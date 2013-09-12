@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.11
+ *  Version:		1.0
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -339,6 +339,13 @@ WaspSD::WaspSD()
  */
 uint8_t WaspSD::ON(void)
 {
+	// enable Chip select
+	pinMode(SS_PIN, OUTPUT);
+	digitalWrite(SS_PIN, LOW);	
+		
+	// mandatory delay
+	delay(100);	
+		
 	// configure pins as input/output
 	pinMode(MEM_PW, OUTPUT);
 	pinMode(SD_PRESENT, INPUT);
@@ -455,10 +462,16 @@ void WaspSD::close()
 	// close root directory 
 	root.close();	
   
-	// SD_SS (SD chip select) is disabled by inner SD  
-	// library each time a communication is finished
-  
-	// set SPI pins as input
+	// SD_SS (SD chip select) is disabled 
+  	pinMode(SS_PIN, OUTPUT);
+	digitalWrite(SS_PIN, HIGH);	
+    
+  	// switch SD off
+	pinMode(MEM_PW, OUTPUT);
+	digitalWrite(MEM_PW, LOW);		
+	delay(100);
+ 
+    // set SPI pins as input
 	pinMode(SD_SS,INPUT);
 	pinMode(SD_SCK,INPUT);
 	pinMode(SD_MISO,INPUT);
@@ -1595,7 +1608,7 @@ int8_t WaspSD::isDir(const char* dirpath)
  * file that has a long name. 
  *  
  */
-uint8_t WaspSD::del(const char* filepath)
+boolean WaspSD::del(const char* filepath)
 {   
 	return walkPath((char*)filepath, currentDir, callback_remove, NULL);
 }
@@ -1615,7 +1628,7 @@ uint8_t WaspSD::del(const char* filepath)
  * file that has a long name.
  *  
  */
-uint8_t WaspSD::rmdir(const char* dirpath)
+boolean WaspSD::rmdir(const char* dirpath)
 {  	
 	boolean result = walkPath((char*)dirpath, currentDir, callback_rmdir, NULL);
 	if(!result)
@@ -1637,7 +1650,7 @@ uint8_t WaspSD::rmdir(const char* dirpath)
  * file that has a long name. For example if a file has the long name
  *  
  */
-uint8_t WaspSD::rmRfDir(const char* dirpath)
+boolean WaspSD::rmRfDir(const char* dirpath)
 {  	
 	return walkPath((char*)dirpath, currentDir, callback_rmRfdir, NULL);
 }
@@ -1943,10 +1956,10 @@ uint8_t WaspSD::appendln(const char* filepath, uint8_t* str, uint16_t length)
 {
     uint8_t exit = 0;
     exit = append(filepath, str, length);
-#ifndef FILESYSTEM_LINUX
-    if (exit) exit &= append(filepath, "\r");
-#endif
-    if (exit) exit &= append(filepath, "\n");
+    if (exit)
+    {
+		exit &= writeEndOfLine(filepath);
+	}
     return exit;
 }
 
@@ -1967,10 +1980,10 @@ uint8_t WaspSD::appendln(const char* filepath, const char* str)
 {
     uint8_t exit = 0;
     exit = append(filepath, str);
-#ifndef FILESYSTEM_LINUX
-    if (exit) exit &= append(filepath, "\r");
-#endif
-    if (exit) exit &= append(filepath, "\n");
+    if (exit) 
+    {
+		exit &= writeEndOfLine(filepath);
+	}    
     return exit;
 }
 
@@ -1991,10 +2004,10 @@ uint8_t WaspSD::appendln(const char* filepath, uint8_t* str)
 {
 	uint8_t exit = 0;
 	exit = append(filepath, str);
-#ifndef FILESYSTEM_LINUX
-	if (exit) exit &= append(filepath, "\r");
-#endif
-	if (exit) exit &= append(filepath, "\n");
+    if (exit) 
+    {		
+		exit &= writeEndOfLine(filepath);
+	}
 	return exit;
 }
 
@@ -2175,6 +2188,34 @@ uint16_t WaspSD::cleanFlags(void)
 {
 	flag = 0;
 	return flag;
+}
+
+
+uint8_t WaspSD::writeEndOfLine(const char* filepath)
+{	
+	uint8_t result = 1;
+	
+#ifndef FILESYSTEM_LINUX
+    if(result) 
+    {
+		result = append(filepath, "\r\n");
+		if(!result)
+		{
+			result = append(filepath, "\r\n");			
+		}
+	}
+#else
+    if(result) 
+    {
+		result = append(filepath, "\n");
+		if(!result)
+		{
+			result = append(filepath, "\n");			
+		}
+	}
+#endif
+	
+	return result;	
 }
 
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -53,6 +53,23 @@ void WaspUtils::setLED(uint8_t led, uint8_t state)
 }
 
 
+/* setExternalLED(led, state) - set external LED to the specified state(ON or OFF)
+ *
+ * It sets external LED to the specified state(ON or OFF)
+ */
+void	WaspUtils::setExternalLED(uint8_t state)
+{
+	pinMode(LED1,OUTPUT);
+	if(state==LED_ON)
+	{
+		digitalWrite(LED1,HIGH);
+	}
+	if(state==LED_OFF)
+	{
+		digitalWrite(LED1,LOW);
+	}
+}
+
 /* getLED(led) - gets the state of the specified LED
  *
  * It gets the state of the specified LED
@@ -60,6 +77,15 @@ void WaspUtils::setLED(uint8_t led, uint8_t state)
 uint8_t	WaspUtils::getLED(uint8_t led)
 {
 	return digitalRead(led);
+}
+
+/* getExternalLED(led) - gets the state of the specified LED
+ *
+ * It gets the state of external LED
+ */
+uint8_t	WaspUtils::getExternalLED()
+{
+	return digitalRead(LED1);
 }
 
 
@@ -77,6 +103,21 @@ void WaspUtils::blinkLEDs(uint16_t time)
 	delay(time);
 }
 
+
+
+/* externalLedBlink(time) - blinks external LED, with the specified time of blinking
+ *
+ * It bliks LED1, with the specified time of blinking
+ */
+void WaspUtils::externalLEDBlink(uint16_t time) 
+{
+	
+	setLED(LED1,LED_ON);
+	delay(time);
+	
+	setLED(LED1,LED_OFF);  
+	delay(time);
+}
 
 /* map(x,in_min,in_max,out_min,out_max) - maps 'x' from the read range to the specified range
  *
@@ -104,11 +145,11 @@ long WaspUtils::map(long x, long in_min, long in_max, long out_min, long out_max
 void WaspUtils::setMux(uint8_t MUX_LOW, uint8_t MUX_HIGH)
 {
 	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX0, OUTPUT);      
-	pinMode(MUX1, OUTPUT);   
+	pinMode(MUX_0, OUTPUT);      
+	pinMode(MUX_1, OUTPUT);   
 	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX0, MUX_LOW);
-	digitalWrite(MUX1, MUX_HIGH);
+	digitalWrite(MUX_0, MUX_LOW);
+	digitalWrite(MUX_1, MUX_HIGH);
 }
 
 
@@ -125,11 +166,11 @@ void WaspUtils::setMux(uint8_t MUX_LOW, uint8_t MUX_HIGH)
 void WaspUtils::setMuxGPS()
 {
 	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX0, OUTPUT);      
-	pinMode(MUX1, OUTPUT);   
+	pinMode(MUX_0, OUTPUT);      
+	pinMode(MUX_1, OUTPUT);   
 	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX0, LOW);
-	digitalWrite(MUX1, HIGH);
+	digitalWrite(MUX_0, LOW);
+	digitalWrite(MUX_1, HIGH);
 }
 
 
@@ -146,11 +187,11 @@ void WaspUtils::setMuxGPS()
 void WaspUtils::setMuxSocket1()
 {
 	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX0, OUTPUT);      
-	pinMode(MUX1, OUTPUT);   
+	pinMode(MUX_0, OUTPUT);      
+	pinMode(MUX_1, OUTPUT);   
 	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX0, HIGH);
-	digitalWrite(MUX1, HIGH);
+	digitalWrite(MUX_0, HIGH);
+	digitalWrite(MUX_1, HIGH);
 }
 
 
@@ -167,11 +208,11 @@ void WaspUtils::setMuxSocket1()
 void WaspUtils::setMuxAux1()
 {
 	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX0, OUTPUT);      
-	pinMode(MUX1, OUTPUT);   
+	pinMode(MUX_0, OUTPUT);      
+	pinMode(MUX_1, OUTPUT);   
 	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX0, HIGH);
-	digitalWrite(MUX1, LOW);
+	digitalWrite(MUX_0, HIGH);
+	digitalWrite(MUX_1, LOW);
 }
 
 
@@ -188,11 +229,11 @@ void WaspUtils::setMuxAux1()
 void WaspUtils::setMuxAux2()
 {
 	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX0, OUTPUT);      
-	pinMode(MUX1, OUTPUT);   
+	pinMode(MUX_0, OUTPUT);      
+	pinMode(MUX_1, OUTPUT);   
 	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX0, LOW);
-	digitalWrite(MUX1, LOW);
+	digitalWrite(MUX_0, LOW);
+	digitalWrite(MUX_1, LOW);
 }
 
 
@@ -322,7 +363,7 @@ unsigned long WaspUtils::readSerialID()
 {
 	Utils.setLED(LED0,LED_OFF);
 	Utils.setLED(LED1,LED_OFF);
-		
+	
 	WaspOneWire OneWire(LED1);
 	
 	int data[64];
@@ -341,7 +382,7 @@ unsigned long WaspUtils::readSerialID()
 	// con otras hay que comentar las dos siguientes lineas
 	// para que funcione
 	Utils.setLED(LED1,LED_ON);
-	delay(1);
+	delay(10);
   
     // ask the ID number
 	OneWire.write(0x33,0);
@@ -351,6 +392,7 @@ unsigned long WaspUtils::readSerialID()
 	for (int i = 63; i >= 0;i--)
 	{
 		data[i] = OneWire.read_bit();
+		delay(1);
 	}
 
 	for (int i = 8;i < 56;i++)
@@ -368,6 +410,8 @@ unsigned long WaspUtils::readSerialID()
 		seed = seed * 2;
 	}			
     digitalWrite(LED0,LOW);
+    Utils.setLED(LED0,LED_OFF);
+	Utils.setLED(LED1,LED_OFF);
 	return id;
 }
 
@@ -407,7 +451,7 @@ float WaspUtils::readTempDS1820(uint8_t pin)
 	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
     delay(750);
     
-	byte present = OneWireTemp.reset();
+	OneWireTemp.reset();
 	OneWireTemp.select(addr);    
 	OneWireTemp.write(0xBE); // Read Scratchpad
 
@@ -451,10 +495,12 @@ void WaspUtils::hex2str(uint8_t* number, char* macDest, uint8_t length)
 	uint8_t aux_1=0;
 	uint8_t aux_2=0;
 
-	for(int i=0;i<length;i++){
+	for(int i=0;i<length;i++)
+	{
 		aux_1=number[i]/16;
 		aux_2=number[i]%16;
-		if (aux_1<10){
+		if (aux_1<10)
+		{
 			macDest[2*i]=aux_1+'0';
 		}
 		else{
@@ -622,6 +668,27 @@ uint8_t WaspUtils::str2hex(char* str)
 		aux2=*str-'A'+10;
 	}
 	return aux*16+aux2;
+}
+
+
+
+/*
+ * Function: Converts a string to an array of bytes
+ * For example: If the input array -> 23576173706D6F74655F50726F23
+ * The output string is str -> #Waspmote_Pro#
+ */
+uint16_t WaspUtils::str2hex(char* str, uint8_t* array)
+{		
+    // get length in bytes (half of ASCII characters)
+	uint16_t length=strlen(str)/2;
+	
+    // Conversion from ASCII to HEX    
+    for(int j=0; j<length; j++)
+    {    
+		array[j] = Utils.str2hex(&str[j*2]);      
+    }
+	
+	return length;
 }
 
 
@@ -835,5 +902,231 @@ void WaspUtils::setSPISlave(uint8_t SELECTION)
 		
 	}
 }
+
+
+/*
+ * loadOTA() - It writes into the EEPROM the name of the OTA file
+ * 
+ * This function writes into the EEPROM the name of the OTA file
+ * 
+ */
+void WaspUtils::loadOTA(const char* filename, uint8_t version)
+{  
+  
+  // save the name in EEPROM
+  for(int aux=0; aux<32; aux++)
+  {
+    if (aux < 7)
+    {
+      // filename
+      eeprom_write_byte((unsigned char *) (aux+2), uint8_t(filename[aux]));
+    }
+    else
+    {
+      // asterisks
+      eeprom_write_byte((unsigned char *) (aux+2), 0x2A);
+    }
+  }
+
+  // set OTA flag in EEPROM to '1'
+  eeprom_write_byte((unsigned char *) 0x01, 0x01);
+  
+  // get EEPROM map
+  //readEEPROM();
+  
+  // sets the new program version into EEPROM
+  setProgramVersion( version);
+  
+  SD.ON();
+  delay(100);
+  // reboot
+  PWR.reboot();
+
+  // A little delay
+  delay(2000);
+}
+
+/*
+ * readEEPROM() - It reads the EEPROM from position 2 to 34 and shows it by USB
+ * 
+ * This function prints by USB the map of positions 2 to 34
+ * 
+ */
+void WaspUtils::readEEPROM()
+{
+	uint8_t aux;
+
+	USB.println(F("---------------------------------"));
+	USB.println(F("EEPROM MAP"));
+	USB.println(F("---------------------------------"));
+
+	USB.print(F("OTA: "));
+	USB.printHex(Utils.readEEPROM(0x01));
+	USB.println();
+
+	USB.println(F("\n\t\t\t\tPID\t\tCID\t\tLast Stable ID"));
+	// Reading the EEPROM
+	for(int address=2; address<34; address++)
+	{
+		USB.print(F("Address:  "));
+		USB.print(address,DEC);
+		USB.print(F(" -- Value: "));    
+		USB.print("\t\t");
+
+		//PID
+		aux = Utils.readEEPROM(address);
+		USB.printHex(aux);
+		USB.print(F("   "));
+		USB.print(char(aux));
+
+		//CID    
+		aux = Utils.readEEPROM(address+32);
+		USB.print("\t\t");
+		USB.printHex(aux);
+		USB.print(F("   "));
+		USB.print(char(aux));
+
+		//Last Stable ID    
+		aux = Utils.readEEPROM(address+64);
+		USB.print("\t\t");
+		USB.printHex(aux);
+		USB.print(F("   "));
+		USB.println(char(aux));
+	}
+}
+
+/*
+ * checkNewProgram() - It checks the new firmware upgrade
+ * 
+ * This function checks if there is any OTA process has been performed. This 
+ * function should be called at the beginning of any OTA-supporting code, just
+ * after switching the XBee module ON 
+ * 
+ * Returns '0' if reprogramming error, '1' if reprogramming OK and '2' for normal restart
+ */
+int8_t WaspUtils::checkNewProgram()
+{
+
+  uint8_t buffer_OTA[32];
+  uint8_t current_ID[32];
+  char MID[17];
+  uint8_t it = 0, program_version;
+  bool reprogrammingOK = true;
+
+  // copy current ID (CID) to Last Stable ID 
+  for(it = 0; it < 32; it++)
+  {
+    current_ID[it] = Utils.readEEPROM(it + 34);
+    eeprom_write_byte((unsigned char *) it + 66, current_ID[it]);
+  }
+
+  // get MID
+  for(it = 0; it < 16; it++)
+  {
+    MID[it] = Utils.readEEPROM(it + 147);
+  }
+  MID[16] = '\0';
+
+
+  // check OTA flag
+  if( Utils.readEEPROM(0x01) == 0x01 )
+  {
+    // Checking if programID and currentID are the same --> the program has been changed properly
+    for(it = 0;it<32;it++)
+    {
+      // get PID
+      buffer_OTA[it] = eeprom_read_byte((unsigned char *) it+2);
+    }
+
+    for(it = 0;it<32;it++)
+    {
+      // compare PID vs CID
+      if (buffer_OTA[it] != eeprom_read_byte((unsigned char *) it+34))
+      {
+        reprogrammingOK = false;
+      }
+    }
+
+    // set OTA Flag to '0'
+    eeprom_write_byte((unsigned char *) 0x01, 0x00);
+
+    // If both IDs are equal a confirmation message is sent to the trasmitter
+    if(reprogrammingOK)
+    {
+		program_version = eeprom_read_byte((unsigned char *) 0xE1);
+		eeprom_write_byte((unsigned char *) 0xE2, program_version);
+		
+		return 1;
+    }
+    // If the IDs are different an error message is sent to the transmitter
+    else
+    {     		
+		program_version = eeprom_read_byte((unsigned char *) 0xE2);
+		eeprom_write_byte((unsigned char *) 0xE1, program_version);
+		return 0; 
+    }
+  }   
+  else
+  {    
+		return 2;  
+  }
+
+} 
+
+/*
+ * getProgramID (program_ID) - read program ID (PID) from EEPROM
+ *
+ * This function read the program Identifier (PID) from EEPROM
+ */
+void WaspUtils::getProgramID(char* program_ID)
+{
+	for(int address = 2; address < 9; address++)
+	{
+		//PID
+		program_ID[address-2] = Utils.readEEPROM(address);
+	}
+	
+	program_ID[7] = '\0';
+}
+
+/*
+ * getID (moteID) - read mote ID from EEPROM
+ *
+ * This function read the mote Identifier from EEPROM[147-162] addresses
+ */
+void WaspUtils::getID(char* moteID)
+{
+	// set the mote ID to EEPROM memory
+	for( int i = 0 ; i<16 ; i++ )
+	{		
+		moteID[i] = Utils.readEEPROM(i+147);
+		// break if end of string
+		if( moteID[i] == '\0') 
+		{
+			break;
+		}
+	}
+}
+
+/*
+ * setProgramVersion (version) - store the version of the program to EEPROM
+ *
+ * This function stores the version of the program to EEPROM
+ */
+void WaspUtils::setProgramVersion(uint8_t version)
+{
+	eeprom_write_byte((unsigned char *) 0xE1, version);
+}
+
+/*
+ * getProgramVersion () - read the version of the program from EEPROM
+ *
+ * This function reads the version of the program from EEPROM
+ */
+uint8_t WaspUtils::getProgramVersion()
+{
+	return (eeprom_read_byte((unsigned char *) 0xE1));
+}
+
 
 WaspUtils Utils = WaspUtils();

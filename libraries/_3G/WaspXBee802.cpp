@@ -506,10 +506,12 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 	uint8_t TX[120];
     uint8_t counter=0; 
     unsigned long previous=0;
+    uint16_t aux=0;
     uint8_t protegido=0;
     uint8_t tipo=0;
     uint8_t estado=1;
     int8_t error=2;
+    uint8_t ByteIN[20];  
     uint8_t old_netAddress[2];
     uint8_t net_Address_changed = 0;    
 
@@ -530,10 +532,6 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
     it=0;
     error_AT=2;
  
-	// initialize variable
-    old_netAddress[0]=0x00;
-    old_netAddress[1]=0x00;
- 
 	// BROADCAST MODE
     if(packet->mode==BROADCAST)
 	{
@@ -552,7 +550,7 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 			estado=getOwnNetAddress();
 			
 			 //avoid millis overflow problem
-			if( millis() < previous ) previous=millis();
+			if( millis()-previous < 0 ) previous=millis();
         }
 			
         old_netAddress[0]=sourceNA[0];
@@ -567,7 +565,7 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 			net_Address_changed = 1;
 			
 			//avoid millis overflow problem
-			if( millis() < previous ) previous=millis();
+			if( millis()-previous < 0 ) previous=millis();
         }
         error=2;
 		
@@ -621,7 +619,7 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 				estado=getOwnNetAddress();
 				
 				// avoid millis overflow problem
-				if( millis() < previous ) previous=millis(); 
+				if( millis()-previous < 0 ) previous=millis(); 
             }
 			
 			old_netAddress[0]=sourceNA[0];
@@ -635,7 +633,7 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 				net_Address_changed = 1;
 				
 				// avoid millis overflow problem
-				if( millis() < previous ) previous=millis(); 
+				if( millis()-previous < 0 ) previous=millis(); 
             }
 			
 			error=2;
@@ -714,7 +712,7 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 			estado=setOwnNetAddress(old_netAddress[0],old_netAddress[1]);
 			
 			//avoid millis overflow problem
-			if( millis() < previous ) previous=millis(); 
+			if( millis()-previous < 0 ) previous=millis(); 
 		}
 	}
     

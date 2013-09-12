@@ -122,6 +122,15 @@ class WaspUtils
    */
   void	setLED(uint8_t led, uint8_t state);
   
+  
+   //! It sets external LED to the specified state(ON or OFF)
+  /*!
+   \param uint8_t state : the state to set the LED
+  \return void
+  */
+  void	setExternalLED(uint8_t state);
+  
+  
   //! It gets the state of the specified LED
   /*!
   \param uint8_t led : the LED to get the state
@@ -130,6 +139,17 @@ class WaspUtils
    */
   uint8_t getLED(uint8_t led);
   
+  //! It gets the state of external LED
+  /*!
+  
+  \return the state of the LED
+  \sa setLED(uint8_t led, uint8_t state), blinkLEDs(uint16_t time)
+   */
+  uint8_t getExternalLED();
+  
+  
+  
+  
   //! It blinks LEDs, with the specified time for blinking
   /*!
   \param uint16_t time : time for blinking
@@ -137,6 +157,16 @@ class WaspUtils
   \sa setLED(uint8_t led, uint8_t state), getLED(uint8_t led)
    */
   void blinkLEDs(uint16_t time);
+  
+  
+  //! It blinks LED, with the specified time for blinking
+  /*!
+  \param uint16_t time : time for blinking
+  \return void
+  \sa setLED(uint8_t led, uint8_t state), getLED(uint8_t led)
+   */
+  void externalLEDBlink(uint16_t time);
+  
   
   //! It maps 'x' from the read range to the specified range
   /*!
@@ -287,15 +317,23 @@ class WaspUtils
   \return the converted number
   \sa long2array(long num, char* numb), str2hex(uint8_t* str)
    */
-  uint8_t str2hex(char* str);
+  uint8_t str2hex(char* str);  
+  
+  //! It converts an array of bytes expressed in ASCII to hexadecimal values
+  /*!
+  \param char* str : string where the array is defined in ASCII format
+  \param uint8_t* array : array of bytes where the converted array is stored
+  \return length of the converted array; '0' if error
+   */
+  uint16_t str2hex(char* str, uint8_t* array);
   
   //! It converts a number stored in a string into a hexadecimal number
   /*!
-  \param char* str : string where thember is stored
+  \param char* str : string where the number is stored
   \return the converted number
   \sa long2array(long num, char* numb), str2hex(char* str)
    */
-  uint8_t str2hex(uint8_t* str);
+  uint8_t str2hex(uint8_t* str);  
   
   //! It converts a hexadecimal number stored in an array to a string (8 Byte numbers)
   /*!
@@ -362,6 +400,52 @@ class WaspUtils
   \return void
   */
   void setSPISlave(uint8_t SELECTION);
+  
+  //! It writes into the EEPROM the name of the OTA file
+  /*!
+  \return void
+  */
+  void loadOTA(const char* filename, uint8_t version);
+  
+  //! It reads the EEPROM from position 2 to 34 and shows it by USB
+  /*!
+  \return void
+  */
+  void readEEPROM();
+  
+  //! It checks the new firmware upgrade
+  /*!
+  \return '0' if reprogramming error, '1' if reprogramming OK and '2' for normal restart
+  */
+  int8_t checkNewProgram();
+  
+  //! It reads program ID (PID) from EEPROM
+  /*!
+  \param char* program_ID : string pointer to store the PID
+  \return void
+  */
+  void getProgramID(char* program_ID);
+  
+  //! It reads mote ID from EEPROM
+  /*!
+  \param char* moteID : string pointer to store the mote ID
+  \return void
+  */
+  void getID(char* moteID);
+  
+  //! It stores the version of the program to EEPROM
+  /*!
+  \param uint8_t version : version of te program. Values from 0 to 255
+  \return void
+  */
+  void setProgramVersion(uint8_t version);
+  
+  //! It reads the version of the program from EEPROM
+  /*!
+  \return the version of the actual program
+  */
+  uint8_t getProgramVersion();   
+
   
 };
 

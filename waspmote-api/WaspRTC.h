@@ -258,7 +258,7 @@
     \brief RTC Power Modes. OFF in this case
  */
 #define	RTC_ON	1
-#define	RTC_OFF	2
+#define	RTC_OFF	0
 
 /*! \def RTC_I2C_MODE
     \brief Used to set RTC.isON value
@@ -418,7 +418,7 @@ class WaspRTC
 	//! Variable : It stores the timeStamp in "dow, YY/MM/DD - HH:MM.SS"  format
     /*!    
 	 */
-	char timeStamp[31];
+	char timeStamp[100];
 	
 
 	// RTC Internal Functions
@@ -428,13 +428,6 @@ class WaspRTC
 	\return void
 	 */
     void resetVars();
-	
-	//! It gets 'registerRTC' variable
-    /*!
-	\param void
-	\return 'registerRTC' variable
-	 */
-    char* getRTCarray();
 	
 	//! It gets date and time
     /*!
@@ -704,6 +697,20 @@ class WaspRTC
 	\return void
 	 */
 	void clearAlarmFlag();
+		
+	//! It clears A1IE in control register to disable the Alarm1
+    /*!
+	\param void
+	\return void
+	 */
+	void disableAlarm1();
+	
+	//! It clears A2IE in control register to disable the Alarm2
+    /*!
+	\param void
+	\return void
+	 */
+	void disableAlarm2();
 	
 	//! It gets the temperature from the RTC temperature sensor
     /*!

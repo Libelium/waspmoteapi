@@ -1,7 +1,7 @@
 /*! \file WaspACC.h
     \brief Library for managing the accelerometer LIS331DLH
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -346,6 +346,29 @@
 #define ACC_RATE_400 	2
 #define ACC_RATE_1000 	3
 
+
+/*! \def NO_INT
+    \brief No interruption set
+ */
+/*! \def FF_INT
+    \brief Free Fall interruption set
+ */
+/*! \def IWU_INT
+    \brief Inertial Wake-Up interruption set
+ */
+/*! \def _6DMOV_INT
+    \brief 6D Movement interruption set
+ */
+/*! \def _6DPOS_INT
+    \brief 6D Position interruption set
+ */
+#define NO_INT 				0
+#define FF_INT 				1
+#define IWU_INT 			2
+#define _6DMOV_INT		 	3
+#define _6DPOS_INT			4
+
+
 /******************************************************************************
  * Class
  ******************************************************************************/
@@ -370,9 +393,7 @@ private:
     /*!
 	  Possible values are ACC_ON, ACC_HIBERNATE and ACC_CUSTOM
      */ 
-    uint8_t fsSelection;
-    
-    
+    uint8_t fsSelection;      
 
 public:
 
@@ -405,6 +426,13 @@ public:
     /*!    
     */
     uint8_t isON;
+    
+    //! Variable : Accelerometer Interruption state
+    /*!
+	  Possible values are ACC_ON, ACC_HIBERNATE and ACC_CUSTOM
+     */ 
+    uint8_t accInt;
+    
     
     //! It opens I2C bus and powers the accelerometer
     /*!
@@ -704,13 +732,6 @@ public:
     \sa attachInt()
      */
     void detachInt(void);
-    
-    //! It clears the Accelerometer's alarm flag
-    /*!
-    \param void
-    \return void
-     */
-    void clearAlarmFlag();
 
     //! It gets the contents of INT1_CFG
     /*!

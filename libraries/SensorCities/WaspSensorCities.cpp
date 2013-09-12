@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.9
+ *  Version:		1.0
  *  Design:			David Gascón
- *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
+ *  Implementation: Manuel Calahorra
  */
  
 
@@ -267,6 +267,8 @@ int8_t	WaspSensorCities::setSensorMode(uint8_t mode, uint16_t sensor)
 													break;
 			case	SENS_CITIES_CP				:	digitalWrite(DIGITAL2,HIGH);
 													break;
+			case	SENS_CITIES_TEMP_DS18B20	:	digitalWrite(DIGITAL2,HIGH);
+													break;
 			default								:	return -1;
 		}
 	} else if( mode==SENS_OFF )
@@ -292,6 +294,8 @@ int8_t	WaspSensorCities::setSensorMode(uint8_t mode, uint16_t sensor)
 			case	SENS_CITIES_CD				:	digitalWrite(DIGITAL2,LOW);
 													break;
 			case	SENS_CITIES_CP				:	digitalWrite(DIGITAL2,LOW);
+													break;
+			case	SENS_CITIES_TEMP_DS18B20	:	digitalWrite(DIGITAL2,LOW);
 													break;
 			default								:	return -1;
 		}
@@ -381,6 +385,8 @@ float	WaspSensorCities::readValue(uint16_t sensor, uint8_t type)
 		case	SENS_CITIES_CP				:	aux = analogRead(ANALOG5);
 												value = aux;
 												break;
+		case	SENS_CITIES_TEMP_DS18B20	:	value=readTempDS1820();
+												break;
 		default								:	;
 	}
 	
@@ -432,7 +438,7 @@ uint8_t	WaspSensorCities::loadInt()
 	digitalWrite(SENS_INT_CITIES_CLK_INH, LOW);
 	delay(1);
 
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 1;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= SENS_CITIES_HUMIDITY;
 	delay(2);
 
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
@@ -451,35 +457,35 @@ uint8_t	WaspSensorCities::loadInt()
 
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
 	delay(1);
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 8;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= SENS_CITIES_DUST;
 	delay(1);
 	digitalWrite(SENS_INT_CITIES_CLK_REG, LOW);
 	delay(2);
 
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
 	delay(1);
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 16;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= SENS_CITIES_AUDIO;
 	delay(1);
 	digitalWrite(SENS_INT_CITIES_CLK_REG, LOW);
 	delay(2);
       
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
 	delay(1);
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 32;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= SENS_CITIES_LDR;
 	delay(1);
 	digitalWrite(SENS_INT_CITIES_CLK_REG, LOW);
 	delay(2);
       
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
 	delay(1);
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 64;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= SENS_CITIES_LD;
 	delay(1);
 	digitalWrite(SENS_INT_CITIES_CLK_REG, LOW);
 	delay(2);
 
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
 	delay(1);
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 128;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= SENS_CITIES_TEMPERATURE;
 	delay(1);
 	digitalWrite(SENS_INT_CITIES_CLK_REG, LOW);
 	delay(2);
@@ -492,6 +498,76 @@ uint8_t	WaspSensorCities::loadInt()
 }
 
 // Private Methods //////////////////////////////////////////////////////////////
+
+
+/* readTempDS1820() - reads the DS1820 temperature sensor
+ *
+ * It reads the DS1820 temperature sensor
+ */
+float WaspSensorCities::readTempDS1820()
+{
+	//PWR.setSensorPower(SENS_3V3,SENS_ON);
+	//delay(1000);
+	
+	// analog 4
+	WaspOneWire OneWireTemp(17);
+	
+	byte data[12];
+	byte addr[8];
+
+	if ( !OneWireTemp.search(addr))
+	{
+		//no more sensors on chain, reset search
+		USB.ON();
+		USB.println("no more sensors");
+		OneWireTemp.reset_search();
+		return -1000;
+	}
+	
+	if ( WaspOneWire::crc8( addr, 7) != addr[7]) 
+	{
+		USB.ON();
+		USB.println("CRC is not valid!");
+		return -1000;
+	}
+
+	if ( addr[0] != 0x10 && addr[0] != 0x28)
+	{
+		USB.ON();
+		USB.println("Device is not recognized");
+		return -1000;
+	}
+
+	OneWireTemp.reset();
+	OneWireTemp.select(addr);
+	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
+    delay(750);
+
+	byte present = OneWireTemp.reset();
+	
+	OneWireTemp.select(addr);
+	
+	OneWireTemp.write(0xBE); // Read Scratchpad
+
+  	for (int i = 0; i < 9; i++)  // we need 9 bytes
+	{
+		data[i] = OneWireTemp.read();
+	}
+
+	OneWireTemp.reset_search();
+  
+	byte MSB = data[1];
+	byte LSB = data[0];
+
+	float tempRead = ((MSB << 8) | LSB); //using two's compliment
+	float TemperatureSum = tempRead / 16;
+    
+    //PWR.setSensorPower(SENS_3V3,SENS_OFF);
+    
+	return TemperatureSum;
+}
+
+
 
 /*	setResistor: calculates the resistor value in function of the entered threshold
  * 				 and sets the digipot for B digipots

@@ -78,6 +78,8 @@ ISR(WDT_vect) {
   f_wdt=1;  // set global flag
 	WDTCSR |= (1<<WDIF);
   	WDTCSR &= ~(1<<WDIE);               // Disable Watchdog Interrupt Mode
+  	
+  	// set DIGITAL0 (INT4 pin) to '0' which provokes interruption in this pin
 	digitalWrite(WTD_INT_PIN_MON,LOW);
 	sei();
 }
@@ -96,13 +98,27 @@ void off_watchdog(void)
    sei();
 }
 
+// the prescaler is set so that timer0 ticks every 64 clock cycles, and the
+// the overflow handler is called every 256 ticks.
+#define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
 
+// the whole number of milliseconds per timer0 overflow
+#define MILLIS_INC (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
+
+// the fractional number of milliseconds per timer0 overflow. we shift right
+// by three to fit these numbers into a byte. (for the clock speeds we care
+// about - 8 and 16 MHz - this doesn't lose precision.)
+#define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
+#define FRACT_MAX (1000 >> 3)
 // The number of times timer 0 has overflowed since the program started.
 // Must be volatile or gcc will optimize away some uses of it.
 volatile unsigned long timer0_overflow_count;
+volatile unsigned long timer0_millis = 0;
+static unsigned char timer0_fract = 0;
 
 SIGNAL(SIG_OVERFLOW0)
 {
+	
 	timer0_overflow_count++;
 }
 
@@ -121,11 +137,17 @@ unsigned long millis()
 	// 256.  we would calculate the total number of clock cycles, then
 	// divide by the number of clock cycles per millisecond, but this
 	// overflows too often.
-	//return timer0_overflow_count * 64UL * 256UL / (F_CPU / 1000UL);
-	
-	// instead find 1/128th the number of clock cycles and divide by
-	// 1/128th the number of clock cycles per millisecond
-	return timer0_overflow_count * 64UL * 2UL / (F_CPU / 128000UL);
+
+	unsigned long m;
+	uint8_t oldSREG = SREG;
+
+	// disable interrupts while we read timer0_millis or we might get an
+	// inconsistent value (e.g. in the middle of a write to timer0_millis)
+	cli();
+	m = timer0_overflow_count * 64UL * 2UL / (F_CPU / 128000UL);
+	SREG = oldSREG;
+
+	return m;
 }
 
 unsigned long millisTim2()
@@ -145,7 +167,13 @@ void delay(unsigned long ms)
 {
 	unsigned long start = millis();
 	
-	while (millis() - start < ms);
+	while (millis() - start < ms)
+	{
+		if(millis() < start)
+		{
+			start = millis();
+		}
+	}
 }
 
 /* Delay for the given number of microseconds.  Assumes a 16 MHz clock. 

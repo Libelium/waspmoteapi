@@ -52,13 +52,19 @@ WaspOneWire::WaspOneWire( uint8_t pinArg)
 uint8_t WaspOneWire::reset() {
     uint8_t r;
     uint8_t retries = 125;
+    long a = 0;
 
     // wait until the wire is high... just in case
     pinMode(pin,INPUT);
+    a = millis();
     do {
-	if ( retries-- == 0) return 0;
-	delayMicroseconds(2); 
-    } while( !digitalRead( pin));
+		if ( retries-- == 0) return 0;
+		delayMicroseconds(2); 
+		if ( a > millis() )
+		{
+			a = millis();
+		}
+    } while( !digitalRead( pin) && ( (millis() - a) < 500 ) );
     
     pinMode(pin,OUTPUT);
     digitalWrite(pin,0);   // pull low for 500uS
@@ -67,10 +73,15 @@ uint8_t WaspOneWire::reset() {
     delayMicroseconds(65);
     r = !digitalRead(pin);
     delayMicroseconds(490);
-    while(r!=1)
+    a = millis();
+    while((r!=1) && ( (millis() - a) < 500 ) )
     {
 		 r = !digitalRead(pin);
 		 delayMicroseconds(10);
+		if ( a > millis() )
+		{
+			a = millis();
+		}
     }
     return r;
 }
@@ -85,22 +96,33 @@ uint8_t WaspOneWire::reset() {
 uint8_t WaspOneWire::resetSerialID() {
     uint8_t r;
     uint8_t retries = 125;
+    long a = 0;
 
     // wait until the wire is high... just in case
     pinMode(pin,INPUT);
+    a = millis();
     do {
-	if ( retries-- == 0) return 0;
-	delayMicroseconds(2); 
-    } while( !digitalRead( pin));
+		if ( retries-- == 0) return 0;
+		delayMicroseconds(2); 
+		if ( a > millis() )
+		{
+			a = millis();
+		}		
+    } while( !digitalRead( pin) && ( (millis() - a) < 500 ) );
     
     pinMode(pin,OUTPUT);
     digitalWrite(pin,0);   // pull low for 500uS
     delayMicroseconds(400);
+    a = millis();
     r = !digitalRead(pin);
-    while(r!=1)
+    while( (r!=1) && ( (millis() - a) < 500 ) )
     {
 		 r = !digitalRead(pin);
 		 delayMicroseconds(10);
+		if ( a > millis() )
+		{
+			a = millis();
+		}
     }
     return r;
 }

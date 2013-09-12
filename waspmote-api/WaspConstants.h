@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
  *  This program is free software: you can redistribute it and/or modify
@@ -79,7 +79,9 @@
 #define PGPRS 1
 
 
-// Analog Pins
+/***************************************************
+ * ANALOG PINS
+ ***************************************************/
 #define	ANALOG0	0
 #define	ANALOG1	1
 #define	ANALOG2	2
@@ -89,119 +91,187 @@
 #define	ANALOG6	6
 #define	ANALOG7	7
 
-// WASP interrupt vector
-// this is a 32 bits interrupt vector to contain
-// the flags for the different HW/SW interrupts
-// 0 will denote not-active, 1 will denote active
-// the HW interrupts and default callback functions are
-// stored inside WInterrupts.c
-
-#define	HAI_INT		1 // High Active Interrupt
-#define	LAI_INT		2
-#define ACC_INT   	4
-#define BAT_INT   	8
-#define RTC_INT   	16
-#define WTD_INT   	32
-#define TIM0_INT  	64
-#define TIM1_INT  	128
-#define TIM2_INT  	256
-#define PIN_INT   	512
-#define UART0_INT 	1024
-#define UART1_INT 	2048
-#define	SENS_INT	4096
-#define	PLV_INT		8192
-#define	HIB_INT		16384
-#define	RAD_INT		32768
-#define XBEE_INT 	65536
-#define PIR_3G_INT 	131072
-
-// Interrupt Counter Vector
-// intArray vector index
-#define	HAI_POS		0
-#define	LAI_POS		1
-#define	ACC_POS		2
-#define	BAT_POS		3
-#define	RTC_POS		4
-#define	WTD_POS		5
-#define	TIM0_POS	6
-#define	TIM1_POS	7
-#define	TIM2_POS	8
-#define	PIN_POS		9
-#define	UART0_POS	10
-#define	UART1_POS	11
-#define	SENS_POS	12
-#define	PLV_POS		13
-#define RAD_POS		14
-#define XBEE_POS	15
-#define PIR_3G_POS	16
 
 
-// sensor's interrupt pin
-#define ACC_INT_ACT 		2 
-#define	ACC_INT_PIN_MON		RDY_ACC 
+/***************************************************
+ * INTERRUPTION BITMAP: 'intFlag' and 'intConf'
+ * 
+ * Waspmote interrupt vector definitions for 'intFlag' and 
+ * 'intConf' bit-map vectors. These are 16-bit interrupt 
+ * vectors to contain the flags for the different HW/SW
+ * interrupts '0' will denote not-active, '1' will denote 
+ * active the HW interrupts and default callback functions
+ * are stored inside WInterrupts.c
+ *  __________________________________________________________
+ * |        |      |     |     |     |      |     |     |     |    
+ * | PIR_3G | XBEE | RAD | HIB | PLV | SENS | WTD | RTC | ACC |
+ * |________|______|_____|_____|_____|______|_____|_____|_____|
+ *      8      7      6     5     4      3     2     1     0
+ *  
+ ***************************************************/
+/*! \def ACC_INT
+    \brief Accelerometer interruption bit within intFlag and intConf
+ */
+/*! \def RTC_INT
+    \brief RTC interruption bit within intFlag and intConf
+ */
+/*! \def WTD_INT
+    \brief Watchdog interruption bit within intFlag and intConf
+ */
+/*! \def SENS_INT
+    \brief Sensor Boards interruption bit within intFlag and intConf
+ */
+/*! \def PLV_INT
+    \brief Pluviometer sensor interruption bit within intFlag and intConf
+ */
+/*! \def HIB_INT
+    \brief Hibernate interruption bit within intFlag and intConf
+ */
+/*! \def RAD_INT
+    \brief Radiation sensor interruption bit within intFlag and intConf
+ */
+/*! \def XBEE_INT
+    \brief XBee module interruption bit within intFlag and intConf
+ */
+/*! \def PIR_3G_INT
+    \brief PIR sensor (Video Camera board) interruption bit within intFlag and intConf
+ */
+#define ACC_INT   	1		// bit 0
+#define RTC_INT   	2		// bit 1
+#define WTD_INT   	4		// bit 2
+#define SENS_INT	8		// bit 3
+#define PLV_INT		16		// bit 4
+#define HIB_INT		32		// bit 5
+#define RAD_INT		64		// bit 6
+#define XBEE_INT 	128		// bit 7
+#define PIR_3G_INT	256		// bit 8
 
-#define	HAI_INT_ACT			2 
-#define	HAI_INT_PIN_MON		I2C_SDA 
 
-#define	LAI_INT_ACT			3 
-#define	LAI_INT_PIN_MON		I2C_SDA 
+/*******************************************************************************
+ * INTERRUPTION POSTITION BITMAP 
+ * 
+ * Waspmote definitions for 'intArray' bit-map interruption 
+ * counter vector. This is a 16-Byte interrupt array to 
+ * contain the number of interruption generated per each 
+ * interruption source
+ *  ____________________________________________________
+ * |        |      |     |     |      |     |     |     |    
+ * | PIR_3G | XBEE | RAD | PLV | SENS | WTD | RTC | ACC |
+ * |________|______|_____|_____|______|_____|_____|_____|
+ *      7       6     5     4      3     2     1     0
+ *  
+ ******************************************************************************/
+ /*! \def ACC_POS
+    \brief Accelerometer interruption counter index within 'intArray'
+ */
+ /*! \def RTC_POS
+    \brief RTC interruption counter index within 'intArray'
+ */
+ /*! \def WTD_POS
+    \brief Watchdog interruption counter index within 'intArray'
+ */
+ /*! \def SENS_POS
+    \brief Sensor interruption counter index within 'intArray'
+ */
+ /*! \def PLV_POS
+    \brief Pluviometer interruption counter index within 'intArray'
+ */
+ /*! \def RAD_POS
+    \brief Radiation board interruption counter index within 'intArray'
+ */
+ /*! \def XBEE_POS
+    \brief XBee module interruption counter index within 'intArray'
+ */
+ /*! \def PIR_3G_POS
+    \brief PIR sensor interruption counter index within 'intArray'
+ */
+#define	ACC_POS		0
+#define	RTC_POS		1
+#define	WTD_POS		2
+#define	SENS_POS	3
+#define	PLV_POS		4
+#define RAD_POS		5
+#define XBEE_POS	6
+#define PIR_3G_POS	7
 
-#define	BAT_INT_ACT			3 
-#define	BAT_INT_PIN_MON		LOW_BAT_MON
 
-#define	RTC_INT_ACT			2 
-#define	RTC_INT_PIN_MON		RST_RTC
+/*******************************************************************************
+ * INTERRUPTION PINS used to generate interruptions in Waspmote
+ ******************************************************************************/
+/*! \def RXD1_PIN
+    \brief Interruption pin used for ACC, RTC, SENS and XBEE
+    \remarks This pin is also the UART1's RX pin
+ */
+ /*! \def TXD1_PIN
+    \brief Interruption pin used for BAT critical level
+    \remarks This pin is also the UART1's TX pin
+ */
+ /*! \def INT4_PIN
+    \brief Interruption pin used for Watchdog timer
+ */
+#define RXD1_PIN	2	// INT2 pin
+#define TXD1_PIN	3	// INT3 pin
+#define INT4_PIN	4	// INT4 pin
+ 
 
-#define	WTD_INT_ACT			4 
-#define	WTD_INT_PIN_MON		DIGITAL0
-
-#define	UART1_INT_ACT		2
-#define	UART1_INT_PIN_MON	GPRS_PIN 
+/*******************************************************************************
+ * Interruption monitorization pins
+ ******************************************************************************/
+/*! \def ACC_INT_PIN_MON
+    \brief Monitorization pin used for ACC interruptions
+ */
+ /*! \def BAT_INT_PIN_MON
+    \brief Monitorization pin used for BAT interruptions
+ */ 
+ /*! \def RTC_INT_PIN_MON
+    \brief Monitorization pin used for RTC interruptions
+ */ 
+ /*! \def WTD_INT_PIN_MON
+    \brief Monitorization pin used for Watchdog interruptions
+ */ 
+ /*! \def XBEE_INT_PIN_MON
+    \brief Monitorization pin used for XBee interruptions
+ */ 
+ /*! \def RAD_INT_PIN_MON
+    \brief Monitorization pin used for Radiation sensor board interruptions
+ */ 
+ /*! \def PIR_3G_PIN_MON
+    \brief Monitorization pin used for PIR sensor interruptions (in videocamera
+    sensor board) 
+ */ 
+ /*! \def PLV_INT_PIN_MON
+    \brief Monitorization pin used for Pluviometer sensor interruptions
+ */ 
+#define	ACC_INT_PIN_MON		RDY_ACC 	// PE6
+#define	BAT_INT_PIN_MON		LOW_BAT_MON	// PG0
+#define	RTC_INT_PIN_MON		RST_RTC		// PE7
+#define	WTD_INT_PIN_MON		DIGITAL0	// PE4
+#define XBEE_INT_PIN_MON	XBEE_MON	// PA7
+#define RAD_INT_PIN_MON   	DIGITAL7	// PC4
+#define PIR_3G_PIN_MON    	ANA4		// PF5 (ANALOG5)
+#define	PLV_INT_PIN_MON		DIGITAL4
+#define	UART1_INT_PIN_MON	GPRS_PIN 	// PC2
 
 // Event Sensor Board
-#define	SENS_INT_ACT		2
-#define	SENS_INT_PIN_MON 	DIGITAL2 
-#define	SENS_INT_CLK_REG	DIGITAL7
-#define	SENS_INT_DO			DIGITAL1
-#define	SENS_INT_ENABLE		DIGITAL8
-#define	SENS_INT_CLK_INH	DIGITAL3
+#define	SENS_INT_PIN_MON 	DIGITAL2  	// PA2
+#define	SENS_INT_CLK_REG	DIGITAL7	// PC4
+#define	SENS_INT_DO			DIGITAL1	// PE3
+#define	SENS_INT_ENABLE		DIGITAL8	// PC5
+#define	SENS_INT_CLK_INH	DIGITAL3	// PA4
 
-// Smart Metering Sensor Board
-#define	SENS_INT_SMART_ACT			2
-#define	SENS_INT_SMART_PIN_MON 		DIGITAL2 
-#define	SENS_INT_SMART_CLK_REG		19
-#define	SENS_INT_SMART_DO			18
-#define	SENS_INT_SMART_ENABLE		20
-#define	SENS_INT_SMART_CLK_INH		17
 
 // Smart Cities Sensor Board
-#define	SENS_INT_CITIES_ACT			2
-#define	SENS_INT_CITIES_PIN_MON 	DIGITAL2
-#define	SENS_INT_CITIES_CLK_REG		DIGITAL7
-#define	SENS_INT_CITIES_DO			DIGITAL3
-#define	SENS_INT_CITIES_ENABLE		DIGITAL5
-#define	SENS_INT_CITIES_CLK_INH		DIGITAL8
+#define	SENS_INT_CITIES_PIN_MON 	DIGITAL2	// PA2
+#define	SENS_INT_CITIES_CLK_REG		DIGITAL7	// PC4
+#define	SENS_INT_CITIES_DO			DIGITAL3	// PA4
+#define	SENS_INT_CITIES_ENABLE		DIGITAL5	// PC7
+#define	SENS_INT_CITIES_CLK_INH		DIGITAL8	// PC5
 
-// Meteo Sensor Board
-#define	PLV_INT_ACT		3
-#define SENS2_INT_PIN_MON	DIGITAL5 
-#define SENS2_INT_PIN2_MON	DIGITAL3
 
-// Radiation Sensor Board
-#define RAD_INT_ACT		3
-#define RAD_INT_PIN_MON    DIGITAL7
 
-// XBEE Wake up interrupt
-#define XBEE_INT_ACT		2
-#define XBEE_INT_PIN_MON	XBEE_MON
-
-#define MAX_ARGS 20    			// max amount of arguments in Wasp
-#define MAX_ARG_LENGTH 16    	// max length for Wasp arguments
-
-// 3G Camera Board
-#define PIR_3G_INT_ACT		2	
-#define PIR_3G_PIN_MON    ANA4
-
+/*******************************************************************************
+ * SOCKETS
+ ******************************************************************************/
 
 /*! \def SOCKET0
     \brief socket where UART0 is used

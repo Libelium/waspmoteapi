@@ -32,8 +32,11 @@
 #define HTTP_FUSE	1		//HTTP related funtions and constants
 #define FTP_FUSE	1		//FTP related funtions and constants
 #define IP_FUSE		1		//TCP and UDP related funtions and constants
+#define OTA_FUSE	1		//OTA related funcions
 
 #define GPRS_debug_mode 0
+
+#define BUFFER_SIZE 256		// Never must be lower than 256B
 
 #define	AT_COMMAND	"AT"
 #define OK_RESPONSE "OK"
@@ -47,9 +50,9 @@
 
 #define SET_TIME		 "+CCLK="
 
-#define	AT_GPRS_APN		"internetmas"
-#define	AT_GPRS_LOGIN	""
-#define	AT_GPRS_PASSW	""
+#define	AT_GPRS_APN		"apn"
+#define	AT_GPRS_LOGIN	"user_name"
+#define	AT_GPRS_PASSW	"password"
 
 // SIM Constants
 #define AT_PIN					"+CPIN="
@@ -59,7 +62,6 @@
 #define AT_GPRS_IMEI "+GSN"
 #define AT_GPRS_IMEI_R "+GSN"
 #define AT_GPRS_IMSI "+CIMI"
-
 
 #if GSM_FUSE
 	// Calls Constants
@@ -105,7 +107,7 @@
 #if FTP_FUSE
 
 	#define AT_FTP_WAIT_CONFIG	10
-	#define AT_FTP_WAIT_CONNEC	30
+	#define AT_FTP_WAIT_CONNEC	60
 
 	#define AT_FTP_ID			"+FTPCID="
 	#define AT_FTP_PORT			"+FTPPORT="
@@ -121,6 +123,8 @@
 	#define AT_FTP_GET_NAME		"+FTPGETNAME="
 	#define AT_FTP_GET_PATH		"+FTPGETPATH="
 	#define AT_FTP_GET_SIZE 	"+FTPSIZE"
+	#define AT_FTP_STATUS		"+FTPSTATE"
+
 #endif
 
 #if HTTP_FUSE
@@ -174,15 +178,16 @@
 	#define AT_IP_CGATT				"+CGATT"
 #endif
 
-
-
+// OTA  constants
+#if OTA_FUSE
+	#define OTA_ver_file	"/UPGRADE.TXT"
+	#define NO_OTA			"NO_FILE"
+#endif
 
 #define AT_COMMAND_MODE		"+++"
 #define AT_DATA_MODE		"O"
 #define AT_DATA_MODE_R		"CONNECT"
 #define AT_DATA_MODE_FAIL	"NO CARRIER"
-
-
 
 #define	AT_GPRS_CHECK		"+CGATT?"
 #define	AT_GPRS_CHECK_ON	"+CGATT: 1"
@@ -192,15 +197,15 @@
 #define	AT_GPRS_CELLID		"+CENG"
 #define AT_GPRS_RSSI		"+CSQ"
 
-
-
 //Various
 #define AT_GET_OPERATOR			"+COPS?"
 #define AT_GET_OPERATOR_R		"+COPS:"
 #define AT_SET_PREF_OPERATOR	"+COPS="
 #define AT_OPERATOR_LIST		"+CPOL?"
 #define AT_OPERATOR_LIST_R		"+CPOL:"
-
+#define AT_WHO_AM_I				"+CGMM"
+#define AT_FIRMWARE				"+CGMR"
+#define AT_FIRMWARE_R			"Revision:"
 
 #define AT_IP_SET_DNS	"+CDNSCFG="
 #define	AT_GPRS_DNS1 	"80.58.0.33"

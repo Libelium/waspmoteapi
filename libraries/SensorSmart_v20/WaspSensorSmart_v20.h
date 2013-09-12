@@ -1,7 +1,7 @@
 /*! \file WaspSensorSmart_v20.h
     \brief Library for managing the Smart Metering Sensor Board
     
-    Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.8
+    Version:		1.0
 
     Design:		David Gascón
 
@@ -78,6 +78,10 @@
     \brief Sensor types. 5V Flow sensor
     
  */
+/*! \def SENS_SMART_TEMP_DS18B20
+    \brief Sensor types. DS18B20 temperature sensor
+    
+ */
 #define	SENS_SMART_LDR			2
 #define	SENS_SMART_DFS_3V3		4
 #define	SENS_SMART_DFS_5V		8
@@ -90,6 +94,7 @@
 #define	SENS_SMART_FLOW_3V3		4096
 #define	SENS_SMART_US_5V		8192
 #define	SENS_SMART_FLOW_5V		16384
+#define	SENS_SMART_TEMP_DS18B20	32768
 
 /*! \def SENS_US_WRA1
     \brief Specifies the WRA1 as ultrasound sensor in use
@@ -132,6 +137,13 @@
 class WaspSensorSmart_v20
 {
 	private:
+	
+	//! It reads the DS1820 temperature sensor
+  	/*!
+	\param void
+	\return void
+	 */
+	float readTempDS1820();
  
 	//! It converts the analog read value into volts
   	/*!

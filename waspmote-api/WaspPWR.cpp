@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Version:		1.0
- *  Design:		David Gascón
- *  Implementation:	Alberto Bielsa, David Cuartielles
+ *  Design:			David Gascón
+ *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
  
 #ifndef __WPROGRAM_H__
@@ -147,9 +147,23 @@ void WaspPWR::setWatchdog(uint8_t mode, uint8_t timer)
  */
 void WaspPWR::switchesOFF(uint8_t option)
 {
-	cbi(ADCSRA,ADEN);		// switch Analog to Digital Converter OFF
+	
+	// unset I2C bus        
+    pinMode(I2C_SDA,OUTPUT);
+	digitalWrite(I2C_SDA,LOW);
+	pinMode(I2C_SCL,OUTPUT);
+	digitalWrite(I2C_SCL,LOW);   
+	
+	// switch Analog to Digital Converter OFF
+	cbi(ADCSRA,ADEN);		
+	
 	//pinMode(SERID_PW,OUTPUT);
 	//digitalWrite(SERID_PW,LOW);
+	
+	// Disable MEM_PW and SS_PIN not to waste 
+	// battery from SD when Waspmote is asleep
+  	pinMode(SS_PIN, OUTPUT);
+	digitalWrite(SS_PIN, LOW);	
 	pinMode(MEM_PW,OUTPUT);
 	digitalWrite(MEM_PW,LOW);
 		
@@ -161,39 +175,32 @@ void WaspPWR::switchesOFF(uint8_t option)
 		digitalWrite(SENS_PW_5V,LOW);
 	}
 	
-	if( option & UART0_OFF )
-	{
-		// close UART0
-		closeSerial(SOCKET0);
-		// set XBee module off
+	// close UART0
+	closeSerial(SOCKET0);
+	
+	if( option & SOCKET0_OFF )
+	{	
+		// set SOCKET0 power supply off
 		pinMode(XBEE_PW,OUTPUT);
 		digitalWrite(XBEE_PW,LOW);		
 	}
 	
-	if( option & UART1_OFF )
-	{
-		// close UART1
-		closeSerial(SOCKET1);
-		
-		pinMode(MUX_PW, OUTPUT);
-		digitalWrite(MUX_PW, LOW);
-		pinMode(GPS_PW, OUTPUT);
-		digitalWrite(GPS_PW, LOW);
-	}
+	// close UART1
+	closeSerial(SOCKET1);	
+	// set SOCKET1 power supply off	
+	pinMode(GPS_PW, OUTPUT);
+	digitalWrite(GPS_PW, LOW);
 	
-	if( option & RTC_OFF )
-	{
-		RTC.close();
-		pinMode(RTC_PW,OUTPUT);
-		digitalWrite(RTC_PW,LOW);
-		closeI2C();	
-	}
+	// switch off the RTC power supply
+	RTC.close();
+	pinMode(RTC_PW,OUTPUT);
+	digitalWrite(RTC_PW,LOW);
+	closeI2C();	
 	
-	if( option & BAT_OFF )
-	{
-		pinMode(BAT_MONITOR_PW,OUTPUT);
-		digitalWrite(BAT_MONITOR_PW,LOW);
-	}	
+	// switch off the battery monitor power supply
+	pinMode(BAT_MONITOR_PW,OUTPUT);
+	digitalWrite(BAT_MONITOR_PW,LOW);
+	
 }
 
 
@@ -227,35 +234,44 @@ void	WaspPWR::switchesON(uint8_t option)
  */
 void WaspPWR::sleep(uint8_t option)
 {
-	// Switch off both multiplexers in UART_0 and UART_1 when 
-	// no interruption is expected through the UART1
-   	if( !(option & UART1_OFF) )
-	{	
-		// keep multiplexer on
-	}
-	else
-	{
-		Utils.muxOFF();
-	}
-    
-	RTC.ON();
-	RTC.close();
-    RTC.OFF();
-        
-    pinMode(I2C_SDA,OUTPUT);
-	digitalWrite(I2C_SDA,LOW);
-	pinMode(I2C_SCL,OUTPUT);
-	digitalWrite(I2C_SCL,LOW);    
+	uint8_t retries=0;
 	
-	pinMode(XBEE_MON,INPUT);
+	// Switch off both multiplexers in UART_0 and UART_1
+	Utils.muxOFF();
+
+	// mandatory delay to wait for MUX_RX stabilization
+	delay(100);	
+	
+	// set the XBee monitorization pin to zero
+	pinMode(XBEE_MON,OUTPUT);
 	digitalWrite(XBEE_MON,LOW);
     
+    // switch on and off the RTC so as to unset RTC interruption signal
+	RTC.ON();
+    RTC.OFF();
+        
+    // switches off depending on the option selected
 	switchesOFF(option);
+	
+	// make sure interruption pin is LOW before entering a low power state
+	// if not the interruption will never come
+	while(digitalRead(MUX_RX)==HIGH)
+	{
+		// clear all detected interruption signals
+		delay(1);
+		PWR.clearInterruptionPin();
+		retries++;
+		if(retries>10)
+		{
+			return (void)0;
+		}
+	}
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sleep_enable();
 	sleep_mode();
 	sleep_disable();
-	switchesON(option);
+	
+	//~ switchesON(option);
 }
 
 
@@ -281,36 +297,49 @@ void WaspPWR::sleep(uint8_t option)
  * It returns nothing.
  */
 void WaspPWR::sleep(uint8_t	timer, uint8_t option)
-{	
-	// Switch off both multiplexers in UART_0 and UART_1 when 
-	// no interruption is expected through the UART1
-   	if( !(option & UART1_OFF) )
-	{	
-		// keep multiplexer on
-	}
-	else
-	{
-		Utils.muxOFF();
-	}
+{
+	uint8_t retries=0;
+		
+	// Switch off both multiplexers in UART_0 and UART_1
+	Utils.muxOFF();
+
+	// mandatory delay to wait for MUX_RX stabilization
+	delay(100);	
 	
-	RTC.ON();
-   
-    pinMode(XBEE_MON,INPUT);
+	// set the XBee monitorization pin to zero
+	pinMode(XBEE_MON,OUTPUT);
 	digitalWrite(XBEE_MON,LOW);
-           
+	
+    // switch on and off the RTC so as to unset RTC interruption signal
+	RTC.ON();
+    RTC.OFF(); 
+     
+	// switches off depending on the option selected       
 	switchesOFF(option);
-	pinMode(I2C_SDA,OUTPUT);
-	digitalWrite(I2C_SDA,LOW);
-	pinMode(I2C_SCL,OUTPUT);
-	digitalWrite(I2C_SCL,LOW); 
+	
+	// make sure interruption pin is LOW before entering a low power state
+	// if not the interruption will never come
+	while(digitalRead(MUX_RX)==HIGH)
+	{
+		// clear all detected interruption signals
+		delay(1);
+		PWR.clearInterruptionPin();
+		retries++;
+		if(retries>10)
+		{
+			return (void)0;
+		}
+	}
 	
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sleep_enable();
 	
+	// set watchdog timer to cause interruption for selected time
 	setWatchdog(WTD_ON,timer);
 	sleep_mode();
 	sleep_disable();
-	switchesON(option);
+	
+	//~ switchesON(option);
 	
 }
 
@@ -335,47 +364,59 @@ void WaspPWR::deepSleep(	const char* time2wake,
 							uint8_t offset, 
 							uint8_t mode, 
 							uint8_t option	)
-{
-	// set the monitorization pin to zero
-	pinMode(XBEE_MON,INPUT);
-	digitalWrite(XBEE_MON,LOW);
+{	
+	uint8_t retries=0;
 	
-	// Switch off both multiplexers in UART_0 and UART_1 when 
-	// no interruption is expected through the UART1
-   	if( !(option & UART1_OFF) )
-	{	
-		// keep multiplexer on
-	}
-	else
-	{
-		Utils.muxOFF();
-	}
-	delay(100);
+	// Switch off both multiplexers in UART_0 and UART_1
+	Utils.muxOFF();
+
+	// mandatory delay to wait for MUX_RX stabilization
+	delay(100);	
+	
+	// set the XBee monitorization pin to zero
+	pinMode(XBEE_MON,OUTPUT);
+	digitalWrite(XBEE_MON,LOW);
 	
 	// Set RTC alarm to wake up from Sleep Power Down Mode
 	RTC.ON();
-	RTC.setAlarm1(time2wake,offset,mode);
-	RTC.close();  
+	RTC.setAlarm1(time2wake,offset,mode);  
     RTC.OFF();
-
-    pinMode(I2C_SDA,OUTPUT);
-	digitalWrite(I2C_SDA,LOW);
-	pinMode(I2C_SCL,OUTPUT);
-	digitalWrite(I2C_SCL,LOW);    
-	
-    pinMode(SD_SS,OUTPUT);
-    digitalWrite(SD_SS,HIGH);    
- 
+    	
+	// switches off depending on the option selected  
 	switchesOFF(option);
+	
+	// make sure interruption pin is LOW before entering a low power state
+	// if not the interruption will never come
+	while(digitalRead(MUX_RX)==HIGH)
+	{
+		// clear all detected interruption signals
+		delay(1);
+		PWR.clearInterruptionPin();
+		retries++;
+		if(retries>10)
+		{
+			return (void)0;
+		}
+	}
+	
+	// set sleep mode
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sleep_enable();
 	sleep_mode();
 	sleep_disable();
-	delay(500);
+		
+	// in the case SENS_OFF was an option is mandatory to turn on the
+	// sensor boards before setting up the I2C bus
 	switchesON(option);
+	
+	// Switch on the RTC and clear the alarm signals	
+	// Disable RTC interruption after waking up 
 	RTC.ON();
+	RTC.disableAlarm1();
 	RTC.clearAlarmFlag();
-	if( option & RTC_OFF ) RTC.OFF();
+	RTC.OFF();
+	
+	// Keep sensor supply powered down if selected
 	if( option & SENS_OFF )
 	{
 		pinMode(SENS_PW_3V3,OUTPUT);
@@ -439,7 +480,7 @@ void WaspPWR::hibernate(const char* time2wake, uint8_t offset, uint8_t mode)
  * Minimum value for good battery is +1V5, so with resistor bridge is set to +0V75
  * Values (in this case) are from 204 to 567
  */
-uint8_t    WaspPWR::getBatteryLevel()
+uint8_t WaspPWR::getBatteryLevel()
 {
    float aux=0;
    uint8_t resul=0;
@@ -648,6 +689,85 @@ void    WaspPWR::reboot()
 {
     __asm__("jmp 0x1E000");
 }
+
+
+// clear all kind of Interruption signal in Waspmote
+void WaspPWR::clearInterruptionPin()
+{
+	// unset XBee interruption line
+	pinMode(XBEE_MON,OUTPUT);
+	digitalWrite(XBEE_MON,LOW);
+	
+	// RTC module
+	if( digitalRead(RTC_INT_PIN_MON) )
+	{
+		// clear RTC interrupt
+		RTC.ON();
+		RTC.clearAlarmFlag();
+	}
+	
+	// check ACC interruption
+	if( digitalRead(ACC_INT_PIN_MON)==HIGH )
+	{
+		// clear ACC interrupt
+		ACC.ON();
+		
+		switch(ACC.accInt)
+		{
+			case FF_INT:	ACC.setFF();				
+							break;	
+										
+			case IWU_INT:	ACC.setIWU();				
+							break;	
+										
+			case _6DMOV_INT:ACC.set6DMovement();				
+							break;
+				
+			case _6DPOS_INT:ACC.set6DPosition();				
+							break;	
+														
+			case NO_INT:	break;
+			
+			default: 		// do nothing
+							break;				
+		}										
+	}	 
+}
+
+
+
+/* printIntFlag() - print 'intFlag' global variable
+ *
+ */
+void WaspPWR::printIntFlag()
+{
+	USB.println(F(" __________________________________________________________"));
+	USB.println(F("|        |      |     |     |     |      |     |     |     |"));
+	USB.println(F("| PIR_3G | XBEE | RAD | HIB | PLV | SENS | WTD | RTC | ACC |"));
+	USB.println(F("|________|______|_____|_____|_____|______|_____|_____|_____|"));
+	USB.print(F("     "));
+	USB.print(bool(intFlag & PIR_3G_INT));
+	USB.print(F("       "));
+	USB.print(bool(intFlag & XBEE_INT));
+	USB.print(F("     "));
+	USB.print(bool(intFlag & RAD_INT));
+	USB.print(F("     "));
+	USB.print(bool(intFlag & HIB_INT));
+	USB.print(F("     "));
+	USB.print(bool(intFlag & PLV_INT));
+	USB.print(F("     "));
+	USB.print(bool(intFlag & SENS_INT));
+	USB.print(F("      "));
+	USB.print(bool(intFlag & WTD_INT));
+	USB.print(F("     "));
+	USB.print(bool(intFlag & RTC_INT));
+	USB.print(F("     "));
+	USB.print(bool(intFlag & ACC_INT));
+	USB.println();
+	USB.println();
+}
+
+
 
 // Private Methods /////////////////////////////////////////////////////////////
 

@@ -34,7 +34,6 @@
 #include <avr/pgmspace.h>
 #include <alloca.h>
 
-// HASH
 #include "hash/md5.h"
 #include "hash/md5_sbox.h"
 #include "hash/sha1.h"
@@ -44,13 +43,8 @@
 #include "hash/sha512.h"
 #include "hash/sha2_small_common.h"
 #include "hash/sha2_large_common.h"
-
-// AES
 #include "aes/aes.h"
-
-// RSA
 #include "rsa/bignum.h"
-
 // I2C libraries
 #include "Wire.h"
 #include "twi.h"
@@ -80,28 +74,9 @@
 #include "WaspSPI.h"
 
 
-// Usb host library
-#include "usbhost.h"
-#include "max3421e.h"
-#include "usb_ch9.h"
-#include "Usb.h"
-#include "usbhub.h"
-
-#include "address.h"
-#include "pgmstrings.h"
-
-#include "parsetools.h"
-#include "confdescparser.h"
-#include "hidusagestr.h"
-#include "hid.h"
-#include "hidboot.h"
-#include "message.h"
-
-// Usb device library
-#include "enum_data.h"
-
 // One wire library
 #include "WaspOneWire.h"
+
 
 // random prototypes
 long random(long);

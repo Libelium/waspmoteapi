@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -60,7 +60,7 @@ WaspSensorAgr_v20::WaspSensorAgr_v20()
 	digitalWrite(DIGITAL1,LOW);
 	digitalWrite(ANA0,LOW);
 	digitalWrite(SENS_PW_3V3,LOW);
-	digitalWrite(SENS_PW_5V,LOW);
+	digitalWrite(SENS_PW_5V,LOW);	
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -133,6 +133,7 @@ int8_t	WaspSensorAgr_v20::setBoardMode(uint8_t mode)
  * 							- SENS_AGR_RADIATION : Solar radiation Sensor
  * 							- SENS_AGR_SENSIRION : Humidity and temperature Sensor
  * 							- SENS_AGR_LDR : Luminosity Sensor
+ * 							- SENS_AGR_TEMP_DS18B20 : Temperature DS18B20 sensor (Only P&S!)
  *  Return:		int8_t error
  * 						1 : success
  * 						0 : wrong mode selected
@@ -176,6 +177,9 @@ int8_t	WaspSensorAgr_v20::setSensorMode(uint8_t mode, uint16_t sensor)
 											break;
 			case	SENS_AGR_LDR		:	digitalWrite(SENS_SWITCH_4,HIGH);
 											break;
+			case	SENS_AGR_TEMP_DS18B20:	digitalWrite(SENS_SWITCH_4,HIGH);
+											digitalWrite(SENS_MUX_SEL,HIGH);
+											break;
 			default						:	return -1;
 		}
 	} else if( mode==SENS_OFF )
@@ -210,6 +214,8 @@ int8_t	WaspSensorAgr_v20::setSensorMode(uint8_t mode, uint16_t sensor)
 											break;
 			case	SENS_AGR_LDR:			digitalWrite(SENS_SWITCH_4,LOW);
 											break;
+			case	SENS_AGR_TEMP_DS18B20:  digitalWrite(SENS_SWITCH_4,LOW);
+											break;
 			default						:	return -1;
 		}
 	} else return 0;
@@ -233,6 +239,7 @@ int8_t	WaspSensorAgr_v20::setSensorMode(uint8_t mode, uint16_t sensor)
  * 							- SENS_AGR_HUMIDITY : Humidity Sensor
  * 							- SENS_AGR_RADIATION : Solar radiation Sensor
  * 							- SENS_AGR_LDR : Luminosity Sensor
+ * 							- SENS_AGR_TEMP_DS18B20 : Temperature DS18B20 sensor (only P&S!)
  *  Return:		float value : value read from the sensor
  * 
  */
@@ -259,6 +266,7 @@ float	WaspSensorAgr_v20::readValue(uint16_t sensor)
  * 							- SENS_AGR_RADIATION : Solar radiation Sensor
  * 							- SENS_AGR_SENSIRION : Humidity and temperature Sensor
  * 							- SENS_AGR_LDR : Luminosity Sensor
+ * 							- SENS_AGR_TEMP_DS18B20 : Temperature DS18B20 sensor (only P&S!)
  *  Return:		float value : value read from the sensor
  * 
  */
@@ -324,6 +332,9 @@ float	WaspSensorAgr_v20::readValue(uint16_t sensor, uint8_t type)
 		case	SENS_AGR_LDR		:	aux2=analogRead(ANALOG7);
 										aux=float(aux2*3.3) / 1023;
 										break;	
+		case	SENS_AGR_TEMP_DS18B20:	aux=readTempDS1820();
+										break;	
+		
 		default						:	;
 	}
 	
@@ -338,7 +349,7 @@ float	WaspSensorAgr_v20::readValue(uint16_t sensor, uint8_t type)
  */
 void	WaspSensorAgr_v20::attachPluvioInt(void) 
 {
-		enableInterrupts(PLV_INT | HAI_INT);
+		enableInterrupts(PLV_INT);
 }
 
 
@@ -349,7 +360,7 @@ void	WaspSensorAgr_v20::attachPluvioInt(void)
  */
 void	WaspSensorAgr_v20::detachPluvioInt(void) 
 {
-	disableInterrupts(PLV_INT | HAI_INT);
+	disableInterrupts(PLV_INT);
 }
 
 /*  sleepAgr: Calls the sleepAgr without agriculture interruptions
@@ -389,48 +400,72 @@ void	WaspSensorAgr_v20::sleepAgr(const char* time2wake,
 									uint8_t agr_interrupt)
 {
 	// Set RTC alarme to wake up from Sleep Power Down Mode
+	uint8_t retries=0;	
+	
+	// Switch off both multiplexers in UART_0 and UART_1
+    Utils.muxOFF();
+    
+    // mandatory delay to wait for MUX_RX stabilization
+	delay(100);	
+    
+	// set the XBee monitorization pin to zero
+	pinMode(XBEE_MON,OUTPUT);
+	digitalWrite(XBEE_MON,LOW);
+
+	// set RTC alarm to wake up at specified time
 	RTC.ON();
 	RTC.setAlarm1(time2wake,offset,mode);
-	RTC.close();
+	RTC.OFF();
+	
+	// switch off sensors power supply
 	digitalWrite(SENS_SWITCH_1, LOW);
 	digitalWrite(SENS_SWITCH_2, LOW);
 	digitalWrite(SENS_SWITCH_4, LOW);
 	digitalWrite(SENS_MUX_SEL, LOW);
 	digitalWrite(SENS_DATA, LOW);
 	digitalWrite(SENS_SWITCH_3, LOW);
-
-    Utils.muxOFF();
-    RTC.OFF();
-        
-    pinMode(I2C_SDA,OUTPUT);
-	digitalWrite(I2C_SDA,LOW);
-	pinMode(I2C_SCL,OUTPUT);
-	digitalWrite(I2C_SCL,LOW);    
 	
-	pinMode(SD_SS,OUTPUT);
-    digitalWrite(SD_SS,HIGH);
-    
-    pinMode(XBEE_MON,INPUT);
-	digitalWrite(XBEE_MON,LOW);
-
+	// switches off depending on the option selected
 	PWR.switchesOFF(option);
 
-
-	if (agr_interrupt && SENS_AGR_PLUVIOMETER)
+	// enable PLV interruption if selected
+	if (agr_interrupt & SENS_AGR_PLUVIOMETER)
 	{
-		enableInterrupts(PLV_INT | HAI_INT);
+		enableInterrupts(PLV_INT);
+	}
+	
+	// make sure interruption pin is LOW before entering a low power state
+	// if not the interruption will never come
+	while(digitalRead(MUX_RX)==HIGH)
+	{
+		// clear all detected interruption signals
+		delay(1);
+		PWR.clearInterruptionPin();
+		retries++;
+		if(retries>10)
+		{
+			return (void)0;
+		}
 	}
 
-
+	// set sleep mode
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sleep_enable();
 	sleep_mode();
 	sleep_disable();
-	delay(500);
+	
+	// in the case SENS_OFF was an option is mandatory to turn on the
+	// sensor boards before setting up the I2C bus
 	PWR.switchesON(option);
-	RTC.ON();
+	
+	// Switch on the RTC and clear the alarm signals	
+	// Disable RTC interruption after waking up 
+	RTC.ON();	
+	RTC.disableAlarm1();
 	RTC.clearAlarmFlag();
-	if( option & RTC_OFF ) RTC.OFF();
+	RTC.OFF();
+	
+	// Keep sensor supply powered down if selected
 	if( option & SENS_OFF )
 	{
 		pinMode(SENS_PW_3V3,OUTPUT);
@@ -438,6 +473,7 @@ void	WaspSensorAgr_v20::sleepAgr(const char* time2wake,
 		pinMode(SENS_PW_5V,OUTPUT);
 		digitalWrite(SENS_PW_5V,LOW);
 	}
+		
 }
 
 
@@ -513,7 +549,7 @@ float WaspSensorAgr_v20::readAnemometer(void)
 			value_anemometer++;
 		}
 		//avoid millis overflow problem
-		if( millis()-start_anemometer < 0 ) start_anemometer=millis(); 
+		if( millis() < start_anemometer ) start_anemometer=millis(); 
 	}
 	delay(100);
 	
@@ -884,7 +920,7 @@ uint16_t WaspSensorAgr_v20::readPluviometer()
 			value_pluviometer++;
 		}
 		//avoid millis overflow problem
-		if( millis()-start_pluviometer < 0 ) start_pluviometer=millis();
+		if( millis() < start_pluviometer) start_pluviometer=millis();
 	}
 	delay(100);
   
@@ -1013,9 +1049,9 @@ void WaspSensorAgr_v20::getVaneDirection(float vane)
 	else if( vane>=1.96 && vane<2.15 ) vaneDirection=SENS_AGR_VANE_SW;
 	else if( vane>=2.15 && vane<2.35 ) vaneDirection=SENS_AGR_VANE_NNW;
 	else if( vane>=2.35 && vane<2.6 ) vaneDirection=SENS_AGR_VANE_N;
-	else if( vane>=2.6 && vane<2.8 ) vaneDirection=SENS_AGR_VANE_WNW;
-	else if( vane>=2.8 && vane<3.1 ) vaneDirection=SENS_AGR_VANE_W;
-	else if( vane>=3.1 ) vaneDirection=SENS_AGR_VANE_NW;
+	else if( vane>=2.6 && vane<2.75 ) vaneDirection=SENS_AGR_VANE_WNW;
+	else if( vane>=2.75 && vane<2.95 ) vaneDirection=SENS_AGR_VANE_NW;
+	else if( vane>=2.95 ) vaneDirection=SENS_AGR_VANE_W;
 }
 
 /*	senceraConversion: converts the value read at the analog to digital
@@ -1053,5 +1089,77 @@ float WaspSensorAgr_v20::mcpConversion(int readValue)
 	return(temperature);
    
 }
+
+
+/* readTempDS1820() - reads the DS1820 temperature sensor
+ *
+ * It reads the DS1820 temperature sensor
+ */
+float WaspSensorAgr_v20::readTempDS1820()
+{
+	//PWR.setSensorPower(SENS_3V3,SENS_ON);
+	//delay(1000);
+	
+	// analog 4
+	WaspOneWire OneWireTemp(17);
+	
+	byte data[12];
+	byte addr[8];
+
+	if ( !OneWireTemp.search(addr))
+	{
+		//no more sensors on chain, reset search
+		//USB.ON();
+		//USB.println(F("no more sensors"));
+		OneWireTemp.reset_search();
+		return -1000;
+	}
+	
+	if ( WaspOneWire::crc8( addr, 7) != addr[7]) 
+	{
+		//USB.ON();
+		//USB.println(F("CRC is not valid!"));
+		return -1000;
+	}
+
+	if ( addr[0] != 0x10 && addr[0] != 0x28)
+	{
+		//USB.ON();
+		//USB.println(F("Device is not recognized"));
+		return -1000;
+	}
+	
+	OneWireTemp.reset();
+	OneWireTemp.select(addr);
+	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
+    delay(750);
+    
+	byte present = OneWireTemp.reset();
+	OneWireTemp.select(addr);    
+	OneWireTemp.write(0xBE); // Read Scratchpad
+
+  	for (int i = 0; i < 9; i++)  // we need 9 bytes
+	{
+		data[i] = OneWireTemp.read();
+	}
+  
+	OneWireTemp.reset_search();
+  
+	byte MSB = data[1];
+	byte LSB = data[0];
+
+	float tempRead = ((MSB << 8) | LSB); //using two's compliment
+	float TemperatureSum = tempRead / 16;
+    
+    //PWR.setSensorPower(SENS_3V3,SENS_OFF);
+    
+	return TemperatureSum;
+}
+
+
+
+
+
+
 
 WaspSensorAgr_v20 SensorAgrv20=WaspSensorAgr_v20();

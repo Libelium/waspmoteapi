@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,13 +17,61 @@
  *
  *  Version:		1.0
  *  Design:			David Gascón
- *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza
+ *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
  
 
 #ifndef __WPROGRAM_H__
   #include "WaspClasses.h"
 #endif
+
+
+
+
+/// table_RTC /////////////////////////////////////////////////////////////////
+
+prog_char rtc_string_00[] 	PROGMEM	= 	"Alarm Mode matches "; 	
+prog_char rtc_string_01[] 	PROGMEM	= 	"[Day : hours : minutes : seconds] -> "; 	
+prog_char rtc_string_02[] 	PROGMEM = 	"[Date : hours : minutes : seconds] -> ";	
+prog_char rtc_string_03[] 	PROGMEM = 	"[Hours : minutes : seconds] -> ";		
+prog_char rtc_string_04[] 	PROGMEM = 	"[Minutes : seconds] -> ";		
+prog_char rtc_string_05[] 	PROGMEM = 	"[Seconds] -> ";		
+prog_char rtc_string_06[] 	PROGMEM = 	"Once per second";	
+prog_char rtc_string_07[] 	PROGMEM = 	"Incorrect alarm mode";	
+prog_char rtc_string_08[] 	PROGMEM = 	"[%02u:%02u:%02u:%02u]";	
+prog_char rtc_string_09[] 	PROGMEM = 	"[%02u:%02u:%02u]";	
+prog_char rtc_string_10[] 	PROGMEM = 	"[%02u:%02u]";
+prog_char rtc_string_11[] 	PROGMEM = 	"[%02u]";
+prog_char rtc_string_12[] 	PROGMEM = 	"[Day : hours : minutes ] -> ";
+prog_char rtc_string_13[] 	PROGMEM = 	"[Date : hours : minutes ] -> ";
+prog_char rtc_string_14[] 	PROGMEM = 	"[Hours : minutes] -> ";
+prog_char rtc_string_15[] 	PROGMEM = 	"[Minutes] -> ";	
+prog_char rtc_string_16[] 	PROGMEM = 	"Once per minute";	
+prog_char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";	
+
+
+PROGMEM const char* table_RTC[] = 	  
+{
+	rtc_string_00, 		// 0
+	rtc_string_01,		// 1
+	rtc_string_02,		// 2
+	rtc_string_03, 		// 3
+	rtc_string_04,		// 4
+	rtc_string_05,		// 5
+	rtc_string_06, 		// 6
+	rtc_string_07,		// 7
+	rtc_string_08,		// 8
+	rtc_string_09, 		// 9
+	rtc_string_10,		// 10
+	rtc_string_11,		// 11
+	rtc_string_12,		// 12
+	rtc_string_13,		// 13
+	rtc_string_14, 		// 14
+	rtc_string_15,		// 15
+	rtc_string_16,		// 16
+	rtc_string_17,		// 16
+};
+
 
 
 // Constructors ////////////////////////////////////////////////////////////////
@@ -69,16 +117,19 @@ void WaspRTC::OFF(void)
  */ 
 void WaspRTC::begin()
 {
-  // Powers RTC UP
-  setMode(RTC_ON, RTC_NORMAL_MODE);
-  // Inits I2C bus
-  if( !Wire.I2C_ON ) Wire.begin();
-
-  // initialize the variables used to store the data
-  // from the RTC
-  clearAlarmFlag();
-  resetVars();
-  readRTC(RTC_ALARM2_ADDRESS);
+	// Powers RTC UP
+	setMode(RTC_ON, RTC_NORMAL_MODE);
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+ 
+	// clear the alarm flags
+	clearAlarmFlag();
+  
+	// initialize the variables used to store the data from the RTC
+	resetVars();
+  
+	// read all registers related to the Time and Date and Alarms 
+	readRTC(RTC_ALARM2_ADDRESS);
 }
 
 
@@ -154,21 +205,6 @@ void WaspRTC::resetVars()
 }
 
 
-/* getRTCarray() - gets the last array taken from the RTC
- *
- * It gets the 'registersRTC' variable which contains the last values given by
- * the RTC
- *
- * It returns a string containing this array
- */
-char* WaspRTC::getRTCarray() 
-{
-  char aux[60];
-  for(uint8_t i = 0; i < RTC_DATA_SIZE; i++) {
-    sprintf(aux, "%u", registersRTC[i]);
-  }
-  return aux;
-}
 
 
 /* getTimestamp() - returns a string containing variables related with time 
@@ -179,21 +215,27 @@ char* WaspRTC::getRTCarray()
  */
 char* WaspRTC::getTimestamp() 
 {
-  switch (day) 
-  {
-	case 1:	sprintf (timeStamp, "%s, %02u/%02u/%02u, %02u:%02u:%02u", DAY_1, year, month, date, hour, minute, second);
+	// define local buffer
+	char buffer[40];
+	
+	// buffer <-- "%s, %02u/%02u/%02u, %02u:%02u:%02u"
+	strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[17])));		
+	
+	switch (day) 
+	{
+	case 1:	sprintf (timeStamp, buffer, DAY_1, year, month, date, hour, minute, second);
 			break;
-	case 2:	sprintf (timeStamp, "%s, %02u/%02u/%02u, %02u:%02u:%02u", DAY_2, year, month, date, hour, minute, second);
+	case 2:	sprintf (timeStamp, buffer, DAY_2, year, month, date, hour, minute, second);
 			break;
-	case 3:	sprintf (timeStamp, "%s, %02u/%02u/%02u, %02u:%02u:%02u", DAY_3, year, month, date, hour, minute, second);
+	case 3:	sprintf (timeStamp, buffer, DAY_3, year, month, date, hour, minute, second);
 			break;
-	case 4:	sprintf (timeStamp, "%s, %02u/%02u/%02u, %02u:%02u:%02u", DAY_4, year, month, date, hour, minute, second);
+	case 4:	sprintf (timeStamp, buffer, DAY_4, year, month, date, hour, minute, second);
 			break;
-	case 5:	sprintf (timeStamp, "%s, %02u/%02u/%02u, %02u:%02u:%02u", DAY_5, year, month, date, hour, minute, second);
+	case 5:	sprintf (timeStamp, buffer, DAY_5, year, month, date, hour, minute, second);
 			break;
-	case 6:	sprintf (timeStamp, "%s, %02u/%02u/%02u, %02u:%02u:%02u", DAY_6, year, month, date, hour, minute, second);
+	case 6:	sprintf (timeStamp, buffer, DAY_6, year, month, date, hour, minute, second);
 			break;
-	case 7:	sprintf (timeStamp, "%s, %02u/%02u/%02u, %02u:%02u:%02u", DAY_7, year, month, date, hour, minute, second);
+	case 7:	sprintf (timeStamp, buffer, DAY_7, year, month, date, hour, minute, second);
 			break;
 	default:sprintf (timeStamp, "error");
 			break;
@@ -984,7 +1026,7 @@ void WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
 			}			
 		}
 	}
-	
+	alarm1Mode=mode;
 	RTC.writeRTCalarm1();
 	RTC.configureAlarmMode(1,mode);
 }
@@ -1100,7 +1142,7 @@ void WaspRTC::setAlarm1(uint8_t day_date, uint8_t _hour, uint8_t _minute,
 			}			
 		}
 	}
-	
+	alarm1Mode=mode;
 	RTC.writeRTCalarm1();
 	RTC.configureAlarmMode(1,mode);
 }
@@ -1111,18 +1153,120 @@ void WaspRTC::setAlarm1(uint8_t day_date, uint8_t _hour, uint8_t _minute,
  * It gets Alarm1 time from RTC. 
  *
  * It returns a string containing this time and date for Alarm1
+ * Format: [dd - hh:mm:ss] where "dd" indicates day of alarm set in the RTC 
+ * which might refer to day of month or day of week depending on the alarm mode
+ * set to the RTC
  */
 char* WaspRTC::getAlarm1()
 {
+	// read RTC registers
 	readRTC(RTC_ALARM1_ADDRESS);
-	sprintf(timeStamp, "%02u, %02u/%02u/%02u - %02u:%02u:%02u",
-															date,
-															year,
-															month,
-															day_alarm1,
-															hour_alarm1,
-															minute_alarm1,
-															second_alarm1);
+	
+	// initialize variable
+	memset(timeStamp, 0x00, sizeof(timeStamp) );
+	
+	// define local buffers
+	char buffer[40];	
+	char buffer_format[40];	
+	char auxiliar[40];
+			
+	// buffer <-- "Alarm Mode matches "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_RTC[0]))); 	
+	strcat(timeStamp,buffer);
+		
+	switch(alarm1Mode)
+	{
+		case RTC_ALM1_MODE1:	
+		
+			// buffer <-- [Day : hours : minutes : seconds]
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[1])));			
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u:%02u:%02u:%02u]"
+			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[8])));
+			
+			sprintf(auxiliar, buffer_format,
+											day_alarm1,
+											hour_alarm1,
+											minute_alarm1,
+											second_alarm1);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM1_MODE2:	
+		
+			// buffer <-- "[Date : hours : minutes : seconds]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[2])));
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u:%02u:%02u:%02u]"
+			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[8])));
+			
+			sprintf(auxiliar,buffer_format,
+											day_alarm1,
+											hour_alarm1,
+											minute_alarm1,
+											second_alarm1);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM1_MODE3:
+		
+			// buffer <-- "[Hours : minutes : seconds]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[3])));
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u:%02u:%02u]"
+			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
+			
+			sprintf(auxiliar,buffer_format,
+											hour_alarm1,
+											minute_alarm1,
+											second_alarm1);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM1_MODE4:	
+		
+			// buffer <-- "[Minutes : seconds]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[4])));
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u:%02u]"
+			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[10])));
+	
+			sprintf(auxiliar,buffer_format,												
+											minute_alarm1,
+											second_alarm1);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM1_MODE5:
+		
+			// buffer <-- "[Seconds]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[5]))); 
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u]"
+			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[11]))); 
+	
+			sprintf(auxiliar,buffer_format,	second_alarm1);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM1_MODE6:
+			
+			// buffer <-- "Once per second"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[6])));
+			strcat(timeStamp,buffer);	
+			break;	
+					
+		default:
+			// buffer <-- "Incorrect alarm mode"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[7])));
+			sprintf(timeStamp, buffer);	
+	}	
+			
 	return timeStamp;
 }
 
@@ -1192,7 +1336,7 @@ void WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
 			}			
 		}
 	}
-	
+	alarm2Mode=mode;
 	RTC.writeRTCalarm2();
 	RTC.configureAlarmMode(2,mode);
 }
@@ -1290,7 +1434,7 @@ void WaspRTC::setAlarm2(uint8_t day_date, uint8_t _hour, uint8_t _minute,
 			}			
 		}
 	}
-	
+	alarm2Mode=mode;
 	RTC.writeRTCalarm2();
 	RTC.configureAlarmMode(2,mode);
 }
@@ -1300,18 +1444,96 @@ void WaspRTC::setAlarm2(uint8_t day_date, uint8_t _hour, uint8_t _minute,
  *
  * It gets Alarm2 time from RTC. 
  *
- * It returns a string containing this time and date for Alarm1
+ * It returns a string containing this time and date for Alarm2
+ * Format: [dd - hh:mm] where "dd" indicates day of alarm set in the RTC
+ * which might refer to day of month or day of week depending on the alarm mode
+ * set to the RTC
  */
 char* WaspRTC::getAlarm2()
 {
+	// read RTC registers
 	readRTC(RTC_ALARM2_ADDRESS);
-	sprintf (timeStamp, "%02u, %02u/%02u/%02u - %02u:%02u",
-														date,
-														year,
-														month,
-														day_alarm2,
-														hour_alarm2,
-														minute_alarm2);
+	
+	// initialize variable
+	memset(timeStamp, 0x00, sizeof(timeStamp) );
+	
+	// define local buffers
+	char buffer[40];	
+	char buffer_format[40];	
+	char auxiliar[40];
+			
+	// buffer <-- "Alarm Mode matches "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_RTC[0]))); 	
+	strcat(timeStamp,buffer);
+			
+	switch(alarm2Mode)
+	{		
+		case RTC_ALM2_MODE1:				
+			
+			// buffer <-- "[Day : hours : minutes ]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[12])));			
+			strcat(timeStamp, buffer);
+						
+			// buffer_format <-- "[%02u:%02u:%02u]"			
+			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
+			sprintf(auxiliar, buffer_format,
+											day_alarm2,
+											hour_alarm2,
+											minute_alarm2);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM2_MODE2:
+			
+			// buffer <-- "[Date : hours : minutes ]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[13])));			
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u:%02u:%02u]"			
+			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
+			sprintf(auxiliar, buffer_format,
+											day_alarm2,
+											hour_alarm2,
+											minute_alarm2);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM2_MODE3:
+			
+			// buffer <-- "[Hours : minutes ]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[14])));			
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u:%02u]"
+			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[10])));			
+			sprintf(auxiliar, buffer_format, hour_alarm2, minute_alarm2);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM2_MODE4:
+			
+			// buffer <-- "[Minutes ]"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[15])));			
+			strcat(timeStamp, buffer);
+			
+			// buffer_format <-- "[%02u]"
+			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[11]))); 
+			sprintf(auxiliar, buffer_format, minute_alarm2);
+			strcat(timeStamp, auxiliar);
+			break;
+			
+		case RTC_ALM2_MODE5:		
+			// buffer <-- "Once per minute"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[16])));			
+			strcat(timeStamp, buffer);
+			break;
+			
+		default:
+			// buffer <-- "Incorrect alarm mode"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[7])));
+			sprintf(timeStamp, buffer);	
+	}	
+	
 	return timeStamp;
 }
 
@@ -1324,9 +1546,42 @@ char* WaspRTC::getAlarm2()
  */
 void WaspRTC::clearAlarmFlag()
 {
-	RTC.registersRTC[RTC_STATUS_ADDRESS] &= B11111100;  // reset the alarm flags in RT
+	// reset the alarm flags in RT
+	RTC.registersRTC[RTC_STATUS_ADDRESS] &= B11111100;  
 	RTC.writeRTCregister(RTC_STATUS_ADDRESS);
 }
+
+
+/* disableAlarm1() - disables Alarm1
+ *
+ * It clears (A1IE) in the RTC CONTROL REGISTER
+ * Clearing this flag we disable the Alarm1 in RTC even if the Alarm1 matches 
+ * the previously set time and date
+ */
+void WaspRTC::disableAlarm1()
+{
+	// read CONTROL REGISTER
+	readRTCregister(RTC_CONTROL_ADDRESS);
+	// set A1IE to '0'
+	registersRTC[RTC_CONTROL_ADDRESS] &= B11111110; 
+	writeRTCregister(RTC_CONTROL_ADDRESS);	
+}
+
+/* disableAlarm2() - disables Alarm2
+ *
+ * It clears (A2IE) in the RTC CONTROL REGISTER
+ * Clearing this flag we disable the Alarm2 in RTC even if the Alarm2 matches 
+ * the previously set time and date
+ */
+void WaspRTC::disableAlarm2()
+{
+	// read CONTROL REGISTER
+	readRTCregister(RTC_CONTROL_ADDRESS);
+	// set A2IE to '0'
+	registersRTC[RTC_CONTROL_ADDRESS] &= B11111101; 
+	writeRTCregister(RTC_CONTROL_ADDRESS);	
+}
+
 
 
 /* BCD2byte ( number ) - converts a BCD number to an integer
@@ -1357,7 +1612,7 @@ uint8_t WaspRTC::byte2BCD(uint8_t theNumber)
  *******************************************************************************/
 
 /*
- * attachInterrupt(void) - configure the specific hardware interrupt for the RTC
+ * attachInt(void) - configure the specific hardware interrupt for the RTC
  *
  * the default interrupt functions are defined inside WInterrupts.c
  */
@@ -1367,14 +1622,21 @@ void WaspRTC::attachInt(void)
 }
 
 /*
- * detachInterrupt(void) - unset the specific hardware interrupt for the RTC
+ * detachInt(void) - unset the specific hardware interrupt for the RTC
  *
  * It also clear Alarm Flags so as to provide RTC the correct parameters for future alarms
  */
 void WaspRTC::detachInt(void)
 {
-  disableInterrupts(RTC_INT);
-  clearAlarmFlag();
+	// disable alarm not to provoke the interruption signal
+	disableAlarm1();
+	disableAlarm2();
+	
+	// disable the RXD1 interruption pin
+	disableInterrupts(RTC_INT);
+	
+	// clear the Alarm signal
+	clearAlarmFlag();
 }
 
 

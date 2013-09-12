@@ -31,7 +31,8 @@
 
 WaspACC::WaspACC()
 {
-    // nothing to do
+    // no interruption set at the beginning
+    accInt=NO_INT;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -590,6 +591,9 @@ uint8_t WaspACC::setFF(void)
 	// set interrupt configuration	
 	writeRegister(INT1_CFG, INT1_CFG_val); 
     
+    // Free-Fall interruption set
+	accInt=FF_INT;	
+	
     delay(100);
 	// attach the hardware interrupt to the pin
 	enableInterrupts(ACC_INT);
@@ -610,6 +614,9 @@ uint8_t WaspACC::unsetFF(void)
   
 	// detach the event 
 	detachInt();
+	
+	// no interruption set
+	accInt=NO_INT;
 	
 	return flag;
 }
@@ -632,6 +639,9 @@ uint8_t WaspACC::setIWU(void)
 	
 	// attach the hardware interrupt to the pin
 	enableInterrupts(ACC_INT);
+	
+	// IWU interruption set
+	accInt=IWU_INT;
 
 	return flag;
 }
@@ -650,6 +660,9 @@ uint8_t WaspACC::unsetIWU(void)
 	// detach the event 
 	detachInt();
 	
+	// no interruption set
+	accInt=NO_INT;
+	
 	return flag;
 }
 
@@ -665,12 +678,15 @@ uint8_t WaspACC::set6DMovement(void)
 	// handle acceleration detection on the X, Y, or Z axis
 	writeRegister(CTRL_REG3,0x04);
   
-	writeRegister(INT1_THS,0x21);  // threshold L
-	writeRegister(INT1_DURATION,0x00);  // threshold H
-	writeRegister(INT1_CFG,0xFF);  // event duration
+	writeRegister(INT1_THS,0x30);  // threshold
+	writeRegister(INT1_DURATION,0x00); // event duration
+	writeRegister(INT1_CFG,0x7F);  // 6D movement recognition in 3-axes
 	
 	// attach the hardware interrupt to the pin
 	enableInterrupts(ACC_INT);
+	
+	// 6D Movement interruption set
+	accInt=_6DMOV_INT;
 
 	return flag;
 }
@@ -689,6 +705,9 @@ uint8_t WaspACC::unset6DMovement(void)
 	// detach the event 
 	detachInt();
 	
+	// no interruption set
+	accInt=NO_INT;
+	
 	return flag;
 }
 
@@ -704,12 +723,15 @@ uint8_t WaspACC::set6DPosition(void)
 	// handle acceleration detection on the X, Y, or Z axis
 	writeRegister(CTRL_REG3,0x04);
   
-	writeRegister(INT1_THS,0x10);  // threshold L
-	writeRegister(INT1_DURATION,0x00);  // threshold H
-	writeRegister(INT1_CFG,0xFF);  // event duration
+	writeRegister(INT1_THS,0x21);  // threshold
+	writeRegister(INT1_DURATION,0x00);  // event duration
+	writeRegister(INT1_CFG,0xFF);  // 6D position recognition in 3-axes
 
 	// attach the hardware interrupt to the pin
 	enableInterrupts(ACC_INT);
+
+	// 6D Position interruption set
+	accInt=_6DPOS_INT;
 
 	return flag;
 }
@@ -727,6 +749,9 @@ uint8_t WaspACC::unset6DPosition(void)
 
 	// detach the event 
 	detachInt();
+		
+	// no interruption set
+	accInt=NO_INT;
   
 	return flag;
 }
@@ -739,7 +764,7 @@ uint8_t WaspACC::unset6DPosition(void)
  *******************************************************************************/
 
 /*
- * attachInterrupt(void) - configure the specific hardware interrupt for the acc
+ * attachInt(void) - configure the specific hardware interrupt for the acc
  *
  * the default interrupt functions are defined inside WInterrupts.c
  */
@@ -749,7 +774,7 @@ void WaspACC::attachInt(void)
 }
 
 /*
- * detachInterrupt(void) - unset the specific hardware interrupt for the acc
+ * detachInt(void) - unset the specific hardware interrupt for the acc
  */
 void WaspACC::detachInt(void)
 {
@@ -757,22 +782,6 @@ void WaspACC::detachInt(void)
 }
 
 
-/*
- * clearAlarmFlag() - clears the Accelerometer's alarm flag
- */
-/*void WaspACC::clearAlarmFlag(void)
-{
-	writeRegister(FF_WU_CFG, 0x00);  
-	readRegister(FF_WU_ACK);  // clear the interrupt flag
-	
-	writeRegister(DD_CFG, 0x00);
-	readRegister(DD_ACK);  // clear the interrupt flag
-}
-*/
-/*
-void attachInterrupt();
-void detachInterrupt();
-*/
 
 /*******************************************************************************
  * LOW LEVEL READ AND WRITE REGISTERS

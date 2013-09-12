@@ -489,6 +489,7 @@ uint8_t Sd2Card::waitNotBusy(uint16_t timeoutMillis) {
   uint16_t t0 = millis();
   do {
     if (spiRec() == 0XFF) return true;
+    if ((uint16_t)millis() < t0) t0 = millis();
   }
   while (((uint16_t)millis() - t0) < timeoutMillis);
   return false;

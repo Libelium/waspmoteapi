@@ -1,7 +1,7 @@
 /*! \file WaspSensorAgr_v20.h
     \brief Library for managing the Agriculture Sensor Board v2.0
     
-    Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.9
+    Version:		1.0
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
 
@@ -99,6 +99,16 @@
     
  */
 
+/*! \def SENS_AGR_LDR
+    \brief Sensor types. Pressure sensor in this case
+    
+ */
+
+/*! \def SENS_AGR_TEMP_DS18B20
+    \brief Sensor types. Pressure sensor in this case
+    
+ */
+
 #define	SENS_AGR_PLUVIOMETER		16
 #define	SENS_AGR_ANEMOMETER 		1
 #define	SENS_AGR_WATERMARK_1		2
@@ -114,7 +124,7 @@
 #define	SENS_AGR_SENSIRION			2048
 #define	SENS_AGR_PRESSURE			4096
 #define	SENS_AGR_LDR				8192
-
+#define	SENS_AGR_TEMP_DS18B20		16384
 
 /*! \def SENS_SWITCH_1
     \brief Switches for powering the sensors
@@ -432,12 +442,13 @@ class WaspSensorAgr_v20
 	 */
 	float readValue(uint16_t sensor, uint8_t type);
 		
+	
 	//! It sleeps Waspmote enabling the switches required for the agriculture board
   	/*!
 	\param const char* time2wake : string that indicates the time to wake up. It looks like "dd:hh:mm:ss"
 	\param uint8_t offset : RTC_OFFSET or RTC_ABSOLUTE
 	\param uint8_t mode : RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3, RTC_ALM1_MODE4 or RTC_ALM1_MODE5
-	\param uint8_t option : ALL_OFF, SENS_OFF, UART0_OFF, UART1_OFF, BAT_OFF or RTC_OFF
+	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF or SOCKET0_OFF
 	\return void
 	 */
 	void sleepAgr(const char* time2wake, uint8_t offset, uint8_t mode, uint8_t option);
@@ -447,7 +458,7 @@ class WaspSensorAgr_v20
 	\param const char* time2wake : string that indicates the time to wake up. It looks like "dd:hh:mm:ss"
 	\param uint8_t offset : RTC_OFFSET or RTC_ABSOLUTE
 	\param uint8_t mode : RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3, RTC_ALM1_MODE4 or RTC_ALM1_MODE5
-	\param uint8_t option : ALL_OFF, SENS_OFF, UART0_OFF, UART1_OFF, BAT_OFF or RTC_OFF
+	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF or SOCKET0_OFF
 	\param uint8_t agr_interrupt : specifies the sensor we are enabling before going sleep (Anemometer and Pluviometer)
 	\return void
 	 */
@@ -466,6 +477,16 @@ class WaspSensorAgr_v20
 	\return void
 	 */
 	void detachPluvioInt(void);
+	
+	
+	//! It reads the DS1820 temperature sensor
+  	/*!
+	\param void
+	\return void
+	 */
+	float readTempDS1820();
+	
+	
 };
 
 extern WaspSensorAgr_v20 SensorAgrv20;

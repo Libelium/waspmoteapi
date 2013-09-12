@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
 
     Design:		David Gascón
 
@@ -265,14 +265,6 @@ class WaspGPRS_Pro
 	 */
 	uint8_t checkIPstatus();
 #endif	
-	
-	//! Parses 'data_expected' into 'data' string
-	/*!
-	\param char* data : string of data  
-	\param char* data_expected : string of data to find
-	\return '1' if data_expected is in data, '0' if not.
-	*/
-	uint8_t parse(const char* data,const char* data_expected);
 
 	//! It gets if GPRS module is ready or not
     /*!
@@ -431,6 +423,12 @@ class WaspGPRS_Pro
 	\return size or '-1' if error
 	 */
 	long getfilesizeFTP(const char* path);
+	
+	//! FTPstatus() - Checks if the FTP is busy
+	/*!
+	\return '2' if FTP is busy, '1' if FTP is idle and '0' if error.
+	*/
+	int8_t FTPstatus();
 #endif
 
 	//! It closes at opened connection for FTP or HTTP
@@ -522,7 +520,7 @@ class WaspGPRS_Pro
     //! Variable : specifies if the GPRS modules is connected to the network (1:connected ; 0:connected)
     uint8_t connected;
 	
-	char buffer_GPRS[256];
+	char buffer_GPRS[BUFFER_SIZE];
 	
     //! class constructor
     /*!
@@ -535,10 +533,10 @@ class WaspGPRS_Pro
 	//! It opens UART1 and powers the SIM900 module
     /*!
 	\param void
-	\return void
+	\return '1' if success, '0' or '-2' if error
 	\sa close(), begin()
      */ 
-	void ON();
+	int8_t ON();
 		
 	//! It closes UART1 and powers off the SIM900 module
     /*!
@@ -585,10 +583,10 @@ class WaspGPRS_Pro
 	
 	//! It checks if GPRS is connected to the network
     /*!
-	\param void
+	\param uint8_t time: time to wait 
 	\return '1' if connected, '0' if not
 	*/
-	int8_t check();
+	int8_t check(uint16_t time);
 		
 	//! It sets PIN
     /*!
@@ -864,6 +862,8 @@ class WaspGPRS_Pro
 		'-54' setting the path in the FTP to get the file size with CME error code available, '-55' if error getting the file size with CME error code available
 	 */
 	int8_t downloadFile(const char* file, const char* path, const char* user, const char* passw, const char* ftp_server, const char* ftp_port, uint8_t n_conf);
+	
+
 #endif	
 	
 #if HTTP_FUSE
@@ -1124,7 +1124,8 @@ class WaspGPRS_Pro
 	//! It gets data manually from a TCP or UDP connection
     /*! 
 	\param uint16_t data_length : the legth of the data to get
-	\return '1' on success, '0' if error
+	\return '1' on success, '0' if error and '2' if buffer_GPRS is full. The answer from the server
+		is limited by the length of buffer_GPRS. To increase the length	of the answer, increase the BUFFER_SIZE constant.
 	 */
 	int8_t GetDataManually(uint16_t data_length);
 	
@@ -1132,7 +1133,8 @@ class WaspGPRS_Pro
     /*! 
 	\param uint16_t data_length : the legth of the data to get
 	\param uint8_t id : id connection number
-	\return '1' on success, '0' if error
+	\return '1' on success, '0' if error and '2' if buffer_GPRS is full. The answer from the server
+		is limited by the length of buffer_GPRS. To increase the length	of the answer, increase the BUFFER_SIZE constant.
 	 */
 	int8_t GetDataManually(uint16_t data_length, uint8_t id);
 #endif
@@ -1157,6 +1159,72 @@ class WaspGPRS_Pro
 	\return '1' on success, '0' if error and '-2' if CME error code available
 	 */
 	uint8_t setDNS(const char* DNS_dir1, const char* DNS_dir2);
+	
+	//! It gets the model of the module and saves it in 'buffer_GPRS'
+    /*!
+	\return '1' on success, '0' if error
+	 */	
+	int8_t whoamI();
+	
+	//! It gets the firmware version of the module and saves it in 'buffer_GPRS'
+    /*!
+	\return '1' on success, '0' if error
+	 */	
+	int8_t firmware_version();
+	
+	//! It shows the apn, login and password constants
+    /*!
+	\return '1' on success, '0' if error
+	 */	
+	void show_APN();
+	
+	#if OTA_FUSE>0
+	
+	//! It downloads a new OTA file if OTA is necessary
+	/*!
+	\param const char* FTP_server: string with the server domain or IP
+	\param const char* FTP_port:string with the FTP port
+	\param const char* FTP_username:string with the user name
+	\param const char* FTP_password:string with the FTP password
+	\return  '1' if success, '-2' if error and '-4' if error setting the type of internet connection, 
+		'-5' if error setting the apn, '-6' if error setting the user name, '-7' if error setting the password
+		'-8' if error saving the configuration, '-9' if error opening connection with the GPRS provider,  '-10' error downloading OTA version file,
+		'-11' if error getting the IP address, '-12' if error setting the FTP/HTTP ID, '-13' if error setting the FTP mode, '-14' if error setting the FTP type,
+		'-15' if error setting the FTP server, '-16' if error setting the FTP port, '-17' if error setting the user name,
+		'-18' if error setting the password, '-21' if error setting the file name in the FTP server, 
+		'-22' if error setting the path of the file in the FTP server, '-23' if error opening the FTP session,
+		'-24' if error starting the SD, '-25' if error creating the file, '-26' error requesting data to the FTP,
+		'-27' if error saving data into the SD, '-28' if error requesting more data to the FTP, '-30' setting the file name in the FTP to get the file size
+		'-31' setting the path in the FTP to get the file size, '-32' if error getting the file size
+		'-50' if error setting the FTP/HTTP ID with CME error code available, '-51' if error setting the FTP mode with CME error code available,
+		'-52' if error setting the FTP type with CME error code available, '-53' if error setting the FTP server with CME error code available,
+		'-54' if error setting the FTP port with CME error code available, '-55' if error setting the user name with CME error code available,
+		'-56' if error setting the password with CME error code available, '-57' if error setting the file name in the FTP server with CME error code available,
+		'-58' if error setting the path of the file in the FTP server with CME error code available, '-59' if error opening the FTP session with CME error code available,
+		'-60' if error requesting data to the FTP with CME error code available, '-61' if error requesting more data to the FTP with CME error code available,
+		'-62 setting the file name in the FTP to get the file size with CME error code available,
+		'-63' setting the path in the FTP to get the file size with CME error code available, '-64' if error getting the file size with CME error code available,
+		'-65' if FTP is busy, '-66' if there isn't FILE tag, '-67' if there isn't PATH tag,  '-68' if there isn't VERSION tag,'-69' if OTA is not necessary, 
+		'-70' if OTA files are the same program version, '-71' if error opening connection with the GPRS provider, '-72' error downloading OTA file, 
+		'-73' if error getting the IP address '-74' if error setting the FTP/HTTP ID, '-75' if error setting the FTP mode, '-76' if error setting the FTP type,
+		'-77' if error setting the FTP server, '-78' if error setting the FTP port, '-79' if error setting the user name,
+		'-80' if error setting the password, '-83' if error setting the file name in the FTP server, 
+		'-84' if error setting the path of the file in the FTP server, '-85' if error opening the FTP session,
+		'-86' if error starting the SD, '-87' if error creating the file, '-88' error requesting data to the FTP,
+		'-89' if error saving data into the SD, '-90' if error requesting more data to the FTP, '-92' setting the file name in the FTP to get the file size
+		'-93' setting the path in the FTP to get the file size, '-94' if error getting the file size
+		'-112' if error setting the FTP/HTTP ID with CME error code available, '-113' if error setting the FTP mode with CME error code available,
+		'-114' if error setting the FTP type with CME error code available, '-115' if error setting the FTP server with CME error code available,
+		'-116' if error setting the FTP port with CME error code available, '-117' if error setting the user name with CME error code available,
+		'-118' if error setting the password with CME error code available, '-119' if error setting the file name in the FTP server with CME error code available,
+		'-120' if error setting the path of the file in the FTP server with CME error code available, '-121' if error opening the FTP session with CME error code available,
+		'-122' if error requesting data to the FTP with CME error code available, '-123' if error requesting more data to the FTP with CME error code available,
+		'-124' setting the file name in the FTP to get the file size with CME error code available,
+		'-125' setting the path in the FTP to get the file size with CME error code available, '-126' if error getting the file size with CME error code available
+		and '-127' if FTP is busy
+	*/
+	int8_t requestOTA(const char* FTP_server, const char* FTP_port, const char* FTP_username, const char* FTP_password);
+	#endif
 };
 
 extern WaspGPRS_Pro GPRS_Pro;

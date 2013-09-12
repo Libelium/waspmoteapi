@@ -526,7 +526,6 @@ uint8_t WaspXBeeCore::getPAN()
             for(it=0;it<2;it++)
             {
                 PAN_ID[it]=data[it];
-                delay(20);
             }
         }
         if(protocol==ZIGBEE) 
@@ -534,7 +533,6 @@ uint8_t WaspXBeeCore::getPAN()
             for(it=0;it<8;it++)
             {
                 PAN_ID[it]=data[it];
-                delay(20);
             }
         }
     } 
@@ -2083,7 +2081,6 @@ uint8_t WaspXBeeCore::sendCommandAT(const char* atcommand)
             for(it=0;it<data_length;it++)
             {
                 commandAT[it]=data[it];
-                delay(20);
             }
         }
         else
@@ -2118,7 +2115,7 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
     begin(uart,XBEE_RATE);
 	setMode(XBEE_ON);
 
-    if( protocol== ZIGBEE || protocol==XBEE_868 ) delay(500);
+    if( protocol== ZIGBEE) delay(500);
     else delay(50);
     error=0;
     XBee_ON=1;
@@ -3103,12 +3100,9 @@ int8_t WaspXBeeCore::readXBee(uint8_t* data)
     uint8_t index2=0;
     long time=0;
     uint8_t finishIndex=0; 
-	   
-    // check if data length is correct 
-    if( data_length < 12 ) return 1; 
        
 	#if DEBUG
-    USB.println("new packet");
+    USB.println(F("new packet"));
 	#endif
     	    
 	// initialize variables to zero
@@ -3889,8 +3883,8 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
     // get execution time instant
     uint8_t timeout1=0;
     uint8_t timeout2=0;
-    long previous=millis();
-    long previous2=millis(); 
+    unsigned long previous=millis();
+    unsigned long previous2=millis(); 
 
 	////////////////////////////////////////////////////////////////////////////
     // Read data from XBee module when any condition is broken
@@ -3927,10 +3921,10 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
 		}
 		
 		//avoid millis overflow problem
-		if( millis()-previous < 0 ) previous=millis(); 
+		if( millis() < previous ) previous=millis(); 
 		
 		//avoid millis overflow problem
-        if( millis()-previous2 < 0 ) previous2=millis(); 
+        if( millis() < previous2 ) previous2=millis(); 
         
         
         // check timeout1
@@ -3960,6 +3954,20 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
         {
 			i++;
 		}
+	}
+	else
+	{
+		// reset index to starting byte
+		i=0;
+	}
+	
+	// increment index to the byte that follows up the start delimiter
+	i++;
+	
+	// if no frame has been received properly then return error
+	if( i > num_data)
+	{
+		return 1;
 	}
 
 	////////////////////////////////////////////////////////////////////////////
@@ -4207,7 +4215,7 @@ uint8_t WaspXBeeCore::txStatusResponse()
 {
 	// create reception buffer
 	uint8_t ByteIN[MAX_PARSE];
-    long previous=millis();
+    unsigned long previous=millis();
     
      // set number of bytes that TX Status frame (0x89) has
     uint16_t numberBytes=7;
@@ -4445,7 +4453,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
 {		
 	// create reception buffer
 	uint8_t ByteIN[MAX_PARSE];
-    long previous=millis();
+    unsigned long previous=millis();
     
     // set number of bytes that TX Status frame (0x8B) has
     uint16_t numberBytes=11;
@@ -5611,7 +5619,7 @@ void WaspXBeeCore::upload_firmware()
 	uint16_t offset = 0;
 	packetXBee* paq_sent;
 	uint8_t destination[8];
-	long previous=0;
+	unsigned long previous=0;
 	uint8_t buf_sd[46];
 	bool end_file=false;
 	uint8_t num_bytes = 0;
@@ -5696,6 +5704,9 @@ void WaspXBeeCore::upload_firmware()
 						id_exist=true;
 					}
 					else if(id_exist) break;
+					
+					//avoid millis overflow problem
+					if( millis() < previous ) previous=millis(); 
 				}
 			}
 			else
@@ -5805,7 +5816,7 @@ void WaspXBeeCore::upload_firmware()
 				}
 				else reset=true;
 				delay(10);
-				if( millis()-previous < 0 ) previous=millis(); //avoid millis overflow problem
+				if( millis() < previous ) previous=millis(); //avoid millis overflow problem
 			}			
 	
 			// Jump to bootloader
@@ -5971,7 +5982,7 @@ void WaspXBeeCore::request_bootlist()
 	uint16_t offset = 0;
 	packetXBee* paq_sent;
 	uint8_t destination[8];
-	long previous=0;
+	unsigned long previous=0;
 	uint8_t buf_sd[46];
 	char buf_sd_aux[47];
 	bool end_file=false;
@@ -6066,6 +6077,10 @@ void WaspXBeeCore::request_bootlist()
 						free(paq_sent); 
 						paq_sent=NULL;
 					}
+					
+					// avoid millis overflow problem
+					if( millis() < previous ) previous=millis(); 
+					
 				}
 			
 				// close SD files
@@ -6369,7 +6384,7 @@ void WaspXBeeCore::delete_firmware()
 	if(freeMemory()<400) return (void)-1;
 	packetXBee* paq_sent;
 	uint8_t destination[8];
-	long previous=0;
+	unsigned long previous=0;
 	char buf_sd[46];
 	char buf_sd_aux[47];
 	bool end_file=false;
@@ -6470,6 +6485,9 @@ void WaspXBeeCore::delete_firmware()
 							else match_id = true;							
 						}
 					}
+					
+					// avoid millis overflow problem
+					if( millis() < previous ) previous=millis(); 
 				}
 				end_file=false;
 				firm_file.close();
@@ -6508,6 +6526,9 @@ void WaspXBeeCore::delete_firmware()
 								error=true;
 							}
 						}
+						
+						// avoid millis overflow problem
+						if( millis() < previous ) previous=millis(); 
 					}
 					firm_file.close();
 					firm_file.remove(&root,file_aux);
@@ -6632,7 +6653,6 @@ void WaspXBeeCore::setMulticastConf()
 	{
 		case 0	:	setChannel(firm_info.channel);				
 					writeValues();
-					USB.println("setMulticastConf --> 0 \n");
 					break;
 			
 		case 1	: 	// Set previous 'Auth key'
@@ -6641,7 +6661,6 @@ void WaspXBeeCore::setMulticastConf()
 						eeprom_write_byte((unsigned char *) it+107, firm_info.authkey[it]);
 
 					}
-					USB.println("setMulticastConf --> 1 \n");
 					break;
 			
 		case 2	: 	// set initial encryption mode
@@ -6650,7 +6669,6 @@ void WaspXBeeCore::setMulticastConf()
 					// set initial encryption key
 					setLinkKey(firm_info.encryptionkey);					
 					writeValues();
-					USB.println("setMulticastConf --> 2 \n");
 					break;
 	}
 }
@@ -6669,7 +6687,7 @@ uint8_t WaspXBeeCore::checkOtapTimeout()
 	if( programming_ON )
    	{
 		// Check millis crossing through zero. Don't count time till zero
-		if( (millis()-firm_info.time_arrived)<0 ) 
+		if( (millis() < firm_info.time_arrived) ) 
 		{
 			//restart counter
 			total_time=millis();

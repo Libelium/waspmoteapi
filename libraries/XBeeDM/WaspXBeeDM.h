@@ -251,4 +251,4 @@ public:
 
 extern WaspXBeeDM	xbeeDM;
 
-#endif;
+#endif

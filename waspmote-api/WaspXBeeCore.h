@@ -218,7 +218,7 @@
 //! Node Discovery is performed
 /*!    
  */
-typedef struct Node
+struct Node
 {
 	//! Structure Variable : 16b Network Address
 	/*!    
@@ -275,7 +275,7 @@ typedef struct Node
 //! packet, such as the addresses and data
 /*!    
  */
-typedef struct packetXBee
+struct packetXBee
 {
   private:
   public:
@@ -414,7 +414,7 @@ typedef struct packetXBee
 //! Structure : used to store information about a new firmware
 /*!    
  */
-typedef struct firmware_struct
+struct firmware_struct
 {
 private:
 public:
@@ -503,7 +503,7 @@ public:
 //! Structure : header_t
 /*! Special frame header for OTA packets
  */
-typedef struct header_t
+struct header_t
 {
 	uint8_t start[3]; // <=>
 	uint8_t type;	  // frame type
@@ -513,7 +513,7 @@ typedef struct header_t
 //! Structure : delete_firm_t
 /*! Special frame structure for OTA packets  
  */
-typedef struct delete_firm_t
+struct delete_firm_t
 {
 	header_t header;
 	uint8_t authkey[8];
@@ -525,7 +525,7 @@ typedef struct delete_firm_t
 //! Structure : new_firm_received_t
 /*!    
  */
-typedef struct new_firm_received_t
+struct new_firm_received_t
 {
 	header_t header;
 	uint8_t authkey[8];
@@ -547,7 +547,7 @@ typedef struct new_firm_received_t
 //! Structure : new_firm_packet_t
 /*!    
  */
-typedef struct new_firm_packet_t
+struct new_firm_packet_t
 {
 	header_t header;
 	uint8_t counter;
@@ -558,7 +558,7 @@ typedef struct new_firm_packet_t
 //! Structure : new_firm_end_t
 /*!    
  */
-typedef struct new_firm_end_t
+struct new_firm_end_t
 {
 	header_t header;
 	char numPackets[4];
@@ -569,7 +569,7 @@ typedef struct new_firm_end_t
 //! Structure : upload_firm_t
 /*!    
  */
-typedef struct upload_firm_t
+struct upload_firm_t
 {
 	header_t header;
 	uint8_t authkey[8];
@@ -580,7 +580,7 @@ typedef struct upload_firm_t
 //! Structure : request_id_t
 /*!    
  */
-typedef struct request_id_t
+struct request_id_t
 {
 	header_t header;
 	uint8_t authkey[8];
@@ -590,7 +590,7 @@ typedef struct request_id_t
 //! Structure : request_boot_t
 /*!    
  */
-typedef struct request_boot_t
+struct request_boot_t
 {
 	header_t header;
 	uint8_t authkey[8];

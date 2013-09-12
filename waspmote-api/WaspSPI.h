@@ -1,7 +1,7 @@
 /*! \file WaspUtils.h
     \brief Library containing useful general functions
     
-    Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,10 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.12
-
-    Design:		David Gascón
-
+    Version:		1.0
+    Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
 */
@@ -53,7 +51,6 @@
 #define SPI_CLOCK_DIV2 0x04
 #define SPI_CLOCK_DIV8 0x05
 #define SPI_CLOCK_DIV32 0x06
-#define SPI_CLOCK_DIV64 0x07
 
 #define SPI_MODE0 0x00
 #define SPI_MODE1 0x04

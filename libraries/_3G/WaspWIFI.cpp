@@ -289,8 +289,6 @@ uint8_t WaspWIFI::commandMode()
 			timeout=true;
 		}
 		
-		if (millis() < prev) prev = millis();	//to avoid millis overflow
-		
 	}		
 	
 	//////////////////////////////////////////////
@@ -884,6 +882,7 @@ WaspWIFI::WaspWIFI()
 //! Powers on the module and enters in command mode.
 bool WaspWIFI::ON(uint8_t sock)
 {		
+	char question[20];
 		
 	// previous power down prior to power up
 	if(sock==SOCKET0)
@@ -1287,7 +1286,6 @@ uint8_t WaspWIFI::join(char* ssid)
 			retry=true;
 		}
 				
-		if (millis() < prev) prev = millis();	//to avoid millis overflow
 		delay(500);			
 	}	
 	
@@ -1694,6 +1692,8 @@ uint8_t WaspWIFI::getFile(	char* filename,
 	int readRet=0;
 	unsigned long int previous;
 	bool stop, end, timeout;
+	bool truncated=false;
+	int position=0;
 	unsigned long total=0;
 		
 	// get statistics
@@ -1897,8 +1897,7 @@ uint8_t WaspWIFI::getFile(	char* filename,
 				baud_rate=WIFI_BAUDRATE;
 				ON(_uartWIFI);
 				return 0;
-			}	
-			
+			}			
 		}
 		
 		// Store the number of received bytes
@@ -2132,7 +2131,7 @@ uint8_t WaspWIFI::getFile(	char* filename,
 				if( (millis()-previous)>FTP_TIMEOUT )
 				{
 					timeout=true;
-				}	
+				}				
 			}			
 			
 			// check timeout
@@ -2269,7 +2268,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 		return 0;
 	}	
 	
-	if(WTX_aux == (unsigned long)-1)
+	if(WTX_aux == -1)
 	{	
 		#ifdef DEBUG_WIFI
 		USB.println(F("WTX_aux==-1")); 
@@ -3365,12 +3364,12 @@ bool WaspWIFI::isConnected()
 		delay(10);
 		
 		// check the timeout overflow
-		if( millis() < aux_previous )
+		if( millis()< aux_previous )
 		{
-			aux_previous = millis();
+			aux_previous=millis();
 		}
 		
-		if( (millis() - aux_previous)>FTP_TIMEOUT )
+		if( (millis()- aux_previous)>FTP_TIMEOUT )
 		{
 			aux_timeout=true;
 		}
@@ -3649,12 +3648,12 @@ void WaspWIFI::getStats()
 		}
 		else
 		{
-			WRX=(unsigned long)-1;			
+			WRX=-1;			
 		}		
 	}
 	else
 	{
-		WRX=(unsigned long)-1;
+		WRX=-1;
 	}
 	
 	
@@ -4467,9 +4466,9 @@ uint8_t WaspWIFI::waitForData(int numBytes, unsigned long timeout)
 		{
 			return 0;
 		}
-		if(	millis() < previous )
+		if(	millis()<previous )
 		{
-			previous = millis();
+			previous=millis();
 		}
 	}
 	return 1;
@@ -4550,6 +4549,7 @@ int8_t WaspWIFI::requestOTA()
 	char aux_str[10];
 	unsigned long aux_size;
 	uint8_t aux_version;
+	unsigned long previous;
 	int len;
 
 	// set to zero the buffer 'path'

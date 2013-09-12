@@ -64,8 +64,8 @@
 #define	HIB_PIN		33	//	PB	4	**	33	**	SERID_PW
 #define	SOCKET0_SS	34	//	PB	5	**	34	**	SERID_IN
 #define	GPS_PW		35	//	PA	0	**	35	**	GPS_PW
-#define	MUX0		36	//	PB	6	**	36	**	MUX0
-#define	MUX1		37	//	PB	7	**	37	**	MUX1
+#define	MUX_0		36	//	PB	6	**	36	**	MUX_0
+#define	MUX_1		37	//	PB	7	**	37	**	MUX_1
 #define	RDY_ACC		38	//	PE	6	**	38	**	RDY_ACC
 #define	RST_RTC		39	//	PE	7	**	39	**	RST_RTC
 #define	I2C_SCL		40	//	PD	0	**	40	**	I2C_SCL

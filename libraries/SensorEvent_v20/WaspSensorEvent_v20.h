@@ -1,7 +1,7 @@
 /*! \file WaspSensorEvent_v20.h
     \brief Library for managing the Event Sensor Board V2.0
     
-    Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,10 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.8
-
+    Version:		1.0
     Design:		David Gascón
-
     Implementation:	Alberto Bielsa, Manuel Calahorra
 
  */
@@ -84,6 +82,34 @@
 #define	SENS_SOCKET7		64
 #define	SENS_SOCKET8		128
 
+/*! \def SENS_SENSIRION_DATA
+    \brief Sensirion data pin
+ */
+/*! \def SENS_SENSIRION_DATA
+    \brief Sensirion clock pin
+ */
+#define SENS_SENSIRION_DATA	19
+#define SENS_SENSIRION_CLK	20
+/*! \def SENS_PREC_HIGH
+    \brief Sensirion High Precision
+ */
+/*! \def SENS_PREC_LOW
+    \brief Sensirion Low Precision
+ */
+#define SENS_PREC_HIGH	1
+#define SENS_PREC_LOW	0
+
+/*! \def SENSIRION_TEMP
+    \brief Sensirion Temperature Reading
+ */
+/*! \def SENSIRION_HUM
+    \brief Sensirion Humidity Reading
+ */
+#define SENSIRION_TEMP		0
+#define SENSIRION_HUM		1
+
+
+
 /*! \def SENS_RESISTIVE
     \brief Sensor sockets. Socket number 6 in this case
     
@@ -114,6 +140,7 @@
 #define	SENS_FLOW_FS400		3
 #define	SENS_TEMPERATURE	4
 #define	SENS_HUMIDITY		5
+#define SENS_SENSIRION		6
 
 /******************************************************************************
  * Class
@@ -126,6 +153,29 @@
 class WaspSensorEvent_v20
 {
 	private:
+
+	//! It reads from the sensirion
+  	/*!
+	\param uint8_t parameter : TEMPERATURE or HUMIDITY
+	\return the value returned by the sensor
+	 */
+	float readSensirion(uint8_t parameter);
+
+ 	//! It converts the temperature returned by sensirion
+  	/*!
+	\param int readValue : value returned by sensirion
+	\param int precision : precission bits
+	\return the converted value
+	 */	
+	float temperatureConversion(int readValue, int precision);
+	
+	//! It converts the humidity returned by sensirion
+  	/*!
+	\param int readValue : value returned by sensirion
+	\param int precision : precission bits
+	\return the converted value
+	 */
+	float humidityConversion(int readValue, int precision);
     
 	//! It sets the Digipot0 threshold
   	/*!

@@ -126,13 +126,13 @@ float WaspRadiationBoard::getRadiation()
 			count++;
 			while(digitalRead(RAD_INT_PIN_MON) == 0); // do nothing until pin goes back to HIGH
 		}
-		if( millis()< time )
+		if( millis() < time )
 		{
 			count = 0;
 			time = millis();
 		}
 	}
-	radiationValue = 6.0*count * CONV_FACTOR;
+	radiationValue = 6.0 * count * CONV_FACTOR;
 
 	return radiationValue;
 
@@ -149,31 +149,31 @@ float WaspRadiationBoard::getRadiation()
 float WaspRadiationBoard::getRadiationInt()
 {
 
-long timeRepeat= 10000;        
-long previous=millis();
+	unsigned long timeRepeat= 10000;        
+	unsigned long previous=millis();
 
 	enableInterrupts(RAD_INT);
 
 	
 	while( (millis()-previous<timeRepeat) )
-    	{
+	{
 		if( intFlag & RAD_INT){
 			disableInterrupts(RAD_INT);
 			intFlag &= ~(RAD_INT);
 			countPulse();
 
 			while(!digitalRead(RAD_INT_PIN_MON));
-    			enableInterrupts(RAD_INT);
-  		}
-    
-    		// Condition to avoid an overflow (DO NOT REMOVE)
-    		if( millis()-previous < 0 ) previous=millis();
-    	}
+				enableInterrupts(RAD_INT);
+		}
 
-     	radiationValue = 6.0*count * CONV_FACTOR;
-   	timePreviousMeassure = millis();
-   	ledBar(6*count);  
-   	count = 0;
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < previous ) previous = millis();
+	}
+
+	radiationValue = 6.0 *count * CONV_FACTOR;
+	timePreviousMeassure = millis();
+	ledBar(6*count);  
+	count = 0;
 
 	return radiationValue;
 }
@@ -191,14 +191,14 @@ long previous=millis();
 float WaspRadiationBoard::getRadiationInt(long time)
 {
 
-float k=0;      //used to obtain CPM
-float minute = 60000;
-long previous=millis();
+	float k=0;      //used to obtain CPM
+	float minute = 60000;
+	unsigned long previous=millis();
 
 	enableInterrupts(RAD_INT);
 
 	while( (millis()-previous<time) )
-    	{
+    {
 		if( intFlag & RAD_INT){
 			disableInterrupts(RAD_INT);
 			intFlag &= ~(RAD_INT);
@@ -209,8 +209,8 @@ long previous=millis();
   		}
     
     		// Condition to avoid an overflow (DO NOT REMOVE)
-    		if( millis()-previous < 0 ) previous=millis();
-    	}
+    	if( millis() < previous ) previous = millis();
+    }
      	
 	k = (minute/time);
 	radiationValueCPM = k*count;
@@ -233,24 +233,26 @@ long previous=millis();
 float WaspRadiationBoard::getCPM(long time)
 {
 
-float k=0;
-float minute = 60000;
-long previous=millis();
+	float k=0;
+	float minute = 60000;
+	unsigned long previous=millis();
 
-while( (millis()-previous<time) )
-    	{
-		if( intFlag & RAD_INT){
+	enableInterrupts(RAD_INT);
+	while( (millis()-previous<time) )
+    {
+		if( intFlag & RAD_INT)
+		{
 			disableInterrupts(RAD_INT);
 			intFlag &= ~(RAD_INT);
 			countPulse();
 
 			while(!digitalRead(RAD_INT_PIN_MON));
-    			enableInterrupts(RAD_INT);
+    		enableInterrupts(RAD_INT);
   		}
     
-    		// Condition to avoid an overflow (DO NOT REMOVE)
-    		if( millis()-previous < 0 ) previous=millis();
-    	}
+    	// Condition to avoid an overflow (DO NOT REMOVE)
+    	if( millis() < previous ) previous=millis();
+    }
 	k = (minute/time);
    	radiationValueCPM = k*count  ;
    	timePreviousMeassure = millis();

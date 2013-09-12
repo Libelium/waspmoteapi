@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.100
+ *  Version:		1.0
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -44,7 +44,7 @@
 #define ENABLE_FRIENDLY_NAME
 
 // General constants
-#define BT_BLUEGIGA_RATE	115000		// Default baudrate
+#define BT_BLUEGIGA_RATE	115200		// Default baudrate
 
 #define DEFAULT_MAX_INQUIRY_RESULTS	250	
 #define RX_BUFFER	64			
@@ -54,15 +54,12 @@
 #define BT_PRO_PW_1   6					// Bluetooth power pin when UART1 is used. Same as DIGITAL 6
 #define BT_PRO_PW_0   22				// Bluetooth power pin when UART0 is used. Same as Xbee_pw
 #define BT_NODE_ID_ADDR 1024				// EEPROM address where node ID is stored.
-#define TOTAL				"Total: "
 #define ERRORSD1			"err1"		// Error writting.
 #define ERRORSD2			"err2"		// Error creating.
 #define ERRORSD3			"err3"		// Error deleting.
 
 // File name definitions
 #define INQFILE 			"DEVICES.TXT"
-#define INQFILEHEAD     	"Discovered devices"
-#define ENDSTRING			"---"
 
 
 //TX power levels allowed for WT12
@@ -209,7 +206,7 @@ class WaspBT_Pro
     \param bool limited: Enables limited scan.
     \return '1' on success, '0' error parsing block, '-1' error parsing names, '-2' maybe device lost, '-3' error writting SD
 	 */
-	int8_t waitInquiryAnswer(long inquiryTime, uint16_t MAX_DEVICES, bool name, bool limited); 
+	int8_t waitInquiryAnswer(unsigned long inquiryTime, uint16_t MAX_DEVICES, bool name, bool limited); 
 
 #ifdef ENABLE_DATE_AND_TIME
 	//! Reads nodeID from EEPROM and Date from RTC. Writes them into INQFILE.
@@ -225,7 +222,7 @@ class WaspBT_Pro
     \param char* mac: mac of desired device.
     \return Returs 1 if found. 0 if not found.
 	 */
-	bool  waitScanDeviceAnswer(long inquiryTime, char* mac);
+	bool  waitScanDeviceAnswer(unsigned long inquiryTime, char* mac);
 
 	//! Sets time to be waiting for inquiry answer.
     	/*!
@@ -307,6 +304,11 @@ class WaspBT_Pro
 	 */
 	// 
 	char linkRSSI[4];
+	
+	//! Variable : Variable to store the own name
+    /*!
+	 */
+	char friendlyName[24];
 	
 	
 	//! It opens the UART and powers the module

@@ -62,7 +62,9 @@
 				pinMode(XBEE_PW,OUTPUT);
 				digitalWrite(XBEE_PW,HIGH);
 				_uart = 0;
-			}	
+			}
+
+			delay(100);
 			getFirmware();
 			configureSAM();
 	}
@@ -166,7 +168,7 @@
 		delay(_delay);
 		digitalWrite(MUX_USB_XBEE, HIGH); 
 		delay(_delay);
-		Serial.print("                ", _uart);		
+		Serial.print("                  ", _uart);		
 		
 		memset(dataTX, 0x00, 35);  
 		dataTX[0] = 0x02; // Length
@@ -181,7 +183,7 @@
 		
 		for (int i = 11; i < (15) ; i++)
 		{
-			USB.print(dataRX[i], HEX);
+			USB.printHex(dataRX[i]);
 			USB.print(" ");
 		}
 			USB.print("\n"); 
@@ -373,7 +375,7 @@
 	{
 		for (int i = 0; i < length ; i++)
 		{
-			USB.print(_data[i], HEX);
+			USB.printHex(_data[i]);
 			USB.print(" ");   
 		}
 			USB.print("\n"); 	
@@ -561,6 +563,7 @@
 	{
 		delay(5);
 		waitResponse();
+		
 		for (int i = 0; i<5 ; i++) {		
 			dataRX[i] = Serial.read(_uart);
 		}
@@ -570,12 +573,12 @@
 	void WaspRFID::waitResponse(void)
 	{	
 		int val = 0xFF;
-		long timeOut = 0;
+		long cont = 0;
 		
-		while((val != PREAMBLE) && (timeOut < timeOut)) {
+		while((val != PREAMBLE) && (cont < timeOut)) {
 			val = Serial.read(_uart);
 			delay(5);
-			timeOut ++;
+			cont ++;
 		}
 	}
 	

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.8
+ *  Version:		1.0
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -156,6 +156,8 @@ int8_t	WaspSensorSmart_v20::setSensorMode(uint8_t mode, uint16_t sensor)
 												break;
 			case	SENS_SMART_DFS_5V		:	digitalWrite(DIGITAL7,HIGH);
 												break;
+			case	SENS_SMART_TEMP_DS18B20	:	digitalWrite(DIGITAL8,HIGH);
+												break;
 			default							:	return -1;
 		}
 	} else if( mode==SENS_OFF )
@@ -185,6 +187,8 @@ int8_t	WaspSensorSmart_v20::setSensorMode(uint8_t mode, uint16_t sensor)
 			case	SENS_SMART_US_5V		:	digitalWrite(DIGITAL7,LOW);
 												break;
 			case	SENS_SMART_DFS_5V		:	digitalWrite(DIGITAL7,LOW);
+												break;
+			case	SENS_SMART_TEMP_DS18B20	:	digitalWrite(DIGITAL8,LOW);
 												break;
 			default							:	return -1;
 		}
@@ -225,6 +229,7 @@ float	WaspSensorSmart_v20::readValue(uint16_t sensor)
  * 						- SENS_SMART_US_3V3 : ultrasound sensor at 3.3V socket
  * 						- SENS_SMART_FLOW_3V3 : flow sensor at 3.3V socket
  * 						- SENS_SMART_US_5B : ultrasound sensor at 5V socket
+ *						- SENS_SMART_TEMP_DS18B20 : Temperature DS18B20 sensor (only P&S)
  * 				uint8_t type
  * 						- SENS_US_WRA1 : Selects WRA1 ultrasound sensor
  * 						- SENS_US_EZO : Selects EZ0 ultrasound sensor
@@ -272,6 +277,8 @@ float	WaspSensorSmart_v20::readValue(uint16_t sensor, uint8_t type)
 										break;
 		case SENS_SMART_DFS_5V		:	value = ldReading(ANALOG2);
 										break;
+		case SENS_SMART_TEMP_DS18B20:	value=readTempDS1820();
+										break;
 		default						:	;
 	}
 
@@ -282,6 +289,70 @@ float	WaspSensorSmart_v20::readValue(uint16_t sensor, uint8_t type)
 
 // Private Methods //////////////////////////////////////////////////////////////
 
+/* readTempDS1820() - reads the DS1820 temperature sensor
+ *
+ * It reads the DS1820 temperature sensor
+ */
+float WaspSensorSmart_v20::readTempDS1820()
+{
+	//PWR.setSensorPower(SENS_3V3,SENS_ON);
+	//delay(1000);
+	
+	// analog 4
+	WaspOneWire OneWireTemp(17);
+	
+	byte data[12];
+	byte addr[8];
+
+	if ( !OneWireTemp.search(addr))
+	{
+		//no more sensors on chain, reset search
+		USB.ON();
+		USB.println("no more sensors");
+		OneWireTemp.reset_search();
+		return -1000;
+	}
+	
+	if ( WaspOneWire::crc8( addr, 7) != addr[7]) 
+	{
+		USB.ON();
+		USB.println("CRC is not valid!");
+		return -1000;
+	}
+
+	if ( addr[0] != 0x10 && addr[0] != 0x28)
+	{
+		USB.ON();
+		USB.println("Device is not recognized");
+		return -1000;
+	}
+	
+	OneWireTemp.reset();
+	OneWireTemp.select(addr);
+	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
+    delay(750);
+    
+	byte present = OneWireTemp.reset();
+	OneWireTemp.select(addr);    
+	OneWireTemp.write(0xBE); // Read Scratchpad
+
+  	for (int i = 0; i < 9; i++)  // we need 9 bytes
+	{
+		data[i] = OneWireTemp.read();
+	}
+  
+	OneWireTemp.reset_search();
+  
+	byte MSB = data[1];
+	byte LSB = data[0];
+
+	float tempRead = ((MSB << 8) | LSB); //using two's compliment
+	float TemperatureSum = tempRead / 16;
+    
+    //PWR.setSensorPower(SENS_3V3,SENS_OFF);
+    
+	return TemperatureSum;
+}
  
 /*	ldrConversion: converts the value read at the analog to digital converter
  * 				   into a voltage
@@ -468,6 +539,7 @@ float	WaspSensorSmart_v20::readValue(uint16_t sensor, uint8_t type)
 	  {
 	    value++;
 	  }
+		if (millis() < start) start = millis();	//to avoid millis overflow
 	}
 	delay(100);
 

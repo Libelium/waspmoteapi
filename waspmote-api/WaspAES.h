@@ -1,7 +1,7 @@
 /*! \file WaspAES.h
     \brief Library for managing the encryption
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,10 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.5
-
-    Design:		David Gascón
-    
+    Version:		1.0
+    Design:			David Gascón    
     Implementation:	Alvaro Gonzalez
 
  */
@@ -281,7 +279,7 @@ class WaspAES{
     \return void
      */
     
-    uint8_t decrypt(uint16_t KeySize,char* Password,uint8_t encrypted_message[],
+    void decrypt(uint16_t KeySize,char* Password,uint8_t encrypted_message[],
       uint8_t size,uint8_t original_message[], uint16_t *oringinal_size,
       uint8_t mode,uint8_t padding);
 };

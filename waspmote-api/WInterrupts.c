@@ -5,7 +5,7 @@
  * 
  *  Modified 24 November 2006 by David A. Mellis
  * 
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -56,12 +56,18 @@ volatile static voidFuncPtr twiIntFunc;
  *
  * It attaches the interruption to the corresponding microcontroller pin and 
  * subrutine associated to it.
+ * 
+ * Observe that, if enabled, the interrupts will trigger even if the INT7:0 or 
+ * PCINT23:0 pins are configured as outputs
+ * 
+ * The External Interrupts can be triggered by a falling or rising edge or a low 
+ * level. This is set up as indicated in the specification for the External 
+ * Interrupt Control Registers – EICRA (INT3:0) and EICRB (INT7:4).
  *
  * It returns nothing
  */
 void attachInterrupt(uint8_t interruptNum, void (*userFunc)(void), int mode) 
 {
-  
 	if(interruptNum < EXTERNAL_NUM_INTERRUPTS) 
 	{
 		intFunc[interruptNum] = userFunc;
@@ -69,7 +75,7 @@ void attachInterrupt(uint8_t interruptNum, void (*userFunc)(void), int mode)
 		switch (interruptNum) 
 		{
 			
-			case 0:	// INT0 connects to I2C_SCL
+			case 0:	// INT0 connects to I2C_SCL (not used as interrupt pin in Waspmote)
 					// Configure the interrupt mode (trigger on low input, any 
 					// change, rising edge, or falling edge).  The mode constants 
 					// were chosen to correspond to the configuration bits in the 
@@ -80,52 +86,58 @@ void attachInterrupt(uint8_t interruptNum, void (*userFunc)(void), int mode)
 					EIMSK |= (1 << INT0);
 					break;
 			
-			case 1:	// INT1 connects to I2C_SDA
+			case 1:	// INT1 connects to I2C_SDA (not used as interrupt pin in Waspmote)
 					EICRA = (EICRA & ~((1 << ISC10) | (1 << ISC11))) | (mode << ISC10);
 					EIMSK |= (1 << INT1);
 					break;
 			
-			case 2:	// INT2 is assigned to GPRS_RX in Wasp v5, this will allow 
-					// waking up the processor on serial event from the GPRS
+			case 2:	// INT2 is assigned to MUX_RX
+					// This means the interruption pin is shared with the UART1
+					// RX pin
 					EICRA = (EICRA & ~((1 << ISC20) | (1 << ISC21))) | (mode << ISC20);
 					EIMSK |= (1 << INT2);
 					break;
         
-			case 3:	// INT3 corresponds to GPRS_TX in Wasp v5, it could 
-					// eventually be used in a configuration where we were not 
-					// using the GPRS board
+			case 3:	// INT3 is assigned to MUX_TX
+					// This means the interruption pin is shared with the UART1
+					// TX pin
 					EICRA = (EICRA & ~((1 << ISC30) | (1 << ISC31))) | (mode << ISC30);
 					EIMSK |= (1 << INT3);
 					break;
         
-			case 4:	// INT4 is connected to PE4 which is also PWM2 in Wasp v5, 
-					// it could be used as a source for an external interrupt, 
-					// since it is connected to the analog sensor port
+			case 4:	// INT4 pin is connected to DIGITAL0 pin (RESERVED pin!!) 
+					// DIGITAL0 pin is used by the Watchdog timer to simulate a 
+					// hardware interruption. So when the Watchdog interrupts, 
+					// the inner subroutine sets this pin to high level to 
+					// indicate this interrption arrived and this is the way to
+					// distinguish this interruption from others.
 					EICRB = (EICRB & ~((1 << ISC40) | (1 << ISC41))) | (mode << ISC40);
 					EIMSK |= (1 << INT4);
 					break;
         
-			case 5:	// this hardware interrupt is connected to EN_5V_PW in 
-					// Wasp v5, therefore it will not be used as interrupt, 
+			case 5:	// INT5 pin is used to enable the 5v power supply
+					// Therefore it will not be used as interruption pin, 
 					// since it has a completely different use it is commented 
-					// away to avoid conflicts
+					// to avoid conflicts
 					//EICRB = (EICRB & ~((1 << ISC50) | (1 << ISC51))) | (mode << ISC50);
 					//EIMSK |= (1 << INT5);
 					break;
 			
-			case 6:	// INT6 is the interrupt at PE6 which in Wasp v5 corresponds 
-					// to the accelerometer's RDY_ACC pin, we should activate it 
-					// when willing to get signals from it
-					EICRB = (EICRB & ~((1 << ISC60) | (1 << ISC61))) | (mode << ISC60);
-					EIMSK |= (1 << INT6);
+			case 6:	// INT6 pin is used as the ACC_INT monitorization pin
+					// Corresponds to the accelerometer's RDY_ACC pin
+					// Therefore it will not be used as interruption pin, 
+					// since it has a completely different use it is commented 
+					// to avoid conflicts
+					//EICRB = (EICRB & ~((1 << ISC60) | (1 << ISC61))) | (mode << ISC60);
+					//EIMSK |= (1 << INT6);
 					break;
 			
-			case 7:	// INT7 is the interrupt at PE7 which in Wasp v5 is 
-					// connected to RST_RTC, or the watchdog from the RTC, 
-					// therefore we will have to connect this pin when working 
-					// with the external RTC
-					EICRB = (EICRB & ~((1 << ISC70) | (1 << ISC71))) | (mode << ISC70);
-					EIMSK |= (1 << INT7);
+			case 7:	// INT7 pin is used as the RTC_INT monitorization pin
+					// Therefore it will not be used as interruption pin, 
+					// since it has a completely different use it is commented 
+					// to avoid conflicts					
+					//EICRB = (EICRB & ~((1 << ISC70) | (1 << ISC71))) | (mode << ISC70);
+					//EIMSK |= (1 << INT7);
 					break;
 		}
 	}
@@ -274,16 +286,6 @@ void onHAIwakeUP(void)
 		}
 	}
 	
-	if( intConf & HAI_INT )
-	{
-		if( digitalRead(HAI_INT_PIN_MON) )
-		{
-			intCounter++;
-			intFlag |= HAI_INT;
-			intArray[HAI_POS]++;
-		}
-	}
-	
 	if( intConf & SENS_INT )
 	{	
 		if( digitalRead(SENS_INT_PIN_MON) )
@@ -316,13 +318,12 @@ void onHAIwakeUP(void)
 	
 	if( intConf & PLV_INT )
 	{
-		if( ( !(intConf & ACC_INT) || !digitalRead(ACC_INT_PIN_MON) ) && 
-			( !(intConf & RTC_INT) || !digitalRead(RTC_INT_PIN_MON) ) && 
-			( !(intConf & UART1_INT) || !digitalRead(UART1_INT_PIN_MON) )	)
+		// check monitorization pin
+		if( !(digitalRead(PLV_INT_PIN_MON)))
 		{
 			intCounter++;
 			intFlag |= PLV_INT;
-			intArray[PLV_POS]++;
+			intArray[PLV_POS]++;					
 		}
 	}
 	
@@ -352,17 +353,6 @@ void onLAIwakeUP(void)
 	
 	// used to update the interrupt flag
 	
-	if( intConf & BAT_INT )
-	{
-		if( !digitalRead(BAT_INT_PIN_MON) )
-		{
-			intCounter++;
-			intFlag |= BAT_INT;
-			intArray[BAT_POS]++;
-			disableInterrupts(BAT_INT);
-		}
-	}
-	
 	if( intConf & RAD_INT )
     {
         if( !digitalRead(RAD_INT_PIN_MON) )
@@ -385,27 +375,6 @@ void onLAIwakeUP(void)
 			digitalWrite(WTD_INT_PIN_MON,HIGH);
 		}
 	}
-	
-	if( intConf & UART1_INT )
-	{
-		if( digitalRead(UART1_INT_PIN_MON) )
-		{
-			intCounter++;
-			intFlag |= UART1_INT;
-			intArray[UART1_POS]++;
-		}
-	}
-
-	if( intConf & LAI_INT )
-	{
-		if( !digitalRead(LAI_INT_PIN_MON) )
-		{
-			intCounter++;
-			intFlag |= LAI_INT;
-			intArray[LAI_POS]++;
-		}
-	}
-
 
 	// Enable interrupts by setting the global interrupt mask
 	sei();
@@ -414,7 +383,7 @@ void onLAIwakeUP(void)
 /* clearIntFlag() - clears 'intFlag' global variable
  *
  */
-void	clearIntFlag()
+void clearIntFlag()
 {
 	intFlag=0;
 }
@@ -431,83 +400,58 @@ void	clearIntFlag()
 void enableInterrupts(uint32_t conf)
 {
 	intConf |= conf;
-		
-	if( conf & HAI_INT )
-	{
-		pinMode(MUX_RX,INPUT);
-		attachInterrupt(HAI_INT_ACT, onHAIwakeUP, HIGH);
-	}
-	if( conf & LAI_INT )
-	{
-		pinMode(MUX_TX, INPUT);
-		attachInterrupt(LAI_INT_ACT, onLAIwakeUP, LOW);
-	}
+
 	if( conf & ACC_INT )
 	{
 		pinMode(MUX_RX,INPUT);
 		pinMode(ACC_INT_PIN_MON, INPUT);
-		attachInterrupt(ACC_INT_ACT, onHAIwakeUP, HIGH);
-	}
-	if( conf & BAT_INT )
-	{
-		pinMode(MUX_TX, INPUT);
-		pinMode(BAT_INT_PIN_MON,INPUT);
-		digitalWrite(MUX_TX, HIGH);
-		attachInterrupt(BAT_INT_ACT, onLAIwakeUP, LOW);
+		attachInterrupt(RXD1_PIN, onHAIwakeUP, RISING);
 	}	
 	if( conf & RTC_INT )
 	{
 		pinMode(MUX_RX, INPUT);
 		pinMode(RTC_INT_PIN_MON,INPUT);
-		attachInterrupt(RTC_INT_ACT, onHAIwakeUP, HIGH);
+		attachInterrupt(RXD1_PIN, onHAIwakeUP, RISING);
 	}
 	if( conf & WTD_INT )
 	{
 		pinMode(WTD_INT_PIN_MON,OUTPUT);
 		digitalWrite(WTD_INT_PIN_MON,HIGH);
-		attachInterrupt(WTD_INT_ACT, onLAIwakeUP, LOW);
-	}
-	if( conf & UART1_INT )
-	{
-		pinMode(MUX_RX, INPUT);
-		pinMode(UART1_INT_PIN_MON,INPUT);
-		attachInterrupt(UART1_INT_ACT, onLAIwakeUP, LOW);
+		attachInterrupt(INT4_PIN, onLAIwakeUP, FALLING);
 	}
 	if( conf & SENS_INT )
 	{
 		pinMode(MUX_RX, INPUT);
 		pinMode(SENS_INT_PIN_MON,INPUT);
-		attachInterrupt(SENS_INT_ACT, onHAIwakeUP, HIGH);
+		attachInterrupt(RXD1_PIN, onHAIwakeUP, RISING);
 	}
 	if( conf & PLV_INT )
-	{
-		pinMode(MUX_RX, INPUT);
-		pinMode(MUX_TX, INPUT);
-		pinMode(SENS2_INT_PIN_MON,INPUT);
-		pinMode(SENS2_INT_PIN2_MON,INPUT);
-		attachInterrupt(PLV_INT_ACT, onLAIwakeUP, LOW);
+	{	
+		pinMode(MUX_RX,INPUT);
+		attachInterrupt(RXD1_PIN, onHAIwakeUP, RISING);
 	}
 	
 	if( conf & RAD_INT )
 	{
 		pinMode(RAD_INT_PIN_MON,INPUT);
         pinMode(MUX_TX, INPUT);
-        attachInterrupt(RAD_INT_ACT, onLAIwakeUP, LOW);
+        attachInterrupt(TXD1_PIN, onLAIwakeUP, FALLING);
 	}
 	
 	if( conf & XBEE_INT )
 	{
 		pinMode(XBEE_INT_PIN_MON,INPUT);
         pinMode(MUX_RX, INPUT);
-        attachInterrupt(XBEE_INT_ACT, onHAIwakeUP, HIGH);
+        attachInterrupt(RXD1_PIN, onHAIwakeUP, RISING);
 	}
 	
 	if( conf & PIR_3G_INT )
 	{
 		pinMode(MUX_RX, INPUT);
 		pinMode(PIR_3G_PIN_MON,INPUT);
-		attachInterrupt(PIR_3G_INT_ACT, onHAIwakeUP, HIGH);
+		attachInterrupt(RXD1_PIN, onHAIwakeUP, RISING);
 	}
+
 }
 
 
@@ -515,57 +459,46 @@ void enableInterrupts(uint32_t conf)
  *
  * It disables the specified interruption by 'conf' input.
  *
- * When this function is called, 'intConf' flag is updated with the interruption that has been detached. After that, it is
- * deatached from the corresponding microcontroller pin and associated subrutine.
+ * When this function is called, 'intConf' flag is updated with the interruption 
+ * that has been detached. After that, it is detached from the corresponding 
+ * microcontroller pin and associated subrutine.
  */
 void disableInterrupts(uint32_t conf)
 {
 	// Disable all interrupts by clearing the global interrupt mask. 
-	cli();
-	
-	if( conf & HAI_INT )
-	{
-		detachInterrupt(HAI_INT_ACT);
-	}
-	if( conf & LAI_INT )
-	{
-		detachInterrupt(LAI_INT_ACT);
-	}
+	cli();	
+
 	if( conf & ACC_INT )
 	{
-		detachInterrupt(ACC_INT_ACT);
-	}
-	if( conf & BAT_INT )
-	{
-		detachInterrupt(BAT_INT_ACT);
+		detachInterrupt(RXD1_PIN);
 	}	
 	if( conf & RTC_INT )
 	{
-		detachInterrupt(RTC_INT_ACT);
-	}
-	if( conf & UART1_INT )
-	{
-		detachInterrupt(UART1_INT_ACT);
+		detachInterrupt(RXD1_PIN);
 	}
 	if( conf & WTD_INT )
 	{
-		detachInterrupt(WTD_INT_ACT);
+		detachInterrupt(INT4_PIN);
 	}
 	if( conf & SENS_INT )
 	{
-		detachInterrupt(SENS_INT_ACT);
+		detachInterrupt(RXD1_PIN);
 	}
 	if( conf & PLV_INT )
 	{
-		detachInterrupt(PLV_INT_ACT);
+		detachInterrupt(RXD1_PIN);
 	}
 	if( conf & XBEE_INT )
 	{
-		detachInterrupt(XBEE_INT_ACT);
+		detachInterrupt(RXD1_PIN);
 	}
 	if( conf & PIR_3G_INT )
 	{
-		detachInterrupt(PIR_3G_INT_ACT);
+		detachInterrupt(RXD1_PIN);
+	}
+	if( conf & RAD_INT )
+	{
+		detachInterrupt(TXD1_PIN);
 	}
 	intConf &= ~(conf);
 	

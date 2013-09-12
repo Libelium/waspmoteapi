@@ -399,7 +399,7 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 		// _serial_id is read in main.cxx
 		sprintf(str,"%lu",_serial_id);
 		
-		for( int i=0 ; i<8 ; i++ )
+		for( int i=0 ; i<strlen(str) ; i++ )
 		{
 			// break if end of string
 			if( str[i] == '\0') 
@@ -462,34 +462,30 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 		}
 		
 		// set a "don't care" character in number of fields byte
-		buffer[4]='?';
-		
-		// set the '#' separator
-		buffer[5]='#';
+		buffer[4]='?';	
 		
 		// set serial ID
-		length=6;
-		char str[16];
+		// _serial_id is read in main.cxx				
+		char val[4]; 
+		memcpy(val, (const void*)&_serial_id, 4);
 		
-		// _serial_id is read in main.cxx
-		sprintf(str,"%lu",_serial_id);
-		for( int i=0 ; i<8 ; i++ )
-		{
-			// break if end of string
-			if( str[i] == '\0') 
-			{
-				break;
-			}
-			else
-			{
-				buffer[length]=str[i];
-				length++;
-			}
-		}
+		/*union {
+		  unsigned long f;
+		  char b[4];
+		} u;
+		u.b[3] = val[3];
+		u.b[2] = val[2];
+		u.b[1] = val[1];
+		u.b[0] = val[0];
 
-		// set separator '#'
-		buffer[length]='#';	
-		length++;
+		USB.println(u.f);	*/
+
+		// concatenate sensor name to frame string
+        buffer[5] = val[0];
+		buffer[6] = val[1];
+        buffer[7] = val[2];
+		buffer[8] = val[3];
+		length=9;		
 
 		// set identifier
 		for( int i=0 ; i<16 ; i++ )
@@ -1541,14 +1537,14 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 		buffer[length-11] = valB1[1];
         buffer[length-10] = valB1[2];
 		buffer[length-9] = valB1[3];
-        buffer[length-8] = valB1[0];
-		buffer[length-7] = valB1[1];
-        buffer[length-6] = valB1[2];
-		buffer[length-5] = valB1[3];
-        buffer[length-4] = valB2[0];
-		buffer[length-3] = valB2[1];
-        buffer[length-2] = valB2[2];
-		buffer[length-1] = valB2[3];
+        buffer[length-8] = valB2[0];
+		buffer[length-7] = valB2[1];
+        buffer[length-6] = valB2[2];
+		buffer[length-5] = valB2[3];
+        buffer[length-4] = valB3[0];
+		buffer[length-3] = valB3[1];
+        buffer[length-2] = valB3[2];
+		buffer[length-1] = valB3[3];
 		buffer[length] = '\0';
 
 		// increment sensor fields counter 

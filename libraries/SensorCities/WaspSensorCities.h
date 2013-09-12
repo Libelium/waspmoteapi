@@ -1,7 +1,7 @@
 /*! \file WaspSensorCities.h
     \brief Library for managing the Smart Cities Sensor Board
     
-    Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,11 +17,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.8
-
+    Version:		1.0
     Design:		David Gascón
-
-    Implementation:	Alberto Bielsa, Manuel Calahorra
+    Implementation:	Manuel Calahorra
 
  */
 
@@ -82,16 +80,21 @@
  */
 
 #define	SENS_CITIES_HUMIDITY		1
+#define	SENS_CITIES_TEMP_DS18B20	2
 #define	SENS_CITIES_DUST			8
 #define	SENS_CITIES_AUDIO			16
 #define	SENS_CITIES_LDR				32
 #define	SENS_CITIES_LD				64
 #define	SENS_CITIES_TEMPERATURE		128
 #define SENS_CITIES_ULTRASOUND_5V	256
-#define SENS_CITIES_ULTRASOUND_3V3	2048
 #define SENS_CITIES_CD				512
 #define SENS_CITIES_CP				1024
+#define SENS_CITIES_ULTRASOUND_3V3	2048
 
+
+/*! \def SENS_NOISE_ADDRESS
+    \brief Specifies the EEPROM NOISE address    
+ */
 #define SENS_NOISE_ADDRESS			164
 
 /*! \def SENS_US_WRA1
@@ -118,6 +121,13 @@
 class WaspSensorCities
 {
 	private:
+
+	//! It reads the DS1820 temperature sensor
+  	/*!
+	\param void
+	\return void
+	 */
+	float readTempDS1820();
     
 	//! It sets the Digipot0 threshold
   	/*!

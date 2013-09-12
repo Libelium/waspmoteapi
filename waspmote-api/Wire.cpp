@@ -57,12 +57,12 @@ void TwoWire::begin(void)
 {
 	int i=0;
   // init buffer for reads
-  for(i=0;i<BUFFER_LENGTH;i++) rxBuffer[BUFFER_LENGTH]=0;
+  for(i=0;i<BUFFER_LENGTH;i++) rxBuffer[i]=0;
   rxBufferIndex = 0;
   rxBufferLength = 0;
 
   // init buffer for writes
-  for(i=0;i<BUFFER_LENGTH;i++) txBuffer[BUFFER_LENGTH]=0;
+  for(i=0;i<BUFFER_LENGTH;i++) txBuffer[i]=0;
   txBufferIndex = 0;
   txBufferLength = 0;
 

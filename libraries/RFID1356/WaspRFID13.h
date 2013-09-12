@@ -91,6 +91,7 @@
 #define RFID_RATE 115200
 
 #define _delay 1
+
 #define timeOut 1000 // 1000 = 5 seconds wating for tag
 
 #include <inttypes.h>

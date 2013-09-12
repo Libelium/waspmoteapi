@@ -1,7 +1,7 @@
 /*! \file WaspSD.h
     \brief Library for managing the SD Card
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.7
+    Version:		1.0
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
@@ -356,7 +356,7 @@ public:
 	\note This function should not be used to delete the 8.3 version of a
 	file that has a long name. 
 	*/
-	uint8_t del(const char* filepath);
+	boolean del(const char* filepath);
 	
 	//! It deletes a directory 
 	/*!	It is possible to delete a directory iterating through directories 
@@ -366,7 +366,7 @@ public:
 	\note This function should not be used to delete the 8.3 version of a
 	directory that has a long name. 
 	*/
-	uint8_t rmdir(const char* dirpath);
+	boolean rmdir(const char* dirpath);
 	
 	//! It deletes a directory and all contained files
 	/*!	
@@ -375,7 +375,7 @@ public:
 	\note This function should not be used to delete the 8.3 version of a
 	directory that has a long name. 
 	*/
-	uint8_t rmRfDir(const char* dirpath);
+	boolean rmRfDir(const char* dirpath);
   
 	//! It opens a file if available
 	/*! It is possible to open a file iterating through directories. So a valid 
@@ -645,7 +645,16 @@ public:
 	\sa appendln(const char* filepath, const char* str)
 	*/
 	uint8_t appendln(const char* filepath, uint8_t* str);
+	
+	
   
+	//! It writes an EOL in the specified file
+	/*!
+	\param const char* filepath : the file to write to
+	\param uint8_t* str : the integer array to write into the file
+	\return '1' on success, '0' otherwise
+	*/
+	uint8_t writeEndOfLine(const char* filepath);
   
 
 };

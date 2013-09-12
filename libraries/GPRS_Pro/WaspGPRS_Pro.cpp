@@ -28,10 +28,12 @@
 
 #include "WaspGPRS_Pro.h"
 
+
+
+
 // Constructors ////////////////////////////////////////////////////////////////
 
-WaspGPRS_Pro::WaspGPRS_Pro()
-{
+WaspGPRS_Pro::WaspGPRS_Pro(){
 	_baudRate=GPRS_PRO_RATE;
 	_pwrMode=GPRS_PRO_ON;
 	_socket=1;
@@ -59,7 +61,7 @@ uint8_t WaspGPRS_Pro::getIP(){
 	previous=millis();
 	i=0;
 	do{
-		while (!serialAvailable(_socket));
+		while ((!serialAvailable(_socket)) && ((millis() - previous) < 1000));
 		IP_dir[i]=serialRead(_socket);
 		if (((0x2F < IP_dir[i]) && (IP_dir[i] < 0x3A)) || (IP_dir[i] == '.')) // Only moves the cursor when it's a number or a dot
 		{
@@ -101,43 +103,43 @@ uint8_t WaspGPRS_Pro::checkIPstatus(){
 			it++;
 		}while (ip_status[it-1] != '\n');
 		
-		if (parse(ip_status, "IP INITIAL"))
+		if (strstr(ip_status, "IP INITIAL") != NULL)
 		{
 			return 1;
 		}
-		if (parse(ip_status, "IP START"))
+		if (strstr(ip_status, "IP START") != NULL)
 		{
 			return 2;
 		}
-		if (parse(ip_status, "IP CONFIG"))
+		if (strstr(ip_status, "IP CONFIG") != NULL)
 		{
 			return 3;
 		}
-		if (parse(ip_status, "IP GPRSACT"))
+		if (strstr(ip_status, "IP GPRSACT") != NULL)
 		{
 			return 4;
 		}
-		if (parse(ip_status, "IP STATUS") || strcmp(ip_status, "IP PROCESSING"))
+		if ((strstr(ip_status, "IP STATUS") != NULL) || (strstr(ip_status, "IP PROCESSING") != NULL))
 		{
 			return 5;
 		}
-		if (parse(ip_status, "TCP CONNECTING") || strcmp(ip_status, "UDP CONNECTING") || strcmp(ip_status, "SERVER LISTENING"))
+		if ((strstr(ip_status, "TCP CONNECTING") != NULL) || (strstr(ip_status, "UDP CONNECTING") != NULL) || (strstr(ip_status, "SERVER LISTENING") != NULL))
 		{
 			return 6;
 		}
-		if (parse(ip_status, "CONNECT OK"))
+		if (strstr(ip_status, "CONNECT OK") != NULL)
 		{
 			return 7;
 		}
-		if (parse(ip_status, "TCP CLOSING") || strcmp(ip_status, "UDP CLOSING"))
+		if ((strstr(ip_status, "TCP CLOSING") != NULL) || (strstr(ip_status, "UDP CLOSING") != NULL))
 		{
 			return 8;
 		}
-		if (parse(ip_status, "TCP CLOSED") || strcmp(ip_status, "UDP CLOSED"))
+		if ((strstr(ip_status, "TCP CLOSED") != NULL) || (strstr(ip_status, "UDP CLOSED") != NULL))
 		{
 			return 9;
 		}
-		if (parse(ip_status, "PDP DEACT"))
+		if (strstr(ip_status, "PDP DEACT") != NULL)
 		{
 			return 10;
 		}
@@ -153,47 +155,6 @@ uint8_t WaspGPRS_Pro::checkIPstatus(){
 }
 #endif
 
-uint8_t WaspGPRS_Pro::parse(const char* data, const char* data_expected){
-	
-	int it=0;
-	bool theSame=false;
-	int cont=0;
-	int cont2=0;
-	int ok;
-	
-	while ( data[it] != '\0' )
-	{
-		it++;
-	}
-
-	while (cont < it)	
-	{
-		if (data[cont] == data_expected[cont2])
-		{
-			cont2=0;
-			while (data_expected[cont2] != '\0')
-			{
-				if (data[cont+cont2] == data_expected[cont2])
-				{    
-					cont2++;
-					ok=true; 
-				}
-				else
-				{
-					ok=false; 
-					break;
-				}
-			}  
-			if(ok)
-			{
-				return 1;
-			} 
-		}
-		cont++;
-		cont2=0;
-	}	
-	return 0;
-}
 
 /* getIfReady() - gets if GPRS module is ready or not
  *
@@ -241,14 +202,12 @@ uint8_t WaspGPRS_Pro::checkGPRS(){
 
 
 // AT Comands ///////////////////////////////////////////////////////////////////
-//FORJA
-uint8_t WaspGPRS_Pro::sendCommand1(const char* theText, const char* expectedAnswer)
-{
+
+uint8_t WaspGPRS_Pro::sendCommand1(const char* theText, const char* expectedAnswer){
     return sendCommand1(theText, expectedAnswer, DEFAULT_TIMEOUT, 0);
 }
-//FORJA
-uint8_t WaspGPRS_Pro::sendCommand1(const char* theText, const char* expectedAnswer, int MAX_TIMEOUT, int sendOnce)
-{
+
+uint8_t WaspGPRS_Pro::sendCommand1(const char* theText, const char* expectedAnswer, int MAX_TIMEOUT, int sendOnce){
     char* theCommand = (char*) calloc(100, sizeof(char));
 	if ( theCommand == NULL )
 	{
@@ -264,11 +223,12 @@ uint8_t WaspGPRS_Pro::sendCommand1(const char* theText, const char* expectedAnsw
 		USB.print(theCommand);
 	#endif
 	
+	beginSerial(_baudRate, _socket);
 	// try sending the command
 	// wait for serial response
     timeout = 0;
     serialFlush(_socket);
-    while ( !serialAvailable(_socket) && (timeout < MAX_TIMEOUT))
+    while ( (!serialAvailable(_socket)) && ((timeout * (DELAY_ON_SEND / 10)) < MAX_TIMEOUT))
 	{
         if (!sendOnce || !timeout)
 		{
@@ -289,9 +249,8 @@ uint8_t WaspGPRS_Pro::sendCommand1(const char* theText, const char* expectedAnsw
 	
     return answer;
 }
-//FORJA
-uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer, int MAX_TIMEOUT, int timeout, int seconds)
-{
+
+uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer, int MAX_TIMEOUT, int timeout, int seconds){
 	char* theCommand = (char*) calloc(100, sizeof(char));
 	if ( theCommand == NULL )
 	{
@@ -373,7 +332,12 @@ uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer, int MAX_TIMEOUT, i
 					delay(20);
 					#if GPRS_debug_mode>1
 						USB.print(F("Command answer: "));
-						USB.println(theCommand);
+						USB.print(theCommand);
+						USB.print(F("   "));
+						USB.printHex(theCommand[0]);
+						USB.print(F("   "));
+						USB.printHex(theCommand[1]);
+						USB.println(F(""));
 					#endif
 				}
 			}
@@ -392,15 +356,13 @@ uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer, int MAX_TIMEOUT, i
 	}
 }
 
-//FORJA
+
 //functions with two answers
-uint8_t WaspGPRS_Pro::sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2)
-{	
+uint8_t WaspGPRS_Pro::sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2){	
     return sendCommand2(theText, expectedAnswer1, expectedAnswer2, DEFAULT_TIMEOUT, 0);
 }
-//FORJA
-uint8_t WaspGPRS_Pro::sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int sendOnce)
-{
+
+uint8_t WaspGPRS_Pro::sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int sendOnce){
 	
 	char* theCommand = (char*) calloc(100,sizeof(char));
 	if( theCommand==NULL ) return -1;
@@ -414,11 +376,12 @@ uint8_t WaspGPRS_Pro::sendCommand2(const char* theText, const char* expectedAnsw
 		USB.print(theCommand);
 	#endif
 
+	beginSerial(_baudRate, _socket);
 	// try sending the command
 	// wait for serial response
     timeout = 0;
     serialFlush(_socket);
-    while(!serialAvailable(_socket) && (timeout < MAX_TIMEOUT))
+    while((!serialAvailable(_socket)) && ((timeout * (DELAY_ON_SEND / 10)) < MAX_TIMEOUT))
 	{
         if (!sendOnce || !timeout)
 		{
@@ -439,9 +402,8 @@ uint8_t WaspGPRS_Pro::sendCommand2(const char* theText, const char* expectedAnsw
 	
     return answer;
 }
-//FORJA
-uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int timeout, int seconds)
-{
+
+uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int timeout, int seconds){
 	
 	char* theCommand = (char*) calloc(100,sizeof(char));
 	if( theCommand==NULL ) return -1;
@@ -554,83 +516,55 @@ uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expec
 			cont2=0;
 			ok=false;
 			
-			while ( cont < it) // Compares with expectedAnswer1
+			if (strstr(theCommand, expectedAnswer1) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer1[cont2])
+				if ((expectedAnswer1 == ERROR_CME)||(expectedAnswer1 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer1[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer1[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}
-					if (ok)
-					{	
-						free(theCommand);
-						return 1;
-					}
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-			
-				
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 1;
 			}
   
 			cont=0;
 			cont2=0;
 			ok=false;
 			
-			while (cont < it)	// Compares with expectedAnswer2
+			if (strstr(theCommand, expectedAnswer2) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer2[cont2])
+				if ((expectedAnswer2 == ERROR_CME)||(expectedAnswer2 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer2[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer2[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}  
-					if (ok)
-					{
-						if((expectedAnswer2 == ERROR_CME) || (expectedAnswer2 == ERROR_CMS)){
-							#if GPRS_debug_mode>0
-								USB.print(F("special error: "));
-							#endif
-							while (serialRead(_socket) != ' ');
-							CME_CMS_code=0;
-							aux=serialRead(_socket);
-							
-							do{ // Gets the length of the data string
-								CME_CMS_code*=10;
-								CME_CMS_code+=aux-0x30;
-								aux=serialRead(_socket);
-							}while (aux != '\r');
-							#if GPRS_debug_mode>0
-								USB.println(CME_CMS_code,DEC);
-							#endif
-						}
-						free(theCommand);
-						return 2;
-					} 
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 2;
 			}
   			
 		}
@@ -642,9 +576,7 @@ uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expec
 }
 
 // 3 answers
-//FORJA
-uint8_t WaspGPRS_Pro::sendCommand3(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int sendOnce)
-{
+uint8_t WaspGPRS_Pro::sendCommand3(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int sendOnce){
 	
 	char* theCommand = (char*) calloc(100,sizeof(char));
 	if( theCommand==NULL ) return -1;
@@ -657,12 +589,12 @@ uint8_t WaspGPRS_Pro::sendCommand3(const char* theText, const char* expectedAnsw
 		USB.print(theCommand);
 	#endif
     
-
+	beginSerial(_baudRate, _socket);
 	// try sending the command
 	// wait for serial response
     timeout = 0;
     serialFlush(_socket);
-    while(!serialAvailable(_socket) && (timeout < MAX_TIMEOUT))
+    while((!serialAvailable(_socket)) && ((timeout * (DELAY_ON_SEND / 10)) < MAX_TIMEOUT))
 	{
         if (!sendOnce || !timeout)
 		{
@@ -683,9 +615,8 @@ uint8_t WaspGPRS_Pro::sendCommand3(const char* theText, const char* expectedAnsw
     
     return answer;
 }
-//FORJA
-uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int timeout, int seconds)
-{
+
+uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int timeout, int seconds){
 	
 	char* theCommand = (char*) calloc(100,sizeof(char));
 	if( theCommand==NULL ) return -1;
@@ -804,134 +735,84 @@ uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expec
 			cont2=0;
 			ok=false;
 			
-			while (cont < it)	// Compares with expectedAnswer1
+			if (strstr(theCommand, expectedAnswer1) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer1[cont2])
+				if ((expectedAnswer1 == ERROR_CME)||(expectedAnswer1 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer1[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer1[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}
-					if (ok)
-					{
-						free(theCommand);
-						return 1;
-					}
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 1;
 			}
   
 			cont=0;
 			cont2=0;
 			ok=false;
 			
-			while (cont < it)	// Compares with expectedAnswer2
+			if (strstr(theCommand, expectedAnswer2) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer2[cont2])
+				if ((expectedAnswer2 == ERROR_CME)||(expectedAnswer2 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer2[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer2[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}  
-					if (ok)
-					{
-						if((expectedAnswer2 == ERROR_CME) || (expectedAnswer2 == ERROR_CMS))
-						{
-							#if GPRS_debug_mode>0
-								USB.print(F("special error"));
-							#endif
-							while (serialRead(_socket) != ' ');
-							CME_CMS_code=0;
-							aux=serialRead(_socket);
-							
-							// Gets the length of the data string
-							do{	
-								CME_CMS_code*=10;
-								CME_CMS_code+=aux-0x30;
-								aux=serialRead(_socket);
-							}while (aux != '\r');
-							#if GPRS_debug_mode>0
-								USB.println(CME_CMS_code, DEC);
-							#endif
-						}
-						free(theCommand);
-						return 2;
-					} 
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 2;
 			}
 			
 			cont=0;
 			cont2=0;
 			ok=false;
 			
-			while (cont < it)	// Compares with expectedAnswer3
+			if (strstr(theCommand, expectedAnswer3) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer3[cont2])
+				if ((expectedAnswer3 == ERROR_CME)||(expectedAnswer3 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer3[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer3[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}  
-					if(ok)
-					{
-						if((expectedAnswer3 == ERROR_CME) || (expectedAnswer3 == ERROR_CMS))
-						{
-							#if GPRS_debug_mode>0
-								USB.print(F("special error"));
-							#endif
-							while(serialRead(_socket)!=' ');
-							CME_CMS_code=0;
-							aux=serialRead(_socket);
-							
-							// Gets the length of the data string
-							do{
-								CME_CMS_code*=10;
-								CME_CMS_code+=aux-0x30;
-								aux=serialRead(_socket);
-							}while (aux != '\r');
-							#if GPRS_debug_mode>0
-								USB.println(CME_CMS_code, DEC);
-							#endif
-						}
-						free(theCommand);
-						return 3;
-					} 
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 3;
 			}
 			
 			cont=0;
@@ -947,7 +828,6 @@ uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expec
 }
 
 //4 answers
-//FORJA
 uint8_t WaspGPRS_Pro::sendCommand4(const char* theText,  const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, const char* expectedAnswer4, int MAX_TIMEOUT, int sendOnce) {
 	
 	
@@ -965,11 +845,12 @@ uint8_t WaspGPRS_Pro::sendCommand4(const char* theText,  const char* expectedAns
 		USB.print(theCommand);
 	#endif
 
+	beginSerial(_baudRate, _socket);
 	// try sending the command
 	// wait for serial response
     timeout = 0;
     serialFlush(_socket);
-    while(!serialAvailable(_socket) && (timeout < MAX_TIMEOUT))
+    while((!serialAvailable(_socket)) && ((timeout * (DELAY_ON_SEND / 10)) < MAX_TIMEOUT))
 	{
         if (!sendOnce || !timeout)
 		{
@@ -991,7 +872,6 @@ uint8_t WaspGPRS_Pro::sendCommand4(const char* theText,  const char* expectedAns
     return answer;
 }
 
-//FORJA
 uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, const char* expectedAnswer4, int MAX_TIMEOUT, int timeout, int seconds) {
 
 	char* theCommand = (char*) calloc(100,sizeof(char));
@@ -1121,184 +1001,115 @@ uint8_t WaspGPRS_Pro::waitForData(const char* expectedAnswer1, const char* expec
 			cont=0;
 			cont2=0;
 			boolean ok=false;
-			while (cont < it)	// Compares with expectedAnswer1
+			
+			if (strstr(theCommand, expectedAnswer1) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer1[cont2])
+				if ((expectedAnswer1 == ERROR_CME)||(expectedAnswer1 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer1[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer1[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}
-					if (ok)
-					{
-						free(theCommand);
-						return 1;
-					}
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 1;
 			}
   
 			cont=0;
 			cont2=0;
 			ok=false;
 			
-			while (cont < it)	// Compares with expectedAnswer2
+
+			if (strstr(theCommand, expectedAnswer2) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer2[cont2])
+				if ((expectedAnswer2 == ERROR_CME)||(expectedAnswer2 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer2[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer2[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}  
-					if (ok)
-					{
-						if ((expectedAnswer2 == ERROR_CME) || (expectedAnswer2 == ERROR_CMS))
-						{
-							#if GPRS_debug_mode>0
-								USB.print(F("special error"));
-							#endif
-							while (serialRead(_socket) != ' ');
-							CME_CMS_code=0;
-							aux=serialRead(_socket);
-							// Gets the length of the data string
-							do{
-								CME_CMS_code*=10;
-								CME_CMS_code+=aux-0x30;
-								aux=serialRead(_socket);
-							}while (aux != '\r');
-							#if GPRS_debug_mode>0
-								USB.println(CME_CMS_code, DEC);
-							#endif
-						}
-						free(theCommand);
-						return 2;
-					} 
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 2;
 			}
 			
 			cont=0;
 			cont2=0;
 			ok=false;
 			
-			while (cont < it)	// Compares with expectedAnswer3
+			if (strstr(theCommand, expectedAnswer3) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer3[cont2])
+				if ((expectedAnswer3 == ERROR_CME)||(expectedAnswer3 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer3[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer3[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}  
-					if (ok)
-					{
-						if ((expectedAnswer3 == ERROR_CME) || (expectedAnswer3 == ERROR_CMS))
-						{
-							#if GPRS_debug_mode>0
-								USB.print(F("special error"));
-							#endif
-							while (serialRead(_socket) != ' ');
-							CME_CMS_code=0;
-							aux=serialRead(_socket);
-							// Gets the length of the data string
-							do{
-								CME_CMS_code*=10;
-								CME_CMS_code+=aux-0x30;
-								aux=serialRead(_socket);
-							}while (aux != '\r');
-							#if GPRS_debug_mode>0
-								USB.println(CME_CMS_code, DEC);
-							#endif
-						}
-						free(theCommand);
-						return 3;
-					} 
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 3;
 			}
 			
 			cont=0;
 			cont2=0;
 			ok=false;
 			
-			while (cont < it)	// Compares with expectedAnswer4
+  			if (strstr(theCommand, expectedAnswer4) != NULL)
 			{
-				if (theCommand[cont] == expectedAnswer4[cont2])
+				if ((expectedAnswer4 == ERROR_CME)||(expectedAnswer4 == ERROR_CMS))
 				{
-					cont2=0;
-					while (expectedAnswer3[cont2] != '\0')
-					{
-						if (theCommand[cont+cont2] == expectedAnswer4[cont2])
-						{    
-							cont2++;
-							ok=true; 
-						}
-						else
-						{
-							ok=false; 
-							break;
-						}
-					}  
-					if (ok)
-					{
-						if ((expectedAnswer4 == ERROR_CME)||(expectedAnswer4 == ERROR_CMS))
-						{
-							#if GPRS_debug_mode>0
-								USB.print(F("special error"));
-							#endif
-							while  (serialRead(_socket) != ' ');
-							CME_CMS_code=0;
-							aux=serialRead(_socket);
-							// Gets the length of the data string
-							do{
-								CME_CMS_code*=10;
-								CME_CMS_code+=aux-0x30;
-								aux=serialRead(_socket);
-							}while (aux != '\r');
-							#if GPRS_debug_mode>0
-								USB.println(CME_CMS_code, DEC);
-							#endif
-						}	
-						free(theCommand);
-						return 4;
-					} 
+					#if GPRS_debug_mode>0
+						USB.print(F("special error"));
+					#endif
+					while  (serialRead(_socket) != ' ');
+					CME_CMS_code=0;
+					aux=serialRead(_socket);
+					// Gets the length of the data string
+					do{
+						CME_CMS_code*=10;
+						CME_CMS_code+=aux-0x30;
+						aux=serialRead(_socket);
+					}while (aux != '\r');
+					#if GPRS_debug_mode>0
+						USB.println(CME_CMS_code, DEC);
+					#endif
 				}
-				cont++;
-				cont2=0;
+				free(theCommand);
+				return 4;
 			}
-  			
 		}
 	}
 	free(theCommand);
@@ -1321,6 +1132,21 @@ int8_t WaspGPRS_Pro::sendDataFTP(const char* file, const char* path){
 	#if GPRS_debug_mode>0
 		USB.println(F("Inside sendDataFTP"));
 	#endif
+	
+	previous = millis();
+	while ((FTPstatus() == 2) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000))
+	{
+		delay(1000);
+	}
+	
+	if ((millis()-previous) > AT_FTP_WAIT_CONNEC * 1000)
+	{
+		#if GPRS_debug_mode>0
+			USB.println(F("FTP busy"));
+		#endif
+		return -56;
+	}
+	
 	// Sets server path and name	
 	delay(50);
 	sprintf(buffer_GPRS, "%s\"%s\"", AT_FTP_PUT_NAME, strrchr(path, '/'));
@@ -1430,7 +1256,7 @@ int8_t WaspGPRS_Pro::sendDataFTP(const char* file, const char* path){
 		
 		// Sends the data from the file
 		printString(buffer_GPRS, _socket);
-		previous=millis();		
+		previous = millis();		
 		while ( (!serialAvailable(_socket)) && ((millis()-previous) < 10000));	
 		answer=waitForData("OK", AT_FTP_WAIT_CONNEC * 100, 0, 0);
 		if (answer != 1)
@@ -1499,7 +1325,40 @@ int8_t WaspGPRS_Pro::readDataFTP(const char* file, const char* path){
 	
 	#if GPRS_debug_mode>0
 		USB.println(F("Inside readDataFTP"));
-	#endif
+		USB.print(F("FTP file: "));
+		USB.println(file);
+		USB.print(F("SD file:"));
+		USB.println(path);
+	#endif	
+	
+	previous = millis();
+	while ((FTPstatus() == 2) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000))
+	{
+		delay(1000);
+	}
+	
+	if ((millis()-previous) > AT_FTP_WAIT_CONNEC * 1000)
+	{
+		#if GPRS_debug_mode>0
+			USB.println(F("FTP busy"));
+		#endif
+		return -56;
+	}
+	
+	// First goes to the main directory
+	if (SD.goRoot() != 1)
+	{
+		return -15;
+	}
+	
+	SD.del(path);
+	
+	// Then goes to the file directory in SD card	
+	if (SD.create(path) != 1)
+	{
+		return -16;
+	}
+	
 	// Sets server path and name
 	sprintf(buffer_GPRS, "%s\"%s\"", AT_FTP_GET_NAME, strrchr(file, '/'));
 	count=7;
@@ -1555,21 +1414,9 @@ int8_t WaspGPRS_Pro::readDataFTP(const char* file, const char* path){
 	}
 	i=0;
 	j=0;	
-	// First goes to the main directory
-	if (SD.goRoot() != 1)
-	{
-		return -15;
-	}
-	
-	// Then goes to the file directory in SD card
-	
-	if (SD.create(path) != 1)
-	{
-		return -16;
-	}
-	
-	delay(50);
-	sprintf(buffer_GPRS, "%s2,100", AT_FTP_GET);
+
+	delay(1000);
+	sprintf(buffer_GPRS, "%s2,200", AT_FTP_GET);
 	answer=sendCommand2(buffer_GPRS, "+FTPGET:2,", ERROR_CME, AT_FTP_WAIT_CONNEC * 100, 0);
 	if(answer == 0)
 	{
@@ -1580,30 +1427,48 @@ int8_t WaspGPRS_Pro::readDataFTP(const char* file, const char* path){
 		return -51;
 	}
 	
+	previous=millis();
+	
 	FTP_data=0;
-	aux2=serialRead(_socket);
+	while ((serialAvailable(_socket) == 0) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
+	
+	aux2 = serialRead(_socket);
 	do{	// Gets the length of the data string
 		FTP_data*=10;
 		FTP_data+=aux2-0x30;
+		while ((serialAvailable(_socket) == 0) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
 		aux2=serialRead(_socket);
-	}while (aux2 != '\r');
+	}while ((aux2 != '\r') && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
+
 	serialRead(_socket);
+	
 		
-	while (FTP_data != 0)
+		
+	if ((millis()-previous) > AT_FTP_WAIT_CONNEC * 1000)
+	{
+		return -17;
+	}
+	
+	#if GPRS_debug_mode>0
+		USB.print(F("FTP data: "));
+		USB.println(FTP_data, DEC);
+	#endif
+	
+	while ((FTP_data != 0) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000))
 	{		
 		previous=millis();
-		while ((serialAvailable(_socket) < FTP_data) && ((millis()-previous) < 10000));
+		while ((serialAvailable(_socket) < FTP_data) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
 		
 		for (i=0; i < FTP_data; i++)
 		{
-			buffer_GPRS[i]=serialRead(_socket);
+			buffer_GPRS[i] = serialRead(_socket);
 		}
-		if (SD.append(path, buffer_GPRS, FTP_data) != 1)
+		if (SD.writeSD(path, (uint8_t*)buffer_GPRS, SD.getFileSize(path), FTP_data) != 1)
 		{
 			return -18;
 		}
 		
-		sprintf(buffer_GPRS, "%s2,100", AT_FTP_GET);
+		sprintf(buffer_GPRS, "%s2,200", AT_FTP_GET);
 		answer=sendCommand2(buffer_GPRS, "+FTPGET:2,", ERROR_CME, AT_FTP_WAIT_CONNEC * 100, 0);
 		if(answer == 0)
 		{
@@ -1615,26 +1480,55 @@ int8_t WaspGPRS_Pro::readDataFTP(const char* file, const char* path){
 		}
 		
 		FTP_data=0;
+		while ((serialAvailable(_socket) == 0) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
 		aux2=serialRead(_socket);
 		do{	// Gets the length of the data string
 			FTP_data*=10;
 			FTP_data+=aux2-0x30;
+			while ((serialAvailable(_socket) == 0) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
 			aux2=serialRead(_socket);
-		}while (aux2 != '\r');
+		}while ((aux2 != '\r') && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
 		serialRead(_socket);
+		#if GPRS_debug_mode>0
+			USB.print(F("FTP data: "));
+			USB.println(FTP_data, DEC);
+		#endif
 	}
-
+	
+	if ((millis()-previous) > AT_FTP_WAIT_CONNEC * 1000)
+	{
+		return -53;
+	}
+	
 	return 1;
 }
 
 long WaspGPRS_Pro::getfilesizeFTP(const char* path){
 	
-	long previous=0;
+	long size=0,previous=0;
 	uint8_t answer=0;
 	uint8_t end=0;
 	uint32_t i,j=0;
-	int size=0,aux2,n_bytes=0;
+	int aux2,n_bytes=0;
 
+		
+	#if GPRS_debug_mode>0
+		USB.println(F("Inside FTPsize"));
+	#endif
+	
+	previous = millis();
+	while ((FTPstatus() == 2) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000))
+	{
+		delay(1000);
+	}
+	
+	if ((millis()-previous) > AT_FTP_WAIT_CONNEC * 1000)
+	{
+		#if GPRS_debug_mode>0
+			USB.println(F("FTP busy"));
+		#endif
+		return -56;
+	}
 	
 	// Sets server path and name
 	delay(50);
@@ -1681,13 +1575,26 @@ long WaspGPRS_Pro::getfilesizeFTP(const char* path){
 		return -55;
 	}
 			
-	size=0;
-	aux2=serialRead(_socket);
-	do{	//gets the length of the data string
-		size*=10;
-		size+=aux2-0x30;
-		aux2=serialRead(_socket);
-	}while (aux2 != '\r');
+	size = 0;
+	
+	previous = millis();
+	
+	while ((serialAvailable(_socket) == 0) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
+	aux2 = serialRead(_socket);
+	do{	// Gets the length of the data string
+		size *= 10;
+		size += aux2 - 0x30;
+		while ((serialAvailable(_socket) == 0) && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
+		aux2 = serialRead(_socket);
+	}while ((aux2 != '\r') && ((millis()-previous) < AT_FTP_WAIT_CONNEC * 1000));
+	
+	if ((millis()-previous) > AT_FTP_WAIT_CONNEC * 1000)
+	{
+		#if GPRS_debug_mode>0
+			USB.println(F("Timeout"));
+		#endif
+		return -56;
+	}	
 	
 	#if GPRS_debug_mode>0
 		USB.print(F("Size in FTP: "));
@@ -1696,6 +1603,37 @@ long WaspGPRS_Pro::getfilesizeFTP(const char* path){
 		
 	return size;
 	
+}
+
+/* FTPstatus() - Checks if the FTP is busy
+ *
+ * This function checks if the FTP is busy or idle
+ *
+ * Returns '2' if FTP is busy, '1' if FTP is idle and '0' if error.
+*/
+int8_t WaspGPRS_Pro::FTPstatus(){
+	long previous;
+	int8_t answer;
+	
+	answer = sendCommand2(AT_FTP_STATUS, AT_FTP_STATUS, ERROR_CME);
+	if (answer == 1)
+	{
+		previous = millis();
+		while((serialAvailable(_socket) < 2) && ((millis() - previous) < 2000));
+		if ((millis() - previous) > 2000)
+		{
+			return 0;
+		}
+		
+		serialRead(_socket);
+		serialRead(_socket);
+		return (serialRead(_socket) - 0x2F);
+	}
+	else if (answer == 2)
+	{
+		return -2;
+	}
+	return 0;
 }
 #endif
 
@@ -1755,10 +1693,10 @@ int8_t WaspGPRS_Pro::closeHTTP(){
  *
  * Returns nothing
 */
-void WaspGPRS_Pro::ON(){
+int8_t WaspGPRS_Pro::ON(){
 	
-	disableInterrupts(HAI_INT);
-	disableInterrupts(LAI_INT);
+	detachInterrupt(RXD1_PIN);
+	detachInterrupt(TXD1_PIN);
 	
 	#if GPRS_debug_mode==1
 		USB.println(F("Debug mode 1"));
@@ -1778,7 +1716,7 @@ void WaspGPRS_Pro::ON(){
 		RTC.clearAlarmFlag();
 	}
 	begin();
-	setMode(GPRS_PRO_ON);
+	return (setMode(GPRS_PRO_ON));
 }
 
 /* begin(void) - initialize SIM900 module
@@ -1877,6 +1815,7 @@ int8_t WaspGPRS_Pro::setMode(uint8_t pwrMode){
 					delay(2000);
 					digitalWrite(GPRS_PW, LOW);
 					counter=10;
+					global_counter--;
 				}
 			}*/
 			
@@ -1892,8 +1831,8 @@ int8_t WaspGPRS_Pro::setMode(uint8_t pwrMode){
 				USB.println(not_ready, DEC);
 			#endif
 			
-			counter=20;
-			global_counter = 5;
+			counter = 15;
+			global_counter = 3;
 			while ((not_ready == 1) && (global_counter > 0))
 			{
 				getIfReady();
@@ -1904,12 +1843,16 @@ int8_t WaspGPRS_Pro::setMode(uint8_t pwrMode){
 				counter--;
 				delay(1000);
 				if (counter == 0)
-				{
+				{	
+					#if GPRS_debug_mode>0
+						USB.println(F("Restarting"));
+					#endif
 					delay(500);
 					digitalWrite(GPRS_PW, LOW);
 					delay(2000);
 					digitalWrite(GPRS_PW, HIGH);
 					counter=20;
+					global_counter--;
 				}
 			}
 			
@@ -1925,9 +1868,18 @@ int8_t WaspGPRS_Pro::setMode(uint8_t pwrMode){
 				answer=sendCommand1(POWER_NO_SLEEP, OK_RESPONSE);
 				
 				answer=sendCommand2(POWER_FULL, OK_RESPONSE, ERROR_CME);
+				
+				if (PWR.getBatteryLevel() < 20)
+				{	
+					USB.println(F("********************"));
+					USB.println(F("Danger! Low battery!"));
+					USB.println(F("********************"));
+					answer = 3;
+				}
 			}
 			else
-			{
+			{	
+				digitalWrite(GPRS_PW, LOW);
 				answer = 0;
 			}
 			
@@ -1952,7 +1904,7 @@ int8_t WaspGPRS_Pro::setMode(uint8_t pwrMode){
 			answer=sendCommand1(POWER_SLEEP, OK_RESPONSE);
 			break;
 
-		case GPRS_PRO_POWER_OFF:		
+		case GPRS_PRO_POWER_OFF:
 			// GPRS_Pro v1.0
 			/*delay(500);
 			digitalWrite(GPRS_PW, HIGH);
@@ -1989,9 +1941,9 @@ int8_t WaspGPRS_Pro::setMode(uint8_t pwrMode){
 		_pwrMode=pwrMode;
 		return 1;
 	}
-	else if (answer == 2)
+	else if (answer > 1)
 	{
-		return -2;
+		return -answer;
 	}
 		
 	return 0;
@@ -2007,7 +1959,6 @@ uint8_t	WaspGPRS_Pro::getMode(){
 	return	_pwrMode;
 }
 
-//FORJA
 /* setTime() - Sets time and date to GPRS_Pro module from RTC
  *
  * Sets time and date to GPRS_Pro module from RTC
@@ -2046,7 +1997,7 @@ uint8_t WaspGPRS_Pro::setTime(){
 	}
 }
 
-/* check(void) - Checks if GPRS is connected to the network
+/* check(uint8_t) - Checks if GPRS is connected to the network
  *
  * This function checks if GPRS module is connected to the network. If not, it has no sense working with GPRS.
  *
@@ -2055,10 +2006,19 @@ uint8_t WaspGPRS_Pro::setTime(){
  *
  * Returns '1' when connected and '0' if not
 */
-int8_t WaspGPRS_Pro::check(){
+int8_t WaspGPRS_Pro::check(uint16_t time){
 	
-	// Sends the command and waits for the answer (0,1 for home network and 0,5 for roaming)
-	if (sendCommand2("+CREG?", "+CREG: 0,1", "+CREG: 0,5") == 0)
+	unsigned long previous;
+	int8_t answer;
+	
+	previous = millis();
+	
+	do{	
+		// Sends the command and waits for the answer (0,1 for home network and 0,5 for roaming)
+		answer = sendCommand2("+CREG?", "+CREG: 0,1", "+CREG: 0,5");
+	}while ((answer == 0) && ((millis() - previous) < (time * 1000)));
+	
+	if ((answer == 0) || ((millis() - previous) > (time * 1000)))
 	{
 		return 0;
 	}
@@ -2156,7 +2116,7 @@ int8_t WaspGPRS_Pro::getIMEI(){
 */
 int8_t WaspGPRS_Pro::getIMSI(){
 
-	long previous=millis();
+	unsigned long previous=millis();
 	int8_t counter=0,answer=0;
 	
 	answer=sendCommand2(AT_GPRS_IMSI, "\r\n", ERROR_CME);
@@ -2679,6 +2639,10 @@ int8_t WaspGPRS_Pro::readSMS(const char* data){
 		while( serialAvailable(_socket) && (millis()-previous) < 2000 )
 		{
 			byteIN[a]=serialRead(_socket);
+			
+			#if GPRS_debug_mode>0
+				USB.print(byteIN[a]);
+			#endif
 			a++;
 		}
 	}
@@ -2702,6 +2666,9 @@ int8_t WaspGPRS_Pro::readSMS(const char* data){
 	while ( (byteIN[a] != '"') && (a < 200) && (c < 15) )
 	{
 		tlfIN[c]=byteIN[a];
+		#if GPRS_debug_mode>0
+			USB.print(tlfIN[c]);
+		#endif
 		a++;
 		c++;
 	}
@@ -2737,6 +2704,10 @@ int8_t WaspGPRS_Pro::readSMS(const char* data){
 	while ( (byteIN[a] != 13) && (a < 200) && (b < 100) )
 	{
 		sms[b]=byteIN[a];
+		
+		#if GPRS_debug_mode>0
+			USB.print(sms[b]);
+		#endif
 		b++;
 		a++;
 	}
@@ -2770,6 +2741,7 @@ int8_t WaspGPRS_Pro::readSMS(const char* data){
 uint8_t WaspGPRS_Pro::getTotalSMS(){
 	
 	int8_t answer, count;
+	long previous;
 	
 	sprintf(buffer_GPRS, "%s\"SM\",\"SM\",\"SM\"", AT_SMS_MEMORY);  
 	answer=sendCommand1(buffer_GPRS, AT_SMS_MEMORY_R);
@@ -2780,12 +2752,13 @@ uint8_t WaspGPRS_Pro::getTotalSMS(){
 		count=serialRead(_socket);
 		answer=0;	
 		
+		previous = millis();
 		// Gets the number of SMS in the memory
 		do{
 			answer*=10;
 			answer+=count-0x30;
 			count=serialRead(_socket);
-		}while (count != ',');
+		}while ((count != ',') && ((millis()-previous) < 1000));
 		
 		return answer;
 	}
@@ -2826,7 +2799,7 @@ uint8_t WaspGPRS_Pro::deleteSMS(uint8_t sms_index){
  * Returns '1' for call, '2' for SMS, '3' for IP data and '0' for error or not data
 */
 int8_t	WaspGPRS_Pro::manageIncomingData(){
-	char* byteIN = (char*) calloc(100, sizeof(char));
+	char* byteIN = (char*) calloc(200, sizeof(char));
 	if ( byteIN == NULL )
 	{
 		return -1;
@@ -2857,12 +2830,12 @@ int8_t	WaspGPRS_Pro::manageIncomingData(){
 	if (a > 0) // this if is conditionated by the fuses selected in WaspGPRS_Pro.h
 	{
 #if GSM_FUSE&&IP_FUSE	
-		if (parse(byteIN, "+CLIP"))
+		if ((strstr(byteIN, "+CLIP")) != NULL)
 		{
 			readCall(byteIN);
 			a=1;
 		}
-		else if (parse(byteIN, "+CMTI"))
+		else if ((strstr(byteIN, "+CMTI")) != NULL)
 		{
 			readSMS(byteIN);
 			a=2;
@@ -2874,12 +2847,12 @@ int8_t	WaspGPRS_Pro::manageIncomingData(){
 		}
 #endif
 #if GSM_FUSE&&(~IP_FUSE)
-		if (parse(byteIN, "+CLIP"))
+		if ((strstr(byteIN, "+CLIP")) != NULL)
 		{
 			readCall(byteIN);
 			a=1;
 		}
-		else if (parse(byteIN, "+CMTI"))
+		else if ((strstr(byteIN, "+CMTI")) != NULL)
 		{
 			readSMS(byteIN);
 			a=2;
@@ -2965,11 +2938,10 @@ int8_t WaspGPRS_Pro::sendCommand(const char* ATcommand){
 	sprintf(buffer_GPRS, "AT%s%c%c", ATcommand, '\r', '\n');
 
 	serialFlush(_socket);
-	while (!serialAvailable(_socket))
-	{
-		printString(buffer_GPRS, _socket);
-		delay(DELAY_ON_SEND);
-	}
+	
+	printString(buffer_GPRS, _socket);
+	delay(DELAY_ON_SEND);
+	
 	while ( timeout < 5 )
 	{
 		while (!serialAvailable(_socket) && (timeout < 5))
@@ -2979,9 +2951,16 @@ int8_t WaspGPRS_Pro::sendCommand(const char* ATcommand){
 		}
 		while (serialAvailable(_socket) && (timeout < 5))
 		{
-			buffer_GPRS[i] = serialRead(_socket);
+			if (i < BUFFER_SIZE)
+			{
+				buffer_GPRS[i] = serialRead(_socket);
+				i++;
+			}
+			else
+			{
+				serialRead(_socket);
+			}
 			delay(20);
-			i++;
 			timeout=0;
 			if (i >= 199)
 			{
@@ -2989,7 +2968,15 @@ int8_t WaspGPRS_Pro::sendCommand(const char* ATcommand){
 			}
 		}
 	}
-	buffer_GPRS[i]='\0';
+	
+	if (i < BUFFER_SIZE)
+	{
+		buffer_GPRS[i] = '\0';
+	}
+	else
+	{
+		buffer_GPRS[i - 1] = '\0';
+	}	
 	
 	if ( i < 5 )
 	{
@@ -3101,8 +3088,8 @@ int8_t WaspGPRS_Pro::uploadFile(const char* file, const char* path, const char* 
 	closeGPRS_HTTP_FTP_connection(n_conf);
 	
 	sprintf(buffer_GPRS, "%s1,%u", AT_GPRS_CFG, n_conf); // Opens connection
-	count=10;
-    do{
+	count = 10;
+    do{	
         count--;
 		answer=sendCommand1(buffer_GPRS, OK_RESPONSE);
     }while ((answer != 1) && (count != 0));
@@ -3265,10 +3252,10 @@ int8_t WaspGPRS_Pro::uploadFile(const char* file, const char* path, const char* 
 		
 	count=10;
 	do{
-		answer=sendDataFTP(file, path);	
+		answer = sendDataFTP(file, path);	
 		count--;
 		ftp_size=getfilesizeFTP(path);
-	}while (!((ftp_size == sd_size-1) || (ftp_size == sd_size) || (ftp_size == sd_size+1)) && (count != 0));
+	}while (!( ftp_size == sd_size) && (count != 0));
 	
 	SD.OFF();
 	
@@ -3294,7 +3281,7 @@ int8_t WaspGPRS_Pro::uploadFile(const char* file, const char* path, const char* 
  *
  * This function downloads a file from a FTP server
  *
- * Returns '1' on success and '0' if error opening connection with the GPRS provider, '-2' if error getting the IP address
+ * Returns '1' on success and '0' if error opening connection with the GPRS provider, '-1' error downloading the file, '-2' if error getting the IP address
  * '-3' if error setting the FTP/HTTP ID, '-4' if error setting the FTP mode, '-5' if error setting the FTP type,
  * '-6' if error setting the FTP server, '-7' if error setting the FTP port, '-8' if error setting the user name,
  * '-9' if error setting the password, '-12' if error setting the file name in the FTP server, 
@@ -3310,21 +3297,22 @@ int8_t WaspGPRS_Pro::uploadFile(const char* file, const char* path, const char* 
  * '-51' if error requesting data to the FTP with CME error code available, '-52' if error requesting more data to the FTP with CME error code available,
  * '-53' setting the file name in the FTP to get the file size with CME error code available,
  * '-54' setting the path in the FTP to get the file size with CME error code available, '-55' if error getting the file size with CME error code available
+ * and '-56' if FTP is busy
 */
 int8_t WaspGPRS_Pro::downloadFile(const char* file, const char* path, const char* user, const char* passw, const char* ftp_server, const char* ftp_port, uint8_t n_conf){
 	
 	long previous=0;
-	uint8_t answer=0;
+	int8_t answer=0;
 	uint8_t id=0;
 	uint8_t i=0,j=0;
 	uint8_t count=10;
-	long sd_size=0;
-	long ftp_size=0;
+	unsigned long sd_size=0;
+	unsigned long ftp_size=0;
 	
 	closeGPRS_HTTP_FTP_connection(n_conf);
 	
 	sprintf(buffer_GPRS, "%s1,%u", AT_GPRS_CFG, n_conf); // Opens connection
-	count=10;
+	count = 5;
     do
 	{
         count--;
@@ -3461,30 +3449,32 @@ int8_t WaspGPRS_Pro::downloadFile(const char* file, const char* path, const char
 		return -47;
 	}
 	
-		
-	count=10;
-	do{
-		ftp_size=getfilesizeFTP(file);
-		count--;
-	}while ((ftp_size <= -1) && (count != 0));
-	
-	if (count == 0)
-	{
-		closeGPRS_HTTP_FTP_connection(n_conf);
-		return ftp_size;
-	}
-	
 	SD.ON();
-	count=10;
+	count = 3;
 	do{
-		answer=readDataFTP(file, path);
+		answer = readDataFTP(file, path);
+		ftp_size = getfilesizeFTP(file);
+		#if GPRS_debug_mode>0
+			USB.print(F("Return from readDataFTP: "));
+			USB.println(answer, DEC);
+			USB.print(F("ftp_size: "));
+			USB.println(ftp_size, DEC);
+			USB.print(F("count: "));
+			USB.println(count, DEC);
+			USB.print(F("file size SD: "));
+			USB.println(SD.getFileSize(path), DEC);
+		#endif
 		count--;
-	}while ((answer != 1) && (count != 0));
+	}while (((answer != 1)  || (ftp_size != SD.getFileSize(path))) && (count != 0));
 	SD.OFF();
-	
-	if (count == 0)
+
+	if ((count == 0) && (ftp_size != SD.getFileSize(path)))
 	{
 		closeGPRS_HTTP_FTP_connection(n_conf);
+		if (answer == 1)
+		{
+			return -1;
+		}
 		return answer;
 	}
 
@@ -3492,15 +3482,10 @@ int8_t WaspGPRS_Pro::downloadFile(const char* file, const char* path, const char
 
 	return 1;
 }
-
 #endif
 
 #if HTTP_FUSE
 
-
-int8_t WaspGPRS_Pro::readURL(const char* url, uint8_t n_conf){
-		return (readURL(url, NULL, 0, n_conf));
-}
 /* readURL(const char*, uint8_t) - access to the specified URL and stores the info read in 'buffer_GPRS' variable
  *
  * This function access to the specified URL and stores the info read in 'buffer_GPRS' variable
@@ -3512,6 +3497,26 @@ int8_t WaspGPRS_Pro::readURL(const char* url, uint8_t n_conf){
  * '-7' if error starting HTTP sesion, '-13' if error starting HTTP sesion with CME error code available,
  * '-8' if error getting data from url, '-14' if error getting data from url with CME error code available,
  * '-9' if error closing the HTTP service, '-15' if error closing the HTTP service with CME error code available,
+ * '2' if buffer_GPRS is full. The answer from the server is limited by the length of buffer_GPRS. To increase the length
+ * of the answer, increase the BUFFER_SIZE constant.
+ */
+int8_t WaspGPRS_Pro::readURL(const char* url, uint8_t n_conf){
+		return (readURL(url, NULL, 0, n_conf));
+}
+
+/* readURL(const char*, uint8_t, int, uint8_t) - access to the specified URL and stores the info read in 'buffer_GPRS' variable
+ *
+ * This function access to the specified URL and stores the info read in 'buffer_GPRS' variable
+ *
+ * Returns '1' on success and '0' if error, '-2' if error opening the connection,'-3' if error getting the IP address,
+ * '-4' if error initializing the HTTP service, '-10' if error initializing the HTTP service with CME error code available,
+ * '-5' if error setting CID the HTTP service, '-11' if error setting CID the HTTP service with CME error code available,
+ * '-6' if error setting the url the HTTP service, '-12' if error setting the url the HTTP service with CME error code available,
+ * '-7' if error starting HTTP sesion, '-13' if error starting HTTP sesion with CME error code available,
+ * '-8' if error getting data from url, '-14' if error getting data from url with CME error code available,
+ * '-9' if error closing the HTTP service, '-15' if error closing the HTTP service with CME error code available,
+ * '2' if buffer_GPRS is full. The answer from the server is limited by the length of buffer_GPRS. To increase the length
+ * of the answer, increase the BUFFER_SIZE constant.
  */
 int8_t WaspGPRS_Pro::readURL(const char* url, uint8_t* data, int length, uint8_t n_conf){
 	
@@ -3548,7 +3553,7 @@ int8_t WaspGPRS_Pro::readURL(const char* url, uint8_t* data, int length, uint8_t
 			}while ((IP_dir[i-1] != '"') && (millis()-previous < 10000));
 			IP_dir[i-1]='\0';
 		}
-    }while ((answer != 1 && counter != 0));
+    }while ((answer != 1) && (counter != 0));
 
     if (counter == 0)
 	{
@@ -3673,19 +3678,38 @@ int8_t WaspGPRS_Pro::readURL(const char* url, uint8_t* data, int length, uint8_t
 		aux=0;
 		previous=millis();
 		do{	//gets the length of the data string
-			buffer_GPRS[counter]=serialRead(_socket);
+			if (counter < BUFFER_SIZE)
+			{
+				buffer_GPRS[counter]=serialRead(_socket);
+				counter++;
+			}
+			else
+			{ 
+				serialRead(_socket);
+			}			
 			aux++;
-			counter++;
 		}while ((aux < HTTP_data) && (millis()-previous < 10000));
 		waitForData("OK", 20, 0, 0);
 	
-	}while (HTTP_data == 100);
+	}while ((HTTP_data == 100) && (counter < BUFFER_SIZE) && (millis()-previous < 10000));
 	
-	buffer_GPRS[counter]='\0';
+	if (counter < BUFFER_SIZE)
+	{
+		buffer_GPRS[counter] = '\0';
+	}
+	else
+	{
+		buffer_GPRS[counter - 1] = '\0';
+	}
 	
 	closeHTTP();		
 	
 	closeGPRS_HTTP_FTP_connection(n_conf);
+	
+	if (counter >= BUFFER_SIZE)
+	{
+		return 2;
+	}
 	
 	return 1;
 }
@@ -3764,7 +3788,7 @@ int8_t WaspGPRS_Pro::getAvailableOperators(){
 			while ((serialAvailable(_socket) == 0) && (millis()-previous < 10000));
 			operators_list[j].format=aux-0x30;
 			aux=serialRead(_socket);
-		}while (aux != ',');
+		}while ((aux != ',') && (millis()-previous < 10000));
 		while ((serialRead(_socket)!='"') && (millis()-previous < 10000)); // Gets operator name
 		i=0;
 		do{
@@ -3810,7 +3834,7 @@ int8_t WaspGPRS_Pro::setPreferredOperator(int index, uint8_t format, const char*
 */
 int8_t WaspGPRS_Pro::getCellInfo(){
 	
-	long previous=millis();
+	unsigned long previous=millis();
 	uint8_t counter=0;
 	uint8_t a,b=0;
 	int answer=0;
@@ -3960,6 +3984,7 @@ int8_t WaspGPRS_Pro::configureGPRS_TCP_UDP(uint8_t mode, uint8_t app_mode){
 	uint8_t answer=0;
 	uint8_t count;
 	uint8_t state;
+	long previous;
 	
 	for (count = 0; count < 16; count++)
 	{
@@ -4006,8 +4031,14 @@ int8_t WaspGPRS_Pro::configureGPRS_TCP_UDP(uint8_t mode, uint8_t app_mode){
 	{
 		return -16;
 	}
-	while (checkGPRS() != 1);
 	
+	previous = millis();
+	while ((checkGPRS() != 1) && ((millis() - previous) < 60000));
+	
+	if ((millis() - previous) > 60000)
+	{
+		return -17;
+	}
 	
 	// Set the application mode: transparent or not transparent
 	if (app_mode == 0)
@@ -4377,11 +4408,11 @@ int8_t WaspGPRS_Pro::readIPData(char* dataIN){
 		if (IP_app_mode == 0)
 		{	
 			// Non transparent mode
-			if (parse(dataIN, "+CIPRXGET"))
+			if (strstr(dataIN, "+CIPRXGET") != NULL)
 			{
 				answer=GetDataManually(150, 0);
 			}
-			else if (parse(dataIN, "+IPD"))
+			else if (strstr(dataIN, "+IPD") != NULL)
 			{
 				do{
 					i++;
@@ -4399,14 +4430,24 @@ int8_t WaspGPRS_Pro::readIPData(char* dataIN){
 				
 				for ( j=0; j < IP_data_length; j++)
 				{
-					buffer_GPRS[j]=dataIN[i+j];
+					if (j < BUFFER_SIZE - 1)
+					{
+						buffer_GPRS[j]=dataIN[i+j];
+					}					
 				}
 				
 			}
 			else
 			{
-				// copy dataIN to buffer_GPRS
-				strcpy(buffer_GPRS, dataIN);
+					// copy dataIN to buffer_GPRS
+				if (strlen(dataIN) < BUFFER_SIZE)
+				{
+					strcpy(buffer_GPRS, dataIN);
+				}
+				else
+				{
+					strncpy(buffer_GPRS, dataIN, BUFFER_SIZE - 2);
+				}
 			}
 				
 		}
@@ -4414,13 +4455,20 @@ int8_t WaspGPRS_Pro::readIPData(char* dataIN){
 		{
 			// Transparent mode
 			// copy dataIN to buffer_GPRS
-			strcpy(buffer_GPRS, dataIN);
+			if (strlen(dataIN) < BUFFER_SIZE)
+			{
+				strcpy(buffer_GPRS, dataIN);
+			}
+			else
+			{
+				strncpy(buffer_GPRS, dataIN, BUFFER_SIZE - 2);
+			}
 		}
 	}
 	else
 	{
 		// Multiconnection mode		
-		if (parse(dataIN, "+CIPRXGET"))
+		if (strstr(dataIN, "+CIPRXGET") != NULL)
 		{
 			while (dataIN[i] != ',')
 			{
@@ -4499,8 +4547,8 @@ int8_t WaspGPRS_Pro::closeSocket(uint8_t n_connection){
 				sprintf(buffer_GPRS, "%s%c,0", AT_IP_CLOSE, n_connection+0x30);
 				break;
 		}
-		
-		answer=sendCommand1(buffer_GPRS, AT_IP_CLOSE_R);
+		 
+		answer = sendCommand1(buffer_GPRS, AT_IP_CLOSE_R);
 	}
 	
 	if (answer != 1)
@@ -4530,7 +4578,7 @@ int8_t WaspGPRS_Pro::QuickcloseSocket(uint8_t mode){
 			break;
 	}
 	
-	answer=sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
+	answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
 	
 	if (answer != 1)
 	{
@@ -4593,7 +4641,7 @@ int8_t WaspGPRS_Pro::IPHeader(uint8_t on_off){
 
 	sprintf(buffer_GPRS, "%s%u", AT_IP_HEADER, on_off);
 	
-	answer=sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
+	answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
 		
 	if (answer != 1)
 	{
@@ -4632,7 +4680,7 @@ int8_t WaspGPRS_Pro::SetAutoSendingTimer(uint8_t mode, uint8_t time){
 			break;
 	}
 	
-	answer=sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
+	answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
 	
 	if (answer != 1)
 	{
@@ -4652,7 +4700,7 @@ int8_t WaspGPRS_Pro::ShowRemoteIP(uint8_t on_off){
 	uint8_t answer=0;
 	sprintf(buffer_GPRS, "%s%u", AT_IP_SHOW_REMOTE_IP, on_off);
 	
-	answer=sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
+	answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
 	
 	if (answer != 1)
 	{
@@ -4673,7 +4721,7 @@ int8_t WaspGPRS_Pro::ShowProtocolHeader(uint8_t on_off){
 	
 	sprintf(buffer_GPRS, "%s%u", AT_IP_PROTOCOL_HEADER, on_off);
 	
-	answer=sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
+	answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
 
 	if (answer != 1)
 	{
@@ -4694,7 +4742,7 @@ int8_t WaspGPRS_Pro::DiscardInputATData(uint8_t on_off){
 	
 	sprintf(buffer_GPRS, "%s%u", AT_IP_DISCARD_AT_DATA, on_off);
 	
-	answer=sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);	
+	answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);	
 
 	if (answer != 1)
 	{
@@ -4732,7 +4780,7 @@ int8_t WaspGPRS_Pro::SetDataManually(uint8_t on_off, uint8_t id){
 		sprintf(buffer_GPRS, "%s=%u,%u", AT_IP_GET_MANUALLY, on_off, id);
 	}
 	
-	answer=sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
+	answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR);
 	
 	if (answer != 1)
 	{
@@ -4756,13 +4804,15 @@ int8_t WaspGPRS_Pro::GetDataManually(uint16_t data_length){
  *
  * This function gets data manually from a TCP or UDP connection
  *
- * Returns '1' on success, '0' if error 
+ * Returns '1' on success, '0' if error and '2' if buffer_GPRS is full. The answer from the server is 
+ * limited by the length of buffer_GPRS. To increase the length of the answer, increase the BUFFER_SIZE constant.
 */
 int8_t WaspGPRS_Pro::GetDataManually(uint16_t data_length, uint8_t id){
 
 	uint8_t answer=0;
 	uint8_t i=0,IP_data_length;
 	char aux;
+	long previous;
 	
 	
 	if (IP_mode == 0)
@@ -4773,26 +4823,27 @@ int8_t WaspGPRS_Pro::GetDataManually(uint16_t data_length, uint8_t id){
 	{
 		sprintf(buffer_GPRS, "%s=2,%u,%u", AT_IP_GET_MANUALLY, id, data_length);
 	}
-	answer=sendCommand2(buffer_GPRS, "+CIPRXGET=2,", ERROR);
+	answer = sendCommand2(buffer_GPRS, "+CIPRXGET=2,", ERROR);
 	
 	switch (answer)
 	{
 		case 0:
 			return 0;
 			break;
-		case 1:			
+		case 1:	
+			previous = millis();
 			do{
-				while (serialAvailable(_socket) == 0);
-			}while (serialRead(_socket) != ':');
+				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000));
+			}while ((serialRead(_socket) != ':') && ((millis() - previous) < 10000));
 			do{
-				while (serialAvailable(_socket) == 0);
-			}while (serialRead(_socket) != ',');
+				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000));
+			}while ((serialRead(_socket) != ',') && ((millis() - previous) < 10000));
 			
 			if (IP_mode == 1)
 			{
 				do{
-					while(serialAvailable(_socket) == 0);
-				}while (serialRead(_socket) != ',');
+					while((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000));
+				}while ((serialRead(_socket) != ',') && ((millis() - previous) < 10000));
 			}
 			
 			// Gets the length of the data string
@@ -4802,22 +4853,37 @@ int8_t WaspGPRS_Pro::GetDataManually(uint16_t data_length, uint8_t id){
 				IP_data_length*=10;
 				IP_data_length+=(aux-0x30);
 				aux=serialRead(_socket);
-			}while (aux != ',');
+			}while ((aux != ',') && ((millis() - previous) < 10000));
 		
 			do{
-				while (serialAvailable(_socket) == 0);
-			}while (serialRead(_socket) != '\n');
+				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000));
+			}while ((serialRead(_socket) != '\n') && ((millis() - previous) < 10000));
 		
 			do{
-				while (serialAvailable(_socket) == 0);
-				buffer_GPRS[i]=serialRead(_socket);
+				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000));
+				if (i < BUFFER_SIZE)
+				{
+					buffer_GPRS[i] = serialRead(_socket);
+				}
+				else
+				{
+					serialRead(_socket);
+				}
 				i++;
-			}while (i < (IP_data_length-1));
+			}while ((i < (IP_data_length-1)) && ((millis() - previous) < 10000));
+			
+			buffer_GPRS[BUFFER_SIZE - 1] = '\0';
+			
 			break;
 			
 		case 2:
 			return 0;
 			break;
+	}
+	
+	if (i >= BUFFER_SIZE)
+	{
+		return 2;
 	}
 	
 	return 1;
@@ -4888,7 +4954,292 @@ uint8_t WaspGPRS_Pro::setDNS(const char* DNS_dir1, const char* DNS_dir2){
 	return answer;
 }
 
+/* whoamI() - Gets the model of the module
+ *
+ * This function gets the model of the module and saves it in 'buffer_GPRS'
+ *
+ * Returns '1' on success, '0' if error
+*/
+int8_t WaspGPRS_Pro::whoamI(){
+	int8_t answer, x;
+	long previous;
+	
+	// Sends the command:
+	answer=sendCommand1(AT_WHO_AM_I, "\r\n");
 
+	if (answer == 1)
+	{
+		x=0;
+		previous=millis();
+		do{
+			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000));
+			buffer_GPRS[x]=serialRead(_socket);
+			x++;
+		}while ((buffer_GPRS[x-1] != '\r') && ((millis() - previous) < 5000));
+		buffer_GPRS[x-1]='\0';
+	}
+	
+	return answer;
+
+}
+
+/* firmware_version() - Gets the firmware version of the module
+ *
+ * This function gets the firmware version of the module and saves it in 'buffer_GPRS'
+ *
+ * Returns '1' on success, '0' if error
+*/
+int8_t WaspGPRS_Pro::firmware_version(){
+	int8_t answer, x;
+	long previous;
+	
+	// Sends the command:
+	answer=sendCommand1(AT_FIRMWARE, AT_FIRMWARE_R);
+
+	if (answer == 1)
+	{
+		x=0;
+		previous=millis();
+		do{
+			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000));
+			buffer_GPRS[x]=serialRead(_socket);
+			x++;
+		}while ((buffer_GPRS[x-1] != '\r') && ((millis() - previous) < 5000));
+		buffer_GPRS[x-1]='\0';
+	}
+	
+	return answer;
+
+}
+
+/* show_APN() - Shows the apn, login and password constants
+ *
+ * This function shows the apn, login and password constants
+ *
+ * Returns nothing
+*/
+void WaspGPRS_Pro::show_APN(){
+	// APN parameters depends on SIM
+	USB.print(F("APN: "));
+	USB.println(AT_GPRS_APN);
+	USB.print(F("LOGIN: "));
+	USB.println(AT_GPRS_LOGIN);
+	USB.print(F("PASSWORD: "));
+	USB.println(AT_GPRS_PASSW);
+} 
+
+#if OTA_FUSE
+/* requestOTA(const char*, const char*, const char*, const char*) - It downloads a new OTA file if OTA is necessary
+ *
+ * This function downloads a new OTA file if OTA is necessary
+ *
+ * Returns '1' if success, '-2' if error and '-4' if error setting the type of internet connection, 
+ * '-5' if error setting the apn, '-6' if error setting the user name, '-7' if error setting the password
+ * '-8' if error saving the configuration, '-9' if error opening connection with the GPRS provider, '-10' error downloading OTA version file, '-11' if error getting the IP address
+ * '-12' if error setting the FTP/HTTP ID, '-13' if error setting the FTP mode, '-14' if error setting the FTP type,
+ * '-15' if error setting the FTP server, '-16' if error setting the FTP port, '-17' if error setting the user name,
+ * '-18' if error setting the password, '-21' if error setting the file name in the FTP server, 
+ * '-22' if error setting the path of the file in the FTP server, '-23' if error opening the FTP session,
+ * '-24' if error starting the SD, '-25' if error creating the file, '-26' error requesting data to the FTP,
+ * '-27' if error saving data into the SD, '-28' if error requesting more data to the FTP, '-30' setting the file name in the FTP to get the file size
+ * '-31' setting the path in the FTP to get the file size, '-32' if error getting the file size
+ * '-50' if error setting the FTP/HTTP ID with CME error code available, '-51' if error setting the FTP mode with CME error code available,
+ * '-52' if error setting the FTP type with CME error code available, '-53' if error setting the FTP server with CME error code available,
+ * '-54' if error setting the FTP port with CME error code available, '-55' if error setting the user name with CME error code available,
+ * '-56' if error setting the password with CME error code available, '-57' if error setting the file name in the FTP server with CME error code available,
+ * '-58' if error setting the path of the file in the FTP server with CME error code available, '-59' if error opening the FTP session with CME error code available,
+ * '-60' if error requesting data to the FTP with CME error code available, '-61' if error requesting more data to the FTP with CME error code available,
+ * '-62 setting the file name in the FTP to get the file size with CME error code available,
+ * '-63' setting the path in the FTP to get the file size with CME error code available, '-64' if error getting the file size with CME error code available,
+ * '-65' if FTP is busy, '-66' if there isn't FILE tag, '-67' if there isn't PATH tag, '-68' if there isn't VERSION tag,'-69' if OTA is not necessary, 
+ * '-70' if OTA files are the same program version, '-71' if error opening connection with the GPRS provider, '-72' error downloading OTA file, '-73' if error getting the IP address
+ * '-74' if error setting the FTP/HTTP ID, '-75' if error setting the FTP mode, '-76' if error setting the FTP type,
+ * '-77' if error setting the FTP server, '-78' if error setting the FTP port, '-79' if error setting the user name,
+ * '-80' if error setting the password, '-83' if error setting the file name in the FTP server, 
+ * '-84' if error setting the path of the file in the FTP server, '-85' if error opening the FTP session,
+ * '-86' if error starting the SD, '-87' if error creating the file, '-88' error requesting data to the FTP,
+ * '-89' if error saving data into the SD, '-90' if error requesting more data to the FTP, '-92' setting the file name in the FTP to get the file size
+ * '-93' setting the path in the FTP to get the file size, '-94' if error getting the file size
+ * '-112' if error setting the FTP/HTTP ID with CME error code available, '-113' if error setting the FTP mode with CME error code available,
+ * '-114' if error setting the FTP type with CME error code available, '-115' if error setting the FTP server with CME error code available,
+ * '-116' if error setting the FTP port with CME error code available, '-117' if error setting the user name with CME error code available,
+ * '-118' if error setting the password with CME error code available, '-119' if error setting the file name in the FTP server with CME error code available,
+ * '-120' if error setting the path of the file in the FTP server with CME error code available, '-121' if error opening the FTP session with CME error code available,
+ * '-122' if error requesting data to the FTP with CME error code available, '-123' if error requesting more data to the FTP with CME error code available,
+ * '-124' setting the file name in the FTP to get the file size with CME error code available,
+ * '-125' setting the path in the FTP to get the file size with CME error code available, '-126' if error getting the file size with CME error code available
+ * and '-127' if FTP is busy
+*/
+int8_t WaspGPRS_Pro::requestOTA(const char* FTP_server, const char* FTP_port, const char* FTP_username, const char* FTP_password){
+
+	int8_t answer;
+	char aux_ver[4];
+	uint8_t version;
+	char* str_pointer;
+	char aux_name[8];
+	char programID[8];
+	char* path = (char*) calloc(60, sizeof(char));
+	if ( path == NULL )
+	{
+		return -1;
+	}
+	
+	SD.ON();
+	SD.goRoot();
+	SD.del(OTA_ver_file);
+	SD.OFF();
+	answer = configureGPRS_HTTP_FTP(1);
+	if (answer == 1)
+	{
+		#if GPRS_debug_mode>0
+			USB.println(F("Downloading OTA VER FILE"));
+		#endif
+		sprintf(path, ".gprs%s", OTA_ver_file);
+		answer = downloadFile(path, OTA_ver_file, FTP_username, FTP_password, FTP_server, FTP_port, 1);
+		if (answer == 1)
+		{
+
+			SD.ON();
+			SD.goRoot();
+			
+			// Reads the file
+			strcpy(buffer_GPRS, SD.cat(OTA_ver_file, 0, BUFFER_SIZE));
+			// Searchs the file name
+			str_pointer = strstr(buffer_GPRS, "FILE:");
+			if (str_pointer != NULL)
+			{	
+				
+				strncpy(aux_name, strchr(buffer_GPRS, ':') + 1, 7);
+				aux_name[7] = '\0';
+				
+				#if GPRS_debug_mode>0
+					USB.print(F("OTA file: "));
+					USB.println(aux_name);	
+				#endif
+				// Searchs the file name
+				str_pointer = strstr(buffer_GPRS, "PATH:");
+				if (str_pointer != NULL)
+				{
+					strncpy(path, strchr(str_pointer, ':') + 1, strchr(str_pointer, '\n') - (strchr(str_pointer, ':')));
+					
+					path[strchr(path, '\n') - path] = '\0';
+					
+					#if GPRS_debug_mode>0
+						USB.print(F("File path: "));
+						USB.println(path);
+					#endif
+					strcat(path,"/");
+					strcat(path,aux_name);
+					
+					str_pointer = strstr(buffer_GPRS, "VERSION:");
+					
+					if (str_pointer != NULL)
+					{
+					
+						strncpy(aux_ver, strchr(str_pointer, ':') + 1, strchr(str_pointer, '\n') - (strchr(str_pointer, ':')));					
+						aux_ver[strchr(aux_ver, '\n') - aux_ver] = '\0';
+						
+						version = atoi(aux_ver);
+						
+						#if GPRS_debug_mode>0
+							USB.print(F("Version: "));
+							USB.println(version, DEC);
+						#endif
+					
+						SD.del(aux_name);
+		
+						if (strcmp(aux_name, NO_OTA) != 0)
+						{
+							#if GPRS_debug_mode>0
+								USB.println(F("Downloading OTA FILE"));
+							#endif
+							
+							Utils.getProgramID(programID);
+							// check if the program have a new version or if it is a different code
+							if (((strcmp(aux_name, programID) == 0) && (version > Utils.getProgramVersion())) || (strcmp(aux_name, programID) != 0))
+							{
+								sprintf(buffer_GPRS, ".gprs%s", path);
+								strcpy(path, buffer_GPRS);
+								answer = downloadFile(path, aux_name, FTP_username, FTP_password, FTP_server, FTP_port, 1);
+								if (answer == 1)
+								{
+									#if GPRS_debug_mode>0
+										SD.ON();
+										SD.ls();
+										SD.OFF();
+									#endif
+									Utils.loadOTA(aux_name, version);
+									free(path);
+									return 1;
+								}
+								else
+								{
+									
+									SD.OFF();
+									free(path);
+									return answer - 71;
+								}
+							}
+							else
+							{
+								#if GPRS_debug_mode>0
+									USB.println(F("Same program version, no OTA required"));
+								#endif
+								SD.OFF();
+								free(path);
+								return -70;
+							}
+						}
+						else
+						{
+							
+							#if GPRS_debug_mode>0
+								USB.println(F("No OTA"));
+							#endif
+							SD.OFF();
+							free(path);
+							return -69;
+						}
+					}
+					else
+					{
+						SD.OFF();
+						free(path);
+						return -68;
+					}
+				}
+				else
+				{
+					SD.OFF();
+					free(path);
+					return -67;
+				}
+					
+			}
+			else
+			{
+				SD.OFF();
+				free(path);
+				return -66;
+			}
+		}
+		else
+		{
+			free(path);
+			return answer - 9;
+		}
+	}
+	else
+	{	
+		free(path);
+		return answer - 2;
+	}
+	
+	return 0;
+
+}
+
+#endif
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
 WaspGPRS_Pro GPRS_Pro = WaspGPRS_Pro();

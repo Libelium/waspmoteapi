@@ -1,7 +1,7 @@
 /*! \file WaspVariables.h
     \brief General variables used through the libraries
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -46,10 +46,9 @@
     \brief Flag used for storing the number of times each different kind of interruption has been generated
  */
 
-volatile	uint32_t 	intFlag;
-volatile	uint32_t	intConf;
+volatile	uint16_t 	intFlag;
+volatile	uint16_t	intConf;
 
-static	uint8_t		intCounter;
-static	uint8_t		intArray[14];
+volatile 	uint8_t	intCounter;
+volatile 	uint8_t	intArray[8];
 
-volatile unsigned long _serial_id;

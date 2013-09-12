@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.5
- *  Design:		David Gascón
+ *  Version:		1.0
+ *  Design:			David Gascón
  *  Implementation:	Alvaro Gonzalez
  *
  */
@@ -434,9 +434,7 @@ void WaspAES::paddingEncrypt(uint8_t *original_data,uint16_t size,uint16_t size_
 o_message WaspAES::paddingDecrypt(uint8_t *original_data,uint16_t size,uint8_t mode){
   o_message m;
   uint8_t index = size-1;
-  uint16_t new_size;
   uint16_t count = 0;
-  uint8_t ok = 1;
   // Decrypt
   if (mode == PKCS5) {
     // PKCS5
@@ -467,6 +465,8 @@ o_message WaspAES::paddingDecrypt(uint8_t *original_data,uint16_t size,uint8_t m
     return m;
     
   }
+  
+  return m;
 }
 
 /*
@@ -494,7 +494,6 @@ uint8_t WaspAES::sizeOfBlocks(char* message){
   
   uint8_t lenght;
   float aux;
-  uint8_t aux2;
   
   lenght = strlen(message);
 
@@ -518,7 +517,7 @@ uint8_t WaspAES::init(char* Password, uint16_t keySize){
     case 128:
       key = (uint8_t*) calloc(16,sizeof(uint8_t));
       if (strlen(Password) < 17) {
-      	for (int i=0; i < strlen(Password);i++){
+      	for (uint16_t i=0; i < strlen(Password);i++){
       	  key[i] = Password[i];
       	}
       	if (strlen(Password) < 16){
@@ -533,7 +532,7 @@ uint8_t WaspAES::init(char* Password, uint16_t keySize){
     case 192:
       key = (uint8_t*) calloc(24,sizeof(uint8_t));
       if (strlen(Password) < 25) {
-      	for (int i = 0; i < strlen(Password);i++){
+      	for (uint16_t i = 0; i < strlen(Password);i++){
       	  key[i] = Password[i];
       	}
       	if (strlen(Password) < 24){
@@ -549,7 +548,7 @@ uint8_t WaspAES::init(char* Password, uint16_t keySize){
 
       key = (uint8_t*) calloc(32,sizeof(uint8_t));
       if (strlen(Password) < 33) {
-      	for (int i = 0; i < strlen(Password);i++){
+      	for (uint16_t i = 0; i < strlen(Password);i++){
       	  key[i] = Password[i];
       	}
       	if (strlen(Password) < 32){
@@ -578,7 +577,7 @@ uint8_t WaspAES::init(char* Password, uint16_t keySize){
 */
 void WaspAES::printMatrix(uint8_t* data,uint16_t size){
   
-  for (int x = 0; x < size; x++){
+  for (uint16_t x = 0; x < size; x++){
     if ((x % 4) == 0){
       USB.println();
     }
@@ -606,7 +605,7 @@ void WaspAES::printMatrix(uint8_t* data,uint16_t size){
 
 void WaspAES::printMessage(uint8_t* data, uint16_t size){
   USB.print(" \"");
-  for (int x = 0; x < size; x++){
+  for (uint16_t x = 0; x < size; x++){
     if (data[x] < 0x0F){
       USB.print("0");
       USB.print(data[x],HEX);
@@ -790,7 +789,7 @@ uint8_t WaspAES::decrypt(uint16_t KeySize,char* Password,uint8_t encrypted_messa
  *  AES.decrypt(128,"libelium","Libelium",8,original_message,8,ECB,PKCS5)
  * 
  */
-uint8_t WaspAES::decrypt(uint16_t KeySize,char* Password,uint8_t encrypted_message[], uint8_t size,
+void WaspAES::decrypt(uint16_t KeySize,char* Password,uint8_t encrypted_message[], uint8_t size,
           uint8_t original_message[], uint16_t *original_size,
           uint8_t mode,uint8_t padding){
 
@@ -819,7 +818,7 @@ uint8_t WaspAES::decrypt(uint16_t KeySize,char* Password,uint8_t encrypted_messa
     USB.println("Wrong Key Size");
   }
 
- 
+  
 }
 
  void WaspAES::seedGenerator(uint8_t* seed){

@@ -598,15 +598,10 @@ uint8_t WaspXBee868::sendXBeePriv(struct packetXBee* packet)
 	// Local variables
 	uint8_t TX[120];
     uint8_t counter=0;
-    long previous=0;
     uint16_t aux=0;
     uint8_t protegido=0;
     uint8_t tipo=0;
-    uint8_t estado=1;
-    int8_t error=2;
-    uint8_t ByteIN[20];  
-    uint8_t old_netAddress[2];
-    uint8_t net_Address_changed = 0;
+    int8_t error=2; 
     
 
     clearCommand();

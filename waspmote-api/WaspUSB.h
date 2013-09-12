@@ -75,8 +75,7 @@
 #define BYTE 	0
 
 /*! \def USB_RATE
-    \brief USB Baud Rate
-    
+    \brief USB Baud Rates    
  */
 #define USB_RATE	115200
 

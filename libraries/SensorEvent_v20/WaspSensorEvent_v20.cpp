@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.8
+ *  Version:		1.0
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -231,12 +231,25 @@ float	WaspSensorEvent_v20::readValue(uint8_t sensor, uint8_t type)
 		case 	SENS_FLOW_FS200 :	
 		case 	SENS_FLOW_FS400	:	aux = flowReading(type);
 									break;
-		case 	SENS_TEMPERATURE:	aux = readValue(sensor);
-									aux = ( aux - 0.5 )* 100;
+		case 	SENS_TEMPERATURE:	if(sensor = SENS_SENSIRION)
+									{
+										aux = readSensirion(SENSIRION_TEMP);
+									} else
+									{
+										aux = readValue(sensor);
+										aux = ( aux - 0.5 )* 100;
+									}
 									break;
-		case 	SENS_HUMIDITY	:	aux = readValue(sensor);
-									aux = aux * 100 / 3;
+		case 	SENS_HUMIDITY	:	if(sensor = SENS_SENSIRION)
+									{
+										aux = readSensirion(SENSIRION_HUM);
+									} else
+									{
+										aux = readValue(sensor);
+										aux = aux * 100 / 3;
+									}
 									break;
+							
 		default					:	aux = readValue(sensor);
 									break;			
 	}
@@ -391,6 +404,11 @@ uint8_t	WaspSensorEvent_v20::loadInt(void)
 	  {
 	    value++;
 	  }
+	  if( millis() < start )
+	  {
+		  value = 0;
+		  start = millis();
+	  }
 	}
 	delay(100);
 
@@ -412,6 +430,142 @@ uint8_t	WaspSensorEvent_v20::loadInt(void)
 
 	return flow;
 }
+
+
+/*	readSensirion: reads the temperature or humidity value from the Sensirion
+ * 				   digital temperature and humidity sensor
+ *	Parameters: uint8_t parameter
+ * 						- SENS_TEMPERATURE
+ * 						- SENS_HUMIDITY
+ *  Return:	float value : temperature (ºC) or humidity (%RH) value
+ * 						  out of range values if connection problem
+ * 
+ */
+float WaspSensorEvent_v20::readSensirion(uint8_t parameter)
+{
+	int ack = 0;
+	int val_read = 0;
+	int ack2, ack3, i = 0;
+	long a = 0;
+	long b = 0;
+	
+	const byte HUMIDITY = B00000101;
+	const byte TEMPERATURE = B00000011;
+	
+	
+
+	if( parameter==SENSIRION_TEMP ) parameter=TEMPERATURE;
+	else if( parameter==SENSIRION_HUM ) parameter=HUMIDITY;
+		
+  //************************************* 
+  // First Transmission cycle (START)
+  
+	pinMode(SENS_SENSIRION_DATA,  OUTPUT);
+	pinMode(SENS_SENSIRION_CLK, OUTPUT);
+	digitalWrite(SENS_SENSIRION_DATA,  HIGH);
+	digitalWrite(SENS_SENSIRION_CLK, HIGH);
+	delayMicroseconds(1);
+	digitalWrite(SENS_SENSIRION_DATA,  LOW);
+	digitalWrite(SENS_SENSIRION_CLK, LOW);
+	delayMicroseconds(1);
+	digitalWrite(SENS_SENSIRION_CLK, HIGH);
+	digitalWrite(SENS_SENSIRION_DATA,  HIGH);
+	delayMicroseconds(1);
+	digitalWrite(SENS_SENSIRION_CLK, LOW);
+
+  //***************************************
+  // Write the command (3 first bits: always 000, last five bits: command)
+
+	//parameter: B00000011 for temperature and B00000101 for humidity
+	shiftOut(SENS_SENSIRION_DATA, SENS_SENSIRION_CLK, MSBFIRST, parameter);  
+	digitalWrite(SENS_SENSIRION_CLK, HIGH);
+	pinMode(SENS_SENSIRION_DATA, INPUT);
+	digitalWrite(SENS_SENSIRION_DATA, HIGH);
+
+	a = millis();
+	ack = digitalRead(SENS_SENSIRION_DATA);
+	while((ack == HIGH)&&((millis()-a)<10))
+	{
+		ack = digitalRead(SENS_SENSIRION_DATA);
+		if (millis() < a) a = millis();	//to avoid millis overflow
+	}
+
+	digitalWrite(SENS_SENSIRION_CLK, LOW);
+
+	a = millis();
+	ack = digitalRead(SENS_SENSIRION_DATA);
+	while((ack == LOW)&&((millis()-a)<10))
+	{
+		ack = digitalRead(SENS_SENSIRION_DATA);
+		if (millis() < a) a = millis();	//to avoid millis overflow
+	}
+  
+  //****************************************
+  //Wait for a complete conversion
+  
+	ack = digitalRead(SENS_SENSIRION_DATA);
+	a = millis();
+	while((ack == HIGH)&&((millis()-a)<400))
+	{
+		ack = digitalRead(SENS_SENSIRION_DATA);
+	}
+ 
+  //*****************************************
+  //Read the 8 most significative bits
+
+	a = millis();
+	for(int i = 0; i < 8; i++)
+	{
+		digitalWrite(SENS_SENSIRION_CLK, HIGH);
+		val_read = (val_read * 2) + digitalRead(SENS_SENSIRION_DATA);
+		digitalWrite(SENS_SENSIRION_CLK, LOW);
+	}
+  
+	ack = digitalRead(SENS_SENSIRION_DATA);
+	a = millis();
+	while((ack == LOW)&&((millis()-a)<10))
+	{
+		ack = digitalRead(SENS_SENSIRION_DATA);
+		if (millis() < a) a = millis();	//to avoid millis overflow
+	}
+  
+  //****************************************
+  //ACK from the  microcontroller
+	pinMode(SENS_SENSIRION_DATA, OUTPUT);
+	digitalWrite(SENS_SENSIRION_DATA, LOW);
+	delayMicroseconds(1);
+	digitalWrite(SENS_SENSIRION_CLK, HIGH);
+	delayMicroseconds(400);
+	digitalWrite(SENS_SENSIRION_CLK, LOW);
+	pinMode(SENS_SENSIRION_DATA, INPUT);
+	digitalWrite(SENS_SENSIRION_DATA, HIGH);
+   
+  //***************************************
+  //Read the 8 least significative bits
+	a = millis();
+	for(int i = 0; i < 8; i++)
+	{
+		digitalWrite(SENS_SENSIRION_CLK, HIGH);
+		val_read = val_read * 2 + digitalRead(SENS_SENSIRION_DATA);
+		digitalWrite(SENS_SENSIRION_CLK, LOW);
+	}
+	b = millis()-a;
+
+  
+  //**************************************
+  //CRC not taken into account
+  
+	pinMode(SENS_SENSIRION_DATA, OUTPUT);
+	digitalWrite(SENS_SENSIRION_DATA, HIGH);
+	digitalWrite(SENS_SENSIRION_CLK, HIGH);
+	delayMicroseconds(400);
+	digitalWrite(SENS_SENSIRION_CLK, LOW);
+	
+	digitalWrite(SENS_SENSIRION_DATA, LOW);
+  
+	if( parameter==TEMPERATURE ) return temperatureConversion(val_read,SENS_PREC_HIGH);
+	else if( parameter==HUMIDITY ) return humidityConversion(val_read,SENS_PREC_HIGH);
+} 
 
 
 /*	setResistor: calculates the resistor value in function of the entered threshold
@@ -471,4 +625,69 @@ void WaspSensorEvent_v20::setDigipot0(uint8_t address, float value)
 	}
 }
 
+/*	temperatureConversion: converts the value read from the Sensirion into a
+ * 						   temperature value
+ *	Parameters:	int readValue : value read from the Sensirion
+ * 				int precision : format at which the sensor was read
+ *  Return:		float value : temperature measured by the sensor in ºC
+ * 
+ */
+float WaspSensorEvent_v20::temperatureConversion(int readValue, int precision)
+{
+	float temperature = 0;
+	float d1 = -39.7;
+	float d2 = 0;
+	
+	float aux=0;
+  
+	switch(precision)
+	{
+		case SENS_PREC_HIGH:    d2 = 0.01;
+					temperature = d1 + (d2 * float(readValue));
+					break;    
+		case SENS_PREC_LOW:     d2 = 0.04;
+					temperature = d1 + (d2 * float(readValue));
+					break;
+	}
+  
+	return(temperature);
+}
+/*	humidityConversion: converts the value read from the Sensirion into a
+ * 						humidity value
+ *	Parameters:	int readValue : value read from the Sensirion
+ * 				int precision : format at which the sensor was read
+ *  Return:		float value : humidity measured by the sensor in %RH
+ *  
+ */
+float WaspSensorEvent_v20::humidityConversion(int readValue, int precision)
+{
+	float humidity = 0;
+	float c1 = -2.0468;
+	float c2 = 0;
+	float c3 = 0;
+  
+	switch(precision)
+	{
+		case SENS_PREC_HIGH	:	c2 = 0.0367;
+								c3 = -1.5955e-6;
+								humidity = c1 + (c2 * float(readValue)) 
+										   + (c3 * float(readValue) * float(readValue));
+								break;
+
+		case SENS_PREC_LOW	:	c2 = 0.5872;
+								c3 = -4.0845e-4;
+								humidity = c1 + (c2 * float(readValue))
+										   + (c3 * float(readValue) * float(readValue));
+								break;
+		default			  	:	;
+	}
+  
+	//in case of saturation
+	if( humidity > 99.0 )
+	{
+		humidity = 100.0;
+	}
+	
+	return(humidity);
+}
 WaspSensorEvent_v20 SensorEventv20=WaspSensorEvent_v20();

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.9
+ *  Version:		1.0
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra
  */
@@ -391,7 +391,7 @@ float	WaspSensorGas_v20::readValue(uint16_t sensor)
  */
 float WaspSensorGas_v20::calculateResistance(uint16_t sensor, float value, uint8_t gain, float load)
 {
-	float resistor;
+	float resistor=0.0000000;
 	float realGain;
 	float realLoad;
 	float aux;
@@ -428,7 +428,7 @@ float WaspSensorGas_v20::calculateResistance(uint16_t sensor, float value, uint8
 		return -2;
 	}
 	
-	aux = value / realGain;
+	aux = value / realGain + 0.000001;
 	
 	switch ( sensor )
 	{

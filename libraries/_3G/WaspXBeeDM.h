@@ -1,5 +1,6 @@
-/*! \file WaspXBee900.h
-    \brief Library for managing 900MHz modules
+/*! \file WaspXBeeDM.h
+    \brief Library for managing XBee 802.15.4 and 900MHz modules with 
+    DIGIMESH firmware in them.
     
     Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
@@ -19,15 +20,15 @@
   
     Version:		1.0
     Design:			David Gascón
-    Implementation:	Yuri Carmona
+    Implementation:	Alberto Bielsa, Yuri Carmona
  */
  
 /*! \def WaspXBeeDM_h
     \brief The library flag
     
  */
-#ifndef WaspXBee900_h
-#define WaspXBee900_h
+#ifndef WaspXBeeDM_h
+#define WaspXBeeDM_h
 
 /******************************************************************************
  * Includes
@@ -45,13 +46,13 @@
  * Class
  ******************************************************************************/
 
-//! WaspXBee900 Class
+//! WaspXBeeDM Class
 /*!
-	WaspXBee900 Class defines all the variables and functions used to manage 
-	XBee 900MHz modules. It inherits from 'WaspXBeeCore' class 
+	WaspXBeeDM Class defines all the variables and functions used to manage 
+	XBee DigiMesh and 900MHz modules. It inherits from 'WaspXBeeCore' class 
 	the necessary functions, variables and definitions
  */
-class WaspXBee900 : public WaspXBeeCore
+class WaspXBeeDM : public WaspXBeeCore
 {
   
 public:
@@ -62,17 +63,18 @@ public:
 	\param void
 	\return void
 	 */
-	WaspXBee900(){};
-
+	WaspXBeeDM(){};
 	
 	//! It initializes the necessary variables
   	/*!
 	It initalizes all the necessary variables
+	\param uint8_t protocol_used : specifies the protocol used in the XBee 
+			module (depends on the XBee module)
 	\param uint8_t uart_used : specifies the UART where the data are sent to,
 			(SOCKET0 or SOCKET1)
 	\return void
 	 */
-	void init(	uint8_t uart_used	);
+	void init( uint8_t uart_used );
 	
 	//! It gets the number of times the RF receiver detected a CRC or length error
   	/*!
@@ -109,26 +111,76 @@ public:
 	\return '0' on success, '1' otherwise
 	 */
 	uint8_t getTransmisionErrors();
-		
-	//! It gets module temperature in Celsius. Negatives temperatures can be returned
-  	/*!
-	It stores in global 'temperature' variable module temperature in Celsius
-	\return '0' on success, '1' otherwise
-	 */
-	uint8_t getTemperature();
 	
-	//! It gets the voltage on the Vcc pin
+	//! It sets the maximum number of hops expected to be seen in a network route
   	/*!
-		It stores in global 'supplyVoltage' variable the voltage on the Vcc pin
+	\param uint8_t nhops : the maximum number of hops expected to be seen in a 
+			network route (range [1-0xFF])
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t getSupplyVoltage();
+	uint8_t setNetworkHops(uint8_t nhops);
 	
-	//! It restores module parameters to compiled defaults
+	//! It gets the maximum number of hops expected to be seen in a network route
   	/*!
+	It stores in global 'networkHops' variable the maximum number of hops 
+	expected to be seen in a network route receiving a MAC acknowledgement 
+	message from the adjacent node
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t restoreCompiled();
+	uint8_t getNetworkHops();
+	
+	//! It sets the maximum random number of network delay slots before 
+	//! rebroadcasting a network packet
+  	/*!
+	\param uint8_t dslots : the maximum random number of network delay slots 
+			before rebroadcasting a network packet (range [0-0x0A])
+	\return '0' on success, '1' otherwise
+	 */
+	uint8_t setNetworkDelaySlots(uint8_t dslots);
+	
+	//! It gets the maximum random number of network delay slots before 
+	//! rebroadcasting a network packet
+  	/*!
+	It stores in global 'netDelaySlots' variable the maximum random number 
+	of network delay slots before rebroadcasting a network packet
+	\return '0' on success, '1' otherwise
+	 */
+	uint8_t getNetworkDelaySlots();
+	
+	//! It sets the maximum number of route discovery retries allowed to find a 
+	//! path to the destination node
+  	/*! 
+	\param uint8_t route : the maximum number of route discovery retries allowed 
+			to find a path to the destination node (range [0-0x0A])
+	\return '0' on success, '1' otherwise
+	\remarks Only valid for XBee900 protocol
+	 */
+	uint8_t setNetworkRouteRequests(uint8_t route);
+	
+	//! It gets the maximum number of route discovery retries allowed to find a 
+	//! path to the destination node
+  	/*!
+	It stores in global 'netRouteRequest' variable the maximum number of 
+	route discovery retries allowed to find a path to the destination node
+	\return '0' on success, '1' otherwise
+	 */
+	uint8_t getNetworkRouteRequests();
+	
+	//! It sets the maximum number of network packet delivery attempts
+  	/*!
+	\param uint8_t mesh : the maximum number of network packet delivery attempts 
+			(range [0-7])
+	\return '0' on success, '1' otherwise
+	 */
+	uint8_t setMeshNetworkRetries(uint8_t mesh);
+	
+	//! It gets the maximum number of network packet delivery attempts
+  	/*!
+	It stores in global 'meshNetRetries' variable the maximum number of network 
+	packet delivery attempts
+	\return '0' on success, '1' otherwise
+	 */
+	uint8_t getMeshNetworkRetries();
 
 	//! It sends a packet to other XBee modules
   	/*!
@@ -138,8 +190,8 @@ public:
     */
 	uint8_t sendXBeePriv(struct packetXBee* packet);		
 		
-
 		
+	/// ATRIBUTES
 	
 	//! Variable : the number of times the RF receiver detected a CRC or length error
   	/*!
@@ -197,6 +249,6 @@ public:
 	uint8_t supplyVoltage[2];
 };
 
-extern WaspXBee900	xbee900;
+extern WaspXBeeDM	xbeeDM;
 
-#endif
+#endif;
