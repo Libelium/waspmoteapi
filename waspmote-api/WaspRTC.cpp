@@ -30,27 +30,27 @@
 
 /// table_RTC /////////////////////////////////////////////////////////////////
 
-prog_char rtc_string_00[] 	PROGMEM	= 	"Alarm Mode matches "; 	
-prog_char rtc_string_01[] 	PROGMEM	= 	"[Day : hours : minutes : seconds] -> "; 	
-prog_char rtc_string_02[] 	PROGMEM = 	"[Date : hours : minutes : seconds] -> ";	
-prog_char rtc_string_03[] 	PROGMEM = 	"[Hours : minutes : seconds] -> ";		
-prog_char rtc_string_04[] 	PROGMEM = 	"[Minutes : seconds] -> ";		
-prog_char rtc_string_05[] 	PROGMEM = 	"[Seconds] -> ";		
-prog_char rtc_string_06[] 	PROGMEM = 	"Once per second";	
-prog_char rtc_string_07[] 	PROGMEM = 	"Incorrect alarm mode";	
-prog_char rtc_string_08[] 	PROGMEM = 	"[%02u:%02u:%02u:%02u]";	
-prog_char rtc_string_09[] 	PROGMEM = 	"[%02u:%02u:%02u]";	
-prog_char rtc_string_10[] 	PROGMEM = 	"[%02u:%02u]";
-prog_char rtc_string_11[] 	PROGMEM = 	"[%02u]";
-prog_char rtc_string_12[] 	PROGMEM = 	"[Day : hours : minutes ] -> ";
-prog_char rtc_string_13[] 	PROGMEM = 	"[Date : hours : minutes ] -> ";
-prog_char rtc_string_14[] 	PROGMEM = 	"[Hours : minutes] -> ";
-prog_char rtc_string_15[] 	PROGMEM = 	"[Minutes] -> ";	
-prog_char rtc_string_16[] 	PROGMEM = 	"Once per minute";	
-prog_char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";	
+const char rtc_string_00[] 	PROGMEM	= 	"Alarm Mode matches "; 	
+const char rtc_string_01[] 	PROGMEM	= 	"[Day : hours : minutes : seconds] -> "; 	
+const char rtc_string_02[] 	PROGMEM = 	"[Date : hours : minutes : seconds] -> ";	
+const char rtc_string_03[] 	PROGMEM = 	"[Hours : minutes : seconds] -> ";		
+const char rtc_string_04[] 	PROGMEM = 	"[Minutes : seconds] -> ";		
+const char rtc_string_05[] 	PROGMEM = 	"[Seconds] -> ";		
+const char rtc_string_06[] 	PROGMEM = 	"Once per second";	
+const char rtc_string_07[] 	PROGMEM = 	"Incorrect alarm mode";	
+const char rtc_string_08[] 	PROGMEM = 	"[%02u:%02u:%02u:%02u]";	
+const char rtc_string_09[] 	PROGMEM = 	"[%02u:%02u:%02u]";	
+const char rtc_string_10[] 	PROGMEM = 	"[%02u:%02u]";
+const char rtc_string_11[] 	PROGMEM = 	"[%02u]";
+const char rtc_string_12[] 	PROGMEM = 	"[Day : hours : minutes ] -> ";
+const char rtc_string_13[] 	PROGMEM = 	"[Date : hours : minutes ] -> ";
+const char rtc_string_14[] 	PROGMEM = 	"[Hours : minutes] -> ";
+const char rtc_string_15[] 	PROGMEM = 	"[Minutes] -> ";	
+const char rtc_string_16[] 	PROGMEM = 	"Once per minute";	
+const char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";	
 
 
-PROGMEM const char* table_RTC[] = 	  
+const char* const table_RTC[] PROGMEM = 	  
 {
 	rtc_string_00, 		// 0
 	rtc_string_01,		// 1
@@ -742,7 +742,7 @@ int WaspRTC::dow(int y, int m, int d)
 	
     static int t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
     y -= m < 3;
-    return (y + y/4 - y/100 + y/400 + t[m-1] + d +1) % 7;
+    return (y + y/4 - y/100 + y/400 + t[m-1] + d) % 7 + 1;
 }
 
 

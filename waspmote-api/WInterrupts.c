@@ -200,42 +200,57 @@ void attachInterruptTwi(void (*userFunc)(void) ) {
 }
 
 
-SIGNAL(SIG_INTERRUPT0) {
+ISR(INT0_vect) 
+{
   if(intFunc[EXTERNAL_INT_0])
     intFunc[EXTERNAL_INT_0]();
 }
 
-SIGNAL(SIG_INTERRUPT1) {
+
+ISR(INT1_vect)
+{
   if(intFunc[EXTERNAL_INT_1])
     intFunc[EXTERNAL_INT_1]();
 }
 
-SIGNAL(SIG_INTERRUPT2) {
+
+ISR(INT2_vect) 
+{
   if(intFunc[EXTERNAL_INT_2])
     intFunc[EXTERNAL_INT_2]();
 }
 
-SIGNAL(SIG_INTERRUPT3) {
+
+ISR(INT3_vect) 
+{
   if(intFunc[EXTERNAL_INT_3])
     intFunc[EXTERNAL_INT_3]();
 }
 
-SIGNAL(SIG_INTERRUPT4) {
+
+ISR(INT4_vect) 
+{
   if(intFunc[EXTERNAL_INT_4])
     intFunc[EXTERNAL_INT_4]();
 }
 
-SIGNAL(SIG_INTERRUPT5) {
+
+ISR(INT5_vect) 
+{
   if(intFunc[EXTERNAL_INT_5])
     intFunc[EXTERNAL_INT_5]();
 }
 
-SIGNAL(SIG_INTERRUPT6) {
+
+ISR(INT6_vect) 
+{
   if(intFunc[EXTERNAL_INT_6])
     intFunc[EXTERNAL_INT_6]();
 }
 
-SIGNAL(SIG_INTERRUPT7) {
+
+ISR(INT7_vect) 
+{
   if(intFunc[EXTERNAL_INT_7])
     intFunc[EXTERNAL_INT_7]();
 }

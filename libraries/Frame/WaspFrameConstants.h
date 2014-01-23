@@ -19,96 +19,96 @@
  ******************************************************************************/
 
 // Gases
-prog_char	str_CO[] 	PROGMEM	= "CO";		// 0	
-prog_char 	str_CO2[] 	PROGMEM	= "CO2";	// 1
-prog_char 	str_O2[] 	PROGMEM	= "O2";		// 2	
-prog_char 	str_CH4[] 	PROGMEM	= "CH4";	// 3	
-prog_char 	str_LPG[] 	PROGMEM	= "LPG";	// 4	
-prog_char 	str_NH3[] 	PROGMEM	= "NH3";	// 5	
-prog_char 	str_AP1[] 	PROGMEM	= "AP1";	// 6	
-prog_char 	str_AP2[] 	PROGMEM	= "AP2";	// 7	
-prog_char 	str_SV[] 	PROGMEM	= "SV";		// 8	
-prog_char 	str_NO2[] 	PROGMEM	= "NO2";	// 9	
-prog_char 	str_O3[] 	PROGMEM	= "O3";		// 10	
-prog_char 	str_VOC[] 	PROGMEM	= "VOC";	// 11	
-prog_char 	str_TCA[] 	PROGMEM	= "TCA";	// 12	
-prog_char 	str_TFA[] 	PROGMEM	= "TFA";	// 13	
-prog_char 	str_HUMA[] 	PROGMEM	= "HUMA";	// 14	
-prog_char 	str_PA[] 	PROGMEM	= "PA";		// 15	
+const char	str_CO[] 	PROGMEM	= "CO";		// 0	
+const char 	str_CO2[] 	PROGMEM	= "CO2";	// 1
+const char 	str_O2[] 	PROGMEM	= "O2";		// 2	
+const char 	str_CH4[] 	PROGMEM	= "CH4";	// 3	
+const char 	str_LPG[] 	PROGMEM	= "LPG";	// 4	
+const char 	str_NH3[] 	PROGMEM	= "NH3";	// 5	
+const char 	str_AP1[] 	PROGMEM	= "AP1";	// 6	
+const char 	str_AP2[] 	PROGMEM	= "AP2";	// 7	
+const char 	str_SV[] 	PROGMEM	= "SV";		// 8	
+const char 	str_NO2[] 	PROGMEM	= "NO2";	// 9	
+const char 	str_O3[] 	PROGMEM	= "O3";		// 10	
+const char 	str_VOC[] 	PROGMEM	= "VOC";	// 11	
+const char 	str_TCA[] 	PROGMEM	= "TCA";	// 12	
+const char 	str_TFA[] 	PROGMEM	= "TFA";	// 13	
+const char 	str_HUMA[] 	PROGMEM	= "HUMA";	// 14	
+const char 	str_PA[] 	PROGMEM	= "PA";		// 15	
 
 // Events
-prog_char	str_PW[] 	PROGMEM	= "PW";		// 16
-prog_char	str_BEND[] 	PROGMEM	= "BEND";	// 17
-prog_char	str_VBR[] 	PROGMEM	= "VBR";	// 18
-prog_char	str_HALL[] 	PROGMEM	= "HALL";	// 19
-prog_char	str_LP[] 	PROGMEM	= "LP";		// 20
-prog_char	str_LL[] 	PROGMEM	= "LL";		// 21
-prog_char	str_LUM[] 	PROGMEM	= "LUM";	// 22
-prog_char	str_PIR[] 	PROGMEM	= "PIR";	// 23
-prog_char	str_ST[] 	PROGMEM	= "ST";		// 24
+const char	str_PW[] 	PROGMEM	= "PW";		// 16
+const char	str_BEND[] 	PROGMEM	= "BEND";	// 17
+const char	str_VBR[] 	PROGMEM	= "VBR";	// 18
+const char	str_HALL[] 	PROGMEM	= "HALL";	// 19
+const char	str_LP[] 	PROGMEM	= "LP";		// 20
+const char	str_LL[] 	PROGMEM	= "LL";		// 21
+const char	str_LUM[] 	PROGMEM	= "LUM";	// 22
+const char	str_PIR[] 	PROGMEM	= "PIR";	// 23
+const char	str_ST[] 	PROGMEM	= "ST";		// 24
 
 // Smart cities
-prog_char	str_MCP[] 	PROGMEM	= "MCP";	// 25
-prog_char	str_CDG[] 	PROGMEM	= "CDG";	// 26
-prog_char	str_CPG[] 	PROGMEM	= "CPG";	// 27
-prog_char	str_LD[] 	PROGMEM	= "LD";		// 28
-prog_char	str_DUST[] 	PROGMEM	= "DUST";	// 29
-prog_char	str_US[] 	PROGMEM	= "US";		// 30
+const char	str_MCP[] 	PROGMEM	= "MCP";	// 25
+const char	str_CDG[] 	PROGMEM	= "CDG";	// 26
+const char	str_CPG[] 	PROGMEM	= "CPG";	// 27
+const char	str_LD[] 	PROGMEM	= "LD";		// 28
+const char	str_DUST[] 	PROGMEM	= "DUST";	// 29
+const char	str_US[] 	PROGMEM	= "US";		// 30
 
 // Smart parking
-prog_char	str_MF[] 	PROGMEM	= "MF";		// 31
-prog_char	str_PS[] 	PROGMEM	= "PS";		// 32
+const char	str_MF[] 	PROGMEM	= "MF";		// 31
+const char	str_PS[] 	PROGMEM	= "PS";		// 32
 
 // Agriculture
-prog_char	str_TCB[] 	PROGMEM	= "TCB";	// 33
-prog_char	str_TFB[]	PROGMEM = "TFB";	// 34
-prog_char	str_HUMB[]	PROGMEM = "HUMB";	// 35
-prog_char	str_SOILT[] PROGMEM	= "SOILT";	// 36
-prog_char	str_SOIL[] 	PROGMEM	= "SOIL";	// 37
-prog_char	str_LW[] 	PROGMEM	= "LW";		// 38
-prog_char	str_PAR[] 	PROGMEM	= "PAR";	// 39
-prog_char	str_UV[] 	PROGMEM	= "UV";		// 40
-prog_char	str_TD[] 	PROGMEM	= "TD";		// 41
-prog_char	str_SD[] 	PROGMEM	= "SD";		// 42
-prog_char	str_FD[] 	PROGMEM	= "FD";		// 43
-prog_char	str_ANE[] 	PROGMEM	= "ANE";	// 44
-prog_char	str_WV[] 	PROGMEM	= "WV";		// 45
-prog_char	str_PLV[] 	PROGMEM	= "PLV";	// 46
+const char	str_TCB[] 	PROGMEM	= "TCB";	// 33
+const char	str_TFB[]	PROGMEM = "TFB";	// 34
+const char	str_HUMB[]	PROGMEM = "HUMB";	// 35
+const char	str_SOILT[] PROGMEM	= "SOILT";	// 36
+const char	str_SOIL[] 	PROGMEM	= "SOIL";	// 37
+const char	str_LW[] 	PROGMEM	= "LW";		// 38
+const char	str_PAR[] 	PROGMEM	= "PAR";	// 39
+const char	str_UV[] 	PROGMEM	= "UV";		// 40
+const char	str_TD[] 	PROGMEM	= "TD";		// 41
+const char	str_SD[] 	PROGMEM	= "SD";		// 42
+const char	str_FD[] 	PROGMEM	= "FD";		// 43
+const char	str_ANE[] 	PROGMEM	= "ANE";	// 44
+const char	str_WV[] 	PROGMEM	= "WV";		// 45
+const char	str_PLV[] 	PROGMEM	= "PLV";	// 46
 
 // Radiation
-prog_char	str_RAD[] 	PROGMEM	= "RAD";	// 47
+const char	str_RAD[] 	PROGMEM	= "RAD";	// 47
 
 // Smart meetering
-prog_char	str_CU[] 	PROGMEM	= "CU";		// 48
-prog_char	str_WF[] 	PROGMEM	= "WF";		// 49
-prog_char	str_LC[] 	PROGMEM	= "LC";		// 50
-prog_char	str_DF[] 	PROGMEM	= "DF";		// 51
+const char	str_CU[] 	PROGMEM	= "CU";		// 48
+const char	str_WF[] 	PROGMEM	= "WF";		// 49
+const char	str_LC[] 	PROGMEM	= "LC";		// 50
+const char	str_DF[] 	PROGMEM	= "DF";		// 51
 
 // Additional
-prog_char	str_BAT[] 	PROGMEM	= "BAT";	// 52
-prog_char	str_GPS[] 	PROGMEM	= "GPS";	// 53
-prog_char	str_RSSI[] 	PROGMEM	= "RSSI";	// 54
-prog_char	str_MAC[] 	PROGMEM	= "MAC";	// 55
-prog_char	str_NA[] 	PROGMEM	= "NA";		// 56
-prog_char	str_NID[] 	PROGMEM	= "NID";	// 57
-prog_char	str_DATE[] 	PROGMEM	= "DATE";	// 58
-prog_char	str_TIME[] 	PROGMEM	= "TIME";	// 59
-prog_char	str_GMT[] 	PROGMEM	= "GMT";	// 60
-prog_char	str_RAM[] 	PROGMEM	= "RAM";	// 61
-prog_char	str_IN_TEMP[] 	PROGMEM	= "IN_TEMP";	// 62
-prog_char	str_ACC[]	PROGMEM = "ACC";	// 63
-prog_char	str_MILLIS[] PROGMEM = "MILLIS"; // 64
+const char	str_BAT[] 	PROGMEM	= "BAT";	// 52
+const char	str_GPS[] 	PROGMEM	= "GPS";	// 53
+const char	str_RSSI[] 	PROGMEM	= "RSSI";	// 54
+const char	str_MAC[] 	PROGMEM	= "MAC";	// 55
+const char	str_NA[] 	PROGMEM	= "NA";		// 56
+const char	str_NID[] 	PROGMEM	= "NID";	// 57
+const char	str_DATE[] 	PROGMEM	= "DATE";	// 58
+const char	str_TIME[] 	PROGMEM	= "TIME";	// 59
+const char	str_GMT[] 	PROGMEM	= "GMT";	// 60
+const char	str_RAM[] 	PROGMEM	= "RAM";	// 61
+const char	str_IN_TEMP[] 	PROGMEM	= "IN_TEMP";	// 62
+const char	str_ACC[]	PROGMEM = "ACC";	// 63
+const char	str_MILLIS[] PROGMEM = "MILLIS"; // 64
 
 // Special
-prog_char	str_STR[] 	PROGMEM	= "STR";	// 65
+const char	str_STR[] 	PROGMEM	= "STR";	// 65
 
 // Meshlium
-prog_char	str_MBT[] 	PROGMEM	= "MBT";	// 66
-prog_char	str_MWIFI[] PROGMEM	= "MWIFI";	// 67
+const char	str_MBT[] 	PROGMEM	= "MBT";	// 66
+const char	str_MWIFI[] PROGMEM	= "MWIFI";	// 67
 
 // RFID
-prog_char	str_UID[] 	PROGMEM	= "UID";	// 68
-prog_char	str_RB[] 	PROGMEM	= "RB";		// 69
+const char	str_UID[] 	PROGMEM	= "UID";	// 68
+const char	str_RB[] 	PROGMEM	= "RB";		// 69
 
 
 /******************************************************************************* 
@@ -117,7 +117,7 @@ prog_char	str_RB[] 	PROGMEM	= "RB";		// 69
  * This table specifies the tag for each sensor. Every tag has been previously 
  * defined in Flash memory
  ******************************************************************************/
-PROGMEM const char* SENSOR_TABLE[] = 	  
+const char* const SENSOR_TABLE[] PROGMEM= 	  
 {   
 	// Gases
 	str_CO,			// 0	
@@ -227,7 +227,7 @@ PROGMEM const char* SENSOR_TABLE[] =
  *  4: unsigned long
  *  5: uint8_t*
  ******************************************************************************/
-PROGMEM const uint8_t SENSOR_TYPE_TABLE[] = 	  
+const uint8_t SENSOR_TYPE_TABLE[] PROGMEM= 	  
 {   
 	// Gases
 	2, // str_CO,		// 0	
@@ -334,7 +334,7 @@ PROGMEM const uint8_t SENSOR_TYPE_TABLE[] =
  * On the other hand, the GPS module indicates the position with two fields: 
  * latitude and longitude
  ******************************************************************************/
-PROGMEM const uint8_t SENSOR_FIELD_TABLE[] = 	  
+const uint8_t SENSOR_FIELD_TABLE[] PROGMEM= 	  
 {   
 	// Gases
 	1, // str_CO,		// 0
@@ -437,7 +437,7 @@ PROGMEM const uint8_t SENSOR_FIELD_TABLE[] =
  * 
  * This table specifies the number of decimals for each sensor for ASCII frames
  ******************************************************************************/
-PROGMEM const uint8_t DECIMAL_TABLE[] = 	  
+const uint8_t DECIMAL_TABLE[] PROGMEM = 	  
 {   
 	// Gases
 	3, // str_CO,		// 0

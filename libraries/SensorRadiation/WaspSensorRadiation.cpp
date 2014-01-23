@@ -80,7 +80,7 @@ void WaspRadiationBoard::OFF()
 {
 	PWR.setSensorPower(SENS_5V,SENS_OFF); 
   	PWR.setSensorPower(SENS_3V3,SENS_OFF);
-	disableInterrupts(LAI_INT);
+	disableInterrupts(RAD_INT);
 }
 
 /*

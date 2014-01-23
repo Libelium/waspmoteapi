@@ -61,79 +61,79 @@
 #define ERROR		"ERROR"
 
 //Power constants
-prog_char POWER_FULL[]			PROGMEM	= "+CFUN=1";		//0
-prog_char POWER_RF_OFF[] 		PROGMEM	= "+CFUN=4";		//1
-prog_char POWER_MIN[]			PROGMEM	= "+CFUN=0";		//2
-prog_char POWER_OFF[]			PROGMEM	= "+CPOF";			//3
-prog_char SET_TIME[]			PROGMEM	= "+CCLK=";			//4
+const char POWER_FULL[]			PROGMEM	= "+CFUN=1";		//0
+const char POWER_RF_OFF[] 		PROGMEM	= "+CFUN=4";		//1
+const char POWER_MIN[]			PROGMEM	= "+CFUN=0";		//2
+const char POWER_OFF[]			PROGMEM	= "+CPOF";			//3
+const char SET_TIME[]			PROGMEM	= "+CCLK=";			//4
 
-prog_char AT_3G_CHECK[]			PROGMEM	= "+CGATT?";		//5
-prog_char AT_3G_CHECK_ON[]		PROGMEM	= "+CGATT: 1";		//6
-prog_char AT_3G_CHECK_OFF[]		PROGMEM	= "+CGATT: 0";		//7
-prog_char AT_3G_ATT_ON[]		PROGMEM	= "+CGATT=1";		//8
-prog_char AT_3G_ATT_OFF[]		PROGMEM	= "+CGATT=0";		//9
+const char AT_3G_CHECK[]		PROGMEM	= "+CGATT?";		//5
+const char AT_3G_CHECK_ON[]		PROGMEM	= "+CGATT: 1";		//6
+const char AT_3G_CHECK_OFF[]	PROGMEM	= "+CGATT: 0";		//7
+const char AT_3G_ATT_ON[]		PROGMEM	= "+CGATT=1";		//8
+const char AT_3G_ATT_OFF[]		PROGMEM	= "+CGATT=0";		//9
 
-prog_char _3G_CON[] 			PROGMEM	= "+CGSOCKCONT=";	//10
-prog_char _3G_AUTH[]			PROGMEM	= "+CSOCKAUTH=1,";	//11
+const char _3G_CON[] 			PROGMEM	= "+CGSOCKCONT=";	//10
+const char _3G_AUTH[]			PROGMEM	= "+CSOCKAUTH=1,";	//11
 
 //SIM constants
-prog_char SET_PIN[] 			PROGMEM	= "+CPIN=";			//12
-prog_char GET_IMEI[] 			PROGMEM	= "+SIMEI?";		//13
-prog_char GET_IMEI_R[]			PROGMEM	= "+SIMEI: ";		//14
-prog_char GET_IMSI[] 			PROGMEM	= "+CIMI";			//15
+const char SET_PIN[] 			PROGMEM	= "+CPIN=";			//12
+const char GET_IMEI[] 			PROGMEM	= "+SIMEI?";		//13
+const char GET_IMEI_R[]			PROGMEM	= "+SIMEI: ";		//14
+const char GET_IMSI[] 			PROGMEM	= "+CIMI";			//15
 
 //File system functions
-prog_char CHANGE_DIR[]			PROGMEM	= "+FSCD=";			//16
-prog_char CHANGE_DIR_BACK[]		PROGMEM	= "+FSCD=..";		//17
-prog_char CHANGE_DIR_R[]		PROGMEM	= "+FSCD:";			//18
-prog_char FILE_ATTRIB[]			PROGMEM	= "+FSATTRI=";		//19
-prog_char FILE_ATTRIB_R[]		PROGMEM	= "+FSATTRI: ";		//20
-prog_char DEL_FILE[]			PROGMEM	= "+FSDEL=";		//21
-prog_char MEM_SIZE[]			PROGMEM	= "+FSMEM";			//22
-prog_char LIST_DIR[]			PROGMEM	= "+FSLS";			//23
+const char CHANGE_DIR[]			PROGMEM	= "+FSCD=";			//16
+const char CHANGE_DIR_BACK[]	PROGMEM	= "+FSCD=..";		//17
+const char CHANGE_DIR_R[]		PROGMEM	= "+FSCD:";			//18
+const char FILE_ATTRIB[]		PROGMEM	= "+FSATTRI=";		//19
+const char FILE_ATTRIB_R[]		PROGMEM	= "+FSATTRI: ";		//20
+const char DEL_FILE[]			PROGMEM	= "+FSDEL=";		//21
+const char MEM_SIZE[]			PROGMEM	= "+FSMEM";			//22
+const char LIST_DIR[]			PROGMEM	= "+FSLS";			//23
 
 //Extra!
 
-prog_char GET_RSSI[]			PROGMEM	= "+CSQ";			//24
-prog_char OPERATOR_SEL[]		PROGMEM	= "+COPS";			//25
-prog_char PREF_MODE[]			PROGMEM	= "+CNMP";			//26
-prog_char PREF_BAND[]			PROGMEM	= "+CNBP";			//27
+const char GET_RSSI[]			PROGMEM	= "+CSQ";			//24
+const char OPERATOR_SEL[]		PROGMEM	= "+COPS";			//25
+const char PREF_MODE[]			PROGMEM	= "+CNMP";			//26
+const char PREF_BAND[]			PROGMEM	= "+CNBP";			//27
 
-prog_char ACQ_ORDER[]			PROGMEM	= "+CNAOP";			//28
-prog_char PREF_SERV_DOM[]		PROGMEM	= "+CNSDP";			//29
-prog_char INQ_UE_SYS[]			PROGMEM	= "+CPSI?";			//30
-prog_char INQ_UE_SYS_R[]		PROGMEM	= "+CPSI: ";		//31
-prog_char NETWORK_MODE[]		PROGMEM	= "+CNSMOD?";		//32
-prog_char NETWORK_MODE_R[]		PROGMEM	= "+CNSMOD: ";		//33
+const char ACQ_ORDER[]			PROGMEM	= "+CNAOP";			//28
+const char PREF_SERV_DOM[]		PROGMEM	= "+CNSDP";			//29
+const char INQ_UE_SYS[]			PROGMEM	= "+CPSI?";			//30
+const char INQ_UE_SYS_R[]		PROGMEM	= "+CPSI: ";		//31
+const char NETWORK_MODE[]		PROGMEM	= "+CNSMOD?";		//32
+const char NETWORK_MODE_R[]		PROGMEM	= "+CNSMOD: ";		//33
 
-prog_char CELL_SYS_INFO[]		PROGMEM	= "+CCINFO";		//34
-prog_char CELL_CHN_INFO[]		PROGMEM	= "+CSCHN";			//35
-prog_char CELL_RADIO_PARAM[]	PROGMEM	= "+CSRP";			//36
-prog_char CELL_SET_SYS_INFO[]	PROGMEM	= "+CRUS";			//37
-prog_char CELL_SET_SYS_INFO_R[]	PROGMEM	= "+CRUS: ";		//38
+const char CELL_SYS_INFO[]		PROGMEM	= "+CCINFO";		//34
+const char CELL_CHN_INFO[]		PROGMEM	= "+CSCHN";			//35
+const char CELL_RADIO_PARAM[]	PROGMEM	= "+CSRP";			//36
+const char CELL_SET_SYS_INFO[]	PROGMEM	= "+CRUS";			//37
+const char CELL_SET_SYS_INFO_R[] PROGMEM	= "+CRUS: ";	//38
 
 
-prog_char CHN_SCAN_STR[]		PROGMEM	= "+CNSVS";			//39
-prog_char CHN_SCAN_NUM[]		PROGMEM	= "+CNSVN";			//40
-prog_char NET_START_SCAN[]		PROGMEM	= "Network survey started...";	//41
+const char CHN_SCAN_STR[]		PROGMEM	= "+CNSVS";			//39
+const char CHN_SCAN_NUM[]		PROGMEM	= "+CNSVN";			//40
+const char NET_START_SCAN[]		PROGMEM	= "Network survey started...";	//41
 
 //Miscelaneus constants
-prog_char STORE_LOCATION[]		PROGMEM	= "+FSLOCA=";		//42
-prog_char CHANGE_BAUDRATE[]		PROGMEM	= "+IPR=";			//43
-prog_char AUDIO_OUT[]			PROGMEM	= "+CSDVC=";		//44
-prog_char MUTE_MIC[]			PROGMEM	= "+CMUT=";			//45
-prog_char GAIN_MIC[]			PROGMEM	= "+CMIC=";			//46
-prog_char GAIN_SPEAKER[]		PROGMEM	= "+CLVL=";			//47
-prog_char MUTE_SPEAKER[]		PROGMEM	= "+VMUTE";			//48
-prog_char LVL_SPEAKER[]			PROGMEM	= "+CLVL=";			//49
-prog_char XMODEM_RECEIVE[]		PROGMEM	= "+CTXFILE";		//50
+const char STORE_LOCATION[]		PROGMEM	= "+FSLOCA=";		//42
+const char CHANGE_BAUDRATE[]	PROGMEM	= "+IPR=";			//43
+const char AUDIO_OUT[]			PROGMEM	= "+CSDVC=";		//44
+const char MUTE_MIC[]			PROGMEM	= "+CMUT=";			//45
+const char GAIN_MIC[]			PROGMEM	= "+CMIC=";			//46
+const char GAIN_SPEAKER[]		PROGMEM	= "+CLVL=";			//47
+const char MUTE_SPEAKER[]		PROGMEM	= "+VMUTE";			//48
+const char LVL_SPEAKER[]		PROGMEM	= "+CLVL=";			//49
+const char XMODEM_RECEIVE[]		PROGMEM	= "+CTXFILE";		//50
 
-prog_char AT_WHO_AM_I[]			PROGMEM	= "+CGMM";			//51
-prog_char FIRMWARE_VER[]		PROGMEM	= "+CGMR";			//52
-prog_char FIRMWARE_VER_R[]		PROGMEM	= "+CGMR: ";		//53
+const char AT_WHO_AM_I[]		PROGMEM	= "+CGMM";			//51
+const char FIRMWARE_VER[]		PROGMEM	= "+CGMR";			//52
+const char FIRMWARE_VER_R[]		PROGMEM	= "+CGMR: ";		//53
 
 	
-PROGMEM const char* table_MISC[] = 
+const char* const table_MISC[] PROGMEM = 
 {   
 	//Power constants
 	POWER_FULL,				//0
@@ -208,29 +208,29 @@ PROGMEM const char* table_MISC[] =
 
 //Call and SMS constants
 #if GSM_FUSE	
-prog_char CALL[]			PROGMEM	= "D";				//0
-prog_char LINE_ID[]			PROGMEM	= "+CLIP=1";		//1
-prog_char HANG_CALL[]		PROGMEM	= "+CHUP";			//2
-prog_char AUTO_ANSWER[]		PROGMEM	= "ATS0=";			//3
-prog_char CALL_ASNWER[]		PROGMEM	= "ATA";			//4
+const char CALL[]			PROGMEM	= "D";				//0
+const char LINE_ID[]		PROGMEM	= "+CLIP=1";		//1
+const char HANG_CALL[]		PROGMEM	= "+CHUP";			//2
+const char AUTO_ANSWER[]	PROGMEM	= "ATS0=";			//3
+const char CALL_ASNWER[]	PROGMEM	= "ATA";			//4
 
-prog_char TONE[]			PROGMEM	= "+CPTONE=";		//5
-prog_char MUTE_RINGER[]		PROGMEM	= "+CALM=";			//6
-prog_char LVL_RINGER[]		PROGMEM	= "+CRSL=";			//7
-prog_char LINE_ID_PRES[]	PROGMEM	= "+CLIP=";			//8
-prog_char LINE_ID_REST[]	PROGMEM	= "+CLIR=";			//9
-prog_char PHONE_ACT[]		PROGMEM	= "+CPAS";			//10
+const char TONE[]			PROGMEM	= "+CPTONE=";		//5
+const char MUTE_RINGER[]	PROGMEM	= "+CALM=";			//6
+const char LVL_RINGER[]		PROGMEM	= "+CRSL=";			//7
+const char LINE_ID_PRES[]	PROGMEM	= "+CLIP=";			//8
+const char LINE_ID_REST[]	PROGMEM	= "+CLIR=";			//9
+const char PHONE_ACT[]		PROGMEM	= "+CPAS";			//10
 
-prog_char SMS_MODE[]		PROGMEM	= "+CMGF=1";		//11
-prog_char SEND_SMS[]		PROGMEM	= "+CMGS=";			//12
-prog_char SMS_INFO[]		PROGMEM	= "+CNMI=2,1,0,0,0";//13
-prog_char SMS_READ[]		PROGMEM	= "+CMGR=";			//14
-prog_char SMS_READ_R[]		PROGMEM	= "+CMGR:";			//15
-prog_char SMS_MEMORY[]		PROGMEM	= "+CPMS=";			//16
-prog_char SMS_MEMORY_R[]	PROGMEM	= "+CPMS: ";		//17
-prog_char SMS_DELETE[]		PROGMEM	= "+CMGD="; 		//18
+const char SMS_MODE[]		PROGMEM	= "+CMGF=1";		//11
+const char SEND_SMS[]		PROGMEM	= "+CMGS=";			//12
+const char SMS_INFO[]		PROGMEM	= "+CNMI=2,1,0,0,0";//13
+const char SMS_READ[]		PROGMEM	= "+CMGR=";			//14
+const char SMS_READ_R[]		PROGMEM	= "+CMGR:";			//15
+const char SMS_MEMORY[]		PROGMEM	= "+CPMS=";			//16
+const char SMS_MEMORY_R[]	PROGMEM	= "+CPMS: ";		//17
+const char SMS_DELETE[]		PROGMEM	= "+CMGD="; 		//18
 	
-PROGMEM const char* table_GSM[] = 
+const char* const table_GSM[] PROGMEM = 
 {   
 	CALL,			//0
 	LINE_ID,		//1
@@ -270,57 +270,57 @@ PROGMEM const char* table_GSM[] =
 	#define THRESHOLD_LIGHT_2	150
 	#define THRESHOLD_IR		400
 	
-prog_char CAM_START[]			PROGMEM	= "+CCAMS";			//0
-prog_char CAM_STOP[]			PROGMEM	= "+CCAME";			//1
-prog_char CAM_DIM[]				PROGMEM	= "+CCAMSETD=";		//2
-prog_char RES_STAMP[]			PROGMEM	= "80,48";			//3
-prog_char RES_QQVGA[]			PROGMEM	= "160,120";		//4
-prog_char RES_QCIF[]			PROGMEM	= "176,144";		//5
-prog_char RES_QVGA[]			PROGMEM	= "320,240";		//6
-prog_char RES_CIF[]				PROGMEM	= "352,288";		//7
-prog_char RES_VGA[]				PROGMEM	= "640,480";		//8
-prog_char RES_XGA[]				PROGMEM	= "1024,768";		//9
-prog_char CAM_FPS[]				PROGMEM	= "+CCAMSETF=";		//10
-prog_char CAM_ROT[]				PROGMEM	= "+CCAMSETR=";		//11
-prog_char CAM_NIGHT[]			PROGMEM	= "+CCAMSETN=";		//12
-prog_char CAM_WHITE[]			PROGMEM	= "+CCAMSETWB=";	//13
-prog_char CAM_BRIGHT[]			PROGMEM	= "+CCAMSETB=";		//14
-prog_char CAM_ZOOM[]			PROGMEM	= "+CCAMSETZ=";		//15
-//prog_char CAM_TAKE_PIC[]		PROGMEM	= "+CCAMTP"
-prog_char CAM_TAKE_PIC[]		PROGMEM	= "+CCAMTPEXT=100";	//16
-prog_char CAM_SAVE_PIC[]		PROGMEM	= "+CCAMEP";		//17
-prog_char CAM_NAME_PIC[]		PROGMEM	= "+CCAMSETPN=";	//18
-prog_char CAM_TIME_STAMP[]		PROGMEM	= "+CCAMAFT=";		//19
-prog_char CAM_START_VIDEO[]		PROGMEM	= "+CCAMRS";		//20
-prog_char CAM_PAUSE_VIDEO[]		PROGMEM	= "+CCAMRP";		//21
-prog_char CAM_RESUME_VIDEO[]	PROGMEM	= "+CCAMRR";		//22
-prog_char CAM_STOP_VIDEO[]		PROGMEM	= "+CCAMRE";		//23
-prog_char CAMA_MODE[]			PROGMEM	= "+CCAMMD=";		//24
-prog_char CAMA_CH[]				PROGMEM	= "+CCAMCHL=";		//25
+const char CAM_START[]			PROGMEM	= "+CCAMS";			//0
+const char CAM_STOP[]			PROGMEM	= "+CCAME";			//1
+const char CAM_DIM[]			PROGMEM	= "+CCAMSETD=";		//2
+const char RES_STAMP[]			PROGMEM	= "80,48";			//3
+const char RES_QQVGA[]			PROGMEM	= "160,120";		//4
+const char RES_QCIF[]			PROGMEM	= "176,144";		//5
+const char RES_QVGA[]			PROGMEM	= "320,240";		//6
+const char RES_CIF[]			PROGMEM	= "352,288";		//7
+const char RES_VGA[]			PROGMEM	= "640,480";		//8
+const char RES_XGA[]			PROGMEM	= "1024,768";		//9
+const char CAM_FPS[]			PROGMEM	= "+CCAMSETF=";		//10
+const char CAM_ROT[]			PROGMEM	= "+CCAMSETR=";		//11
+const char CAM_NIGHT[]			PROGMEM	= "+CCAMSETN=";		//12
+const char CAM_WHITE[]			PROGMEM	= "+CCAMSETWB=";	//13
+const char CAM_BRIGHT[]			PROGMEM	= "+CCAMSETB=";		//14
+const char CAM_ZOOM[]			PROGMEM	= "+CCAMSETZ=";		//15
+//const char CAM_TAKE_PIC[]		PROGMEM	= "+CCAMTP"
+const char CAM_TAKE_PIC[]		PROGMEM	= "+CCAMTPEXT=100";	//16
+const char CAM_SAVE_PIC[]		PROGMEM	= "+CCAMEP";		//17
+const char CAM_NAME_PIC[]		PROGMEM	= "+CCAMSETPN=";	//18
+const char CAM_TIME_STAMP[]		PROGMEM	= "+CCAMAFT=";		//19
+const char CAM_START_VIDEO[]	PROGMEM	= "+CCAMRS";		//20
+const char CAM_PAUSE_VIDEO[]	PROGMEM	= "+CCAMRP";		//21
+const char CAM_RESUME_VIDEO[]	PROGMEM	= "+CCAMRR";		//22
+const char CAM_STOP_VIDEO[]		PROGMEM	= "+CCAMRE";		//23
+const char CAMA_MODE[]			PROGMEM	= "+CCAMMD=";		//24
+const char CAMA_CH[]			PROGMEM	= "+CCAMCHL=";		//25
 
-prog_char CAM_NO_SENSOR[]		PROGMEM	= "CAMERA NO SENSOR";		//26
-prog_char CAM_INVALID_STATE[]	PROGMEM	= "CAMERA INVALID STATE";	//27
-prog_char CAM_NO_MEM[]			PROGMEM	= "CAMERA NO MEMORY";		//28
-prog_char CAM_NO_START[]		PROGMEM	= "CAMERA NOT START";		//29
-prog_char CAM_EP[]				PROGMEM	= "Picture/";				//30
-prog_char CAM_EV[]				PROGMEM	= "Video/";					//31
+const char CAM_NO_SENSOR[]		PROGMEM	= "CAMERA NO SENSOR";		//26
+const char CAM_INVALID_STATE[]	PROGMEM	= "CAMERA INVALID STATE";	//27
+const char CAM_NO_MEM[]			PROGMEM	= "CAMERA NO MEMORY";		//28
+const char CAM_NO_START[]		PROGMEM	= "CAMERA NOT START";		//29
+const char CAM_EP[]				PROGMEM	= "Picture/";				//30
+const char CAM_EV[]				PROGMEM	= "Video/";					//31
 
 //Videocall related constants
-prog_char V_CALL_START[]		PROGMEM	= "+VPMAKE=";	//32
-prog_char V_CALL_END[]			PROGMEM	= "+VPEND";		//33
-prog_char V_DMTF[]				PROGMEM	= "+VPDTMF=";	//34
-prog_char V_RECORD[]			PROGMEM	= "+VPRECORD=";	//35
-prog_char V_QUALITY[]			PROGMEM	= "+VPQLTY=";	//36
+const char V_CALL_START[]		PROGMEM	= "+VPMAKE=";	//32
+const char V_CALL_END[]			PROGMEM	= "+VPEND";		//33
+const char V_DMTF[]				PROGMEM	= "+VPDTMF=";	//34
+const char V_RECORD[]			PROGMEM	= "+VPRECORD=";	//35
+const char V_QUALITY[]			PROGMEM	= "+VPQLTY=";	//36
 
-prog_char V_ACCEPTED[]			PROGMEM	= "VPACCEPT";		//37
-prog_char V_RECV[]				PROGMEM	= "VPRINGBACK";		//38
-prog_char V_SETUP[]				PROGMEM	= "VPSETUP";		//39
-prog_char V_CONNECTED[]			PROGMEM	= "VPCONNECTED";	//40
-prog_char V_END[]				PROGMEM	= "VPEND";			//41
-prog_char V_INCOMING[]			PROGMEM	= "VPINCOM";		//42
+const char V_ACCEPTED[]			PROGMEM	= "VPACCEPT";		//37
+const char V_RECV[]				PROGMEM	= "VPRINGBACK";		//38
+const char V_SETUP[]			PROGMEM	= "VPSETUP";		//39
+const char V_CONNECTED[]		PROGMEM	= "VPCONNECTED";	//40
+const char V_END[]				PROGMEM	= "VPEND";			//41
+const char V_INCOMING[]			PROGMEM	= "VPINCOM";		//42
 	
 	
-PROGMEM const char* table_CAMERA[] = 
+const char* const table_CAMERA[] PROGMEM = 
 {   
 	CAM_START,			//0
 	CAM_STOP,			//1
@@ -375,40 +375,40 @@ PROGMEM const char* table_CAMERA[] =
 //FTP constants
 #if FTP_FUSE
 	
-prog_char FTP_SERVER[]				PROGMEM	= "+CFTPSERV=";			//0
-prog_char FTP_PORT[]				PROGMEM	= "+CFTPPORT=";			//1
-prog_char FTP_MODE[]				PROGMEM	= "+CFTPMODE=";			//2
-prog_char FTP_TYPE[]				PROGMEM	= "+CFTPTYPE=";			//3
-prog_char FTP_UN[]					PROGMEM	= "+CFTPUN=";			//4
-prog_char FTP_PW[]					PROGMEM	= "+CFTPPW=";			//5
-prog_char FTP_GET_FILE[]			PROGMEM	= "+CFTPGETFILE=";		//6
-prog_char FTP_GET_FILE_RES[]		PROGMEM	= "+CFTPGETFILE: ";		//7
-prog_char FTP_GET_FILE_SIO[]		PROGMEM	= "+CFTPGET=";			//8
-prog_char FTP_GET_FILE_RES_SIO[]	PROGMEM	= "+CFTPGET: ";			//9
-prog_char FTP_PUT_FILE[]			PROGMEM	= "+CFTPPUTFILE=";		//10
-prog_char FTP_PUT_FILE_RES[]		PROGMEM	= "+CFTPPUTFILE: ";		//11
-prog_char FTP_PUT_FILE_SIO[]		PROGMEM	= "+CFTPPUT=";			//12
-prog_char FTP_PUT_FILE_RES_SIO[]	PROGMEM	= "+CFTPPUT: BEGIN";	//13
+const char FTP_SERVER[]				PROGMEM	= "+CFTPSERV=";			//0
+const char FTP_PORT[]				PROGMEM	= "+CFTPPORT=";			//1
+const char FTP_MODE[]				PROGMEM	= "+CFTPMODE=";			//2
+const char FTP_TYPE[]				PROGMEM	= "+CFTPTYPE=";			//3
+const char FTP_UN[]					PROGMEM	= "+CFTPUN=";			//4
+const char FTP_PW[]					PROGMEM	= "+CFTPPW=";			//5
+const char FTP_GET_FILE[]			PROGMEM	= "+CFTPGETFILE=";		//6
+const char FTP_GET_FILE_RES[]		PROGMEM	= "+CFTPGETFILE: ";		//7
+const char FTP_GET_FILE_SIO[]		PROGMEM	= "+CFTPGET=";			//8
+const char FTP_GET_FILE_RES_SIO[]	PROGMEM	= "+CFTPGET: ";			//9
+const char FTP_PUT_FILE[]			PROGMEM	= "+CFTPPUTFILE=";		//10
+const char FTP_PUT_FILE_RES[]		PROGMEM	= "+CFTPPUTFILE: ";		//11
+const char FTP_PUT_FILE_SIO[]		PROGMEM	= "+CFTPPUT=";			//12
+const char FTP_PUT_FILE_RES_SIO[]	PROGMEM	= "+CFTPPUT: BEGIN";	//13
 
 
-prog_char ACQUIRE_SSL_STACK[]		PROGMEM	= "+CFTPSSTART";		//14
-prog_char RELEASE_SSL_STACK[]		PROGMEM	= "+CFTPSSTOP";			//15
-prog_char FTPS_LOGIN[]				PROGMEM	= "+CFTPSLOGIN";		//16
-prog_char FTPS_LOGOUT[]				PROGMEM	= "+CFTPSLOGOUT";		//17
-prog_char FTPS_GET_FILE[]			PROGMEM	= "+CFTPSGETFILE=";		//18
-prog_char FTPS_GET_FILE_RES[]		PROGMEM	= "+CFTPSGETFILE: ";	//19
-prog_char FTPS_GET_FILE_SIO[]		PROGMEM	= "+CFTPSGET=";			//20
-prog_char FTPS_GET_FILE_RES_SIO[]	PROGMEM	= "+CFTPSGET: ";		//21
-prog_char FTPS_PUT_FILE[]			PROGMEM	= "+CFTPSPUTFILE=";		//22
-prog_char FTPS_PUT_FILE_RES[]		PROGMEM	= "+CFTPSPUTFILE: ";	//23
-prog_char FTPS_PUT_FILE_SIO[]		PROGMEM	= "+CFTPSPUT=";			//24
-prog_char FTPS_PUT_FILE_RES_SIO[]	PROGMEM	= "+CFTPSPUT: BEGIN";	//25
+const char ACQUIRE_SSL_STACK[]		PROGMEM	= "+CFTPSSTART";		//14
+const char RELEASE_SSL_STACK[]		PROGMEM	= "+CFTPSSTOP";			//15
+const char FTPS_LOGIN[]				PROGMEM	= "+CFTPSLOGIN";		//16
+const char FTPS_LOGOUT[]			PROGMEM	= "+CFTPSLOGOUT";		//17
+const char FTPS_GET_FILE[]			PROGMEM	= "+CFTPSGETFILE=";		//18
+const char FTPS_GET_FILE_RES[]		PROGMEM	= "+CFTPSGETFILE: ";	//19
+const char FTPS_GET_FILE_SIO[]		PROGMEM	= "+CFTPSGET=";			//20
+const char FTPS_GET_FILE_RES_SIO[]	PROGMEM	= "+CFTPSGET: ";		//21
+const char FTPS_PUT_FILE[]			PROGMEM	= "+CFTPSPUTFILE=";		//22
+const char FTPS_PUT_FILE_RES[]		PROGMEM	= "+CFTPSPUTFILE: ";	//23
+const char FTPS_PUT_FILE_SIO[]		PROGMEM	= "+CFTPSPUT=";			//24
+const char FTPS_PUT_FILE_RES_SIO[]	PROGMEM	= "+CFTPSPUT: BEGIN";	//25
 
-prog_char FTP_LIST[]				PROGMEM	= "+CFTPLIST";			//26
-prog_char FTP_LIST_RES[]			PROGMEM	= "+CFTPLIST: ";		//27
+const char FTP_LIST[]				PROGMEM	= "+CFTPLIST";			//26
+const char FTP_LIST_RES[]			PROGMEM	= "+CFTPLIST: ";		//27
 	
 
-PROGMEM const char* table_FTP[] = 
+const char* const table_FTP[] PROGMEM = 
 {   
 	FTP_SERVER,				//0
 	FTP_PORT,				//1
@@ -438,35 +438,35 @@ PROGMEM const char* table_FTP[] =
 	FTPS_PUT_FILE_SIO,		//24
 	FTPS_PUT_FILE_RES_SIO,	//25
 	FTP_LIST,				//26
-	FTP_LIST_RES,				//27
+	FTP_LIST_RES,			//27
 };
 #endif
 
 //SMTP and POP3 constants
 #if MAIL_FUSE
 	
-prog_char SMTP_SERVER[]		PROGMEM	= "+SMTPSRV=";		//0
-prog_char SMTP_AUTH[]		PROGMEM	= "+SMTPAUTH=";		//1
-prog_char SMTP_FROM[]		PROGMEM	= "+SMTPFROM=";		//2
-prog_char SMTP_RCPT[]		PROGMEM	= "+SMTPRCPT=";		//3
-prog_char SMTP_SUBJECT[]	PROGMEM	= "+SMTPSUB=";		//4
-prog_char SMTP_BODY[]		PROGMEM	= "+SMTPBODY=";		//5
-prog_char SMTP_ATTACH[]		PROGMEM	= "+SMTPFILE=";		//6
-prog_char SMTP_SEND[]		PROGMEM	= "+SMTPSEND";		//7
-prog_char SMTP_SEND_R[]		PROGMEM	= "+SMTP: SUCCESS";	//8
+const char SMTP_SERVER[]	PROGMEM	= "+SMTPSRV=";		//0
+const char SMTP_AUTH[]		PROGMEM	= "+SMTPAUTH=";		//1
+const char SMTP_FROM[]		PROGMEM	= "+SMTPFROM=";		//2
+const char SMTP_RCPT[]		PROGMEM	= "+SMTPRCPT=";		//3
+const char SMTP_SUBJECT[]	PROGMEM	= "+SMTPSUB=";		//4
+const char SMTP_BODY[]		PROGMEM	= "+SMTPBODY=";		//5
+const char SMTP_ATTACH[]	PROGMEM	= "+SMTPFILE=";		//6
+const char SMTP_SEND[]		PROGMEM	= "+SMTPSEND";		//7
+const char SMTP_SEND_R[]	PROGMEM	= "+SMTP: SUCCESS";	//8
 
-prog_char POP3_SERVER[]		PROGMEM	= "+POP3SRV";		//9
-prog_char POP3_IN[]			PROGMEM	= "+POP3IN";			//10
-prog_char POP3_OUT[]		PROGMEM	= "+POP3OUT";		//11
-prog_char POP3_LIST[]		PROGMEM	= "+POP3LIST";		//12
-prog_char POP3_LIST_R[]		PROGMEM	= "+POP3:";			//13
-prog_char POP3_HEADER[]		PROGMEM	= "+POP3HDR=";		//14
-prog_char POP3_GET[]		PROGMEM	= "+POP3GET=";		//15
-prog_char POP3_DEL[]		PROGMEM	= "+POP3DEL=";		//16
-prog_char POP3_SUCCESS[]	PROGMEM	= "+POP3: SUCCESS";	//17
+const char POP3_SERVER[]	PROGMEM	= "+POP3SRV";		//9
+const char POP3_IN[]		PROGMEM	= "+POP3IN";			//10
+const char POP3_OUT[]		PROGMEM	= "+POP3OUT";		//11
+const char POP3_LIST[]		PROGMEM	= "+POP3LIST";		//12
+const char POP3_LIST_R[]	PROGMEM	= "+POP3:";			//13
+const char POP3_HEADER[]	PROGMEM	= "+POP3HDR=";		//14
+const char POP3_GET[]		PROGMEM	= "+POP3GET=";		//15
+const char POP3_DEL[]		PROGMEM	= "+POP3DEL=";		//16
+const char POP3_SUCCESS[]	PROGMEM	= "+POP3: SUCCESS";	//17
 	
 
-PROGMEM const char* table_MAIL[] = 
+const char* const table_MAIL[] PROGMEM = 
 {   
 	SMTP_SERVER,	//0
 	SMTP_AUTH,		//1
@@ -493,20 +493,20 @@ PROGMEM const char* table_MAIL[] =
 //HTTP constants
 #if HTTP_FUSE
 	
-prog_char HTTP_ACT[] 		PROGMEM	= "+CHTTPACT=";			//0
-prog_char HTTP_ACT_REQ[]	PROGMEM	= "+CHTTPACT: REQUEST";	//1
-prog_char HTTP_ACT_DATA[]	PROGMEM	= "+CHTTPACT: ";		//2
+const char HTTP_ACT[] 		PROGMEM	= "+CHTTPACT=";			//0
+const char HTTP_ACT_REQ[]	PROGMEM	= "+CHTTPACT: REQUEST";	//1
+const char HTTP_ACT_DATA[]	PROGMEM	= "+CHTTPACT: ";		//2
 
-prog_char HTTPS_START[]		PROGMEM	= "+CHTTPSSTART";		//3
-prog_char HTTPS_STOP[]		PROGMEM	= "+CHTTPSSTOP";		//4
-prog_char HTTPS_OPEN[]		PROGMEM	= "+CHTTPSOPSE";		//5
-prog_char HTTPS_CLOSE[]		PROGMEM	= "+CHTTPSCLSE";		//6
-prog_char HTTPS_SEND[]		PROGMEM	= "+CHTTPSSEND";		//7
-prog_char HTTPS_RCV[]		PROGMEM	= "+CHTTPSRECV=1";		//8
-prog_char HTTPS_DATA[]		PROGMEM	= "+CHTTPSRECV: ";		//9
+const char HTTPS_START[]	PROGMEM	= "+CHTTPSSTART";		//3
+const char HTTPS_STOP[]		PROGMEM	= "+CHTTPSSTOP";		//4
+const char HTTPS_OPEN[]		PROGMEM	= "+CHTTPSOPSE";		//5
+const char HTTPS_CLOSE[]	PROGMEM	= "+CHTTPSCLSE";		//6
+const char HTTPS_SEND[]		PROGMEM	= "+CHTTPSSEND";		//7
+const char HTTPS_RCV[]		PROGMEM	= "+CHTTPSRECV=1";		//8
+const char HTTPS_DATA[]		PROGMEM	= "+CHTTPSRECV: ";		//9
 
 
-PROGMEM const char* table_HTTP[] = 
+const char* const table_HTTP[] PROGMEM = 
 {   
 	HTTP_ACT,		//0
 	HTTP_ACT_REQ,	//1
@@ -524,19 +524,19 @@ PROGMEM const char* table_HTTP[] =
 
 //GPS constants
 #if GPS_FUSE
-prog_char START_GPS[]			PROGMEM	= "+CGPS=1,";		//0
-prog_char START_GPS_COLD[]		PROGMEM	= "+CGPSCOLD";		//1
-prog_char START_GPS_HOT[]		PROGMEM	= "+CGPSHOT";		//2
-prog_char STOP_GPS[]			PROGMEM	= "+CGPS=0";		//3
-prog_char GPS_SERVER[]			PROGMEM	= "+CGPSURL=";		//4
-prog_char A_GPS_INFO[]			PROGMEM	= "+CAGPSINFO:";	//5
-prog_char GPS_INFO[]			PROGMEM	= "+CGPSINFO";		//6
-prog_char GPS_INFO_R[]			PROGMEM	= "+CGPSINFO:";		//7
-prog_char ENABLE_AUTO_GPS[]		PROGMEM	= "+CGPSAUTO=1";	//8
-prog_char DISABLE_AUTO_GPS[]	PROGMEM	= "+CGPSAUTO=0";	//9
+const char START_GPS[]			PROGMEM	= "+CGPS=1,";		//0
+const char START_GPS_COLD[]		PROGMEM	= "+CGPSCOLD";		//1
+const char START_GPS_HOT[]		PROGMEM	= "+CGPSHOT";		//2
+const char STOP_GPS[]			PROGMEM	= "+CGPS=0";		//3
+const char GPS_SERVER[]			PROGMEM	= "+CGPSURL=";		//4
+const char A_GPS_INFO[]			PROGMEM	= "+CAGPSINFO:";	//5
+const char GPS_INFO[]			PROGMEM	= "+CGPSINFO";		//6
+const char GPS_INFO_R[]			PROGMEM	= "+CGPSINFO:";		//7
+const char ENABLE_AUTO_GPS[]	PROGMEM	= "+CGPSAUTO=1";	//8
+const char DISABLE_AUTO_GPS[]	PROGMEM	= "+CGPSAUTO=0";	//9
 
 
-PROGMEM const char* table_GPS[] = 
+const char* const table_GPS[] PROGMEM = 
 {   
 	START_GPS,			//0
 	START_GPS_COLD,		//1
@@ -557,39 +557,39 @@ PROGMEM const char* table_GPS[] =
 	#define RETRIES				10
 	#define DELAY_SEND			0
 	
-prog_char IP_OPEN[]				PROGMEM	= "+NETOPEN=";		//0
-prog_char IP_CLOSE[]			PROGMEM	= "+NETCLOSE";		//1
-prog_char IP_APP_MODE[]			PROGMEM	= "+CIPMODE=";		//2
-prog_char GET_IP[]				PROGMEM	= "+IPADDR";		//3
-prog_char GET_IP_R[]			PROGMEM	= "+IPADDR:";		//4
+const char IP_OPEN[]			PROGMEM	= "+NETOPEN=";		//0
+const char IP_CLOSE[]			PROGMEM	= "+NETCLOSE";		//1
+const char IP_APP_MODE[]		PROGMEM	= "+CIPMODE=";		//2
+const char GET_IP[]				PROGMEM	= "+IPADDR";		//3
+const char GET_IP_R[]			PROGMEM	= "+IPADDR:";		//4
 
-prog_char TCP_CONNECT[]			PROGMEM	= "+TCPCONNECT=";	//5
-prog_char TCP_SEND[]			PROGMEM	= "+TCPWRITE=";		//6
-prog_char UDP_SEND[]			PROGMEM	= "+UDPSEND=";		//7
-prog_char IP_SERVER[]			PROGMEM	= "+SERVERSTART";	//8
+const char TCP_CONNECT[]		PROGMEM	= "+TCPCONNECT=";	//5
+const char TCP_SEND[]			PROGMEM	= "+TCPWRITE=";		//6
+const char UDP_SEND[]			PROGMEM	= "+UDPSEND=";		//7
+const char IP_SERVER[]			PROGMEM	= "+SERVERSTART";	//8
 
-prog_char MULTI_OPEN[]			PROGMEM	= "+CIPOPEN=";		//9
-prog_char MULTI_SEND[]			PROGMEM	= "+CIPSEND=";		//10
-prog_char MULTI_CLOSE[]			PROGMEM	= "+CIPCLOSE=";		//11
-prog_char TCP_SEND_OK[]			PROGMEM	= "Send ok";		//12
-prog_char UDP_SEND_OK[]			PROGMEM	= "+UDPSEND:";		//13
+const char MULTI_OPEN[]			PROGMEM	= "+CIPOPEN=";		//9
+const char MULTI_SEND[]			PROGMEM	= "+CIPSEND=";		//10
+const char MULTI_CLOSE[]		PROGMEM	= "+CIPCLOSE=";		//11
+const char TCP_SEND_OK[]		PROGMEM	= "Send ok";		//12
+const char UDP_SEND_OK[]		PROGMEM	= "+UDPSEND:";		//13
 
-prog_char SERVER_LIST[]			PROGMEM	= "+LISTCLIENT";	//14
-prog_char SERVER_LIST_R[]		PROGMEM	= "+LISTCLIENT: ";	//15
-prog_char SERVER_OPEN_CLIENT[]	PROGMEM	= "+ACTCLIENT=";	//16
-prog_char SERVER_CLOSE_CLIENT[]	PROGMEM	= "+CLOSECLIENT=";	//17
+const char SERVER_LIST[]		PROGMEM	= "+LISTCLIENT";	//14
+const char SERVER_LIST_R[]		PROGMEM	= "+LISTCLIENT: ";	//15
+const char SERVER_OPEN_CLIENT[]	PROGMEM	= "+ACTCLIENT=";	//16
+const char SERVER_CLOSE_CLIENT[] PROGMEM	= "+CLOSECLIENT=";	//17
 
-prog_char CONFIGURE_IP[]		PROGMEM	= "+CIPCCFG=";		//18
+const char CONFIGURE_IP[]		PROGMEM	= "+CIPCCFG=";		//18
 
-prog_char IPFROMDOM[]			PROGMEM	= "+CDNSGIP";		//19
-prog_char DOMFROMIP[]			PROGMEM	= "+CDNSGHNAME";	//20
+const char IPFROMDOM[]			PROGMEM	= "+CDNSGIP";		//19
+const char DOMFROMIP[]			PROGMEM	= "+CDNSGHNAME";	//20
 
-prog_char IPDATAMODE[]			PROGMEM	= "O";				//21
-prog_char IPDATAMODE_R[]		PROGMEM	= "CONNECT";		//22
-prog_char IPDATAMODE_FAIL[]		PROGMEM	= "NO CARRIER";		//23
+const char IPDATAMODE[]			PROGMEM	= "O";				//21
+const char IPDATAMODE_R[]		PROGMEM	= "CONNECT";		//22
+const char IPDATAMODE_FAIL[]	PROGMEM	= "NO CARRIER";		//23
 	
 	
-PROGMEM const char* table_IP[] = 
+const char* const table_IP[] PROGMEM = 
 {   
 	IP_OPEN,				//0
 	IP_CLOSE,				//1

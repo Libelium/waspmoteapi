@@ -341,7 +341,8 @@ void twi_close()
 	cbi(PRR0,PRTWI);
 }
 
-SIGNAL(SIG_2WIRE_SERIAL)
+
+ISR(TWI_vect)
 {
   switch(TW_STATUS){
     // All Master

@@ -331,7 +331,7 @@ public:
 	//! It prints a sequence of data formatted as the format argument specifies 
   	/*!
   	This function emulates the stdio.h printf() functionality in C and will send
-	the output to the Serial connection using Serial.print(). The resulting 
+	the output to the Serial connection using printByte(). The resulting 
 	string sent over serial is limited to 128 chars.
 	\param char *fmt : is the format string to be printed
 	\param ... :  additional arguments as specified in format.

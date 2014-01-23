@@ -34,40 +34,40 @@
 
 /// table_ZB /////////////////////////////////////////////////////////////////
 
-prog_char	reset_network_ZB[]		PROGMEM	= 	"7E000508524E520000"; 	// AT+NR
-prog_char	get_parent_NA_ZB[]		PROGMEM	= 	"7E000408524D5008";		// AT+MP
-prog_char	get_rem_children_ZB[]	PROGMEM	= 	"7E000408524E4314";		// AT+NC
-prog_char	set_device_type_ZB[]	PROGMEM	=	"7E0005085244440000";	// AT+DD
-prog_char	get_device_type_ZB[]	PROGMEM	=	"7E0004085244441D";		// AT+DD
-prog_char	get_payload_ZB[]		PROGMEM	=	"7E000408524E5007";		// AT+NP
-prog_char	get_ext_PAN_ZB[]		PROGMEM	=	"7E000408524F5006"; 	// AT+OP
-prog_char	get_opt_PAN_ZB[]		PROGMEM	=	"7E000408524F490D";		// AT+OI
-prog_char	set_max_uni_hops_ZB[]	PROGMEM	=	"7E000508524E480000";	// AT+NH
-prog_char	get_max_uni_hops_ZB[]	PROGMEM	=	"7E000408524E480F";		// AT+NH
-prog_char	set_max_brd_hops_ZB[]	PROGMEM	=	"7E0005085242480000";	// AT+BH
-prog_char	get_max_brd_hops_ZB[]	PROGMEM	=	"7E0004085242481B";		// AT+BH
-prog_char	set_stack_profile_ZB[]	PROGMEM	=	"7E000508525A530000";	// AT+ZS
-prog_char	get_stack_profile_ZB[]	PROGMEM	=	"7E000408525A53F8";		// AT+ZS
-prog_char	set_period_sleep_ZB[]	PROGMEM	=	"7E00050852534E0000";	// AT+SN
-prog_char	set_join_time_ZB[]		PROGMEM	=	"7E000508524E4A0000";	// AT+NJ
-prog_char	get_join_time_ZB[]		PROGMEM	=	"7E000408524E4A0D";		// AT+NJ
-prog_char	set_channel_verif_ZB[]	PROGMEM	=	"7E000508524A560000";	// AT+JV
-prog_char	get_channel_verif_ZB[]	PROGMEM	=	"7E000408524A5605";		// AT+JV
-prog_char	set_join_notif_ZB[]		PROGMEM	=	"7E000508524A4E0000";	// AT+JN
-prog_char	get_join_notif_ZB[]		PROGMEM	=	"7E000408524A4E0D";		// AT+JN
-prog_char	set_aggreg_notif_ZB[]	PROGMEM	=	"7E0005085241520000";	// AT+AR
-prog_char	get_aggreg_notif_ZB[]	PROGMEM	=	"7E00040852415212";		// AT+AR
-prog_char	get_assoc_indic_ZB[]	PROGMEM	=	"7E0004085241491B";		// AT+AI
-prog_char	set_encryp_options_ZB[]	PROGMEM	=	"7E00050852454F0000";	// AT+EO
-prog_char	get_encryp_options_ZB[]	PROGMEM	=	"7E00040852454F11";		// AT+EO
-prog_char	set_netwk_key_ZB[]		PROGMEM	=	"7E001408524E4B0000000000000000000000000000000000";	// AT+NK
-prog_char	set_power_mode_ZB[]		PROGMEM	=	"7E00050852504D0000";	// AT+PM
-prog_char	get_power_mode_ZB[]		PROGMEM	=	"7E00040852504D08";		// AT+PM
-prog_char	get_supply_Volt_ZB[]	PROGMEM	=	"7E0004085225562A";		// AT+%V
+const char	reset_network_ZB[]		PROGMEM	= 	"7E000508524E520000"; 	// AT+NR
+const char	get_parent_NA_ZB[]		PROGMEM	= 	"7E000408524D5008";		// AT+MP
+const char	get_rem_children_ZB[]	PROGMEM	= 	"7E000408524E4314";		// AT+NC
+const char	set_device_type_ZB[]	PROGMEM	=	"7E0005085244440000";	// AT+DD
+const char	get_device_type_ZB[]	PROGMEM	=	"7E0004085244441D";		// AT+DD
+const char	get_payload_ZB[]		PROGMEM	=	"7E000408524E5007";		// AT+NP
+const char	get_ext_PAN_ZB[]		PROGMEM	=	"7E000408524F5006"; 	// AT+OP
+const char	get_opt_PAN_ZB[]		PROGMEM	=	"7E000408524F490D";		// AT+OI
+const char	set_max_uni_hops_ZB[]	PROGMEM	=	"7E000508524E480000";	// AT+NH
+const char	get_max_uni_hops_ZB[]	PROGMEM	=	"7E000408524E480F";		// AT+NH
+const char	set_max_brd_hops_ZB[]	PROGMEM	=	"7E0005085242480000";	// AT+BH
+const char	get_max_brd_hops_ZB[]	PROGMEM	=	"7E0004085242481B";		// AT+BH
+const char	set_stack_profile_ZB[]	PROGMEM	=	"7E000508525A530000";	// AT+ZS
+const char	get_stack_profile_ZB[]	PROGMEM	=	"7E000408525A53F8";		// AT+ZS
+const char	set_period_sleep_ZB[]	PROGMEM	=	"7E00050852534E0000";	// AT+SN
+const char	set_join_time_ZB[]		PROGMEM	=	"7E000508524E4A0000";	// AT+NJ
+const char	get_join_time_ZB[]		PROGMEM	=	"7E000408524E4A0D";		// AT+NJ
+const char	set_channel_verif_ZB[]	PROGMEM	=	"7E000508524A560000";	// AT+JV
+const char	get_channel_verif_ZB[]	PROGMEM	=	"7E000408524A5605";		// AT+JV
+const char	set_join_notif_ZB[]		PROGMEM	=	"7E000508524A4E0000";	// AT+JN
+const char	get_join_notif_ZB[]		PROGMEM	=	"7E000408524A4E0D";		// AT+JN
+const char	set_aggreg_notif_ZB[]	PROGMEM	=	"7E0005085241520000";	// AT+AR
+const char	get_aggreg_notif_ZB[]	PROGMEM	=	"7E00040852415212";		// AT+AR
+const char	get_assoc_indic_ZB[]	PROGMEM	=	"7E0004085241491B";		// AT+AI
+const char	set_encryp_options_ZB[]	PROGMEM	=	"7E00050852454F0000";	// AT+EO
+const char	get_encryp_options_ZB[]	PROGMEM	=	"7E00040852454F11";		// AT+EO
+const char	set_netwk_key_ZB[]		PROGMEM	=	"7E001408524E4B0000000000000000000000000000000000";	// AT+NK
+const char	set_power_mode_ZB[]		PROGMEM	=	"7E00050852504D0000";	// AT+PM
+const char	get_power_mode_ZB[]		PROGMEM	=	"7E00040852504D08";		// AT+PM
+const char	get_supply_Volt_ZB[]	PROGMEM	=	"7E0004085225562A";		// AT+%V
 
 
 
-PROGMEM const char* table_ZB[] = 	  
+const char* const table_ZB[] PROGMEM = 	  
 {   	
 	reset_network_ZB,		// 0
 	get_parent_NA_ZB,		// 1

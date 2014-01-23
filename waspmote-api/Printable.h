@@ -24,7 +24,7 @@
 
 
 class __FlashStringHelper;
-#define F(string_literal) (reinterpret_cast<__FlashStringHelper *>(PSTR(string_literal)))
+#define F(string_literal) (reinterpret_cast< const __FlashStringHelper *>(PSTR(string_literal)))
 
 class USB;
 /** The Printable class provides a way for new classes to allow themselves to be printed.

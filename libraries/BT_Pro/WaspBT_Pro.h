@@ -172,6 +172,13 @@ class WaspBT_Pro
     \param const char* theText: Command to send.
     */
 	void sendCommand(const char* theText);
+	
+	//! Sends a command to bluetooth module. 
+    	/*!
+    \param uint8_t * theCommand: Command to send.
+    \param uint16_t length: command length
+    */
+	void sendCommand(uint8_t * theCommand, uint16_t length);
 
 	//! Reads command answer and saves it. 
     	/*!
@@ -475,7 +482,7 @@ class WaspBT_Pro
     */
 	int8_t checkActiveConnections();
 	
-	//!  Updates the Receiver Signal Strength Indication of the variable linkRSSI of the link given as a parameter
+	//!  Updates the Receiver Signal Strength Indication of the variable linkRSSI 
 		/*!
 	\return '1' if RSSI obtained, '0' if no connections, '-1' if error in command mode, '-2' if link not active. 
     */
@@ -487,7 +494,40 @@ class WaspBT_Pro
     \return '1' if RSSI obtained, '0' if no connections, '-1' if error in command mode, '-2' if link not active. 
     */
 	uint8_t getRSSI(uint8_t linkID);
-				
+	
+	//!  Pair with other module, with default pin code 123456. It has a timeout
+    //!  of 20 seconds. Note: the AUTH event can be enabled to see when a device is trying to pair.
+		/*!
+	\param char* macAddress: Mac address of the device to pair.
+    \return '1' if pairing ok, '0' otherwise.
+    */	
+	uint8_t pair(char* macAddress);
+	
+	//!  Pair with other module, specifying Pin code. It has a timeout
+    //!  of 20 seconds. Note: the AUTH event can be enabled to see when a device is trying to pair.
+		/*!
+	\param char* macAddress: Mac address of the device to pair.
+	\param char  * pincode: PIN code for pairing process
+    \return '1' if pairing ok, '0' otherwise.
+    */	
+	uint8_t pair(char* macAddress, char * pinCode);
+	
+	//!  removes al paired devices
+		/*!
+	\param void
+    \return void
+    */	
+	void removePairedDevices();
+	
+	//!  removes all paired devices. mac address must not have capital leters:
+	//! ok    --> "00:1a:f0:90:b3:c8"
+	//! wrong --> "00:1A:F0:90:B3:C8"
+		/*!
+	\param char * deviceMac: mac of device to check.
+    \return returns '1' if pared, '0' otherwise
+    */	
+	uint8_t isPaired(char * deviceMac);
+			
 };
 extern WaspBT_Pro BT_Pro;
 #endif

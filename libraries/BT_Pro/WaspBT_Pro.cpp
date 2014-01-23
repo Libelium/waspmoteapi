@@ -32,46 +32,49 @@
  ******************************************************************************/
 
 /// table_BT /////////////////////////////////////////////////////////////////
-prog_char	bt_string_00[]	PROGMEM = "%02u-%02u-%02u;%02u:%02u; %s; ";	// 0
-prog_char	bt_string_01[]	PROGMEM = "Friendly names: ";   			// 1
-prog_char	bt_string_02[]	PROGMEM = "%s; %s; %s; %c;";   				// 2
-prog_char	bt_string_03[]	PROGMEM = "SET BT POWER %d %d %d";   		// 3
-prog_char	bt_string_04[]	PROGMEM = "sleep";   						// 4
-prog_char	bt_string_05[]	PROGMEM = "SET CONTROL CONFIG 0000 0101";   // 5
-prog_char	bt_string_06[]	PROGMEM = "SET CONTROL CONFIG LIST";   		// 6
-prog_char	bt_string_07[]	PROGMEM = "CONTROL CONFIG 0000 0101";   	// 7
-prog_char	bt_string_08[]	PROGMEM = "SET BT POWER 3 3 -2";   			// 8
-prog_char	bt_string_09[]	PROGMEM = "RESET";   						// 9
-prog_char	bt_string_10[]	PROGMEM = "Bluegiga";   					// 10
-prog_char	bt_string_11[]	PROGMEM = "temp";   						// 11
-prog_char	bt_string_12[]	PROGMEM = "SET";   							// 12
-prog_char	bt_string_13[]	PROGMEM = "SET BT NAME %s_";   				// 13
-prog_char	bt_string_14[]	PROGMEM = "ScanNetwork";   					// 14
-prog_char	bt_string_15[]	PROGMEM = "inquiry %u";   					// 15
-prog_char	bt_string_16[]	PROGMEM = "ScanNetworkLimited. ";   		// 16
-prog_char	bt_string_17[]	PROGMEM = "inquiry 48";   					// 17
-prog_char	bt_string_18[]	PROGMEM = "ScanDevice: ";   				// 18
-prog_char	bt_string_19[]	PROGMEM = "Not found.";   					// 19
-prog_char	bt_string_20[]	PROGMEM = "ScanNetworkName";   				// 20
-prog_char	bt_string_21[]	PROGMEM = "inquiry %u name";   				// 21
-prog_char	bt_string_22[]	PROGMEM = "1101";   						// 22
-prog_char	bt_string_23[]	PROGMEM = "RFCOMM";   						// 23
-prog_char	bt_string_24[]	PROGMEM = "call %s %s %s";   				// 24
-prog_char	bt_string_25[]	PROGMEM = "CALL";   						// 25
-prog_char	bt_string_26[]	PROGMEM = "CONNECT";   						// 26
-prog_char	bt_string_27[]	PROGMEM = "NO CARRIER";   					// 27
-prog_char	bt_string_28[]	PROGMEM = "CLOSE 0";   						// 28
-prog_char	bt_string_29[]	PROGMEM = "ERROR 0";   						// 29
-prog_char	bt_string_30[]	PROGMEM = "READY";   						// 30
-prog_char	bt_string_31[]	PROGMEM = "LIST";   						// 31
-prog_char	bt_string_32[]	PROGMEM = "RSSI %u";   						// 32
-prog_char	bt_string_33[]	PROGMEM = "ERROR";   						// 33
-prog_char	bt_string_34[]	PROGMEM = "Total: ";   						// 34
-prog_char	bt_string_35[]	PROGMEM = "Discovered devices";   			// 35
-prog_char	bt_string_36[]	PROGMEM = "---";   							// 36
+const char	bt_string_00[]	PROGMEM = "%02u-%02u-%02u;%02u:%02u; %s; ";	// 0
+const char	bt_string_01[]	PROGMEM = "Friendly names: ";   			// 1
+const char	bt_string_02[]	PROGMEM = "%s; %s; %s; %c;";   				// 2
+const char	bt_string_03[]	PROGMEM = "SET BT POWER %d %d %d";   		// 3
+const char	bt_string_04[]	PROGMEM = "sleep";   						// 4
+const char	bt_string_05[]	PROGMEM = "SET CONTROL CONFIG 0000 0101";   // 5
+const char	bt_string_06[]	PROGMEM = "SET CONTROL CONFIG LIST";   		// 6
+const char	bt_string_07[]	PROGMEM = "CONTROL CONFIG 0000 0101";   	// 7
+const char	bt_string_08[]	PROGMEM = "SET BT POWER 3 3 -2";   			// 8
+const char	bt_string_09[]	PROGMEM = "RESET";   						// 9
+const char	bt_string_10[]	PROGMEM = "Bluegiga";   					// 10
+const char	bt_string_11[]	PROGMEM = "temp";   						// 11
+const char	bt_string_12[]	PROGMEM = "SET";   							// 12
+const char	bt_string_13[]	PROGMEM = "SET BT NAME %s_";   				// 13
+const char	bt_string_14[]	PROGMEM = "ScanNetwork";   					// 14
+const char	bt_string_15[]	PROGMEM = "inquiry %u";   					// 15
+const char	bt_string_16[]	PROGMEM = "ScanNetworkLimited. ";   		// 16
+const char	bt_string_17[]	PROGMEM = "inquiry 48";   					// 17
+const char	bt_string_18[]	PROGMEM = "ScanDevice: ";   				// 18
+const char	bt_string_19[]	PROGMEM = "Not found.";   					// 19
+const char	bt_string_20[]	PROGMEM = "ScanNetworkName";   				// 20
+const char	bt_string_21[]	PROGMEM = "inquiry %u name";   				// 21
+const char	bt_string_22[]	PROGMEM = "1101";   						// 22
+const char	bt_string_23[]	PROGMEM = "RFCOMM";   						// 23
+const char	bt_string_24[]	PROGMEM = "call %s %s %s";   				// 24
+const char	bt_string_25[]	PROGMEM = "CALL";   						// 25
+const char	bt_string_26[]	PROGMEM = "CONNECT";   						// 26
+const char	bt_string_27[]	PROGMEM = "NO CARRIER";   					// 27
+const char	bt_string_28[]	PROGMEM = "CLOSE 0";   						// 28
+const char	bt_string_29[]	PROGMEM = "ERROR 0";   						// 29
+const char	bt_string_30[]	PROGMEM = "READY";   						// 30
+const char	bt_string_31[]	PROGMEM = "LIST";   						// 31
+const char	bt_string_32[]	PROGMEM = "RSSI %u";   						// 32
+const char	bt_string_33[]	PROGMEM = "ERROR";   						// 33
+const char	bt_string_34[]	PROGMEM = "Total: ";   						// 34
+const char	bt_string_35[]	PROGMEM = "Discovered devices";   			// 35
+const char	bt_string_36[]	PROGMEM = "---";   							// 36
+const char bt_string_37[]  PROGMEM = "SET BT AUTH * %s";				// 37
+const char bt_string_38[]  PROGMEM = "PAIR %s";						// 38
+const char bt_string_39[]  PROGMEM = "OK";								// 39
+const char bt_string_40[]  PROGMEM = "SET BT PAIR *";					// 40
 
-
-PROGMEM const char* table_BT[] = 	  
+const char* const table_BT[] PROGMEM = 	  
 {   
 	bt_string_00,		// 0
 	bt_string_01,		// 1
@@ -110,6 +113,10 @@ PROGMEM const char* table_BT[] =
 	bt_string_34,		// 34
 	bt_string_35,		// 35
 	bt_string_36,		// 36
+	bt_string_37,		// 37
+	bt_string_38,		// 38
+	bt_string_39,		// 39
+	bt_string_40,		// 40
 };
 	
 	
@@ -215,7 +222,7 @@ int8_t  WaspBT_Pro::waitInquiryAnswer(	unsigned long inquiryTime,
 		// Compare total of devices found and total of devices saved. 
 		
 		// convert from string to int
-		a = atoi(total);
+		int a = atoi(total);
 		
 		if (a!=numberOfDevices)
 		{
@@ -648,6 +655,18 @@ void WaspBT_Pro::readCommandAnswer()
 		}
 		delay(10);	
 	}
+	
+	#ifdef DEBUG_MODE
+	// print answer
+	USB.print(F("Command:"));
+	for (uint8_t a = 0; a < i; a++)
+	{
+		USB.print(commandAnswer[a]);
+	}
+	USB.print(F("\t"));
+	USB.println(F(""));
+	#endif
+	
 }
 
 /*
@@ -782,6 +801,36 @@ void WaspBT_Pro::sendCommand(const char* theText)
     printString(theCommand,_uartBT);
     delay(100);
 }
+
+
+/*
+ Function: Sends a given command to bluetooth module, adding CR+LF.
+ Returns: 
+ Parameters: 
+	theCommand: Command to send.
+	length: command length.
+ Values: 
+*/
+void WaspBT_Pro::sendCommand(uint8_t * theCommand, uint16_t length) 
+{
+    #ifdef DEBUG_MODE
+	USB.print(F("Command:"));
+	USB.print(F("\t"));
+	for(uint16_t a = 0; a < length; a++)
+	{
+		USB.printHex(theCommand[a]);
+	}
+	USB.println(F(""));
+	#endif
+		
+	serialFlush(_uartBT);
+    for(uint16_t b = 0; b < length; b++)
+    {
+      printByte(theCommand[b], _uartBT);
+    }
+    delay(100);
+}
+
 
 /*				
  Function: Change TX power
@@ -954,8 +1003,12 @@ uint8_t WaspBT_Pro::createSDFiles()
 WaspBT_Pro::WaspBT_Pro() 
 {
 
-	i=0;
-	_baudrateBT=BT_BLUEGIGA_RATE;
+	i = 0;
+	_baudrateBT = BT_BLUEGIGA_RATE;
+	commandMode = 1;
+	
+	// set default name to avoid weird chars inside EEPROM
+	setNodeID("DEF_NAME");
 	
 	
 }
@@ -2284,8 +2337,6 @@ uint8_t WaspBT_Pro::getRSSI(uint8_t linkID)
 	
 }
 
-
-
 #ifdef DEBUG_MODE
 // Test purposes only
 void WaspBT_Pro::printBuffer()
@@ -2303,5 +2354,190 @@ void WaspBT_Pro::printBuffer2()
 	
 }
 #endif
+
+/*
+ Function: Pair with other module. Default code 123456.
+ Returns: 	'1' if pairing ok, '0' otherwise.
+ Parameters: char* macAddress: Mac address of the device to pair.
+ Values: 
+*/
+uint8_t WaspBT_Pro::pair(char* macAddress)
+{
+	return pair(macAddress, "123456");
+}
+
+/*
+ Function: Pair with other module, specifying Pin code. It has a timeout
+ * of 20 seconds.
+ * Note: the AUTH event can be enabled to see when a device is 
+ * trying to pair.
+ Returns: 	'1' if pairing ok, '0' otherwise.
+ Parameters: char* macAddress: Mac address of the device to pair.
+ * char * pincode: PIN code for the connection. 
+ Values: 
+*/
+uint8_t WaspBT_Pro::pair(char* macAddress, char * pinCode)
+{
+	// set code for pairing
+	// copy "SET BT AUTH * %s" from flash memory
+	uint8_t found = 0;
+	char dummy[3];
+	char aux[20];
+    strcpy_P(aux, (char*)pgm_read_word(&(table_BT[37])));   
+    sprintf(theCommand, aux, pinCode);
+	sendCommand(theCommand);
+	
+	// clear variable
+	memset(theCommand, 0x00, sizeof(theCommand) );
+	memset(aux, 0x00, sizeof(aux) );	
+	
+	// Now try to pair, copy from flash "PAIR %s"
+	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[38])));  	
+	sprintf(theCommand, aux, macAddress);
+	sendCommand(theCommand);
+	
+	memset(aux, 0x00, sizeof(aux) );	
+	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[39]))); 
+		
+	// wait 20 seconds for succesfull pairing.
+	unsigned long previous = millis();
+	while((millis()-previous < 20000) && !found)
+	{
+		//default answers: if OK: PAIR [MAC] OK; if fail: PAIR [MAC] FAIL.
+		// look for 'OK'
+		// check if "PAIR" is read:
+		if (serialAvailable(_uartBT))
+		{		
+			dummy[0]=serialRead(_uartBT);	
+			if (dummy[0]=='O')
+			{
+				dummy[1]=serialRead(_uartBT);	
+				if (dummy[1]=='K')
+				{
+					found = 1;
+				}
+			}				
+		}
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < previous ) previous=millis();
+	}
+	
+	if (found)
+	{
+		// paired OK.
+		return 1;
+	}
+	
+	// Paired failed
+	return 0;
+}
+
+/*
+ Function: removes all paired devices.
+ Returns: 	
+ Parameters: 
+ Values: 
+*/
+void WaspBT_Pro::removePairedDevices()
+{
+	// copy "SET BT PAIR *" from flash memory
+	char aux[20];
+    strcpy_P(aux, (char*)pgm_read_word(&(table_BT[40])));   
+    sendCommand(aux);
+	
+}
+
+/*
+ Function: removes all paired devices.
+ * mac address must not have capital leters:
+ * ok    --> "00:1a:f0:90:b3:c8"
+ * wrong --> "00:1A:F0:90:B3:C8"
+ Returns: 	returns '1' if pared, '0' otherwise
+ Parameters: char * deviceMac: device to check pairing.
+ Values: 
+*/
+uint8_t WaspBT_Pro::isPaired(char * deviceMac)
+{
+	uint8_t found = 0;
+	char dummy[4];
+	i=0;
+	// copy "SET" from flash memory
+	char aux[20];
+    strcpy_P(aux, (char*)pgm_read_word(&(table_BT[12])));   
+    sendCommand(aux);
+    
+    memset(aux, 0x00, sizeof(aux));
+    
+    /*example of SET response:
+     *  SET BT BDADDR 
+        (...)
+		SET BT PAGEMODE 3 2000 1
+		SET BT PAIR 2c:44:01:7f:f8:03 9edc4e7e8ecdc556cd361f70eb510405
+		SET BT PAIR 00:1a:70:90:b3:28 f92e3335a4119e73b339d71ae3fccca3
+		SET BT POWER 3 3 -2
+		SET BT ROLE 0 f 7d00
+	*/
+    
+    // answer to look to be buffered, look dinamically.
+    delay(500);
+	unsigned long previous = millis();
+	while(serialAvailable(_uartBT) && (millis()-previous < 2000) && !found)
+	{
+		// check if "PAIR" is read:
+		dummy[0]=serialRead(_uartBT);	
+		if (dummy[0]=='P')
+		{
+			dummy[1]=serialRead(_uartBT);	
+			if (dummy[1]=='A')
+			{
+				dummy[0]=serialRead(_uartBT);
+				if (dummy[0]=='I')
+				{
+					dummy[1]=serialRead(_uartBT);
+					if (dummy[1]=='R')
+					{
+						dummy[0]=serialRead(_uartBT);
+						if (dummy[0]==' ')
+						{
+						
+							// check mac of paired device
+							for (i=0; i<17; i++)	
+							{
+								aux[i]=serialRead(_uartBT);
+							}
+							
+							#ifdef DEBUG_MODE
+							USB.println("aux");
+							USB.println(aux);
+							USB.println("device mac");
+							USB.println(deviceMac);
+							#endif
+							
+							// check if right device
+							if(!strcmp(deviceMac, aux) ) 
+							{
+								found = 1;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < previous ) previous=millis();
+	}
+	delay(500);
+	serialFlush(_uartBT);	// delete all other dummy information	
+	delay(200);
+		
+	if (found)
+	{
+		return 1;
+	}
+	
+	return 0;
+}
 
 WaspBT_Pro BT_Pro=WaspBT_Pro();		//object

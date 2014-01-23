@@ -23,6 +23,8 @@ int analogRead(uint8_t pin)
 {
 	uint8_t low, high, ch = analogInPinToBit(pin);
 
+	sbi(ADCSRA,ADEN);
+   
 	// the low 4 bits of ADMUX select the ADC channel
 	ADMUX = (ADMUX & (unsigned int) 0xf0) | (ch & (unsigned int) 0x0f);
 

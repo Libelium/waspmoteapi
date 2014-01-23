@@ -168,7 +168,7 @@
 		delay(_delay);
 		digitalWrite(MUX_USB_XBEE, HIGH); 
 		delay(_delay);
-		Serial.print("                  ", _uart);		
+		printString("                  ", _uart);		
 		
 		memset(dataTX, 0x00, 35);  
 		dataTX[0] = 0x02; // Length
@@ -199,7 +199,7 @@
 		delay(_delay);
 		digitalWrite(MUX_USB_XBEE, HIGH); 
 		delay(2);
-		Serial.print("                ", _uart);		
+		printString("                ", _uart);		
 
 		dataTX[0] = 0x15;
 		lengthCheckSum(dataTX); // Length Checksum
@@ -235,7 +235,7 @@
 		delay(2);
 		digitalWrite(MUX_USB_XBEE, HIGH); 
 		delay(2);
-		Serial.print("                ", _uart);		
+		printString("                ", _uart);		
 		
 		dataTX[0] = 0x05;
 		lengthCheckSum(dataTX); // Length Checksum
@@ -331,7 +331,7 @@
 		delay(2);
 		digitalWrite(MUX_USB_XBEE, HIGH); 
 		delay(2);		
-		Serial.print("                ", _uart);	
+		printString("                ", _uart);	
 		
 		dataTX[0] = 0x03;
 		lengthCheckSum(dataTX);  // Length Checksum
@@ -520,7 +520,7 @@
 		delay(_delay);
 		digitalWrite(MUX_USB_XBEE, HIGH); 
 		delay(_delay);
-		Serial.print("               ", _uart);		
+		printString("               ", _uart);		
 		
 		dataTX[0] = 0x05; //Length 
 		lengthCheckSum(dataTX); // Length Checksum
@@ -542,14 +542,14 @@
 	void WaspRFID::sendTX(uint8_t *dataTX, uint8_t length, uint8_t outLength)
 	{
 
-	    Serial.print(PREAMBLE, BYTE, _uart);
-		Serial.print(PREAMBLE, BYTE, _uart);
-		Serial.print(STARTCODE2, BYTE, _uart); 
+	    printByte(PREAMBLE, _uart);
+		printByte(PREAMBLE, _uart);
+		printByte(STARTCODE2, _uart); 
    
 		for (int i = 0; i<length; i++) {
-			Serial.print(dataTX[i], BYTE, _uart);
+			printByte(dataTX[i], _uart);
 		}
-			Serial.print(POSTAMBLE, BYTE, _uart);			
+			printByte(POSTAMBLE, _uart);			
 			getACK(); 
 			waitResponse();    // 1C - receive response
 			getData(outLength); 
@@ -565,7 +565,7 @@
 		waitResponse();
 		
 		for (int i = 0; i<5 ; i++) {		
-			dataRX[i] = Serial.read(_uart);
+			dataRX[i] = serialRead(_uart);
 		}
 	}
 	
@@ -576,7 +576,7 @@
 		long cont = 0;
 		
 		while((val != PREAMBLE) && (cont < timeOut)) {
-			val = Serial.read(_uart);
+			val = serialRead(_uart);
 			delay(5);
 			cont ++;
 		}
@@ -586,7 +586,7 @@
 	void  WaspRFID::getData(uint8_t outLength)
 	{
 		for (int i=5; i < outLength; i++) {
-			dataRX[i] = Serial.read(_uart); // read data from the module.
+			dataRX[i] = serialRead(_uart); // read data from the module.
 		} 
 	}
 	

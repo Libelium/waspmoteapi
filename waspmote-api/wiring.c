@@ -39,7 +39,7 @@ uint8_t IPRB = 0;
 void wakeUpNowDefault()        // here the interrupt is handled after wakeup, this overrides the one in the WaspPWR library
 {
   // execute code here after wake-up before returning to the loop() function
-  // timers and code using timers (serial.print and more...) will not work here.
+  // timers and code using timers (printByte and more...) will not work here.
   // we don't really need to execute any special functions here, since we
   // just want the thing to wake up
 }
@@ -116,7 +116,8 @@ volatile unsigned long timer0_overflow_count;
 volatile unsigned long timer0_millis = 0;
 static unsigned char timer0_fract = 0;
 
-SIGNAL(SIG_OVERFLOW0)
+
+ISR(TIMER0_OVF_vect)
 {
 	
 	timer0_overflow_count++;
@@ -126,7 +127,8 @@ SIGNAL(SIG_OVERFLOW0)
 // Must be volatile or gcc will optimize away some uses of it.
 volatile unsigned long timer2_overflow_count;
 
-SIGNAL(SIG_OVERFLOW2)
+
+ISR(TIMER2_OVF_vect )
 {
 	timer2_overflow_count++;
 }
@@ -138,16 +140,19 @@ unsigned long millis()
 	// divide by the number of clock cycles per millisecond, but this
 	// overflows too often.
 
-	unsigned long m;
+	unsigned long long m;
 	uint8_t oldSREG = SREG;
 
 	// disable interrupts while we read timer0_millis or we might get an
 	// inconsistent value (e.g. in the middle of a write to timer0_millis)
 	cli();
-	m = timer0_overflow_count * 64UL * 2UL / (F_CPU / 128000UL);
+	//~ m = timer0_overflow_count * 64UL * 2UL / (F_CPU / 128000UL);
+	// ¿¿¿¿¿¿¿¿avoid OVERFLOW when calculating???????
+	m = timer0_overflow_count / 9UL;
+	m = m * 10UL;
 	SREG = oldSREG;
 
-	return m;
+	return (unsigned long) m;
 }
 
 unsigned long millisTim2()
@@ -371,7 +376,7 @@ void init()
 
 	// the bootloader connects pins 0 and 1 to the USART; disconnect them
 	// here so they can be used as normal digital i/o; they will be
-	// reconnected in Serial.begin()
+	// reconnected in beginSerial
 	UCSR0B = 0;
 	UCSR1B = 0;
 }

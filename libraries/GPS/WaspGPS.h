@@ -1,7 +1,7 @@
 /*! \file WaspGPS.h
     \brief Library for managing the GPS v2.0 JN3 receiver
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Javier Siscart
 
@@ -35,7 +35,6 @@
  ******************************************************************************/
 
 #include <inttypes.h>
-#include <WaspGPS.h>
 
 /******************************************************************************
  * Definitions & Declarations
@@ -46,13 +45,13 @@
 	Setting this constant to 1 some debug messages will be pronted by USB
 	Setting this option to 0 the debug messages will be disabled.
  */
- #define GPS_DEBUG 0
+ #define GPS_DEBUG 1
 
 
 /*! \def OSP_MODE
     \brief Enables OSP mode.
     In this mode, the communication is done using binary mode and 
-	OSP commands can be sent to the module.
+	OSP commands can be sent / received to the module.
     
  */
 
@@ -62,9 +61,15 @@
     by the GPS library functions. THis is the default mode of the module.
     
  */
-
+ 
+ /*! \def UNKNOWN_MODE
+    \brief Not KNOWN mode.
+    Used when turning ON the module, to allow turning by default to NMEA mode.
+    
+ */
 #define OSP_MODE 0
 #define NMEA_MODE 1
+#define UNKNOWN_MODE 2
 
 /*! \def GPS_ON 
     \brief GPS power mode: ON.    
@@ -75,7 +80,6 @@
     \brief GPS power mode: OFF
    	Using GPS_OFF makes GPS module to switch off.
  */
-
 #define GPS_ON 	0
 #define GPS_OFF 1
 
@@ -97,6 +101,11 @@
  */
 #define MAX_SIZE 20
 
+/*! \def FILE_EPHEMERIS
+    \brief File used to save and load ephemeris: "EPHEM.TXT"
+ */
+#define FILE_EPHEMERIS "EPHEM.TXT"
+
 
 /******************************************************************************
  * Class
@@ -112,45 +121,8 @@ class WaspGPS
 
 /// private methods //////////////////////////
 private:
-    
-	//! It calculates the NMEA checkSum, leave out $, *, and the checkSum bytes
-    /*!
-	\param char *gpsString: the string containing the NMEA sentence to get the 
-	checksum from
-	\return '1' if checksum is correct, '0' if not
-	 */ 
-	uint8_t checkSum(const char* gpsString);
-	
-	//! It calculates the NMEA checkSum, leave out $, *, and the checkSum bytes
-    /*!
-	\param char *gpsString: the string containing the NMEA sentence to get the 
-	checksum from
-	\return '1' if checksum is correct, '0' if not
-	\sa setChecksum()
-	 */ 
-	uint8_t getChecksum(const char* gpsString);
-	
-	//! It sets checksum to the end of Utils.inBuffer
-    /*!
-	\param void	
-	\return void 
-	\sa init()
-	 */ 
-	void setChecksum();
-	
-	//! It calculates checksum for a secuence given as a parameter
-    /*!
-	\param uint8_t* buffer: the secuence to get the checksum from
-	\return void. It stores in 'checkSUM' variable the result
-	\sa 
-	 */ 
-	void getChecksum(uint8_t* buffer);
-	
-	
-/// public methods and attributes //////////////////////////    
-public:
 
-    //! Variable: Baudrate used to init the UART and communicate with GPS receiver
+	//! Variable: Baudrate used to init the UART and communicate with GPS receiver
     /*!
     Possible values are 4800,9600,19200,38400,57600,115200.    
     4800 is the only value supported now by the API.    
@@ -169,6 +141,222 @@ public:
      */ 
     uint8_t _uart;
     
+    //! Variable : Communication mode. Two possibilities available -> 
+    //! binary mode (OSP) or NMEA mode.
+    /*!
+    Possible values are NMEA_MODE and OSP_MODE
+     */ 
+    uint16_t _commMode;
+    
+    //! Variable : Power mode used for GPS receiver
+    /*!
+    Possible values are related below.
+    \sa	 GPS_ON, GPS_OFF
+     */ 
+    uint8_t _pwrMode;
+    
+    //! Variable : the frame checksum
+    /*!
+     */ 
+    uint8_t _checksum;
+    
+    //! Variable : for storing the frame checksum
+    /*!
+     */ 
+    uint8_t _checkSUM[2];
+
+    //! Variable : buffer to store incoming data
+    /*!
+    */ 
+    char _dataBuffer[GPS_BUFFER_SIZE];
+    
+    //! Variable : buffer to parse received data
+    /*!
+    */ 
+    char _dataBuffer2[GPS_BUFFER_SIZE];
+    
+    //! It powers up GPS module and opens selected UART to communicate with it
+    /*!
+    \param void
+    \return void
+    \sa init()
+    */ 
+    void begin(void);
+    
+    //! It closes selected UART
+    /*!
+    \param void
+    \return void
+     */ 
+    void close(void);
+    
+    //! It switches between communication modes NMEA and OSP.
+    /*!
+    \param uint8_t mode: OSP or NMEA
+    \return 1 if ok, 0 if already in that mode
+    */ 
+    uint8_t setCommMode(uint8_t mode);
+    
+    //! It initializes GPS module with the default values
+    /*!
+    \param void
+    \return void
+    */ 
+    uint8_t init(void);
+    
+    //! It initializes GPS module with the specified values
+    /*!
+    \param default location parameters
+    \return void
+    */ 
+    uint8_t init(	const char*, 
+				const char*, 
+				const char*, 
+				const char*, 
+				const char*, 
+				const char*, 
+				const char*, 
+				const char* );
+				
+	//! It calculates the NMEA checkSum, leave out $, *, and the checkSum bytes
+    /*!
+	\param char *gpsString: the string containing the NMEA sentence to get the 
+	checksum from
+	\return '1' if checksum is correct, '0' if not
+	 */ 
+	uint8_t checkNMEAMsg(const char* gpsString);
+	
+	//! It calculates the NMEA checkSum, leave out $, *, and the checkSum bytes
+    /*!
+	\param char *gpsString: the string containing the NMEA sentence to get the 
+	checksum from
+	\return '1' if checksum is correct, '0' if not
+	\sa setChecksum()
+	 */ 
+	uint8_t getChecksum(const char* gpsString);
+	
+	//! It calculates checksum for a secuence given as a parameter
+    /*!
+	\param uint8_t* buffer: the secuence to get the checksum from
+	\return void. It stores in 'checkSUM' variable the result
+	\sa 
+	 */ 
+	void getChecksum(uint8_t* buffer);
+	
+	//! Set checksum to a NMEA command.
+    /*!
+    \param 
+    \return REturn command with checksum added.
+    */
+	char* setChecksum(char * command);
+	
+	//! Looks for RMC NEMEA sentence and parses its fields,
+    //! updating the corresponding global variables.
+    /*!
+    \param void
+    \return '0' if not connected yet, '-1' if no RMC sentence parsed, 
+    \ '-2' if no gps data, '1' if connected.
+     */    
+    int8_t parseRMC(void);
+    
+    //! Looks for GGA NEMEA sentence and parses its fields,
+    //! updating the corresponding global variables.
+    /*!
+    \param void
+    \return '0' if not connected yet, '-1' if no GGA sentence parsed, 
+    \ '-2' if no gps data, '1' if connected.
+     */    
+    int8_t parseGGA(void);
+    
+    //! Looks for GSA NEMEA sentence and parses its fields,
+    //! updating the corresponding global variables.
+    /*!
+    \param void
+    \return '0' if not connected yet, '-1' if no GSA sentence parsed, 
+    \ '-2' if no gps data, '1' if connected.
+     */    
+    int8_t parseGSA(void);
+    
+    //! Looks for GSV NEMEA sentence and parses its fields,
+    //! updating the corresponding global variables.
+    /*!
+    \param void
+    \return '0' if not connected yet, '-1' if no GSV sentence parsed, 
+    \ '-2' if no gps data, '1' if connected.
+     */    
+    int8_t parseGSV(void);
+    
+    //! Looks for GLL NEMEA sentence and parses its fields,
+    //! updating the corresponding global variables.
+    //! note: NMEA sentence not enabled by default
+    /*!
+    \param void
+    \return '0' if not connected yet, '-1' if no GLL sentence parsed, 
+    \ '-2' if no gps data, '1' if connected.
+     */    
+    int8_t parseGLL(void);
+    
+    //! Looks for VTG NEMEA sentence and parses its fields,
+    //! updating the corresponding global variables.
+    //! note: NMEA sentence not enabled by default
+    /*!
+    \param void
+    \return '0' if not connected yet, '-1' if no VTG sentence parsed, 
+    \ '-2' if no gps data, '1' if connected.
+     */    
+    int8_t parseVTG(void);
+    
+    
+    //! Shows OSP data sent by the GPS module during 
+    //! specified time.
+    /*!
+    \param long time: time to be printing data
+    \return void
+    */
+  	void showOSPRawData(unsigned long time);
+	
+	//! Shows NMEA sentences sent by GPS module during 
+	//! specified time.
+    /*!
+    \param long time: time to be printing data
+    \return void
+    */
+	void showNMEARawData(unsigned long time);
+	
+	//! Set OSP message rate to 0. 
+    /*!
+    \param void  
+    \return void
+    */
+	void disableOSPMsg();
+	
+	//! Sends NMEA command. Checksum calculated inside.
+    /*!  Example: sendCommand("$PSRF100,0,115200,8,1,0*00");
+    \param char * command: NMEA command
+    \return 
+    */
+	void sendCommand(char * command);
+	
+	//! Sends OSP command. Checksum calculated inside.
+    /*! Example: A0 A2 00 03 93 00 00 00 00 B0 B3
+    \param uint8_t * command: command to send
+    \param uint16_t commandLength: length of the command
+    \return void
+    */
+	void sendCommand(uint8_t * command,  uint16_t commandLength);
+	
+	
+/// public methods and attributes //////////////////////////    
+public:
+
+	//! class constructor
+    /*!
+    It initializes the variables with the default values.
+    \param void
+    \return void
+    */ 
+    WaspGPS();
+    
     //! Variable : Flag used to determine if an error occurred while executing 
     //! some function
     /*!
@@ -176,20 +364,6 @@ public:
      */ 
     uint16_t flag;
     
-    //! Variable : Communication mode. Two possibilities available -> 
-    //! binary mode (OSP) or NMEA mode.
-    /*!
-    Possible values are NMEA_MODE and OSP_MODE
-     */ 
-    uint16_t commMode;
-    
-    //! Variable : Power mode used for GPS receiver
-    /*!
-    Possible values are related below.
-    \sa	 GPS_ON, GPS_OFF
-     */ 
-    uint8_t pwrMode;
-        
     //! Variable : Time extracted from NMEA GGA sentence received from GPS receiver
     /*!
     String that contains the time extracted from NMEA GGA sentence.
@@ -204,10 +378,50 @@ public:
      */ 
     char dateGPS[7];
     
-    //! Variable : the frame checksum
+    //! Variable : Clock drift of the GPS receiver used to initialize it
+    /*!
+    Value in Hz. Use '0' to use the last value saved, if not available 96250Hz 
+    will be used.
+     */ 
+    char* clkOffset;
+    
+    //! Variable : GPS Time of Week used to initialize it
+    /*!
+    Time of week specified in seconds.
+     */ 
+    char* timeOfWeek;
+    
+    //! Variable : Extended GPS Week Number used to initialize it
     /*!
      */ 
-    uint8_t checksum;
+    char* weekNo;
+    
+    //! Variable : Channel Counter used to initialize it
+    /*!
+     */ 
+    char* channel;
+    
+    //! Variable : Reset Configuration
+    /*!
+     */ 
+    char* resetCfg;
+    
+    //! Variable : Default Latitude. + = North (Range 90 to -90). Expressed in
+    //! degrees. Example-->37.3875111
+    /*!
+     */ 
+    char* coordinateLat;
+    
+    //! Variable : Default Longitude. + = East (Range 180 to -180). Expressed 
+    //! in degrees. Example-->-121.97232
+    /*!
+     */ 
+    char* coordinateLon;
+    
+    //! Variable : Default Altitude position. Expressed in meters. Example-->0
+    /*!
+     */ 
+    char* coordinateAl;
     
     //! Variable : it stores the latitude given by the GPS module
     /*!
@@ -244,25 +458,10 @@ public:
      */ 
     char course[MAX_SIZE];
     
-    //! Variable : it stores mode field of RMC NMEA sentence
+    //! Variable : it stores mode field of RMC and GLL NMEA sentence
     /*!
      */ 
 	char RMCMode[2];
-    
-    //! Variable : for storing the frame checksum
-    /*!
-     */ 
-    uint8_t checkSUM[2];
-
-    //! Variable : buffer to store incoming data
-    /*!
-    */ 
-    char inBuffer[GPS_BUFFER_SIZE];
-    
-    //! Variable : buffer to parse received data
-    /*!
-    */ 
-    char inBuffer2[GPS_BUFFER_SIZE];
     
     //! Variable : global to show if connected of not, 
     //! depending RMC status parameter (A connected, V disconected)
@@ -315,15 +514,7 @@ public:
     */
     char satellitesInView[4];
 
-	//! class constructor
-    /*!
-    It initializes the variables with the default values.
-    \param void
-    \return void
-    */ 
-    WaspGPS();
-    
-    //! It sets UART1's multiplexor to GPS and open the serial port
+	//! It sets UART1's multiplexor to GPS and open the serial port
     /*!
     \param void
     \return void
@@ -338,35 +529,6 @@ public:
     \sa close(), begin()
      */ 
     void OFF();
-    
-    //! It powers up GPS module and opens UART1 to communicate with it
-    /*!
-    \param void
-    \return void
-    \sa init()
-    */ 
-    void begin(void);
-    
-    //! It closes UART1
-    /*!
-    \param void
-    \return void
-     */ 
-    void close(void);
-    
-    //! It initializes GPS module with the default values
-    /*!
-    \param void
-    \return void
-    */ 
-    uint8_t init(void);
-     
-    //! It switches between communication modes NMEA and OSP.
-    /*!
-    \param void
-    \return void
-    */ 
-    uint8_t setCommMode(uint8_t mode);
     
     //! It sets the current internal Power Mode on the GPS
     /*!
@@ -384,6 +546,14 @@ public:
     \sa setMode()
      */ 
     uint8_t getMode(void);
+    
+    //! It gets the communication mode in use
+    /*!
+    \param void
+    \return 'commMode' variable that contains the communication mode on use
+    \sa setCommMode()
+     */ 
+    uint8_t getCommMode(void);
 
     //! It checks if the receiver is connected to sattelites
     /*!
@@ -471,14 +641,6 @@ public:
      */ 
     char* getCourse(void);
     
-    //! It gets the communication mode on use
-    /*!
-    \param void
-    \return 'commMode' variable that contains the communication mode on use
-    \sa setCommMode()
-     */ 
-    uint8_t getCommMode(void);
-    
     //! It gets the latitude, longitude, altitude, speed, course, time and date
     /*!
     \param void
@@ -492,45 +654,54 @@ public:
     \return void
      */
     void setTimeFromGPS(void);
-    
-    //! Looks for RMC NEMEA sentence and parses its fields,
-    //! updating the corresponding global variables.
+        
+    //! Saves Ephemeris data into default file on SD card
     /*!
     \param void
-    \return '0' if not connected yet, '-1' if no RMC sentence parsed, 
-    \ '-2' if no gps data, '1' if connected.
-     */    
-    int8_t parseRMC(void);
-    
-    //! Looks for GGA NEMEA sentence and parses its fields,
-    //! updating the corresponding global variables.
+    \return -3 if no ephem data,, -2 if error creating SD card file,
+	\ -1 if no SD, 0 if error writting into file, 1 on success
+    */    
+	int8_t saveEphems();
+	
+	//! Saves Ephemeris data into SD card
+    /*!
+    \param const char * filename: file name on SD card
+    \return -3 if no ephem data,, -2 if error creating SD card file,
+	\ -1 if no SD, 0 if error writting into file, 1 on success
+    */
+	int8_t saveEphems(const char * filename);
+	
+	//! Loads Ephemerids data stored in the default file on SD card.
     /*!
     \param void
-    \return '0' if not connected yet, '-1' if no GGA sentence parsed, 
-    \ '-2' if no gps data, '1' if connected.
-     */    
-    int8_t parseGGA(void);
+    \return return 0 if error reading file, -1 if no SD, -2 if no file. 
+    */
+	int8_t loadEphems();
     
-    //! Looks for GSA NEMEA sentence and parses its fields,
-    //! updating the corresponding global variables.
+    //! Loads Ephemerids data stored in the SD card.
+    /*!
+    \param const char * filename: file name on SD card
+    \return return 0 if error reading file, -1 if no SD, -2 if no file. 
+    */
+    int8_t loadEphems(const char* filename);
+  	
+  	//! Shows data directly from GPS module. NMEA or Binary
+    /*!
+    \param uint8_t mode: NMEA_MODE or OSP_MODE
+    \param unsigned long time: time to show data in seconds.
+    \return void
+    */
+  	void showRawData(uint8_t mode, unsigned long time);
+  	
+  	//! Gets firmware version of GPS module 
     /*!
     \param void
-    \return '0' if not connected yet, '-1' if no GSA sentence parsed, 
-    \ '-2' if no gps data, '1' if connected.
-     */    
-    int8_t parseGSA(void);
-    
-    //! Looks for GSV NEMEA sentence and parses its fields,
-    //! updating the corresponding global variables.
-    /*!
-    \param void
-    \return '0' if not connected yet, '-1' if no GSV sentence parsed, 
-    \ '-2' if no gps data, '1' if connected.
-     */    
-    int8_t parseGSV(void);
+    \return Firmware version
+    */
+	char * getFirmwareVersion();
+		    
 };
 
 extern WaspGPS GPS;
 
 #endif
-

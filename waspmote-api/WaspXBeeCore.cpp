@@ -31,54 +31,54 @@
 
 /// table_CORE /////////////////////////////////////////////////////////////////
 
-prog_char get_own_mac_low[] 	PROGMEM	= 	"7E00040852534C06"; 	// AT+SL
-prog_char get_own_mac_high[] 	PROGMEM	= 	"7E0004085253480A"; 	// AT+SH
-prog_char set_own_net_address[] PROGMEM = 	"7E000608524D59000000";	// AT+MY
-prog_char get_own_net_address[] PROGMEM = 	"7E000408524D59FF";		// AT+MY
-prog_char set_baudrate[] 		PROGMEM = 	"7E0005085242440000";	// AT+BD
-prog_char set_api_mode[] 		PROGMEM = 	"7E0005085241500000";	// AT+AP
-prog_char set_api_options[] 	PROGMEM = 	"7E00050852414F0000";	// AT+AO
-prog_char set_pan[] 			PROGMEM = 	"7E000608524944000000";	// AT+ID
-prog_char set_pan_zb[] 			PROGMEM = 	"7E000C08524944000000000000000000";	// AT+ID
-prog_char get_pan[] 			PROGMEM = 	"7E00040852494418";		// AT+ID
-prog_char set_sleep_mode_xbee[] PROGMEM = 	"7E00050852534D0000";	// AT+SM
-prog_char get_sleep_mode_xbee[] PROGMEM = 	"7E00040852534D05";		// AT+SM
-prog_char set_awake_time[] 		PROGMEM = 	"7E000608525354000000";		// AT+ST
-prog_char set_awake_time_DM[] 	PROGMEM = 	"7E00070852535400000000";	// AT+ST
-prog_char set_sleep_time[] 		PROGMEM = 	"7E000608525350000000";		// AT+SP
-prog_char set_sleep_time_DM[] 	PROGMEM = 	"7E00070852535000000000";	// AT+SP
-prog_char set_channel[] 		PROGMEM = 	"7E0005085243480000";	// AT+CH
-prog_char get_channel[] 		PROGMEM = 	"7E0004085243481A";		// AT+CH
-prog_char get_NI[] 				PROGMEM = 	"7E000408524E490E";		// AT+NI
-prog_char set_scanning_time[] 	PROGMEM = 	"7E000508524E540000";	// AT+NT
-prog_char set_scanning_time_DM[] PROGMEM = 	"7E000608524E54000000";	// AT+NT
-prog_char get_scanning_time[] 	PROGMEM = 	"7E000408524E5403";		// AT+NT
-prog_char set_discov_options[] 	PROGMEM = 	"7E000508524E4F0000";	// AT+NO
-prog_char get_discov_options[] 	PROGMEM = 	"7E000408524E4F08";		// AT+NO
-prog_char write_values[] 		PROGMEM = 	"7E000408525752FC";		// AT+WR
-prog_char set_scanning_channel[] PROGMEM = 	"7E000608525343000000";	// AT+SC
-prog_char get_scanning_channel[] PROGMEM = 	"7E0004085253430F";		// AT+SC
-prog_char get_duration_energy[] PROGMEM = 	"7E0004085253440E";		// AT+SD
-prog_char set_link_key[] 		PROGMEM = 	"7E001408524B590000000000000000000000000000000000";	// AT+KY
-prog_char set_encryption[] 		PROGMEM = 	"7E0005085245450000";	// AT+EE
-prog_char get_encryption[] 		PROGMEM = 	"7E0004085245451B";		// AT+EE
-prog_char set_power_level[] 	PROGMEM = 	"7E00050852504C0000";	// AT+PL
-prog_char get_RSSI[] 			PROGMEM = 	"7E0004085244421F";		// AT+DB
-prog_char get_hard_version[] 	PROGMEM = 	"7E00040852485607";		// AT+HV
-prog_char get_soft_version[] 	PROGMEM = 	"7E000408525652FD";		// AT+VR
-prog_char set_RSSI_time[] 		PROGMEM = 	"7E0005085252500000";	// AT+RP
-prog_char get_RSSI_time[] 		PROGMEM	= 	"7E00040852525003";		// AT+RP
-prog_char apply_changes[] 		PROGMEM = 	"7E00040852414321";		// AT+AC
-prog_char reset_xbee[] 			PROGMEM = 	"7E0004085246520D";		// AT+FR
-prog_char reset_defaults_xbee[] PROGMEM = 	"7E0004085252450E";		// AT+RE
-prog_char set_sleep_options_xbee[] PROGMEM = "7E00050852534F0000";	// AT+SO
-prog_char get_sleep_options_xbee[] PROGMEM = "7E00040852534F03";	// AT+SO
-prog_char scan_network	[] 		PROGMEM = 	"7E000408524E4413";		// AT+ND
-prog_char set_duration_energy[] PROGMEM = 	"7E0005085245440000"; 	// AT+ED
-prog_char set_duration_energy_ZB[] PROGMEM=	"7E0005085253440000"; 	// AT+SD
-prog_char get_low_dest_address[] PROGMEM =	"7E00040852444C15"; 	// AT+DL
+const char   get_own_mac_low[]	PROGMEM	= 	"7E00040852534C06"; 	// AT+SL
+const char get_own_mac_high[] 	PROGMEM	= 	"7E0004085253480A"; 	// AT+SH
+const char set_own_net_address[] PROGMEM = 	"7E000608524D59000000";	// AT+MY
+const char get_own_net_address[] PROGMEM = 	"7E000408524D59FF";		// AT+MY
+const char set_baudrate[] 		PROGMEM = 	"7E0005085242440000";	// AT+BD
+const char set_api_mode[] 		PROGMEM = 	"7E0005085241500000";	// AT+AP
+const char set_api_options[] 	PROGMEM = 	"7E00050852414F0000";	// AT+AO
+const char set_pan[] 			PROGMEM = 	"7E000608524944000000";	// AT+ID
+const char set_pan_zb[] 			PROGMEM = 	"7E000C08524944000000000000000000";	// AT+ID
+const char get_pan[] 			PROGMEM = 	"7E00040852494418";		// AT+ID
+const char set_sleep_mode_xbee[] PROGMEM = 	"7E00050852534D0000";	// AT+SM
+const char get_sleep_mode_xbee[] PROGMEM = 	"7E00040852534D05";		// AT+SM
+const char set_awake_time[] 		PROGMEM = 	"7E000608525354000000";		// AT+ST
+const char set_awake_time_DM[] 	PROGMEM = 	"7E00070852535400000000";	// AT+ST
+const char set_sleep_time[] 		PROGMEM = 	"7E000608525350000000";		// AT+SP
+const char set_sleep_time_DM[] 	PROGMEM = 	"7E00070852535000000000";	// AT+SP
+const char set_channel[] 		PROGMEM = 	"7E0005085243480000";	// AT+CH
+const char get_channel[] 		PROGMEM = 	"7E0004085243481A";		// AT+CH
+const char get_NI[] 				PROGMEM = 	"7E000408524E490E";		// AT+NI
+const char set_scanning_time[] 	PROGMEM = 	"7E000508524E540000";	// AT+NT
+const char set_scanning_time_DM[] PROGMEM = 	"7E000608524E54000000";	// AT+NT
+const char get_scanning_time[] 	PROGMEM = 	"7E000408524E5403";		// AT+NT
+const char set_discov_options[] 	PROGMEM = 	"7E000508524E4F0000";	// AT+NO
+const char get_discov_options[] 	PROGMEM = 	"7E000408524E4F08";		// AT+NO
+const char write_values[] 		PROGMEM = 	"7E000408525752FC";		// AT+WR
+const char set_scanning_channel[] PROGMEM = 	"7E000608525343000000";	// AT+SC
+const char get_scanning_channel[] PROGMEM = 	"7E0004085253430F";		// AT+SC
+const char get_duration_energy[] PROGMEM = 	"7E0004085253440E";		// AT+SD
+const char set_link_key[] 		PROGMEM = 	"7E001408524B590000000000000000000000000000000000";	// AT+KY
+const char set_encryption[] 		PROGMEM = 	"7E0005085245450000";	// AT+EE
+const char get_encryption[] 		PROGMEM = 	"7E0004085245451B";		// AT+EE
+const char set_power_level[] 	PROGMEM = 	"7E00050852504C0000";	// AT+PL
+const char get_RSSI[] 			PROGMEM = 	"7E0004085244421F";		// AT+DB
+const char get_hard_version[] 	PROGMEM = 	"7E00040852485607";		// AT+HV
+const char get_soft_version[] 	PROGMEM = 	"7E000408525652FD";		// AT+VR
+const char set_RSSI_time[] 		PROGMEM = 	"7E0005085252500000";	// AT+RP
+const char get_RSSI_time[] 		PROGMEM	= 	"7E00040852525003";		// AT+RP
+const char apply_changes[] 		PROGMEM = 	"7E00040852414321";		// AT+AC
+const char reset_xbee[] 			PROGMEM = 	"7E0004085246520D";		// AT+FR
+const char reset_defaults_xbee[] PROGMEM = 	"7E0004085252450E";		// AT+RE
+const char set_sleep_options_xbee[] PROGMEM = "7E00050852534F0000";	// AT+SO
+const char get_sleep_options_xbee[] PROGMEM = "7E00040852534F03";	// AT+SO
+const char scan_network	[] 		PROGMEM = 	"7E000408524E4413";		// AT+ND
+const char set_duration_energy[] PROGMEM = 	"7E0005085245440000"; 	// AT+ED
+const char set_duration_energy_ZB[] PROGMEM=	"7E0005085253440000"; 	// AT+SD
+const char get_low_dest_address[] PROGMEM =	"7E00040852444C15"; 	// AT+DL
 
-PROGMEM const char* table_CORE[] = 	  
+const char* const table_CORE[] PROGMEM= 	  
 {   
 	get_own_mac_low, 		// 0
 	get_own_mac_high,		// 1
@@ -131,20 +131,20 @@ PROGMEM const char* table_CORE[] =
 
 /// table_OTA //////////////////////////////////////////////////////////////////
 
-prog_char NEW_FIRMWARE_MESSAGE_OK[] 		PROGMEM	="PROGRAM RECEIVED OK$$$$$$$$$$$$$";
-prog_char NEW_FIRMWARE_MESSAGE_ERROR[] 		PROGMEM	="PROGRAM RECEIVED ERROR$$$$$$$$$$";
-prog_char UPLOAD_FIRWARE_MESSAGE_OK[] 		PROGMEM	="START WITH FIRMWARE OK$$$$$$$$$$$$$$$$$$$$$$$$$$";
-prog_char UPLOAD_FIRWARE_MESSAGE_ERROR[] 	PROGMEM ="START WITH FIRMWARE ERROR$$$$$$$$$$$$$$$$$$$$$$$";
-prog_char REQUEST_BOOTLIST_MESSAGE[] 		PROGMEM	="READ BOOTLIST$$$$$$$$$$$$$$$$$";
-prog_char ANSWER_START_WITH_FIRMWARE_OK[] 	PROGMEM	="NEW PROGRAM RUNNING$$$$$$$$$$$$$";
-prog_char ANSWER_START_WITH_FIRMWARE_ERR[]	PROGMEM	="PREVIOUS PROGRAM RUNNING$$$$$$$$";
-prog_char RESET_MESSAGE[] 					PROGMEM	="RESTARTING$$$$$$$$$$$$$$$$$$$$$$";
-prog_char DELETE_MESSAGE_OK[] 				PROGMEM	="FIRMWARE DELETED$$$$$$$$$$$$$$$$";
-prog_char DELETE_MESSAGE_ERROR[] 			PROGMEM	="FIRMWARE NOT DELETED$$$$$$$$$$$$";
-prog_char START_SECTOR[] 					PROGMEM	="FIRMWARE_FILE_FOR_WASPMOTE######";
+const char NEW_FIRMWARE_MESSAGE_OK[] 		PROGMEM	="PROGRAM RECEIVED OK$$$$$$$$$$$$$";
+const char NEW_FIRMWARE_MESSAGE_ERROR[] 		PROGMEM	="PROGRAM RECEIVED ERROR$$$$$$$$$$";
+const char UPLOAD_FIRWARE_MESSAGE_OK[] 		PROGMEM	="START WITH FIRMWARE OK$$$$$$$$$$$$$$$$$$$$$$$$$$";
+const char UPLOAD_FIRWARE_MESSAGE_ERROR[] 	PROGMEM ="START WITH FIRMWARE ERROR$$$$$$$$$$$$$$$$$$$$$$$";
+const char REQUEST_BOOTLIST_MESSAGE[] 		PROGMEM	="READ BOOTLIST$$$$$$$$$$$$$$$$$";
+const char ANSWER_START_WITH_FIRMWARE_OK[] 	PROGMEM	="NEW PROGRAM RUNNING$$$$$$$$$$$$$";
+const char ANSWER_START_WITH_FIRMWARE_ERR[]	PROGMEM	="PREVIOUS PROGRAM RUNNING$$$$$$$$";
+const char RESET_MESSAGE[] 					PROGMEM	="RESTARTING$$$$$$$$$$$$$$$$$$$$$$";
+const char DELETE_MESSAGE_OK[] 				PROGMEM	="FIRMWARE DELETED$$$$$$$$$$$$$$$$";
+const char DELETE_MESSAGE_ERROR[] 			PROGMEM	="FIRMWARE NOT DELETED$$$$$$$$$$$$";
+const char START_SECTOR[] 					PROGMEM	="FIRMWARE_FILE_FOR_WASPMOTE######";
 
 
-PROGMEM const char* table_OTA[] = 	  
+const char* const table_OTA[] PROGMEM= 	  
 {   
 	NEW_FIRMWARE_MESSAGE_OK, 		// 0
 	NEW_FIRMWARE_MESSAGE_ERROR,		// 1
@@ -2095,7 +2095,7 @@ uint8_t WaspXBeeCore::sendCommandAT(const char* atcommand)
 
 uint8_t WaspXBeeCore::ON()
 {
-	ON(SOCKET0);
+	return ON(SOCKET0);
 }
 
 /*
@@ -2166,11 +2166,9 @@ void WaspXBeeCore::setMode(uint8_t mode)
 						{	
 							// Switch Multiplexor to Expansion Board 
 							Utils.setMuxSocket1(); 	
+							// Switch on XBee module
 							pinMode(DIGITAL6,OUTPUT);
 							digitalWrite(DIGITAL6,HIGH);
-							// FIXME: This will disappear in the final version
-							pinMode(GPRS_PW,OUTPUT);
-							digitalWrite(GPRS_PW,HIGH); 
 						}
 						break;
 	
@@ -2181,11 +2179,9 @@ void WaspXBeeCore::setMode(uint8_t mode)
 						else if(uart==SOCKET1)
 						{
 							Utils.setMux(MUX_TO_LOW,MUX_TO_LOW);
+							// Switch off XBee module
 							pinMode(DIGITAL6,OUTPUT);
 							digitalWrite(DIGITAL6,LOW);
-							// FIXME: This will disappear in the final version
-							pinMode(GPRS_PW,OUTPUT);
-							digitalWrite(GPRS_PW,LOW); 
 						}
 						break;
 	

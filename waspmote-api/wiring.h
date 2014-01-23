@@ -90,7 +90,7 @@ void printHex(unsigned long n, uint8_t);
 void printOctal(unsigned long n, uint8_t);
 void printBinary(unsigned long n, uint8_t);
 void printIntegerInBase(unsigned long n, unsigned long base, uint8_t);
-void puthex(char ch);
+void puthex(char ch, uint8_t portNum);
 
 unsigned long millis(void);
 unsigned long millisTim2(void);

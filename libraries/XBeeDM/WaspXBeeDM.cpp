@@ -33,21 +33,21 @@
 
 /// table_DM /////////////////////////////////////////////////////////////////
 
-prog_char	get_RF_errors_DM[]		PROGMEM	 = 	"7E0004085245520E";
-prog_char 	get_good_pack_DM[]		PROGMEM  = 	"7E0004085247441A";
-prog_char 	get_channel_RSSI_DM[]	PROGMEM  = 	"7E0005085252430000";
-prog_char 	get_trans_errors_DM[]	PROGMEM  = 	"7E000408525452FF";
-prog_char 	set_network_hops_DM[]	PROGMEM  = 	"7E000508524E480000";
-prog_char 	get_network_hops_DM[]	PROGMEM  = 	"7E000408524E480F";
-prog_char 	set_network_delay_DM[]	PROGMEM  = 	"7E000508524E4E0000";
-prog_char 	get_network_delay_DM[]	PROGMEM  = 	"7E000408524E4E09";
-prog_char 	set_network_route_DM[]	PROGMEM  = 	"7E000508524E510000"; // AT+NQ
-prog_char 	get_network_route_DM[]	PROGMEM  = 	"7E000408524E5106";
-prog_char 	set_network_retries_DM[] PROGMEM = 	"7E000508524D520000";
-prog_char 	get_network_retries_DM[] PROGMEM = 	"7E000408524D5206";
+const char	get_RF_errors_DM[]		PROGMEM	 = 	"7E0004085245520E";
+const char 	get_good_pack_DM[]		PROGMEM  = 	"7E0004085247441A";
+const char 	get_channel_RSSI_DM[]	PROGMEM  = 	"7E0005085252430000";
+const char 	get_trans_errors_DM[]	PROGMEM  = 	"7E000408525452FF";
+const char 	set_network_hops_DM[]	PROGMEM  = 	"7E000508524E480000";
+const char 	get_network_hops_DM[]	PROGMEM  = 	"7E000408524E480F";
+const char 	set_network_delay_DM[]	PROGMEM  = 	"7E000508524E4E0000";
+const char 	get_network_delay_DM[]	PROGMEM  = 	"7E000408524E4E09";
+const char 	set_network_route_DM[]	PROGMEM  = 	"7E000508524E510000"; // AT+NQ
+const char 	get_network_route_DM[]	PROGMEM  = 	"7E000408524E5106";
+const char 	set_network_retries_DM[] PROGMEM = 	"7E000508524D520000";
+const char 	get_network_retries_DM[] PROGMEM = 	"7E000408524D5206";
 
 
-PROGMEM const char* table_DM[] = 	  
+const char* const table_DM[] PROGMEM = 	  
 {   
 	get_RF_errors_DM,		// 0
   	get_good_pack_DM,		// 1

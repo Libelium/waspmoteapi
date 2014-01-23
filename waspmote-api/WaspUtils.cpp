@@ -409,6 +409,9 @@ unsigned long WaspUtils::readSerialID()
 		}
 		seed = seed * 2;
 	}			
+	
+	if (id == 4294967295) id = 0;
+				
     digitalWrite(LED0,LOW);
     Utils.setLED(LED0,LED_OFF);
 	Utils.setLED(LED1,LED_OFF);

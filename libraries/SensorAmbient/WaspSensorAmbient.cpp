@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.13
+ *  Version:		1.0
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova
  */
@@ -151,9 +151,7 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 {
 	int ack = 0;
 	int val_read = 0;
-	int ack2, ack3, i = 0;
-	long a = 0;
-	long b = 0;
+	unsigned long a = 0;
 	
 	const byte HUMIDITY = B00000101;
 	const byte TEMPERATURE = B00000011;
@@ -162,6 +160,7 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 
 	if( parameter==SENS_AMBIENT_TEMPERATURE ) parameter=TEMPERATURE;
 	else if( parameter==SENS_AMBIENT_HUMIDITY ) parameter=HUMIDITY;
+	else return 0;
 		
   //************************************* 
   // First Transmission cycle (START)
@@ -255,7 +254,7 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 		val_read = val_read * 2 + digitalRead(SENS_AMBIENT_SENSIRION_DATA);
 		digitalWrite(SENS_AMBIENT_SENSIRION_CLK, LOW);
 	}
-	b = millis()-a;
+	
 
   
   //**************************************
@@ -271,6 +270,7 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
   
 	if( parameter==TEMPERATURE ) return temperatureConversion(val_read,SENS_PREC_HIGH);
 	else if( parameter==HUMIDITY ) return humidityConversion(val_read,SENS_PREC_HIGH);
+	else return 0;
 } 
 
 /*	temperatureConversion: converts the value read from the Sensirion into a
@@ -285,9 +285,7 @@ float WaspSensorAmbient::temperatureConversion(int readValue, int precision)
 	float temperature = 0;
 	float d1 = -39.7;
 	float d2 = 0;
-	
-	float aux=0;
-  
+	  
 	switch(precision)
 	{
 		case SENS_PREC_HIGH:    d2 = 0.01;
@@ -348,7 +346,7 @@ float WaspSensorAmbient::humidityConversion(int readValue, int precision)
  *  Return:		float value : temperature measured by the sensor in ºC
  * 
  */
-float WaspSensorAmbient::TSL2561(uint8_t addr) {
+void WaspSensorAmbient::TSL2561(uint8_t addr) {
   _addr = addr;
   _initialized = false;
   _integration = TSL2561_INTEGRATIONTIME_13MS;
@@ -374,9 +372,9 @@ boolean WaspSensorAmbient::begin(void) {
 #else
   int x = Wire.receive();
 #endif
-  //Serial.print("0x"); Serial.println(x, HEX);
+  
   if (x & 0x0A ) {
-    //Serial.println("Found TSL2561");
+
   } else {
     return false;
   }
@@ -512,7 +510,7 @@ uint32_t WaspSensorAmbient::calculateLux(uint16_t ch0, uint16_t ch1)
   uint32_t lux = temp >> TSL2561_LUX_LUXSCALE;
 
   // Signal I2C had no errors
-  return lux;
+  return (float)lux;
 }
 
 uint32_t WaspSensorAmbient::getFullLuminosity (void)
@@ -649,44 +647,60 @@ float WaspSensorAmbient::readLUXdim()
   // That way you can do whatever math and comparions you want!
 float WaspSensorAmbient::readLUMINOSITYbright()
 {
-  setGain(TSL2561_GAIN_0X);         		// set no gain (for bright situtations)
-  setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-  uint32_t lum = getFullLuminosity();
-  uint16_t ir, full;
-  ir = lum >> 16;
-  full = lum & 0xFFFF;
-  USB.print("IR: "); USB.print(ir);   USB.print("\t");
-  USB.print("Full: "); USB.print(full);   USB.print("\t");
-  USB.print("Visible: "); USB.print(full - ir);   USB.print("\t");
-  USB.print("Lux: "); USB.println(calculateLux(full, ir));
+	float value;
+	
+	setGain(TSL2561_GAIN_0X);         		// set no gain (for bright situtations)
+	setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+	uint32_t lum = getFullLuminosity();
+	uint16_t ir, full;
+	ir = lum >> 16;
+	full = lum & 0xFFFF;
+	value = calculateLux(full, ir);
+	#ifdef SENS_AMBIENT_DEBUG
+	USB.print(F("IR: ")); USB.print(ir);   USB.print(F("\t"));
+	USB.print(F("Full: ")); USB.print(full);   USB.print(F("\t"));
+	USB.print(F("Visible: ")); USB.print(full - ir);   USB.print(F("\t"));
+	USB.print(F("Lux: ")); USB.println(value);
+	#endif
+	return value;  
 }
 
 float WaspSensorAmbient::readLUMINOSITYmedium()
 {
-  setGain(TSL2561_GAIN_16X);         		// set no gain (for bright situtations)
-  setTiming(TSL2561_INTEGRATIONTIME_101MS); // shortest integration time (bright light)
-  uint32_t lum = getFullLuminosity();
-  uint16_t ir, full;
-  ir = lum >> 16;
-  full = lum & 0xFFFF;
-  USB.print("IR: "); USB.print(ir);   USB.print("\t");
-  USB.print("Full: "); USB.print(full);   USB.print("\t");
-  USB.print("Visible: "); USB.print(full - ir);   USB.print("\t");
-  USB.print("Lux: "); USB.println(calculateLux(full, ir));
+	float value;
+	setGain(TSL2561_GAIN_16X);         		// set no gain (for bright situtations)
+	setTiming(TSL2561_INTEGRATIONTIME_101MS); // shortest integration time (bright light)
+	uint32_t lum = getFullLuminosity();
+	uint16_t ir, full;
+	ir = lum >> 16;
+	full = lum & 0xFFFF;
+	value = calculateLux(full, ir);
+	#ifdef SENS_AMBIENT_DEBUG
+	USB.print(F("IR: ")); USB.print(ir);   USB.print(F("\t"));
+	USB.print(F("Full: ")); USB.print(full);   USB.print(F("\t"));
+	USB.print(F("Visible: ")); USB.print(full - ir);   USB.print(F("\t"));
+	USB.print(F("Lux: ")); USB.println(value);
+	#endif
+	return value;
 }
 
 float WaspSensorAmbient::readLUMINOSITYdim()
 {
-  setGain(TSL2561_GAIN_16X);         		// set no gain (for bright situtations)
-  setTiming(TSL2561_INTEGRATIONTIME_402MS); // shortest integration time (bright light)
-  uint32_t lum = getFullLuminosity();
-  uint16_t ir, full;
-  ir = lum >> 16;
-  full = lum & 0xFFFF;
-  USB.print("IR: "); USB.print(ir);   USB.print("\t");
-  USB.print("Full: "); USB.print(full);   USB.print("\t");
-  USB.print("Visible: "); USB.print(full - ir);   USB.print("\t");
-  USB.print("Lux: "); USB.println(calculateLux(full, ir));
+	float value;
+	setGain(TSL2561_GAIN_16X);         		// set no gain (for bright situtations)
+	setTiming(TSL2561_INTEGRATIONTIME_402MS); // shortest integration time (bright light)
+	uint32_t lum = getFullLuminosity();
+	uint16_t ir, full;
+	ir = lum >> 16;
+	full = lum & 0xFFFF;
+	value = calculateLux(full, ir);
+	#ifdef SENS_AMBIENT_DEBUG
+	USB.print(F("IR: ")); USB.print(ir);   USB.print(F("\t"));
+	USB.print(F("Full: ")); USB.print(full);   USB.print(F("\t"));
+	USB.print(F("Visible: ")); USB.print(full - ir);   USB.print(F("\t"));
+	USB.print(F("Lux: ")); USB.println(value);
+	#endif
+	return value;
 }
 
 WaspSensorAmbient SensorAmbient=WaspSensorAmbient();

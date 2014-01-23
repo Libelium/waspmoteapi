@@ -112,7 +112,7 @@ float	WaspSensorPrototyping_v20::readADC(void)
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
 	val = int(valor[0])*256 + int(valor[1]);
-	val_def = (val - 32769)*9;
+	val_def = ((float)val - 32769.0)*9.0;
 	val_def = val_def/65535;
 
 	return val_def;

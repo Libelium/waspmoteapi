@@ -238,7 +238,7 @@ void printIntegerInBase(unsigned long n, unsigned long base, uint8_t portNum)
 }
 
 
-void puthex(char ch) {
+void puthex(char ch, uint8_t portNum) {
     char ah,al;
 
     ah = (ch & 0xf0) >> 4;
@@ -253,8 +253,8 @@ void puthex(char ch) {
     } else {
 	al += '0';
     }
-    printByte(ah, 0);
-    printByte(al, 0);
+    printByte(ah, portNum);
+    printByte(al, portNum);
 }
 
 

@@ -103,7 +103,7 @@
 #define FILE_CREATION_ERROR 64
 #define DIR_CREATION_ERROR 	128
 #define FILE_WRITING_ERROR 	256
-
+#define FILE_SEEKING_ERROR 	512
 
 /*! \def CARD_NOT_PRESENT_em
     \brief Flag possible values. Card not present in this case

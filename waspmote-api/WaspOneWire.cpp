@@ -132,8 +132,8 @@ uint8_t WaspOneWire::resetSerialID() {
 // more certain timing.
 //
 void WaspOneWire::write_bit(uint8_t v) {
-    static uint8_t lowTime[] = { 55, 5 };
-    static uint8_t highTime[] = { 5, 55};
+    static uint8_t lowTime[] = { 100, 10 };
+    static uint8_t highTime[] = { 10, 100};
     
     v = (v&1);
     *modeReg |= bitmask;  // make pin an output, do first since we

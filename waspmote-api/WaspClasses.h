@@ -29,7 +29,6 @@
 
 // interrupts and sleep
 #include <avr/interrupt.h>
-#include <avr/signal.h>
 #include <avr/sleep.h>
 #include <avr/pgmspace.h>
 #include <alloca.h>
@@ -57,7 +56,6 @@
 #ifdef __cplusplus
 
 #include "WaspUtils.h"
-#include "HardwareSerial.h"
 #include "WaspUSB.h"
 #include "Wire.h"
 #include "WaspRTC.h"

@@ -249,7 +249,7 @@ void WaspUSB::printHex(char n)
 	digitalWrite(MUX_PW,HIGH);
 	digitalWrite(MUX_USB_XBEE,LOW);
 
-	puthex((char)n);
+	puthex((char)n,0);
 
 	delay(DELAY_TIME);
 	digitalWrite(MUX_USB_XBEE,HIGH);
@@ -507,7 +507,7 @@ void WaspUSB::printFloat(double number, uint8_t digits)
 uint32_t WaspUSB::print(const __FlashStringHelper *ifsh)
 {
 	beginSerial(USB_RATE, _uart);
-	const prog_char *p = (const prog_char *)ifsh;
+	const char * __attribute__((progmem)) p = (const char * ) ifsh;
 	uint32_t n = 0;
 	while (1) 
 	{
@@ -538,7 +538,7 @@ uint32_t WaspUSB::println(const __FlashStringHelper *ifsh)
  * argument specifies 
  * 
  * This function emulates the stdio.h printf() functionality in C and will send
- * the output to the Serial connection using Serial.print(). The resulting 
+ * the output to the Serial connection using printByte(). The resulting 
  * string sent over serial is limited to 128 chars.
  * 
  * Parameters: 

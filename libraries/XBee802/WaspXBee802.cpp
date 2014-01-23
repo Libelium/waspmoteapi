@@ -34,21 +34,21 @@
 
 /// table_802 /////////////////////////////////////////////////////////////////
 
-prog_char set_retries_802[] 	PROGMEM  	= "7E0005085252520000";   
-prog_char get_retries_802[] 	PROGMEM 	= "7E00040852525201";
-prog_char set_delay_slots_802[] PROGMEM 	= "7E00050852524E0000";
-prog_char get_delay_slots_802[] PROGMEM 	= "7E00040852524E05";
-prog_char set_mac_mode_802[] 	PROGMEM 	= "7E000508524D4D0000";
-prog_char get_mac_mode_802[] 	PROGMEM 	= "7E000408524D4D0B";
-prog_char set_energy_thres_802[] PROGMEM 	= "7E0005085243410000";
-prog_char get_energy_thres_802[] PROGMEM 	= "7E00040852434121";
-prog_char get_CCA_802[] 		PROGMEM 	= "7E0004085245431D";
-prog_char reset_CCA_802[] 		PROGMEM 	= "7E000508524543001D";
-prog_char get_ACK_802[] 		PROGMEM 	= "7E0004085245411F";
-prog_char reset_ACK_802[]		PROGMEM 	= "7E000508524541001F";
+const char set_retries_802[] 	PROGMEM  	= "7E0005085252520000";   
+const char get_retries_802[] 	PROGMEM 	= "7E00040852525201";
+const char set_delay_slots_802[] PROGMEM 	= "7E00050852524E0000";
+const char get_delay_slots_802[] PROGMEM 	= "7E00040852524E05";
+const char set_mac_mode_802[] 	PROGMEM 	= "7E000508524D4D0000";
+const char get_mac_mode_802[] 	PROGMEM 	= "7E000408524D4D0B";
+const char set_energy_thres_802[] PROGMEM 	= "7E0005085243410000";
+const char get_energy_thres_802[] PROGMEM 	= "7E00040852434121";
+const char get_CCA_802[] 		PROGMEM 	= "7E0004085245431D";
+const char reset_CCA_802[] 		PROGMEM 	= "7E000508524543001D";
+const char get_ACK_802[] 		PROGMEM 	= "7E0004085245411F";
+const char reset_ACK_802[]		PROGMEM 	= "7E000508524541001F";
 
 
-PROGMEM const char* table_802[] = 	  
+const char* const table_802[] PROGMEM = 	  
 {   
 	set_retries_802,		// 0
   	get_retries_802,		// 1

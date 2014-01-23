@@ -1090,7 +1090,7 @@ char* WaspSD::cat(const char* filepath, int32_t offset, uint16_t scope)
 	if (scope <= 0) scope = DOS_BUFFER_SIZE;
 	if (scope > DOS_BUFFER_SIZE) scope = DOS_BUFFER_SIZE;
   
-	flag &= ~(TRUNCATED_DATA | FILE_OPEN_ERROR);
+	flag &= ~(TRUNCATED_DATA | FILE_OPEN_ERROR | FILE_SEEKING_ERROR);
 
 	// search file in current working directory and open it 
 	// exit if error and modify the general flag with FILE_OPEN_ERROR
@@ -1116,6 +1116,7 @@ char* WaspSD::cat(const char* filepath, int32_t offset, uint16_t scope)
 	if(!file.seekSet(offset))	
 	{
 		sprintf(buffer, "error seeking on: %s\n", filepath);
+		flag |= FILE_SEEKING_ERROR;
 		file.close();
 		return buffer;
 	}
@@ -1202,7 +1203,7 @@ uint8_t* WaspSD::catBin(const char* filepath, int32_t offset, uint16_t scope)
 	if (scope <= 0) scope = BIN_BUFFER_SIZE;
 	if (scope > BIN_BUFFER_SIZE) scope = BIN_BUFFER_SIZE;
   
-	flag &= ~(TRUNCATED_DATA | FILE_OPEN_ERROR);
+	flag &= ~(TRUNCATED_DATA | FILE_OPEN_ERROR | FILE_SEEKING_ERROR);
 
 	// search file in current working directory and open it 
 	// exit if error and modify the general flag with FILE_OPEN_ERROR
@@ -1224,6 +1225,7 @@ uint8_t* WaspSD::catBin(const char* filepath, int32_t offset, uint16_t scope)
 	{
 		sprintf(buffer, "error seeking on: %s\n", filepath);
 		USB.println(buffer);
+		flag |= FILE_SEEKING_ERROR;
 		file.close();
 		return bufferBin;
 	}
@@ -1748,7 +1750,7 @@ uint8_t WaspSD::writeSD(	const char* filepath,
     }
 
 	// unset error flag
-    flag &= ~(FILE_WRITING_ERROR);
+    flag &= ~(FILE_WRITING_ERROR | FILE_SEEKING_ERROR);
 
 	// search file in current directory and open it in write mode
     if(!openFile(filepath, &file, O_READ | O_WRITE | O_SYNC))    
@@ -1763,7 +1765,7 @@ uint8_t WaspSD::writeSD(	const char* filepath,
 	{
 		sprintf(buffer, "error seeking on: %s\n", filepath);
 		file.close();		
-		flag |= FILE_WRITING_ERROR;
+		flag |= FILE_SEEKING_ERROR;
 		return 0;
 	}
 
@@ -1837,8 +1839,8 @@ uint8_t WaspSD::writeSD(const char* filepath, uint8_t* str, int32_t offset, uint
 	}
 
 	// unset error flag
-	flag &= ~(FILE_WRITING_ERROR);
-	
+	flag &= ~(FILE_WRITING_ERROR | FILE_SEEKING_ERROR);
+
 	// search file in current directory and open it
     if(!openFile(filepath, &file, O_READ | O_WRITE | O_SYNC))
     {
@@ -1852,7 +1854,7 @@ uint8_t WaspSD::writeSD(const char* filepath, uint8_t* str, int32_t offset, uint
 	{
 		sprintf(buffer, "error seeking on: %s\n", filepath);
 		file.close();		
-		flag |= FILE_WRITING_ERROR;
+		flag |= FILE_SEEKING_ERROR;
 		return 0;
 	}
 
@@ -2163,11 +2165,11 @@ int8_t WaspSD::numFiles()
 	while(currentDir.readDir(&dir_entry))
 	{
 		// Don't count TRASH~1 directory
-		if( dir_entry.name[0]!='T' &&
-			dir_entry.name[1]!='R' &&
-			dir_entry.name[2]!='A' &&
-			dir_entry.name[3]!='S' &&
-			dir_entry.name[4]!='H' )
+		if(!(dir_entry.name[0]=='T' &&
+			 dir_entry.name[1]=='R' &&
+			 dir_entry.name[2]=='A' &&
+			 dir_entry.name[3]=='S' &&
+			 dir_entry.name[4]=='H' ))
 		{
 			// increase counter
 			cont++;

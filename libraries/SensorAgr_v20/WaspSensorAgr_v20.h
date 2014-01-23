@@ -186,85 +186,70 @@
 
 
 /*! \def SENS_AGR_VANE_N
-    \brief Vane : North Direction
-    
+    \brief Vane : North Direction    
  */
 /*! \def SENS_AGR_VANE_NNE
-    \brief Vane : North-NorthEast Direction
-    
+    \brief Vane : North-NorthEast Direction    
  */
 /*! \def SENS_AGR_VANE_NE
-    \brief Vane : NorthEast Direction
-    
+    \brief Vane : NorthEast Direction    
  */
 /*! \def SENS_AGR_VANE_ENE
-    \brief Vane : East-NorthEast Direction
-    
+    \brief Vane : East-NorthEast Direction    
  */
 /*! \def SENS_AGR_VANE_E
-    \brief Vane : East Direction
-    
+    \brief Vane : East Direction    
  */
 /*! \def SENS_AGR_VANE_ESE
-    \brief Vane : East-SouthEast Direction
-    
+    \brief Vane : East-SouthEast Direction    
  */
 /*! \def SENS_AGR_VANE_SE
-    \brief Vane : SouthEast Direction
-    
+    \brief Vane : SouthEast Direction    
  */
 /*! \def SENS_AGR_VANE_SSE
-    \brief Vane : South-SouthEast Direction
-    
+    \brief Vane : South-SouthEast Direction    
  */
 /*! \def SENS_AGR_VANE_S
-    \brief Vane : South Direction
-    
+    \brief Vane : South Direction    
  */
 /*! \def SENS_AGR_VANE_SSW
-    \brief Vane : South-SouthWest Direction
-    
+    \brief Vane : South-SouthWest Direction    
  */
 /*! \def SENS_AGR_VANE_SW
-    \brief Vane : SouthWest Direction
-    
+    \brief Vane : SouthWest Direction    
  */
 /*! \def SENS_AGR_VANE_WSW
-    \brief Vane : West-SouthWest Direction
-    
+    \brief Vane : West-SouthWest Direction    
  */
 /*! \def SENS_AGR_VANE_W
-    \brief Vane : West Direction
-    
+    \brief Vane : West Direction    
  */
 /*! \def SENS_AGR_VANE_WNW
-    \brief Vane : West-Northwest Direction
-    
+    \brief Vane : West-Northwest Direction    
  */
 /*! \def SENS_AGR_VANE_NW
-    \brief Vane : NorthWest Direction
-    
+    \brief Vane : NorthWest Direction    
  */
 /*! \def SENS_AGR_VANE_NNW
     \brief Vane : North-NorthWest Direction
     
  */
-#define SENS_AGR_VANE_N		0
-#define SENS_AGR_VANE_NNE	1
+#define SENS_AGR_VANE_E		0
+#define SENS_AGR_VANE_ENE	1
 #define SENS_AGR_VANE_NE	2
-#define SENS_AGR_VANE_ENE	3
-#define SENS_AGR_VANE_E		4
-#define SENS_AGR_VANE_ESE	5
-#define SENS_AGR_VANE_SE	6
-#define SENS_AGR_VANE_SSE	7
-#define SENS_AGR_VANE_S		8
-#define SENS_AGR_VANE_SSW	9
+#define SENS_AGR_VANE_NNE	3
+#define SENS_AGR_VANE_N		4
+#define SENS_AGR_VANE_NNW	5
+#define SENS_AGR_VANE_NW	6
+#define SENS_AGR_VANE_WNW	7
+#define SENS_AGR_VANE_W		8
+#define SENS_AGR_VANE_WSW	9
 #define SENS_AGR_VANE_SW	10
-#define SENS_AGR_VANE_WSW	11
-#define SENS_AGR_VANE_W		12
-#define SENS_AGR_VANE_WNW	13
-#define SENS_AGR_VANE_NW	14
-#define SENS_AGR_VANE_NNW	15
+#define SENS_AGR_VANE_SSW	11
+#define SENS_AGR_VANE_S		12
+#define SENS_AGR_VANE_SSE	13
+#define SENS_AGR_VANE_SE	14
+#define SENS_AGR_VANE_ESE	15
 
 
 /******************************************************************************
@@ -273,11 +258,13 @@
  
 //! WaspSensorAgrV20 Class
 /*!
-	WaspSensorAgrV20 Class defines all the variables and functions used for managing the Agriculture Sensor Board
+	WaspSensorAgrV20 Class defines all the variables and functions used for 
+	managing the Agriculture Sensor Board
  */
 class WaspSensorAgr_v20
 {
-	private:
+
+private:
 	
 	//! It reads from the dendrometer
   	/*!
@@ -383,12 +370,17 @@ class WaspSensorAgr_v20
 	 */
  	float mcpConversion(int readValue);
 
-	public:
+public:
 	
 	//! Variable : specifies the wind direction
   	/*!
    	*/
 	uint8_t vaneDirection;
+	
+	//! Variable : specifies the wind maximum gust
+  	/*!
+   	*/
+	float gustWind;
 	
 	//! class constructor
   	/*!
@@ -445,24 +437,36 @@ class WaspSensorAgr_v20
 	
 	//! It sleeps Waspmote enabling the switches required for the agriculture board
   	/*!
-	\param const char* time2wake : string that indicates the time to wake up. It looks like "dd:hh:mm:ss"
+	\param const char* time2wake : string that indicates the time to wake up. 
+									It looks like "dd:hh:mm:ss"
 	\param uint8_t offset : RTC_OFFSET or RTC_ABSOLUTE
-	\param uint8_t mode : RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3, RTC_ALM1_MODE4 or RTC_ALM1_MODE5
-	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF or SOCKET0_OFF
+	\param uint8_t mode : 	RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3,
+							RTC_ALM1_MODE4 or RTC_ALM1_MODE5
+	\param uint8_t option : ALL_ON,	ALL_OFF, SENS_OFF, SOCKET0_OFF
 	\return void
 	 */
-	void sleepAgr(const char* time2wake, uint8_t offset, uint8_t mode, uint8_t option);
+	void sleepAgr(	const char* time2wake, 
+					uint8_t offset, 
+					uint8_t mode, 
+					uint8_t option);
 
 	//! It sleeps Waspmote enabling the switches required for the Agriculture Board
   	/*!
-	\param const char* time2wake : string that indicates the time to wake up. It looks like "dd:hh:mm:ss"
+	\param const char* time2wake : string that indicates the time to wake up. 
+									It looks like "dd:hh:mm:ss"
 	\param uint8_t offset : RTC_OFFSET or RTC_ABSOLUTE
-	\param uint8_t mode : RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3, RTC_ALM1_MODE4 or RTC_ALM1_MODE5
-	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF or SOCKET0_OFF
-	\param uint8_t agr_interrupt : specifies the sensor we are enabling before going sleep (Anemometer and Pluviometer)
+	\param uint8_t mode : 	RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3,
+							RTC_ALM1_MODE4 or RTC_ALM1_MODE5
+	\param uint8_t option : ALL_ON,	ALL_OFF, SENS_OFF, SOCKET0_OFF
+	\param uint8_t agr_interrupt : specifies the sensor we are enabling before 
+									going sleep (Anemometer and Pluviometer)
 	\return void
 	 */
-	void sleepAgr(const char* time2wake, uint8_t offset, uint8_t mode, uint8_t option, uint8_t agr_interrupt);
+	void sleepAgr(	const char* time2wake, 
+					uint8_t offset, 
+					uint8_t mode, 
+					uint8_t option, 
+					uint8_t agr_interrupt);
 
 	//! It enables the pluviometer interruption
     	/*!
@@ -477,14 +481,20 @@ class WaspSensorAgr_v20
 	\return void
 	 */
 	void detachPluvioInt(void);
-	
-	
+		
 	//! It reads the DS1820 temperature sensor
   	/*!
 	\param void
 	\return void
 	 */
 	float readTempDS1820();
+		
+	//! It gets the mean vane direction from several samples
+  	/*! It gets the mean vane direction and stores it in 'vaneDirection' variable
+	\param void
+	\return void
+	 */
+	void getVaneFiltered();
 	
 	
 };

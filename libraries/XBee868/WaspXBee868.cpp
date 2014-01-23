@@ -33,23 +33,23 @@
 
 /// table_868 /////////////////////////////////////////////////////////////////
 
-prog_char	get_RF_errors_868[]			PROGMEM	= 	"7E0004085245520E"; // AT+ER
-prog_char	get_good_pack_868[]			PROGMEM	= 	"7E0004085247441A"; // AT+GD
-prog_char	get_channel_RSSI_868[]		PROGMEM	= 	"7E0005085252430000"; // AT+RC
-prog_char	get_trans_errors_868[]		PROGMEM	= 	"7E000408525452FF"; // AT+TR
-prog_char	get_temperature_868[]		PROGMEM	= 	"7E00040852545001"; // AT+TP
-prog_char	get_supply_Volt_868[]		PROGMEM	= 	"7E0004085225562A"; // AT+%V
-prog_char	get_device_type_868[]		PROGMEM	= 	"7E0004085244441D"; // AT+DD
-prog_char	get_payload_bytes_868[]		PROGMEM	= 	"7E000408524E5007"; // AT+NP
-prog_char	set_mult_broadcast_868[] 	PROGMEM = 	"7E000508524D540000"; // AT+MT
-prog_char	get_mult_broadcast_868[] 	PROGMEM = 	"7E000408524D5404"; // AT+MT
-prog_char	set_retries_868[]			PROGMEM	= 	"7E0005085252520000"; // AT+RR
-prog_char	get_retries_868[]			PROGMEM	= 	"7E00040852525201"; // AT+RR
-prog_char	get_duty_cycle_868[]		PROGMEM	= 	"7E0004085244431E"; // AT+DC
-prog_char	get_reset_reason_868[]		PROGMEM	= 	"7E00040852522330"; // AT+R#
-prog_char	get_ACK_errors_868[]		PROGMEM	= 	"7E00040852544110"; // AT+TA
+const char	get_RF_errors_868[]			PROGMEM	= 	"7E0004085245520E"; // AT+ER
+const char	get_good_pack_868[]			PROGMEM	= 	"7E0004085247441A"; // AT+GD
+const char	get_channel_RSSI_868[]		PROGMEM	= 	"7E0005085252430000"; // AT+RC
+const char	get_trans_errors_868[]		PROGMEM	= 	"7E000408525452FF"; // AT+TR
+const char	get_temperature_868[]		PROGMEM	= 	"7E00040852545001"; // AT+TP
+const char	get_supply_Volt_868[]		PROGMEM	= 	"7E0004085225562A"; // AT+%V
+const char	get_device_type_868[]		PROGMEM	= 	"7E0004085244441D"; // AT+DD
+const char	get_payload_bytes_868[]		PROGMEM	= 	"7E000408524E5007"; // AT+NP
+const char	set_mult_broadcast_868[] 	PROGMEM = 	"7E000508524D540000"; // AT+MT
+const char	get_mult_broadcast_868[] 	PROGMEM = 	"7E000408524D5404"; // AT+MT
+const char	set_retries_868[]			PROGMEM	= 	"7E0005085252520000"; // AT+RR
+const char	get_retries_868[]			PROGMEM	= 	"7E00040852525201"; // AT+RR
+const char	get_duty_cycle_868[]		PROGMEM	= 	"7E0004085244431E"; // AT+DC
+const char	get_reset_reason_868[]		PROGMEM	= 	"7E00040852522330"; // AT+R#
+const char	get_ACK_errors_868[]		PROGMEM	= 	"7E00040852544110"; // AT+TA
 
-PROGMEM const char* table_868[] = 	  
+const char* const table_868[] PROGMEM= 	  
 {   	
 	get_RF_errors_868,		// 0
 	get_good_pack_868,		// 1

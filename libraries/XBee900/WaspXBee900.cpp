@@ -33,16 +33,16 @@
 
 /// table_900 /////////////////////////////////////////////////////////////////
 
-prog_char	get_RF_errors_900[]		PROGMEM	 = 	"7E0004085245520E";
-prog_char 	get_good_pack_900[]		PROGMEM  = 	"7E0004085247441A";
-prog_char 	get_channel_RSSI_900[]	PROGMEM  = 	"7E0005085252430000";
-prog_char 	get_trans_errors_900[]	PROGMEM  = 	"7E000408525452FF";
-prog_char 	get_temperature_900[]	PROGMEM  = 	"7E00040852545001";
-prog_char 	get_supply_Volt_900[]	PROGMEM  = 	"7E0004085225562A";
-prog_char	restore_compiled_900[]	PROGMEM  = 	"7E00040852523122";
+const char	get_RF_errors_900[]		PROGMEM	 = 	"7E0004085245520E";
+const char 	get_good_pack_900[]		PROGMEM  = 	"7E0004085247441A";
+const char 	get_channel_RSSI_900[]	PROGMEM  = 	"7E0005085252430000";
+const char 	get_trans_errors_900[]	PROGMEM  = 	"7E000408525452FF";
+const char 	get_temperature_900[]	PROGMEM  = 	"7E00040852545001";
+const char 	get_supply_Volt_900[]	PROGMEM  = 	"7E0004085225562A";
+const char	restore_compiled_900[]	PROGMEM  = 	"7E00040852523122";
 
 
-PROGMEM const char* table_900[] = 	  
+const char* const table_900[] PROGMEM= 	  
 {   
 	get_RF_errors_900,		// 0
   	get_good_pack_900,		// 1

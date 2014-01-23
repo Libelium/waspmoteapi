@@ -1,7 +1,7 @@
 /*! \file WaspGPRS_Pro.h
     \brief Library for managing the SIM900 module
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,10 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
-
-    Design:		David Gascón
-
+    Version:		1.2
+    Design:			David Gascón
     Implementation:	Alejandro Gállego
 
 */
@@ -37,11 +35,22 @@
  ******************************************************************************/
  
 #include <inttypes.h>
-#include "WaspGPRS_Proconstants.h"
 
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
+//!Module fuses
+#define GSM_FUSE	1		//Call(audio included) and SMS related funtions and constants
+#define HTTP_FUSE	1		//HTTP related funtions and constants
+#define FTP_FUSE	1		//FTP related funtions and constants
+#define IP_FUSE		1		//TCP and UDP related funtions and constants
+#define OTA_FUSE	1		//OTA related funcions
+
+#define GPRS_debug_mode 0
+
+#define BUFFER_SIZE 300		// Never must be lower than 256B
+#define BUFFER_UART 500		
+
 
 
 /*! \def GPRS_PRO_ON
@@ -139,17 +148,17 @@
 /*! \def GPRS_PRO_RATE
     \brief SIM900 Baud Rate
  */
-#define	GPRS_PRO_RATE	57600
+#define	GPRS_PRO_RATE	115200
 
 /*! \def DELAY_ON_SEND
-    \brief Constants for AT commands. Delay after every sending attempt in this case
+    \brief Constants for AT commands. Delay (in ms) after every sending attempt in this case i
  */
 #define DELAY_ON_SEND 250
 
 /*! \def DEFAULT_TIMEOUT
-    \brief Constants for AT commands. Default attempts to try in this case (steps of 10ms)
+    \brief Constants for AT commands. Default attempts (in ms) to try in this case 
  */
-#define DEFAULT_TIMEOUT 1000
+#define DEFAULT_TIMEOUT 10000
 
 /*! \def SEND_ONCE
     \brief Constants for AT commands. Sending only once in this case
@@ -189,19 +198,22 @@
 #define	TCP_SERVER	2
 
 /*! \def UDP_EXTENDED
-    \brief When opening a socket, it can be opened as client or server. Client for extended UDP in this case
+    \brief When opening a socket, it can be opened as client or server. 
+    Client for extended UDP in this case
  */
 #define	UDP_EXTENDED	3
 
 
 
 /*! \def NON_TRANSPARENT
-    \brief When opening a socket, it can be opened in non transparent mode or transparent mode. Non transparent in this chase
+    \brief When opening a socket, it can be opened in non transparent mode or 
+    transparent mode. Non transparent in this chase
  */
 #define	NON_TRANSPARENT 0
 
 /*! \def TRANSPARENT
-    \brief When opening a socket, it can be opened in non transparent mode or transparent mode. Transparent in this chase
+    \brief When opening a socket, it can be opened in non transparent mode or 
+    transparent mode. Transparent in this chase
  */
 #define	TRANSPARENT 1
 
@@ -234,6 +246,10 @@ class WaspGPRS_Pro
 {
 	private:
 		
+	//! Variables: aux strings that store commands and answer extracted from flash memory   
+	char str_aux1[20];	//
+	char str_aux2[20];	//
+	char str_aux3[70];	//
 	
 	//! Variable : stores if the module is ready or not (1:not ready, 0:ready)
     	/*!
@@ -260,8 +276,10 @@ class WaspGPRS_Pro
 	//! It checks if GPRS connection is OK
     /*!
 	\param void
-	\return '1' IP INITIAL,'2' IP START,'3' IP CONFIG, '4' IP GPRSACT, '5' IP STATUS, '6' TCP CONNECTING/UDP CONNECTING/SERVER LISTENING, 
-	'7' CONNECT OK, '8' TCP CLOSING/UDP CLOSING, '9' TCP CLOSED/UDP CLOSED, '10' PDP DEACT, '0' if error
+	\return '1' IP INITIAL,'2' IP START,'3' IP CONFIG, '4' IP GPRSACT, 
+	'5' IP STATUS, '6' TCP CONNECTING/UDP CONNECTING/SERVER LISTENING, 
+	'7' CONNECT OK, '8' TCP CLOSING/UDP CLOSING, '9' TCP CLOSED/UDP CLOSED, 
+	'10' PDP DEACT, '0' if error
 	 */
 	uint8_t checkIPstatus();
 #endif	
@@ -272,12 +290,24 @@ class WaspGPRS_Pro
 	 */
 	void getIfReady();	
 	
+	
 	//! It checks if GPRS connection is OK
     /*!
 	\param void
 	\return '1' on success, '0' if error
 	 */
-	uint8_t checkGPRS();
+	uint8_t checkGPRS_at(unsigned long time);
+	
+	//! It checks if GPRS connection is OK
+    /*!
+	\param void
+	\return '1' when connected,
+		'0' if not registered and the module is not currently searching a new operator,
+		'-2' if not registered, but the module is currently searching a new operator,
+		'-3' if registration denied
+		'-4' if the state is unknown
+	*/
+	int8_t checkGPRS(unsigned long time);
 		
 	//! It sends an AT command to the module
     /*!
@@ -292,33 +322,28 @@ class WaspGPRS_Pro
 	\param char* theText : string to send to the module
 	\param char* endOfCommand : string to send to the module
 	\param char* expectedAnswer : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long max_timeout : specifies the maximum timeout	
 	\param int sendOnce : specifies if the data is sent once	
 	\return '1' if expectedAnswer has been detected, '0' if not detected
 	 */
-	uint8_t sendCommand1(const char* theText, const char* expectedAnswer, int MAX_TIMEOUT, int sendOnce);
-	
-	//! It waits for data from the module
-    /*!
-	\param char* expectedAnswer : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
-	\param int seconds : specifies the number of seconds to wait before listening to the module
-	\return '1' if expectedAnswer has been detected, '0' if not detected
-	 */
-	uint8_t waitForData(const char* expectedAnswer, int MAX_TIMEOUT, int timeout, int seconds);
+	uint8_t sendCommand1(	const char* theText, 
+							const char* expectedAnswer, 
+							unsigned long max_timeout, 
+							int sendOnce);
 	
 	//!functions with two answers
 	//! It sends an AT command to the module
     /*!
 	\param char* theText : string to send to the module
-	\param char* endOfCommand : string to send to the module
 	\param char* expectedAnswer1 : string expected to be answered by the module
 	\param char* expectedAnswer2 : string expected to be answered by the module
-	\param int sendOnce : specifies if the data is sent once	
-	\return '1' if expectedAnswer1 has been detected, '2' if expectedAnswer2, '0' if not detected
+	\return '1' if expectedAnswer1 has been detected, 
+			'2' if expectedAnswer2, 
+			'0' if not detected
 	 */
-	uint8_t sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2);
+	uint8_t sendCommand2(	const char* theText, 
+							const char* expectedAnswer1, 
+							const char* expectedAnswer2);
 	
 	//! It sends an AT command to the module
     /*!
@@ -326,88 +351,86 @@ class WaspGPRS_Pro
 	\param char* endOfCommand : string to send to the module
 	\param char* expectedAnswer1 : string expected to be answered by the module
 	\param char* expectedAnswer2 : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long max_timeout : specifies the maximum timeout	
 	\param int sendOnce : specifies if the data is sent once	
-	\return '1' if expectedAnswer1 has been detected, '2' if expectedAnswer2 has been detected, '0' if not detected
+	\return '1' if expectedAnswer1 has been detected, 
+			'2' if expectedAnswer2 has been detected, 
+			'0' if not detected
 	 */
-	uint8_t sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int sendOnce);
+	uint8_t sendCommand2(	const char* theText, 
+							const char* expectedAnswer1, 
+							const char* expectedAnswer2, 
+							unsigned long max_timeout, 
+							int sendOnce);
 	
 	//! It waits for data from the module
     /*!
-	\param char* expectedAnswer1 : string 1 expected to be answered by the module
-	\param char* expectedAnswer2 : string 2 expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
+	\param char* expectedAnswer : string expected to be answered by the module
+	\param unsigned long max_timeout : specifies the maximum timeout	
+	\param unsigned long timeout : specifies the timeout
 	\param int seconds : specifies the number of seconds to wait before listening to the module
-	\return '1' if expectedAnswer1 has been detected, '2' if expectedAnswer2 has been detected, '0' if not detected
+	\return '1' if expectedAnswer has been detected, 
+			'0' if not detected
 	 */
-	uint8_t waitForData(const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int timeout, int seconds);
-	
-	//!functions with three answers
-	//! It sends an AT command to the module
-    /*!
-	\param char* theText : string to send to the module
-	\param char* expectedAnswer1 : string expected to be answered by the module
-	\param char* expectedAnswer2 : string expected to be answered by the module
-	\param char* expectedAnswer3 : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int sendOnce : specifies if the data is sent once	
-	\return '1' if expectedAnswer1 has been detected, '2' if expectedAnswer2 has been detected,
-		'3' if expectedAnswer3 has been detected,'0' if not detected
-	 */
-	uint8_t sendCommand3(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int sendOnce);
+	uint8_t waitForData(	const char* expectedAnswer, 
+							unsigned long max_timeout, 
+							unsigned long timeout, 
+							int seconds);
 	
 	//! It waits for data from the module
     /*!
-	\param char* expectedAnswer1 : string 1 expected to be answered by the module
-	\param char* expectedAnswer2 : string 2 expected to be answered by the module
-	\param char* expectedAnswer3 : string 3 expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
+	\param const char* expectedAnswer1 : string 1 expected to be answered by the module
+	\param const char* expectedAnswer2 : string 2 expected to be answered by the module
+	\param unsigned long max_timeout : specifies the maximum timeout	
+	\param unsigned long timeout : specifies the timeout
 	\param int seconds : specifies the number of seconds to wait before listening to the module
-	\return '1' if expectedAnswer1 has been detected, '2' if expectedAnswer2 has been detected,
-		'3' if expectedAnswer3 has been detected,'0' if not detected
+	\param int n_answers : specifies the number of answers
+	\return '1' if expectedAnswer1 has been detected, 
+			'2' if expectedAnswer2 has been detected, 
+			'0' if not detected
 	 */
-	uint8_t waitForData(const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int timeout, int seconds);
-	
-	//!functions with four answers
-	//! It sends an AT command to the module
-    /*!
-	\param char* theText : string to send to the module
-	\param char* expectedAnswer1 : string expected to be answered by the module
-	\param char* expectedAnswer2 : string expected to be answered by the module
-	\param char* expectedAnswer3 : string expected to be answered by the module
-	\param char* expectedAnswer4 : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int sendOnce : specifies if the data is sent once	
-	\return '1' if expectedAnswer1 has been detected, '2' if expectedAnswer2 has been detected,
-		'3' if expectedAnswer3 has been detected, '4' if expectedAnswer4 has been detected, '0' if not detected
-	 */
-	uint8_t sendCommand4(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, const char* expectedAnswer4, int MAX_TIMEOUT, int sendOnce);
-	
-	//! It waits for data from the module
-    /*!
-	\param char* expectedAnswer1 : string 1 expected to be answered by the module
-	\param char* expectedAnswer2 : string 2 expected to be answered by the module
-	\param char* expectedAnswer3 : string 3 expected to be answered by the module
-	\param char* expectedAnswer4 : string 3 expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
-	\param int seconds : specifies the number of seconds to wait before listening to the module	
-	\return '1' if expectedAnswer1 has been detected, '2' if expectedAnswer2 has been detected,
-		'3' if expectedAnswer3 has been detected, '4' if expectedAnswer4 has been detected, '0' if not detected
-	 */
-	uint8_t waitForData(const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, const char* expectedAnswer4, int MAX_TIMEOUT, int timeout, int seconds);
-	
+	uint8_t waitForData(	const char* expectedAnswer1, 
+							const char* expectedAnswer2, 
+							unsigned long max_timeout, 
+							unsigned long timeout, 
+							int seconds, 
+							int n_answers);
+
 	
 #if FTP_FUSE	
     //! It sends data via FTP
     /*!
     \param char* file : path within SD card to find the file to upload
     \param char* path : path in the FTP server where store the file
-    \return '1' on success, '0' if error, '-1' if no memory
+    \return 
+	* '1'   if OK
+	* '-13' if error setting the file name in the FTP server
+	* '-14' if error setting the path of the file in the FTP server
+	* '-15' if error opening the FTP session
+	* '-16' if error when request to send data
+	* '-17' if error sending data to the FTP,
+	* '-18' if error waiting for send more data
+	* '-19' if error when setting Upload File with CME error code available,
+	* '-20' if error closing the FTP session
+	* '-24' if error opening SD file
+	* '-25' if error when setting pointer to the beginning of the file
+	* '-48' if error setting the file name in the FTP server with CME error code available,
+	* '-49' if error setting the path of the file in the FTP server with CME error code available
+	* '-50' if error opening the FTP session with CME error code available,
+	* '-51' if error closing the FTP session with CME error code available
+	* '-57' if FTP is busy sending data
     */
 	int8_t sendDataFTP(const char* file, const char* path);
+	
+    //! It opens the connection with the FTP server 
+    /*!
+    \return 
+    * '1'   if OK
+    * '-15' if error opening the FTP session
+    * '-19' if error when setting Upload File with CME error code available,
+    * '-50' if error opening the FTP session with CME error code available,
+    */
+	int8_t openFTPPUTconnection();
 	
     //! It reads data via FTP
     /*!
@@ -432,13 +455,27 @@ class WaspGPRS_Pro
 #endif
 
 	//! It closes at opened connection for FTP or HTTP
-	/*! This function closes a GPRS connection with the carrier server to get access to the HTTP and FTP applications
+	/*! This function closes a GPRS connection with the carrier server to get 
+	 * access to the HTTP and FTP applications
 	\param uint8_t n_conf : number of the profile (1-3)
 	\return '1' on success, '0' if error and '-2' error with CME error code available
 	 */
 	int8_t closeGPRS_HTTP_FTP_connection(uint8_t n_conf);
-
+	int8_t openGPRS_HTTP_FTP_connection(uint8_t n_conf);
+	
+#if HTTP_FUSE
+	int8_t initHTTP(	const char* url, 
+						uint8_t* data, 
+						int length,
+						uint8_t n_conf);
+	
+	int sendHTTP(uint8_t n_conf);
+	
+	int16_t readHTTP(	uint16_t HTTP_total_data,
+						uint8_t n_conf);
+	
 	int8_t closeHTTP();
+#endif
 	
 	public:
 	
@@ -450,7 +487,10 @@ class WaspGPRS_Pro
 		
 	//! Variable : status flag, used to see if there was an error while communicating with the module
     /*!
-	Possible values are : GPRS_ERROR_POWER, GPRS_ERROR_CALL, GPRS_ERROR_HANG, GPRS_ERROR_SMS, GPRS_ERROR_PIN, GPRS_ERROR_CALLINFO, GPRS_ERROR_SMSINFO, GPRS_ERROR_CONF, GPRS_ERROR_PATTERN, GPRS_ERROR_TIMER, GPRS_ERROR_PROFILE, GPRS_ERROR_SOCKET, GPRS_ERROR_CHECK, GPRS_ERROR_CLOSE
+	Possible values are : GPRS_ERROR_POWER, GPRS_ERROR_CALL, GPRS_ERROR_HANG, 
+	GPRS_ERROR_SMS, GPRS_ERROR_PIN, GPRS_ERROR_CALLINFO, GPRS_ERROR_SMSINFO, 
+	GPRS_ERROR_CONF, GPRS_ERROR_PATTERN, GPRS_ERROR_TIMER, GPRS_ERROR_PROFILE,
+	GPRS_ERROR_SOCKET, GPRS_ERROR_CHECK, GPRS_ERROR_CLOSE
      */
 	int   flag;
 	
@@ -468,7 +508,8 @@ class WaspGPRS_Pro
 	
 	//! Variable : power mode
     /*!
-	Possible values are: GPRS_PRO_ON, GPRS_PRO_FULL, GPRS_PRO_RF_OFF, GPRS_PRO_MIN, GPRS_PRO_SLEEP, GPRS_PRO_OFF
+	Possible values are: GPRS_PRO_ON, GPRS_PRO_FULL, GPRS_PRO_RF_OFF, 
+	GPRS_PRO_MIN, GPRS_PRO_SLEEP, GPRS_PRO_OFF
 	*/
 	uint8_t _pwrMode;
 	
@@ -477,12 +518,6 @@ class WaspGPRS_Pro
 	GPRS module is connected to the UART1
 	*/
 	uint8_t	_socket;
-	
-	//! Variable : last SMS text received
-    /*!
-	It stores up to 100bytes from the last SMS received
-	*/
-	char sms[100];
 	
 	//! Variable : socket ID
     /*!
@@ -517,10 +552,13 @@ class WaspGPRS_Pro
 	//! Variable : Stores CME or CMS error code
     int FTP_error_code;
         
-    //! Variable : specifies if the GPRS modules is connected to the network (1:connected ; 0:connected)
+    //! Variable : specifies if the GPRS modules is connected to the network 
+    //! (1:connected ; 0:connected)
     uint8_t connected;
 	
 	char buffer_GPRS[BUFFER_SIZE];
+	
+	char buffer_temporal[100];
 	
     //! class constructor
     /*!
@@ -541,10 +579,10 @@ class WaspGPRS_Pro
 	//! It closes UART1 and powers off the SIM900 module
     /*!
 	\param void
-	\return void
+	\return '1' if success, '0' or '-2' if error
 	\sa close(), begin()
 	 */ 
-	void OFF();
+	int8_t OFF();
 		
 	//! It opens UART and sets multiplexer properly
     /*!
@@ -562,7 +600,8 @@ class WaspGPRS_Pro
 		
 	//! It sets Power Mode
     /*!
-	\param uint8_t pwrMode : the desired power mode (GPRS_PRO_ON, GPRS_PRO_FULL, GPRS_PRO_RF_OFF, GPRS_PRO_MIN, GPRS_PRO_SLEEP, GPRS_PRO_POWER_OFF)
+	\param uint8_t pwrMode : the desired power mode (GPRS_PRO_ON, GPRS_PRO_FULL, 
+	GPRS_PRO_RF_OFF, GPRS_PRO_MIN, GPRS_PRO_SLEEP, GPRS_PRO_POWER_OFF)
 	\return '1' on success, '0' if error and '-2' if error with CME error code available
 	 */
 	int8_t setMode(uint8_t pwrMode);
@@ -570,7 +609,8 @@ class WaspGPRS_Pro
 	//! It gets Power Mode
     /*!
 	\param void
-	\return the power mode (GPRS_PRO_ON, GPRS_PRO_FULL, GPRS_PRO_RF_OFF, GPRS_PRO_MIN, GPRS_PRO_SLEEP, GPRS_PRO_POWER_OFF)
+	\return the power mode (GPRS_PRO_ON, GPRS_PRO_FULL, GPRS_PRO_RF_OFF, 
+	GPRS_PRO_MIN, GPRS_PRO_SLEEP, GPRS_PRO_POWER_OFF)
 	 */
 	uint8_t getMode();
 		
@@ -584,9 +624,13 @@ class WaspGPRS_Pro
 	//! It checks if GPRS is connected to the network
     /*!
 	\param uint8_t time: time to wait 
-	\return '1' if connected, '0' if not
+	\return '1' when connected,
+		'0' if not registered and the module is not currently searching a new operator,
+		'-2' if not registered, but the module is currently searching a new operator,
+		'-3' if registration denied
+		'-4' if the state is unknown
 	*/
-	int8_t check(uint16_t time);
+	int8_t check(unsigned long time);
 		
 	//! It sets PIN
     /*!
@@ -641,12 +685,11 @@ class WaspGPRS_Pro
 	 */
 	int8_t	setInfoIncomingCall();
 	
-	//! It stores in 'tlfIN' variable the telephone number of the incoming call
+	//! It stores in 'buffer_GPRS' variable the telephone number of the incoming call
     /*!
-	\param char* data : data returned by the module when a call is being received
 	\return '1' on success, '0' if error
 	 */
-	uint8_t	readCall(const char* data);
+	uint8_t	readCall();
 	
 	//! It hangs all the active calls up
     /*!
@@ -675,7 +718,8 @@ class WaspGPRS_Pro
 	 */
 	uint8_t setCLIPresentation(uint8_t mode);
 	
-	//! It restricts or enables the presentation of the CLI to the called party when originating a call.
+	//! It restricts or enables the presentation of the CLI to the called 
+	//! party when originating a call.
     /*!
 	\param uint8_t mode : DEFAULT_CLIR, INVOKE_CLIR or SUPPRESS_CLIR
 	\return '1' on success, '0' if error
@@ -699,9 +743,14 @@ class WaspGPRS_Pro
 	//! It sets the monitor speaker loudness
     /*!
 	\param uint8_t mode : SILENT_MODE
-	\return '1' on success, '0' if error setting the sound mode, '-2' if error setting the sound mode with CME error code available,
-		'-3' if error setting the sound type, '-4' if error setting the sound type with CME error code available,
-		'-5' if error setting the ring level, '-6' if error setting the ring level with CME error code available,
+	\return 
+		'1' on success, 
+		'0' if error setting the sound mode, 
+		'-2' if error setting the sound mode with CME error code available,
+		'-3' if error setting the sound type, 
+		'-4' if error setting the sound type with CME error code available,
+		'-5' if error setting the ring level, 
+		'-6' if error setting the ring level with CME error code available,
 	 */
 	uint8_t setCallAlert(uint8_t mode);
 
@@ -710,9 +759,14 @@ class WaspGPRS_Pro
 	\param uint8_t mode : NORMAL_MODE or SILENT_MODE
 	\param uint8_t sound_type : number for various melodies
 	\param uint8_t ring_level : LEVEL_OFF, LEVEL_LOW, LEVEL_MEDIUM, LEVEL_HIGH or LEVEL_CRESCENDO
-	\return '1' on success, '0' if error setting the sound mode, '-2' if error setting the sound mode with CME error code available,
-		'-3' if error setting the sound type, '-4' if error setting the sound type with CME error code available,
-		'-5' if error setting the ring level, '-6' if error setting the ring level with CME error code available,
+	\return 
+		'1' on success, 
+		'0' if error setting the sound mode, 
+		'-2' if error setting the sound mode with CME error code available,
+		'-3' if error setting the sound type, 
+		'-4' if error setting the sound type with CME error code available,
+		'-5' if error setting the ring level, 
+		'-6' if error setting the ring level with CME error code available,
 	 */
 	uint8_t setCallAlert(uint8_t mode,uint8_t sound_type, uint8_t ring_level);
 	
@@ -734,9 +788,13 @@ class WaspGPRS_Pro
 	//! It sends a SMS to the specified number
     /*!
 	\param const char* smsText : SMS text (up to 80bytes)
-	\param const char* tlfNumber : telephone number to send the SMS. It must be a telephone number with 9 digits.
-	\return '1' on success,'0' if error, '-2' if error sending the SMS 
-		and '-3' if error sending the SMS with CMS error code available
+	\param const char* tlfNumber : telephone number to send the SMS. It must be 
+									a telephone number with 9 digits.
+	\return 
+		'1' on success,
+		'0' if error, 
+		'-2' if error sending the SMS 
+		'-3' if error sending the SMS with CMS error code available
 	 */
 	int8_t sendSMS(const char* smsText, const char* tlfNumber);
 	
@@ -746,30 +804,39 @@ class WaspGPRS_Pro
 	\return '1' on success, '0' if error
 	 */
 	uint8_t setInfoIncomingSMS();
+
+	//int8_t incomingSMS(const char* smsData);
+	uint8_t incomingSMS();
 	
-	//! It stores in 'tlfIN' and 'sms' variables the telephone number and the text of the incoming SMS. It stores in 'sms_index' variable the last sms received index
+	//! It stores in 'tlfIN' and 'sms' variables the telephone number and 
+	//! the text of the incoming SMS. It stores in 'sms_index' variable the 
+	//! last sms received index
     /*!
 	\param char* data : data returned by the module when an SMS is received
 	\return '1' on success, '0' if error, '-1' if no memory
 	 */
-	int8_t readSMS(const char* data);
+	int8_t readSMS(uint8_t sms_index);
 	
 	//! It gets the number of total SMS stored in the SIM
     /*!	
 	\return the number of SMS or '-2' if error
 	 */
-	uint8_t getTotalSMS();	
+	int8_t getTotalSMS();	
 
 	//! It deletes a sms in the memory selected by sms_index
     /*!
 	\param int sms_index : index of the sms to delete
-	\return '1' on success, '0' if error and '-2' if error with CMS error code available
+	\return 
+		'1' on success, 
+		'0' if error 
+		'-2' if error with CMS error code available
 	 */	
 	uint8_t deleteSMS(uint8_t sms_index);	
 #endif	
 	
 	
-	//! It manages incoming data from serial port, executing proper functions to store received data
+	//! It manages incoming data from serial port, executing proper functions 
+	//! to store received data
 	/*!
 	\param void
 	\return '1' on success, '0' if error, '-1' if no memory
@@ -797,12 +864,18 @@ class WaspGPRS_Pro
 	 */
 	int8_t sendCommand(const char* ATcommand);
 		
-	//! It configures GPRS connection with login, password and some other parameters for use with HTTP and FTP functions
+	//! It configures GPRS connection with login, password and some other 
+	//! parameters for use with HTTP and FTP functions
     /*!	It takes the configuration parameters from 'WaspGPRSconstants.h' file
 	\param uint8_t n_conf : number of the profile (1-3)
-	\return '1' on success, '0' if error and '-2' if error setting the type of internet connection, 
-		'-3' if error setting the apn, '-4' if error setting the user name, '-5' if error setting the password
-		and '-6' if error saving the configuration
+	\return 
+		'1' on success, 
+		'0' if error 
+		'-2' if error setting the type of internet connection, 
+		'-3' if error setting the apn,
+		'-4' if error setting the user name,
+		'-5' if error setting the password
+		'-6' if error saving the configuration
 	 */
 	int8_t configureGPRS_HTTP_FTP(uint8_t n_conf);
 		
@@ -816,24 +889,53 @@ class WaspGPRS_Pro
 	\param const char* ftp_server : ftp server
 	\param uint8_t ftp_port : ftp server port
 	\param uint8_t n_conf : number of HTTP/FTP profile
-	\return '1' on success and '0' if error opening connection with the GPRS provider, '-2' if error getting the IP address
-		'-3' if error setting the FTP/HTTP ID, '-4' if error setting the FTP mode, '-5' if error setting the FTP type,
-		'-6' if error setting the FTP server, '-7' if error setting the FTP port, '-8' if error setting the user name,
-		'-9' if error setting the password, '-10' if error starting the SD, '-11' if error taking the file size in the SD,
-		'-13' if error setting the file name in the FTP server, '-14' if error setting the path of the file in the FTP server
-		'-15' if error opening the FTP session, '-16' if error when request to send data, '-17' error sending data to the FTP,
-		'-18' if error waiting for send more data, '-20' if error closing the FTP session, '-21' setting the file name in the FTP to get the file size
-		'-22' setting the path in the FTP to get the file size, '-23' if error getting the file size
-		'-41' if error setting the FTP/HTTP ID with CME error code available, '-42' if error setting the FTP mode with CME error code available,
-		'-43' if error setting the FTP type with CME error code available, '-44' if error setting the FTP server with CME error code available,
-		'-45' if error setting the FTP port with CME error code available, '-46' if error setting the user name with CME error code available,
-		'-47' if error setting the password with CME error code available, '-48' if error starting the SD with CME error code available,
-		'-49' if error taking the file size in the SD with CME error code available, '-48' if error setting the file name in the FTP server with CME error code available,
-		'-49' if error setting the path of the file in the FTP server with CME error code available, '-50' if error opening the FTP session with CME error code available,
-		'-51' if error closing the FTP session with CME error code available, '-53' setting the file name in the FTP to get the file size with CME error code available,
-		'-54' setting the path in the FTP to get the file size with CME error code available, '-55' if error getting the file size with CME error code available
+	\return '1' on success
+		'0' if error opening connection with the GPRS provider,
+		'-1' if error opening the connection,
+		'-2' if error getting the IP address
+		'-3' if error setting the FTP/HTTP ID,
+		'-4' if error setting the FTP mode,
+		'-5' if error setting the FTP type,
+		'-6' if error setting the FTP server,
+		'-7' if error setting the FTP port,
+		'-8' if error setting the user name,
+		'-9' if error setting the password,
+		'-10' if error starting the SD,
+		'-11' if error taking the file size in the SD,
+		'-12' if error using the SD card
+		'-13' if error setting the file name in the FTP server,
+		'-14' if error setting the path of the file in the FTP server
+		'-15' if error opening the FTP session,
+		'-16' if error when request to send data,
+		'-17' error sending data to the FTP,
+		'-18' if error waiting for send more data,
+		'-20' if error closing the FTP session,
+		'-21' setting the file name in the FTP to get the file size
+		'-22' setting the path in the FTP to get the file size,
+		'-23' if error getting the file size
+		'-40' if error from FTP when the module sends data with error code available,
+		'-41' if error setting the FTP/HTTP ID with CME error code available,
+		'-42' if error setting the FTP mode with CME error code available,
+		'-43' if error setting the FTP type with CME error code available,
+		'-44' if error setting the FTP server with CME error code available,
+		'-45' if error setting the FTP port with CME error code available,
+		'-46' if error setting the user name with CME error code available,
+		'-47' if error setting the password with CME error code available,
+		'-48' if error setting the file name in the FTP server with CME error code available,
+		'-49' if error setting the path of the file in the FTP server with CME error code available,
+		'-50' if error opening the FTP session with CME error code available,
+		'-51' if error closing the FTP session with CME error code available,
+		'-53' setting the file name in the FTP to get the file size with CME error code available,
+		'-54' setting the path in the FTP to get the file size with CME error code available,
+		'-55' if error getting the file size with CME error code available
 	 */
-	int8_t uploadFile(const char* file, const char* path, const char* user, const char* passw, const char* ftp_server, const char* ftp_port, uint8_t n_conf);
+	int8_t uploadFile(	const char* file,
+						const char* path, 
+						const char* user, 
+						const char* passw, 
+						const char* ftp_server, 
+						const char* ftp_port, 
+						uint8_t n_conf);
 	
 	//! It downloads a file from a FTP server
     /*!
@@ -844,24 +946,50 @@ class WaspGPRS_Pro
 	\param const char* ftp_server : ftp server
 	\param uint8_t ftp_port : ftp server port
 	\param uint8_t n_conf : number of HTTP/FTP profile
-	\return '1' on success and '0' if error opening connection with the GPRS provider, '-2' if error getting the IP address
-		'-3' if error setting the FTP/HTTP ID, '-4' if error setting the FTP mode, '-5' if error setting the FTP type,
-		'-6' if error setting the FTP server, '-7' if error setting the FTP port, '-8' if error setting the user name,
-		'-9' if error setting the password, '-12' if error setting the file name in the FTP server, 
-		'-13' if error setting the path of the file in the FTP server, '-14' if error opening the FTP session,
-		'-15' if error starting the SD, '-16' if error creating the file, '-17' error requesting data to the FTP,
-		'-18' if error saving data into the SD, '-19' if error requesting more data to the FTP, '-21' setting the file name in the FTP to get the file size
-		'-22' setting the path in the FTP to get the file size, '-23' if error getting the file size
-		'-41' if error setting the FTP/HTTP ID with CME error code available, '-42' if error setting the FTP mode with CME error code available,
-		'-43' if error setting the FTP type with CME error code available, '-44' if error setting the FTP server with CME error code available,
-		'-45' if error setting the FTP port with CME error code available, '-46' if error setting the user name with CME error code available,
-		'-47' if error setting the password with CME error code available, '-48' if error setting the file name in the FTP server with CME error code available,
-		'-49' if error setting the path of the file in the FTP server with CME error code available, '-50' if error opening the FTP session with CME error code available,
-		'-51' if error requesting data to the FTP with CME error code available, '-52' if error requesting more data to the FTP with CME error code available,
+	\return '1' on success
+		'0' if error opening connection with the GPRS provider,
+		'-2' if error getting the IP address
+		'-3' if error setting the FTP/HTTP ID,
+		'-4' if error setting the FTP mode,
+		'-5' if error setting the FTP type,
+		'-6' if error setting the FTP server,
+		'-7' if error setting the FTP port,
+		'-8' if error setting the user name,
+		'-9' if error setting the password,
+		'-12' if error setting the file name in the FTP server, 
+		'-13' if error setting the path of the file in the FTP server,
+		'-14' if error opening the FTP session,
+		'-15' if error starting the SD,
+		'-16' if error creating the file,
+		'-17' error requesting data to the FTP,
+		'-18' if error saving data into the SD,
+		'-19' if error requesting more data to the FTP, 
+		'-21' setting the file name in the FTP to get the file size
+		'-22' setting the path in the FTP to get the file size,
+		'-23' if error getting the file size
+		'-41' if error setting the FTP/HTTP ID with CME error code available,
+		'-42' if error setting the FTP mode with CME error code available,
+		'-43' if error setting the FTP type with CME error code available,
+		'-44' if error setting the FTP server with CME error code available,
+		'-45' if error setting the FTP port with CME error code available,
+		'-46' if error setting the user name with CME error code available,
+		'-47' if error setting the password with CME error code available,
+		'-48' if error setting the file name in the FTP server with CME error code available,
+		'-49' if error setting the path of the file in the FTP server with CME error code available,
+		'-50' if error opening the FTP session with CME error code available,
+		'-51' if error requesting data to the FTP with CME error code available,
+		'-52' if error requesting more data to the FTP with CME error code available,
 		'-53' setting the file name in the FTP to get the file size with CME error code available,
-		'-54' setting the path in the FTP to get the file size with CME error code available, '-55' if error getting the file size with CME error code available
+		'-54' setting the path in the FTP to get the file size with CME error code available,
+		'-55' if error getting the file size with CME error code available
 	 */
-	int8_t downloadFile(const char* file, const char* path, const char* user, const char* passw, const char* ftp_server, const char* ftp_port, uint8_t n_conf);
+	int8_t downloadFile(	const char* file,
+							const char* path,
+							const char* user,
+							const char* passw,
+							const char* ftp_server,
+							const char* ftp_port,
+							uint8_t n_conf);
 	
 
 #endif	
@@ -872,16 +1000,32 @@ class WaspGPRS_Pro
 	It stores in 'buffer_GPRS' variable up to 255 bytes
 	\param const char* url : the URL to get the information from
 	\param uint8_t n_conf : number of HTTP/FTP profile
-	\return '1' on success and '0' if error, '-2' if error opening the connection,'-3' if error getting the IP address,
-		'-4' if error initializing the HTTP service, '-10' if error initializing the HTTP service with CME error code available,
-		'-5' if error setting CID the HTTP service, '-11' if error setting CID the HTTP service with CME error code available,
-		'-6' if error setting the url the HTTP service, '-12' if error setting the url the HTTP service with CME error code available,
-		'-7' if error setting the url the HTTP service, '-13' if error setting the url the HTTP service with CME error code available,
-		'-8' if error getting data from url, '-14' if error getting data from url with CME error code available,
-		'-9' if error closing the HTTP service, '-15' if error closing the HTTP service with CME error code available,
+	\return '1' on success 
+		'2' if buffer_GPRS is full. The answer from the server is limited by the 
+			length of buffer_GPRS. To increase the length of the answer, increase the 
+			BUFFER_SIZE constant.
+		'0' if error, 
+		'-1' if no GPRS connection,
+		'-2' if error opening the connection,
+		'-3' if error getting the IP address,
+		'-4' if error initializing the HTTP service,
+		'-5' if error setting CID the HTTP service,
+		'-6' if error setting the url the HTTP service,
+		'-7' if error setting the url the HTTP service,
+		'-8' if error getting data from url,
+		'-9' if error closing the HTTP service,
+		'-10' if error initializing the HTTP service with CME error code available,
+		'-11' if error setting CID the HTTP service with CME error code available,
+		'-12' if error setting the url the HTTP service with CME error code available,
+		'-13' if error setting the url the HTTP service with CME error code available,
+		'-14' if error getting data from url with CME error code available,
+		'-15' if error closing the HTTP service with CME error code available,
 	 */
-	int8_t readURL(const char* url, uint8_t n_conf);
-	int8_t readURL(const char* url, uint8_t* data, int length, uint8_t n_conf);
+	int readURL(const char* url, uint8_t n_conf);
+	int readURL(const char* url, uint8_t* data, int length, uint8_t n_conf);
+	
+	
+	uint8_t isConnected( uint8_t n_conf );
 #endif
 	
 	//! It gets the currently selected operator from network
@@ -913,28 +1057,48 @@ class WaspGPRS_Pro
 	 */
 	int8_t getCellInfo();
 	
+	/* getWorkingBand() - Gets the currently working band
+ *
+ * This function gets the currently working band
+ *
+ * Returns '1' on success, '0' if error and '-2' if CME error code available
+*/
+	int8_t getWorkingBand();
+	
 	
 #if IP_FUSE	
-	//! It configures GPRS connection with login, password and some other parameters for use with TCP or UDP connections
+	//! It configures GPRS connection with login, password and some other 
+	//! parameters for use with TCP or UDP connections
     /*!
 	It takes the configuration parameters from 'WaspGPRSconstants.h' file
 	\param uint8_t mode : MULTI_CONNECTION
-	\return '1' on success, '0' if error, '-2' if error dettaching the GPRS connection, 
-		'-3' if error attaching the GPRS connection, '-4' if error setting the application mode,
-		'-5' if error setting the connection mode, '-6' if error establishing the connection with the GPRS provider, 
+	\return 
+		'1' on success, 
+		'0' if error, 
+		'-2' if error dettaching the GPRS connection, 
+		'-3' if error attaching the GPRS connection, 
+		'-4' if error setting the application mode,
+		'-5' if error setting the connection mode, 
+		'-6' if error establishing the connection with the GPRS provider, 
 		'-15' if error dettaching the GPRS connection with CME error code available, 
 		'-16' if error attaching the GPRS connection with CME error code available.
 	 */
 	int8_t configureGPRS_TCP_UDP(uint8_t mode_connection);
 	
-	//! It configures GPRS connection with login, password and some other parameters for use with TCP or UDP connections
+	//! It configures GPRS connection with login, password and some other 
+	//! parameters for use with TCP or UDP connections
     /*!
 	It takes the configuration parameters from 'WaspGPRSconstants.h' file
 	\param uint8_t mode_connection : SINGLE_CONNECTION 
 	\param uint8_t app_mode : TRANSPARENT mode or NON_TRANSPARENT mode
-	\return '1' on success, '0' if error, '-2' if error dettaching the GPRS connection, 
-		'-3' if error attaching the GPRS connection, '-4' if error setting the application mode,
-		'-5' if error setting the connection mode, '-6' if error establishing the connection with the GPRS provider, 
+	\return 
+		'1' on success,
+		'0' if error, 
+		'-2' if error dettaching the GPRS connection, 
+		'-3' if error attaching the GPRS connection,
+		'-4' if error setting the application mode,
+		'-5' if error setting the connection mode, 
+		'-6' if error establishing the connection with the GPRS provider, 
 		'-15' if error dettaching the GPRS connection with CME error code available, 
 		'-16' if error attaching the GPRS connection with CME error code available.
 	 */
@@ -970,9 +1134,11 @@ class WaspGPRS_Pro
 	\param uint8_t working_mode : TCP_CLIENT, UDP_CLIENT or UDP_EXTENDED
 	\param const char* ip : the IP to open a socket to
 	\param const char* port : the PORT to open a socket to
-	\return '1' on success, '0' if error setting the connection, 
+	\return 
+		'1' on success, 
+		'0' if error setting the connection, 
 		'-2' if error setting the connection with CME error code available
-		and '-3' if time out waiting the connection
+		'-3' if time out waiting the connection
 	 */
 	int8_t createSocket( uint8_t working_mode, const char* ip,const char* port);
 	
@@ -982,18 +1148,26 @@ class WaspGPRS_Pro
 	\param uint8_t n_connection : number of the connection id to use (0-7)
 	\param const char* ip : the IP to open a socket to
 	\param const char* port : the PORT to open a socket to	
-	\return '1' on success, '0' if error setting the connection, 
+	\return 
+		'1' on success, 
+		'0' if error setting the connection, 
 		'-2' if error setting the connection with CME error code available
-		and '-3' if time out waiting the connection
+		'-3' if time out waiting the connection
 	 */
-	int8_t createSocket( uint8_t working_mode, uint8_t n_connection, const char* ip, const char* port);
+	int8_t createSocket(	uint8_t working_mode, 
+							uint8_t n_connection,
+							const char* ip, 
+							const char* port);
 	
 	//! It sends 'data' to the specified 'socket'
     /*!
 	\param const char* data : the data to send to the socket
-	\return '1' on success, '0' if error waiting the response of the module,
+	\return 
+		'1' on success, 
+		'0' if error waiting the response of the module,
 		'-2' if error with CME error code available
-		'-3' if no feedback detected and '-4' if the send fails
+		'-3' if no feedback detected 
+		'-4' if the send fails
 	*/	
 	int8_t sendData(const char* data);	
 	
@@ -1001,9 +1175,12 @@ class WaspGPRS_Pro
     /*!
 	\param const char* data : the data to send to the socket
 	\param uint8_t n_connection: the connection's number
-	\return '1' on success, '0' if error waiting the response of the module,
+	\return 
+		'1' on success
+		'0' if error waiting the response of the module,
 		'-2' if error with CME error code available
-		'-3' if no feedback detected and '-4' if the send fails
+		'-3' if no feedback detected 
+		'-4' if the send fails
 	*/	
 	int8_t sendData(const char* data, uint8_t n_connection);
 	
@@ -1011,9 +1188,12 @@ class WaspGPRS_Pro
     /*!
 	\param uint8_t* data : the data to send to the socket
 	\param int length : the length of the data for send to the socket
-	\return '1' on success, '0' if error waiting the response of the module,
+	\return 
+		'1' on success
+		'0' if error waiting the response of the module,
 		'-2' if error with CME error code available
-		'-3' if no feedback detected and '-4' if the send fails
+		'-3' if no feedback detected
+		'-4' if the send fails
 	*/	
 	int8_t sendData(uint8_t* data, int length);
 	
@@ -1022,9 +1202,12 @@ class WaspGPRS_Pro
 	\param uint8_t* data : the data to send to the socket
 	\param int length : the length of the data for send to the socket
 	\param uint8_t n_connection: the connection's number
-	\return '1' on success, '0' if error waiting the response of the module,
+	\return 
+		'1' on success, 
+		'0' if error waiting the response of the module,
 		'-2' if error with CME error code available
-		'-3' if no feedback detected and '-4' if the send fails
+		'-3' if no feedback detected
+		'-4' if the send fails
 	*/	
 	int8_t sendData(uint8_t* data, int length, uint8_t n_connection);
 	
@@ -1033,7 +1216,7 @@ class WaspGPRS_Pro
 	\param char* dataIN : string of data with TCP/UDP info
 	\return '1' on success, '0' if error
 	 */
-	int8_t readIPData(char* dataIN);
+	int8_t readIPData();
 	
 	//! It closes TCP/IP connection
     /*!
@@ -1124,8 +1307,12 @@ class WaspGPRS_Pro
 	//! It gets data manually from a TCP or UDP connection
     /*! 
 	\param uint16_t data_length : the legth of the data to get
-	\return '1' on success, '0' if error and '2' if buffer_GPRS is full. The answer from the server
-		is limited by the length of buffer_GPRS. To increase the length	of the answer, increase the BUFFER_SIZE constant.
+	\return 
+		'1' on success, 
+		'0' if error
+		'2' if buffer_GPRS is full. The answer from the server is limited by the 
+			length of buffer_GPRS. To increase the length	of the answer, 
+			increase the BUFFER_SIZE constant.
 	 */
 	int8_t GetDataManually(uint16_t data_length);
 	
@@ -1133,24 +1320,27 @@ class WaspGPRS_Pro
     /*! 
 	\param uint16_t data_length : the legth of the data to get
 	\param uint8_t id : id connection number
-	\return '1' on success, '0' if error and '2' if buffer_GPRS is full. The answer from the server
-		is limited by the length of buffer_GPRS. To increase the length	of the answer, increase the BUFFER_SIZE constant.
+	\return 
+		'1' on success, 
+		'0' if error
+		'2' if buffer_GPRS is full. The answer from the server is limited by the 
+			length of buffer_GPRS. To increase the length	of the answer, 
+			increase the BUFFER_SIZE constant.
 	 */
 	int8_t GetDataManually(uint16_t data_length, uint8_t id);
-#endif
 	
 	//! It sets the directions of DNS servers from GPRS_Proconstants.h
     /*!
 	\return '1' on success, '0' if error and '-2' if CME error code available
 	 */	
-	uint8_t setDNS();
+	int8_t setDNS();
 	
 	//! It sets the direction of DNS server
     /*!
 	\param const char* DNS_dir1 : DNS server direction
 	\return '1' on success, '0' if error and '-2' if CME error code available
 	 */
-	uint8_t setDNS(const char* DNS_dir);
+	int8_t setDNS(const char* DNS_dir);
 	
 	//! It sets the directions of DNS servers
     /*!
@@ -1158,7 +1348,14 @@ class WaspGPRS_Pro
 	\param const char* DNS_dir2 : DNS server direction
 	\return '1' on success, '0' if error and '-2' if CME error code available
 	 */
-	uint8_t setDNS(const char* DNS_dir1, const char* DNS_dir2);
+	int8_t setDNS(const char* DNS_dir1, const char* DNS_dir2);
+#endif
+	
+	//! It sets all current parameters to the manufacturer defined profile.
+    /*!
+	\return '1' on success, '0' if error
+	 */	
+	int8_t setDefault();
 	
 	//! It gets the model of the module and saves it in 'buffer_GPRS'
     /*!
@@ -1186,44 +1383,98 @@ class WaspGPRS_Pro
 	\param const char* FTP_port:string with the FTP port
 	\param const char* FTP_username:string with the user name
 	\param const char* FTP_password:string with the FTP password
-	\return  '1' if success, '-2' if error and '-4' if error setting the type of internet connection, 
-		'-5' if error setting the apn, '-6' if error setting the user name, '-7' if error setting the password
-		'-8' if error saving the configuration, '-9' if error opening connection with the GPRS provider,  '-10' error downloading OTA version file,
-		'-11' if error getting the IP address, '-12' if error setting the FTP/HTTP ID, '-13' if error setting the FTP mode, '-14' if error setting the FTP type,
-		'-15' if error setting the FTP server, '-16' if error setting the FTP port, '-17' if error setting the user name,
-		'-18' if error setting the password, '-21' if error setting the file name in the FTP server, 
-		'-22' if error setting the path of the file in the FTP server, '-23' if error opening the FTP session,
-		'-24' if error starting the SD, '-25' if error creating the file, '-26' error requesting data to the FTP,
-		'-27' if error saving data into the SD, '-28' if error requesting more data to the FTP, '-30' setting the file name in the FTP to get the file size
-		'-31' setting the path in the FTP to get the file size, '-32' if error getting the file size
-		'-50' if error setting the FTP/HTTP ID with CME error code available, '-51' if error setting the FTP mode with CME error code available,
-		'-52' if error setting the FTP type with CME error code available, '-53' if error setting the FTP server with CME error code available,
-		'-54' if error setting the FTP port with CME error code available, '-55' if error setting the user name with CME error code available,
-		'-56' if error setting the password with CME error code available, '-57' if error setting the file name in the FTP server with CME error code available,
-		'-58' if error setting the path of the file in the FTP server with CME error code available, '-59' if error opening the FTP session with CME error code available,
-		'-60' if error requesting data to the FTP with CME error code available, '-61' if error requesting more data to the FTP with CME error code available,
-		'-62 setting the file name in the FTP to get the file size with CME error code available,
-		'-63' setting the path in the FTP to get the file size with CME error code available, '-64' if error getting the file size with CME error code available,
-		'-65' if FTP is busy, '-66' if there isn't FILE tag, '-67' if there isn't PATH tag,  '-68' if there isn't VERSION tag,'-69' if OTA is not necessary, 
-		'-70' if OTA files are the same program version, '-71' if error opening connection with the GPRS provider, '-72' error downloading OTA file, 
-		'-73' if error getting the IP address '-74' if error setting the FTP/HTTP ID, '-75' if error setting the FTP mode, '-76' if error setting the FTP type,
-		'-77' if error setting the FTP server, '-78' if error setting the FTP port, '-79' if error setting the user name,
-		'-80' if error setting the password, '-83' if error setting the file name in the FTP server, 
-		'-84' if error setting the path of the file in the FTP server, '-85' if error opening the FTP session,
-		'-86' if error starting the SD, '-87' if error creating the file, '-88' error requesting data to the FTP,
-		'-89' if error saving data into the SD, '-90' if error requesting more data to the FTP, '-92' setting the file name in the FTP to get the file size
-		'-93' setting the path in the FTP to get the file size, '-94' if error getting the file size
-		'-112' if error setting the FTP/HTTP ID with CME error code available, '-113' if error setting the FTP mode with CME error code available,
-		'-114' if error setting the FTP type with CME error code available, '-115' if error setting the FTP server with CME error code available,
-		'-116' if error setting the FTP port with CME error code available, '-117' if error setting the user name with CME error code available,
-		'-118' if error setting the password with CME error code available, '-119' if error setting the file name in the FTP server with CME error code available,
-		'-120' if error setting the path of the file in the FTP server with CME error code available, '-121' if error opening the FTP session with CME error code available,
-		'-122' if error requesting data to the FTP with CME error code available, '-123' if error requesting more data to the FTP with CME error code available,
-		'-124' setting the file name in the FTP to get the file size with CME error code available,
-		'-125' setting the path in the FTP to get the file size with CME error code available, '-126' if error getting the file size with CME error code available
-		and '-127' if FTP is busy
+	\return  
+	* '1' if success, 
+	* '-2' if error 
+	* '-4' if error setting the type of internet connection,
+	* '-5' if error setting the apn
+	* '-6' if error setting the user name
+	* '-7' if error setting the password
+	* '-8' if error saving the configuration
+	* '-9' if error opening connection with the GPRS provider
+	* '-10' error downloading OTA version file
+	* '-11' if error getting the IP address
+	* '-12' if error setting the FTP/HTTP ID
+	* '-13' if error setting the FTP mode
+	* '-14' if error setting the FTP type
+	* '-15' if error setting the FTP server
+	* '-16' if error setting the FTP port
+	* '-17' if error setting the user name,
+	* '-18' if error setting the password
+	* '-21' if error setting the file name in the FTP server, 
+	* '-22' if error setting the path of the file in the FTP server
+	* '-23' if error opening the FTP session
+	* '-24' if error starting the SD
+	* '-25' if error creating the file
+	* '-26' error requesting data to the FTP,
+	* '-27' if error saving data into the SD
+	* '-28' if error requesting more data to the FTP
+	* '-30' setting the file name in the FTP to get the file size
+	* '-31' setting the path in the FTP to get the file size
+	* '-32' if error getting the file size
+	* '-50' if error setting the FTP/HTTP ID with CME error code available
+	* '-51' if error setting the FTP mode with CME error code available
+	* '-52' if error setting the FTP type with CME error code available
+	* '-53' if error setting the FTP server with CME error code available,
+	* '-54' if error setting the FTP port with CME error code available
+	* '-55' if error setting the user name with CME error code available,
+	* '-56' if error setting the password with CME error code available
+	* '-57' if error setting the file name in the FTP server with CME error code available,
+	* '-58' if error setting the path of the file in the FTP server with CME error code available
+	* '-59' if error opening the FTP session with CME error code available,
+	* '-60' if error requesting data to the FTP with CME error code available
+	* '-61' if error requesting more data to the FTP with CME error code available,
+	* '-62 setting the file name in the FTP to get the file size with CME error code available,
+	* '-63' setting the path in the FTP to get the file size with CME error code available
+	* '-64' if error getting the file size with CME error code available,
+	* '-65' if FTP is busy
+	* '-66' if there isn't FILE tag
+	* '-67' if there isn't PATH tag
+	* '-68' if there isn't VERSION tag
+	* '-69' if OTA is not necessary, 
+	* '-70' if OTA files are the same program version
+	* '-71' if error opening connection with the GPRS provider
+	* '-72' error downloading OTA file, 
+	* '-73' if error getting the IP address 
+	* '-74' if error setting the FTP/HTTP ID
+	* '-75' if error setting the FTP mode
+	* '-76' if error setting the FTP type
+	* '-77' if error setting the FTP server
+	* '-78' if error setting the FTP port
+	* '-79' if error setting the user name
+	* '-80' if error setting the password
+	* '-83' if error setting the file name in the FTP server, 
+	* '-84' if error setting the path of the file in the FTP server
+	* '-85' if error opening the FTP session
+	* '-86' if error starting the SD
+	* '-87' if error creating the file
+	* '-88' error requesting data to the FTP
+	* '-89' if error saving data into the SD
+	* '-90' if error requesting more data to the FTP
+	* '-92' setting the file name in the FTP to get the file size
+	* '-93' setting the path in the FTP to get the file size
+	* '-94' if error getting the file size
+	* '-112' if error setting the FTP/HTTP ID with CME error code available,
+	* '-113' if error setting the FTP mode with CME error code available,
+	* '-114' if error setting the FTP type with CME error code available,
+	* '-115' if error setting the FTP server with CME error code available,
+	* '-116' if error setting the FTP port with CME error code available, 
+	* '-117' if error setting the user name with CME error code available,
+	* '-118' if error setting the password with CME error code available, 
+	* '-119' if error setting the file name in the FTP server with CME error code available,
+	* '-120' if error setting the path of the file in the FTP server with CME error code available, 
+	* '-121' if error opening the FTP session with CME error code available,
+	* '-122' if error requesting data to the FTP with CME error code available, 
+	* '-123' if error requesting more data to the FTP with CME error code available,
+	* '-124' setting the file name in the FTP to get the file size with CME error code available,
+	* '-125' setting the path in the FTP to get the file size with CME error code available, 
+	* '-126' if error getting the file size with CME error code available
+	* '-127' if FTP is busy
 	*/
-	int8_t requestOTA(const char* FTP_server, const char* FTP_port, const char* FTP_username, const char* FTP_password);
+	int8_t requestOTA(	const char* FTP_server, 
+						const char* FTP_port, 
+						const char* FTP_username, 
+						const char* FTP_password);
 	#endif
 };
 

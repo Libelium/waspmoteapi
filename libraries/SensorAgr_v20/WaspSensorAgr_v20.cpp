@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.13
+ *  Version:		1.0
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
  */
@@ -536,24 +536,47 @@ float WaspSensorAgr_v20::readAnemometer(void)
 	int value_anemometer = 0;
 	float wind_speed = 0;
 	unsigned long start_anemometer=0;
+	unsigned long previous_pulse=0;
+	unsigned long pulse_duration=1000000; // set to large value
+	unsigned long new_pulse_duration=0;
+	const unsigned long MEAS_TIME = 3000; // ms
 
 	value_anemometer = 0;
 	start_anemometer = millis();
-	while((millis()-start_anemometer)<=3000)
+	previous_pulse = millis();
+	while( (millis()-start_anemometer) <= MEAS_TIME )
 	{
 		previous_reading_anemometer = reading_anemometer;
 		reading_anemometer = digitalRead(DIGITAL2);
     
+		// check falling edge
 		if((previous_reading_anemometer == 1)&&(reading_anemometer == 0))
 		{
+			// increment pulse counter
 			value_anemometer++;
+			
+			// get new pulse elapsed time
+			new_pulse_duration = millis()-previous_pulse;
+			// update pulse instant time				
+			previous_pulse = millis();
+
+			// update pulse duration in the case is the lowest 
+			if( new_pulse_duration < pulse_duration )
+			{
+				pulse_duration = new_pulse_duration;
+			}
+			
 		}
 		//avoid millis overflow problem
 		if( millis() < start_anemometer ) start_anemometer=millis(); 
 	}
 	delay(100);
 	
-	wind_speed = value_anemometer * 0.8;
+	// calculate average wind speed
+	wind_speed = value_anemometer * 2.4 / (MEAS_TIME/1000);
+	
+	// calculate gust of wind 2.4Km/h per second
+	gustWind = 2.4 / ((float)pulse_duration/1000);
   
 	return wind_speed;
 }
@@ -1052,6 +1075,75 @@ void WaspSensorAgr_v20::getVaneDirection(float vane)
 	else if( vane>=2.6 && vane<2.75 ) vaneDirection=SENS_AGR_VANE_WNW;
 	else if( vane>=2.75 && vane<2.95 ) vaneDirection=SENS_AGR_VANE_NW;
 	else if( vane>=2.95 ) vaneDirection=SENS_AGR_VANE_W;
+}
+
+ 
+/*	getVaneFiltred: stores in the vaneDirection variable the orientation of the
+ * 					vane calculated from the voltage read at its output. The 
+ * 					measurement is performed doing the mean of several values.				
+ *	
+ *  Return:		void
+ *  Remarks: http://en.wikipedia.org/wiki/Mean_of_circular_quantities
+ * 
+ */
+void WaspSensorAgr_v20::getVaneFiltered()
+{
+	int NUM_SAMPLES=20;	
+	int SAMPLING_TIME=100; // ms
+	int aux;
+	float sample[NUM_SAMPLES];
+	float vanes[NUM_SAMPLES];
+	
+	for( int i=0 ; i<NUM_SAMPLES; i++ )
+	{
+		aux = analogRead(ANALOG5); //read bits 0-1023
+		sample[i] = (aux*3.3)/1023; // Volts
+		getVaneDirection(sample[i]); // in vane direction
+		vanes[i] = vaneDirection;
+		delay(SAMPLING_TIME);
+	}
+	
+	// Mean filter
+	float mean=0;
+	int conversion=0;
+	float senos=0.0;
+	float cosenos=0.0;
+	
+	// translate to radians 
+	for( int i=0 ; i<NUM_SAMPLES; i++ )
+	{
+		vanes[i] = vanes[i]*2*PI/16;
+	}
+	
+	// get the summatory of both sine y cosine of all measurements
+	for( int i=0 ; i<NUM_SAMPLES; i++ )
+	{
+		senos += sin(vanes[i]);
+		cosenos += cos(vanes[i]);
+	}
+	
+	// perform the mean of angles
+	mean = atan2(senos/NUM_SAMPLES, cosenos/NUM_SAMPLES);	
+	
+	// negative radians: if range is betwen [-PI to 0] translate it: [PI to 2PI]
+	if(mean<0) 
+	{
+		mean *= -1;
+		mean = (PI-mean)+PI;
+	}
+	
+	// Translate it to the values given in the API
+	conversion = (int)round( 16*mean/(2*PI) );
+	
+	// in case of 2*PI, set to 0
+	if(conversion == 16) 
+	{
+		conversion=0;
+	}
+	
+	// update variable
+	vaneDirection = conversion;
+	
 }
 
 /*	senceraConversion: converts the value read at the analog to digital

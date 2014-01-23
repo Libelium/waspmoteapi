@@ -43,59 +43,43 @@
  ******************************************************************************/
  
 /*! \def SENS_TEMPERATURE
-    \brief Sensor types. Temperature sensor in this case
-    
+    \brief Sensor types. Temperature sensor in this case    
  */
 /*! \def SENS_HUMIDITY
-    \brief Sensor types. Humidity sensor in this case
-    
+    \brief Sensor types. Humidity sensor in this case    
  */
 /*! \def SENS_PRESSURE
-    \brief Sensor types. Pressure sensor in this case
-    
+    \brief Sensor types. Pressure sensor in this case    
  */
 /*! \def SENS_CO2
-    \brief Sensor types. CO2 sensor in this case
-    
+    \brief Sensor types. CO2 sensor in this case    
  */
 /*! \def SENS_O2
-    \brief Sensor types. O2 sensor in this case
-    
+    \brief Sensor types. O2 sensor in this case    
  */
 /*! \def SENS_SOCKET2A
     \brief Sensor types. Socket2A sensor in this case (many sensors can be connected
-		   to this socket)
-    
+		   to this socket)    
  */
 /*! \def SENS_SOCKET2B
     \brief Sensor types. Socket2A sensor in this case (NO2, O3 or VOC sensors can
-		   be connected to this socket)
-    
+		   be connected to this socket)    
  */
 /*! \def SENS_SOCKET3A
     \brief Sensor types. Socket3A sensor in this case (many sensors can be connected
-		   to this socket)
-    
+		   to this socket)    
  */
 /*! \def SENS_SOCKET3B
     \brief Sensor types. Socket3B sensor in this case (many sensors can be connected
-		   to this socket)
-    
+		   to this socket)    
  */
 /*! \def SENS_SOCKET3C
     \brief Sensor types. Socket3C sensor in this case (many sensors can be connected
-		   to this socket)
-    
+		   to this socket)    
  */
 /*! \def SENS_SOCKET4A
     \brief Sensor types. Socket4A sensor in this case (many sensors can be connected
-		   to this socket)
-    
- */
-/*! \def SENS_SOCKET4B
-    \brief Sensor types. Socket4B sensor in this case (many sensors can be connected
-		   to this socket)
-    
+		   to this socket)    
  */
 /*! \def SENS_SOCKET4C
     \brief Sensor types. Socket4C sensor in this case (many sensors can be connected

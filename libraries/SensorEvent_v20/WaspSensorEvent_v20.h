@@ -206,8 +206,15 @@ class WaspSensorEvent_v20
 
 	//! Variable : specifies the sensor that has generated the interruption
   	/*!
-	It specifies the socket that has generated the interruption, activating the corresponding flag position using the 'SENS_SOCKETX' definitions (X range [1-8])
-	\sa SENS_SOCKET4, SENS_SOCKET3, SENS_SOCKET6, SENS_SOCKET5, SENS_SOCKET1, SENS_SOCKET2, SENS_SOCKET7, SENS_SOCKET8
+	It specifies the socket that has generated the interruption, activating the 
+	corresponding flag position using the 'SENS_SOCKETX' definitions 
+	(X range [1-8])
+	\sa SENS_SOCKET4, SENS_SOCKET3, SENS_SOCKET6, SENS_SOCKET5, SENS_SOCKET1, 
+	SENS_SOCKET2, SENS_SOCKET7, SENS_SOCKET8
+		 _______________________________________________
+		|     |     |     |     |     |     |     |     |
+		| S_8 | S_7 | S_2 | S_1 | S_5 | S_6 | S_3 | S_4 |
+		|_____|_____|_____|_____|_____|_____|_____|_____|
    	*/
 	uint8_t	intFlag;
 

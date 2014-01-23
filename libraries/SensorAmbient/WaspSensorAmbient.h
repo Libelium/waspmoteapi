@@ -1,7 +1,7 @@
 /*! \file WaspSensorAmbient.h
     \brief Library for environmental Sensors
     
-    Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.9
+    Version:		1.0
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova
 
@@ -41,6 +41,12 @@
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
+
+/*! \def AMBIENT_DEBUG
+    \brief Debug mode definition    
+ */
+#define SENS_AMBIENT_DEBUG
+
 
 /*! \def SENS_AMBIENT_LDR_OUT
     \brief Sensor types. Pluviometer sensor in this case (two sensors may be connected to this socket)
@@ -255,8 +261,7 @@ class WaspSensorAmbient
 	//! It reads the Lux Sensor
   	/*!
 	\return the value returned by the sensor
-	 */
-	//TSL2561(uint8_t addr);
+	 */	
 	boolean begin(void);
 	void enable(void);
 	void disable(void);
@@ -267,7 +272,7 @@ class WaspSensorAmbient
 	void setGain(tsl2561Gain_t gain);
 	uint16_t getLuminosity (uint8_t channel);
 	uint32_t getFullLuminosity ();
-	float TSL2561(uint8_t addr);
+	void TSL2561(uint8_t addr);
 	float readLUXbright(void);
 	float readLUXmedium(void);
 	float readLUXdim(void);

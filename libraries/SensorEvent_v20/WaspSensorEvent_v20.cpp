@@ -231,7 +231,7 @@ float	WaspSensorEvent_v20::readValue(uint8_t sensor, uint8_t type)
 		case 	SENS_FLOW_FS200 :	
 		case 	SENS_FLOW_FS400	:	aux = flowReading(type);
 									break;
-		case 	SENS_TEMPERATURE:	if(sensor = SENS_SENSIRION)
+		case 	SENS_TEMPERATURE:	if(sensor == SENS_SENSIRION)
 									{
 										aux = readSensirion(SENSIRION_TEMP);
 									} else
@@ -240,7 +240,7 @@ float	WaspSensorEvent_v20::readValue(uint8_t sensor, uint8_t type)
 										aux = ( aux - 0.5 )* 100;
 									}
 									break;
-		case 	SENS_HUMIDITY	:	if(sensor = SENS_SENSIRION)
+		case 	SENS_HUMIDITY	:	if(sensor == SENS_SENSIRION)
 									{
 										aux = readSensirion(SENSIRION_HUM);
 									} else
