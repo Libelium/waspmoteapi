@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -88,6 +88,8 @@ uint8_t WaspPWR::getIPF()
 /* setSensorPower( type, mode) - set ON/OFF 3V3 or 5V switches
  *
  * It sets ON/OFF 3V3 or 5V switches
+ * type: SENS_3V3 or SENS_5V
+ * mode: SENS_ON or SENS_OFF
  */
 void WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
 {
@@ -96,12 +98,34 @@ void WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
 	
 	switch( type )
 	{
-		case SENS_3V3: 	if(mode==SENS_ON) digitalWrite(SENS_PW_3V3,HIGH);
-		else if(mode==SENS_OFF) digitalWrite(SENS_PW_3V3,LOW);
-		break;
-		case SENS_5V:	if(mode==SENS_ON) digitalWrite(SENS_PW_5V,HIGH);
-		else if(mode==SENS_OFF) digitalWrite(SENS_PW_5V,LOW);
-		break;
+		case SENS_3V3: 	
+						if( mode == SENS_ON ) 
+						{
+							digitalWrite(SENS_PW_3V3,HIGH);
+							WaspRegister |= REG_3V3;
+						}
+						else if( mode == SENS_OFF ) 
+						{
+							digitalWrite(SENS_PW_3V3,LOW);
+							WaspRegister &= ~REG_3V3;
+							
+						}						
+						break;
+						
+		case SENS_5V:	
+						if( mode == SENS_ON ) 
+						{
+							digitalWrite(SENS_PW_5V,HIGH);
+							WaspRegister |= REG_5V;
+						}
+						else if( mode == SENS_OFF ) 
+						{
+							digitalWrite(SENS_PW_5V,LOW);
+							WaspRegister &= ~REG_5V;
+						}
+						break;
+						
+		default:		break;
 	}
 }
 
@@ -110,8 +134,10 @@ void WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
  *
  * It enables or disables watchdog interruption.
  *
- * 'mode' --> if mode=WTD_ON, it enables watchdog interruption. If mode=WTD_OFF, it disables watchdog interruption.
- * 'timer' --> it specifies the time before the watchdog activates the interruption. Possible values are:
+ * 'mode' --> if mode=WTD_ON, it enables watchdog interruption. If mode=WTD_OFF, 
+ * it disables watchdog interruption.
+ * 'timer' --> it specifies the time before the watchdog activates the 
+ * interruption. Possible values are:
  * 	WTD_16MS	0
  *	WTD_32MS	1
  *	WTD_64MS	2
@@ -162,8 +188,8 @@ void WaspPWR::switchesOFF(uint8_t option)
 	
 	// Disable MEM_PW and SS_PIN not to waste 
 	// battery from SD when Waspmote is asleep
-  	pinMode(SS_PIN, OUTPUT);
-	digitalWrite(SS_PIN, LOW);	
+  	pinMode(SD_SS, OUTPUT);
+	digitalWrite(SD_SS, LOW);	
 	pinMode(MEM_PW,OUTPUT);
 	digitalWrite(MEM_PW,LOW);
 		

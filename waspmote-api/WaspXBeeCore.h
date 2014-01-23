@@ -1,7 +1,7 @@
 /*! \file WaspXBeeCore.h
     \brief Library for managing the XBee modules
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Yuri Carmona
 
@@ -44,11 +44,7 @@
 #include <inttypes.h>
 
 // SD Utilities
-#include <Sd2Card.h>
-#include <Sd2Fat.h>
-#include <Sd2FatStructs.h>
-#include <Sd2Info.h>
-#include <Sd2PinMap.h>
+#include <WaspSD.h>
 
 
 
@@ -618,6 +614,18 @@ extern volatile unsigned long _serial_id;
  */
 class WaspXBeeCore
 {
+	
+private:
+	
+	//! Variable : firm_file is used for OTA new firmware file
+	/*!    
+	*/
+	SdFile firm_file;
+
+	//! Variable : boot_file is used for OTA boot.txt file
+	/*!    
+	*/
+	SdFile boot_file;
 
 public:
 	  
@@ -871,6 +879,12 @@ public:
     \return '0' on success, '1' otherwise
      */
     uint8_t setPowerLevel(uint8_t value);
+    	
+    //! It gets the power level at which RF module transmits
+  	/*!
+    \return '0' on success, '1' otherwise, '2' if command not executed
+     */  
+    uint8_t getPowerLevel();
 	
 	//! It gets the Received Signal Strength Indicator
   	/*!

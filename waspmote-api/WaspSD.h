@@ -1,7 +1,7 @@
 /*! \file WaspSD.h
     \brief Library for managing the SD Card
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
@@ -38,15 +38,21 @@
 #include <inttypes.h>
 
 // Include FAT16 libraries/utilities
-#include "Sd2Card.h"
-#include "Sd2PinMap.h"
-#include "Sd2Fat.h"
-#include "Sd2Info.h"
+#include <sd_utilities/Sd2Card.h>
+#include <sd_utilities/SdVolume.h>
+#include <sd_utilities/SdFile.h>
+#include <sd_utilities/SdFat.h>
+#include <sd_utilities/SdInfo.h>
 
 /*******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
  
+/*! \def SD_DEBUG
+    \brief Uncomment this definition to enable the DEBUG mode in some functions
+*/
+//~ #define SD_DEBUG
+
 /*! \def FILESYSTEM_LINUX
     \brief determines the type of EOL character, uncomment for Windows, leave for LIN/MAC
 */
@@ -145,11 +151,27 @@ class WaspSD
 private:
 
 
+	//! Variable : volume is used as volume to open the SD card	
+	/*!    
+	*/
+	SdVolume volume;
+	
+	//! Variable : root is used for SD card's root directory file
+	/*!    
+	*/
+	void setFileDate();	
+
+
 public:
 
 	/***************************************************************************
 	* Class Attributes
 	***************************************************************************/
+	
+	//! Variable : root is used for SD card's root directory file
+	/*!    
+	*/
+	SdFile root;	
 
 	//! Variable : buffer containing the information coming from the 
 	//! card used to avoid calls to UART functions inside the library. 
@@ -655,13 +677,16 @@ public:
 	\return '1' on success, '0' otherwise
 	*/
 	uint8_t writeEndOfLine(const char* filepath);
+	
+	bool format();
   
 
 };
 
 /// END FUNCTIONS //////////////////////////////////////////////////////
 
-extern WaspSD SD;
+extern WaspSD SD;	
+
 
 #endif
 

@@ -62,6 +62,9 @@ WaspSensorCities::WaspSensorCities()
 	digitalWrite(15,LOW);
 	digitalWrite(SENS_PW_3V3,LOW);
 	digitalWrite(SENS_PW_5V,LOW);
+	
+	// update Waspmote Control Register
+	WaspRegister |= REG_CITIES;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -98,15 +101,17 @@ int8_t	WaspSensorCities::setBoardMode(uint8_t mode)
 {
 	switch( mode )
 	{
-		case	SENS_ON :	digitalWrite(SENS_PW_3V3,HIGH);
-							digitalWrite(SENS_PW_5V,HIGH);
+		case	SENS_ON :	// switch on the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_ON);
+							PWR.setSensorPower(SENS_5V, SENS_ON);
 							// Sets RTC on to enable I2C
 							if(!RTC.isON) RTC.setMode(RTC_ON, RTC_I2C_MODE);
 							break;
-		case	SENS_OFF:	digitalWrite(SENS_PW_3V3,LOW);
-							digitalWrite(SENS_PW_5V,LOW);
+		case	SENS_OFF:	// switch off the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_OFF);
+							PWR.setSensorPower(SENS_5V, SENS_OFF);
 							break;
-		deafult			:	return 0;
+		default			:	return 0;
 	}
 	
 	return 1;
@@ -142,8 +147,7 @@ void WaspSensorCities::setAudioGain(uint8_t value1, float value2)
 	Wire.beginTransmission(B0101110);
 	Wire.send(B00000000);
 	Wire.send(ampli);
-	Wire.endTransmission();
-	delay(DELAY_TIME);
+	Wire.endTransmission();	
 
 	// value2 range: from 1.056 to 5.0
 	if(value2 > 5.0)
@@ -160,7 +164,6 @@ void WaspSensorCities::setAudioGain(uint8_t value1, float value2)
 	Wire.send(ampli);
 	Wire.endTransmission();
 
-	delay(DELAY_TIME);
 	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
@@ -322,7 +325,7 @@ int8_t	WaspSensorCities::setSensorMode(uint8_t mode, uint16_t sensor)
  */
 float	WaspSensorCities::readValue(uint16_t sensor)
 {
-	readValue(sensor, 0);
+	return readValue(sensor, 0);
 }
 
 /*	readValue: Reads the analog to digital converter input indicated of the given
@@ -426,10 +429,7 @@ void	WaspSensorCities::detachInt()
  * 
  */
 uint8_t	WaspSensorCities::loadInt() 
-{
-	uint8_t a=0;
-	uint8_t aux=0;
-	
+{		
 	intFlag=0;
 	
 	delay(1);
@@ -519,7 +519,7 @@ float WaspSensorCities::readTempDS1820()
 	{
 		//no more sensors on chain, reset search
 		USB.ON();
-		USB.println("no more sensors");
+		USB.println(F("no more sensors"));
 		OneWireTemp.reset_search();
 		return -1000;
 	}
@@ -527,14 +527,14 @@ float WaspSensorCities::readTempDS1820()
 	if ( WaspOneWire::crc8( addr, 7) != addr[7]) 
 	{
 		USB.ON();
-		USB.println("CRC is not valid!");
+		USB.println(F("CRC is not valid!"));
 		return -1000;
 	}
 
 	if ( addr[0] != 0x10 && addr[0] != 0x28)
 	{
 		USB.ON();
-		USB.println("Device is not recognized");
+		USB.println(F("Device is not recognized"));
 		return -1000;
 	}
 
@@ -543,7 +543,7 @@ float WaspSensorCities::readTempDS1820()
 	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
     delay(750);
 
-	byte present = OneWireTemp.reset();
+	OneWireTemp.reset();
 	
 	OneWireTemp.select(addr);
 	

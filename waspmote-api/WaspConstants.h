@@ -270,6 +270,72 @@
 
 
 /*******************************************************************************
+ * WASPMOTE CONTROL REGISTER FOR POWER SUPPLIES AND MODULES 
+   ______________________________________________
+  |       |         |       |           |        |
+  | Video | Parking | Proto | Radiation | Cities |
+  |_______|_________|_______|___________|________|
+     12        11      10         9         8
+   ________________________________________________________________________
+  |        |       |             |          |         |         |     |    |
+  | Events | Gases | Agriculture | Metering | Socket1 | Socket0 | 3V3 | 5V |
+  |________|_______|_____________|__________|_________|_________|_____|____|
+      7        6          5            4         3         2       1     0  
+
+ ******************************************************************************/
+
+/*! \def REG_5V
+    \brief Bit dedicated to the 5V power supply
+ */
+/*! \def REG_3V3
+    \brief Bit dedicated to 
+ */
+/*! \def REG_SOCKET0
+    \brief 
+ */
+/*! \def REG_SOCKET1
+    \brief 
+ */
+/*! \def REG_METERING
+    \brief 
+ */
+/*! \def REG_AGRICULTURE
+    \brief 
+ */
+/*! \def REG_GASES
+    \brief 
+ */
+/*! \def REG_CITIES
+    \brief 
+ */
+/*! \def REG_RADIATION
+    \brief 
+ */
+/*! \def REG_PROTOTYPING
+    \brief 
+ */
+/*! \def REG_PARKING
+    \brief 
+ */
+/*! \def REG_VIDEO_CAMERA
+    \brief 
+ */
+#define	REG_5V				1 
+#define	REG_3V3				2 
+#define	REG_SOCKET0			4 
+#define	REG_SOCKET1			8 
+#define	REG_METERING		16 
+#define	REG_AGRICULTURE		32 
+#define	REG_GASES			64 
+#define	REG_EVENTS			128
+#define	REG_CITIES			256
+#define	REG_RADIATION		512
+#define	REG_PROTOTYPING		1024
+#define	REG_PARKING			2048
+#define	REG_VIDEO_CAMERA	4096
+
+
+/*******************************************************************************
  * SOCKETS
  ******************************************************************************/
 
@@ -322,11 +388,6 @@
 #define	SENS_3V3	0
 #define	SENS_5V		1
 
-
-/*! \def DELAY_TIME
-    \brief dealy time used in sensor boards    
- */
-#define DELAY_TIME	500
 
 /*! \def boolean
     \brief boolean is defined as a uint8_t  

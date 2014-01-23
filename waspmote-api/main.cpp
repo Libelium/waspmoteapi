@@ -3,11 +3,6 @@ volatile unsigned long _serial_id;
 
 int main(void)
 {
-	
-	pinMode(HIB_PIN, OUTPUT);
-	digitalWrite(HIB_PIN,HIGH);
-	pinMode(RTC_SLEEP, OUTPUT);
-	digitalWrite(RTC_SLEEP,HIGH);
 	init();
 
 	// get serial id

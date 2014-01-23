@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -31,7 +31,7 @@
 
 /// table_CORE /////////////////////////////////////////////////////////////////
 
-const char   get_own_mac_low[]	PROGMEM	= 	"7E00040852534C06"; 	// AT+SL
+const char get_own_mac_low[]	PROGMEM	= 	"7E00040852534C06"; 	// AT+SL
 const char get_own_mac_high[] 	PROGMEM	= 	"7E0004085253480A"; 	// AT+SH
 const char set_own_net_address[] PROGMEM = 	"7E000608524D59000000";	// AT+MY
 const char get_own_net_address[] PROGMEM = 	"7E000408524D59FF";		// AT+MY
@@ -39,43 +39,44 @@ const char set_baudrate[] 		PROGMEM = 	"7E0005085242440000";	// AT+BD
 const char set_api_mode[] 		PROGMEM = 	"7E0005085241500000";	// AT+AP
 const char set_api_options[] 	PROGMEM = 	"7E00050852414F0000";	// AT+AO
 const char set_pan[] 			PROGMEM = 	"7E000608524944000000";	// AT+ID
-const char set_pan_zb[] 			PROGMEM = 	"7E000C08524944000000000000000000";	// AT+ID
+const char set_pan_zb[] 		PROGMEM = 	"7E000C08524944000000000000000000";	// AT+ID
 const char get_pan[] 			PROGMEM = 	"7E00040852494418";		// AT+ID
 const char set_sleep_mode_xbee[] PROGMEM = 	"7E00050852534D0000";	// AT+SM
 const char get_sleep_mode_xbee[] PROGMEM = 	"7E00040852534D05";		// AT+SM
-const char set_awake_time[] 		PROGMEM = 	"7E000608525354000000";		// AT+ST
+const char set_awake_time[] 	PROGMEM = 	"7E000608525354000000";		// AT+ST
 const char set_awake_time_DM[] 	PROGMEM = 	"7E00070852535400000000";	// AT+ST
-const char set_sleep_time[] 		PROGMEM = 	"7E000608525350000000";		// AT+SP
+const char set_sleep_time[] 	PROGMEM = 	"7E000608525350000000";		// AT+SP
 const char set_sleep_time_DM[] 	PROGMEM = 	"7E00070852535000000000";	// AT+SP
 const char set_channel[] 		PROGMEM = 	"7E0005085243480000";	// AT+CH
 const char get_channel[] 		PROGMEM = 	"7E0004085243481A";		// AT+CH
-const char get_NI[] 				PROGMEM = 	"7E000408524E490E";		// AT+NI
+const char get_NI[] 			PROGMEM = 	"7E000408524E490E";		// AT+NI
 const char set_scanning_time[] 	PROGMEM = 	"7E000508524E540000";	// AT+NT
-const char set_scanning_time_DM[] PROGMEM = 	"7E000608524E54000000";	// AT+NT
+const char set_scanning_time_DM[] PROGMEM = "7E000608524E54000000";	// AT+NT
 const char get_scanning_time[] 	PROGMEM = 	"7E000408524E5403";		// AT+NT
-const char set_discov_options[] 	PROGMEM = 	"7E000508524E4F0000";	// AT+NO
-const char get_discov_options[] 	PROGMEM = 	"7E000408524E4F08";		// AT+NO
+const char set_discov_options[] PROGMEM = 	"7E000508524E4F0000";	// AT+NO
+const char get_discov_options[] PROGMEM = 	"7E000408524E4F08";		// AT+NO
 const char write_values[] 		PROGMEM = 	"7E000408525752FC";		// AT+WR
-const char set_scanning_channel[] PROGMEM = 	"7E000608525343000000";	// AT+SC
-const char get_scanning_channel[] PROGMEM = 	"7E0004085253430F";		// AT+SC
+const char set_scanning_channel[] PROGMEM = "7E000608525343000000";	// AT+SC
+const char get_scanning_channel[] PROGMEM = "7E0004085253430F";		// AT+SC
 const char get_duration_energy[] PROGMEM = 	"7E0004085253440E";		// AT+SD
 const char set_link_key[] 		PROGMEM = 	"7E001408524B590000000000000000000000000000000000";	// AT+KY
-const char set_encryption[] 		PROGMEM = 	"7E0005085245450000";	// AT+EE
-const char get_encryption[] 		PROGMEM = 	"7E0004085245451B";		// AT+EE
+const char set_encryption[] 	PROGMEM = 	"7E0005085245450000";	// AT+EE
+const char get_encryption[] 	PROGMEM = 	"7E0004085245451B";		// AT+EE
 const char set_power_level[] 	PROGMEM = 	"7E00050852504C0000";	// AT+PL
+const char get_power_level[] 	PROGMEM = 	"7E00040852504C09";		// AT+PL
 const char get_RSSI[] 			PROGMEM = 	"7E0004085244421F";		// AT+DB
 const char get_hard_version[] 	PROGMEM = 	"7E00040852485607";		// AT+HV
 const char get_soft_version[] 	PROGMEM = 	"7E000408525652FD";		// AT+VR
 const char set_RSSI_time[] 		PROGMEM = 	"7E0005085252500000";	// AT+RP
 const char get_RSSI_time[] 		PROGMEM	= 	"7E00040852525003";		// AT+RP
 const char apply_changes[] 		PROGMEM = 	"7E00040852414321";		// AT+AC
-const char reset_xbee[] 			PROGMEM = 	"7E0004085246520D";		// AT+FR
+const char reset_xbee[] 		PROGMEM = 	"7E0004085246520D";		// AT+FR
 const char reset_defaults_xbee[] PROGMEM = 	"7E0004085252450E";		// AT+RE
 const char set_sleep_options_xbee[] PROGMEM = "7E00050852534F0000";	// AT+SO
 const char get_sleep_options_xbee[] PROGMEM = "7E00040852534F03";	// AT+SO
 const char scan_network	[] 		PROGMEM = 	"7E000408524E4413";		// AT+ND
 const char set_duration_energy[] PROGMEM = 	"7E0005085245440000"; 	// AT+ED
-const char set_duration_energy_ZB[] PROGMEM=	"7E0005085253440000"; 	// AT+SD
+const char set_duration_energy_ZB[] PROGMEM="7E0005085253440000"; 	// AT+SD
 const char get_low_dest_address[] PROGMEM =	"7E00040852444C15"; 	// AT+DL
 
 const char* const table_CORE[] PROGMEM= 	  
@@ -112,20 +113,21 @@ const char* const table_CORE[] PROGMEM=
 	set_encryption,			// 29
 	get_encryption,			// 30
 	set_power_level,		// 31
-	get_RSSI,				// 32
-	get_hard_version,		// 33
-	get_soft_version,		// 34
-	set_RSSI_time,			// 35
-	get_RSSI_time,			// 36
-	apply_changes,			// 37
-	reset_xbee,				// 38
-	reset_defaults_xbee,	// 39
-	set_sleep_options_xbee,	// 40
-	get_sleep_options_xbee,	// 41
-	scan_network,			// 42
-	set_duration_energy,	// 43
-	set_duration_energy_ZB,	// 44  
-	get_low_dest_address,	// 45	
+	get_power_level,		// 32
+	get_RSSI,				// 33
+	get_hard_version,		// 34
+	get_soft_version,		// 35
+	set_RSSI_time,			// 36
+	get_RSSI_time,			// 37
+	apply_changes,			// 38
+	reset_xbee,				// 39
+	reset_defaults_xbee,	// 40
+	set_sleep_options_xbee,	// 41
+	get_sleep_options_xbee,	// 42
+	scan_network,			// 43
+	set_duration_energy,	// 44
+	set_duration_energy_ZB,	// 45  
+	get_low_dest_address,	// 46	
 };
 
 
@@ -1490,6 +1492,43 @@ uint8_t WaspXBeeCore::setPowerLevel(uint8_t value)
     return error;
 }
 
+
+/*
+ Function: Get the power level at which the RF module transmits
+ Returns: Integer that determines if there has been any error 
+   error=2 --> The command has not been executed
+   error=1 --> There has been an error while executing the command
+   error=0 --> The command has been executed with no errors
+ Values: Read the PL command. Stores in global "powerLevel" the power level at 
+		 which RF tx
+ Parameters:
+   value: power level of transmission (0-4)
+*/
+uint8_t WaspXBeeCore::getPowerLevel()
+{
+    int8_t error=2;
+    char buffer[20];
+    
+    if(protocol!=XBEE_900)
+    {
+        error_AT=2;
+        
+        // get_power_level
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[31])));
+		if(buffer==NULL) return 1;
+
+		gen_data(buffer);
+		error=gen_send(buffer);
+    }
+    
+    if(!error)
+    {
+        powerLevel=data[0];
+    }
+    return error;
+}
+
+
 /*
  Function: Get the Received Signal Strength Indicator of the last received packet
  Returns: Returns: Integer that determines if there has been any error 
@@ -1510,7 +1549,7 @@ uint8_t WaspXBeeCore::getRSSI()
         error_AT=2;
 		
 		// get_RSSI
-        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[32])));
+        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[33])));
         if(buffer==NULL) return 1;
 
         gen_data(buffer);
@@ -1573,7 +1612,7 @@ uint8_t WaspXBeeCore::getHardVersion()
     char buffer[20];
     error_AT=2;
 
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[33])));//get_hard_version
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[34])));//get_hard_version
     if(buffer==NULL) return 1;
 
     gen_data(buffer);
@@ -1602,7 +1641,7 @@ uint8_t WaspXBeeCore::getSoftVersion()
     error_AT=2;
 
 	// get_soft_version
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[34])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[35])));
     if(buffer==NULL) return 1;
 
     gen_data(buffer);
@@ -1633,7 +1672,7 @@ uint8_t WaspXBeeCore::setRSSItime(uint8_t time)
     
     error_AT=2;
 
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[35])));//set_RSSI_time
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[36])));//set_RSSI_time
     if(buffer==NULL) return 1;
 
     gen_data(buffer,time);
@@ -1661,7 +1700,7 @@ uint8_t WaspXBeeCore::getRSSItime()
     
     error_AT=2;
 
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[36])));//get_RSSI_time
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[37])));//get_RSSI_time
     if(buffer==NULL) return 1;
 
     gen_data(buffer);
@@ -1688,7 +1727,7 @@ uint8_t WaspXBeeCore::applyChanges()
     error_AT=2;
     
 	// apply_changes
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[37])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[38])));
     if(buffer==NULL) return 1;
     
     gen_data(buffer);
@@ -1712,7 +1751,7 @@ uint8_t WaspXBeeCore::reset()
     error_AT=2;
 
 	// reset_xbee
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[38])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[39])));
     if(buffer==NULL) return 1;
     
     gen_data(buffer);
@@ -1735,7 +1774,7 @@ uint8_t WaspXBeeCore::resetDefaults()
     error_AT=2;
 
 	// reset_defaults_xbee
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[39])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[40])));
     if(buffer==NULL) return 1;
     
     gen_data(buffer);
@@ -1764,7 +1803,7 @@ uint8_t WaspXBeeCore::setSleepOptions(uint8_t soption)
         error_AT=2;
 
 		// set_sleep_options_xbee
-        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[40])));
+        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[41])));
         if(buffer==NULL) return 1;
 
         gen_data(buffer,soption);
@@ -1798,7 +1837,7 @@ uint8_t WaspXBeeCore::getSleepOptions()
     char buffer[20];
 
 	// get_sleep_options_xbee
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[41])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[42])));
     if(buffer==NULL) return 1;
         
     if( (protocol==ZIGBEE) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) )
@@ -1836,7 +1875,7 @@ uint8_t WaspXBeeCore::scanNetwork()
     error_AT=2;
  
 	// scan_network
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[42]))); 
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[43]))); 
     if(buffer==NULL) return 1;
 
     totalScannedBrothers=0;
@@ -1871,7 +1910,7 @@ uint8_t WaspXBeeCore::setDurationEnergyChannels(uint8_t duration)
         error_AT=2;
 
 		// set_duration_energy  
-        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[43])));     
+        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[44])));     
 
         gen_data(buffer,duration);
         gen_checksum(buffer);
@@ -1882,7 +1921,7 @@ uint8_t WaspXBeeCore::setDurationEnergyChannels(uint8_t duration)
         error_AT=2;
         
         // set_duration_energy_ZB
-        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[44])));
+        strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[45])));
         
         gen_data(buffer,duration);
         gen_checksum(buffer);
@@ -1930,7 +1969,7 @@ uint8_t WaspXBeeCore::getDestinationAddress(uint8_t* naD)
     error_AT=2;
 
 	// get_low_dest_address
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[45])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[46])));
     if(buffer==NULL) return 1;     
 
     gen_data(buffer);
@@ -3935,7 +3974,7 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
         {
 			//timeout
 			timeout2=1;
-		}        
+		}  	  
     }     
            	
 	// Store number of received bytes in "num_data"	
@@ -5148,7 +5187,7 @@ uint8_t WaspXBeeCore::new_firmware_received()
 		// close SD files
 		boot_file.close();		
 		firm_file.close();		
-		root.close();
+		SD.root.close();
 					
 		// init SD card	and local flag		
 		if(SD.ON())
@@ -5172,12 +5211,12 @@ uint8_t WaspXBeeCore::new_firmware_received()
 		if( !error_sd )
 		{
 			// create firmware file: 2 trials
-			if( !firm_file.open(&root, firm_info.name_file, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND) )
+			if( !firm_file.open(&SD.root, firm_info.name_file, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND) )
 			{
 				// in the case it failed in first place, try it again
-				firm_file.remove(&root,firm_info.name_file);				
-				if(!firm_file.open(&root, firm_info.name_file, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND))
-				{					
+				firm_file.remove(&SD.root,firm_info.name_file);				
+				if(!firm_file.open(&SD.root, firm_info.name_file, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND))
+				{	
 					error_sd=true;
 				}
 			}
@@ -5307,7 +5346,7 @@ void WaspXBeeCore::new_firmware_packets()
 				{
 					// skip programming mode:
 					programming_ON=0;
-					firm_file.remove(&root,firm_info.name_file);
+					firm_file.remove(&SD.root,firm_info.name_file);
 					firm_info.packets_received=0;
 					firm_info.paq_disordered=0;
 					setMulticastConf();
@@ -5332,7 +5371,7 @@ void WaspXBeeCore::new_firmware_packets()
 				{
 					// if more than one packet is lost, then stop OTA process
 					programming_ON=0;
-					firm_file.remove(&root,firm_info.name_file);
+					firm_file.remove(&SD.root,firm_info.name_file);
 					firm_info.packets_received=0;
 					firm_info.paq_disordered=0;
 					setMulticastConf();					
@@ -5443,7 +5482,7 @@ void WaspXBeeCore::new_firmware_end()
 				firm_file.close();
 				delay(10);
 				
-				if(!firm_file.open(&root, firm_info.name_file, O_READ))
+				if(!firm_file.open(&SD.root, firm_info.name_file, O_READ))
 				{
 					send_ok = false;
 				}
@@ -5468,9 +5507,9 @@ void WaspXBeeCore::new_firmware_end()
 		firm_info.packets_received=0;
 
 		// open BOOT.TXT
-		if(!boot_file.open(&root, BOOT_LIST, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND) )
+		if(!boot_file.open(&SD.root, BOOT_LIST, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND) )
 		{
-			if(!boot_file.open(&root, BOOT_LIST, O_WRITE | O_SYNC | O_APPEND)) error_sd=true;
+			if(!boot_file.open(&SD.root, BOOT_LIST, O_WRITE | O_SYNC | O_APPEND)) error_sd=true;
 		}
 					
 		// write program ID into file
@@ -5541,7 +5580,7 @@ void WaspXBeeCore::new_firmware_end()
 	}		
 	else
 	{
-		firm_file.remove(&root,firm_info.name_file);
+		firm_file.remove(&SD.root,firm_info.name_file);
 		programming_ON=0;
 		firm_info.packets_received=0;
 		
@@ -5593,7 +5632,7 @@ void WaspXBeeCore::new_firmware_end()
 	// close SD files
 	boot_file.close();	
 	firm_file.close();	
-	root.close();
+	SD.root.close();
 		
 	sd_on=0;
 }
@@ -5650,7 +5689,7 @@ void WaspXBeeCore::upload_firmware()
 			// init SD card			
 			SD.ON();
 			
-			if(boot_file.open(&root, BOOT_LIST, O_READ))
+			if(boot_file.open(&SD.root, BOOT_LIST, O_READ))
 			{
 				sd_on=1;
 				error_sd=false;
@@ -5660,7 +5699,7 @@ void WaspXBeeCore::upload_firmware()
 	
 		if( !error_sd )
 		{
-			if(boot_file.open(&root, BOOT_LIST, O_READ))
+			if(boot_file.open(&SD.root, BOOT_LIST, O_READ))
 			{
 				// get the pid from the received packet
 				for(it=0;it<32;it++)
@@ -5720,7 +5759,7 @@ void WaspXBeeCore::upload_firmware()
 				}
 				firm_info.name_file[it]='\0';
 			
-				if(!firm_file.open(&root, firm_info.name_file, O_READ))
+				if(!firm_file.open(&SD.root, firm_info.name_file, O_READ))
 				{
 					id_exist=false;
 				}
@@ -5786,7 +5825,7 @@ void WaspXBeeCore::upload_firmware()
 			// close SD files
 			boot_file.close();				
 			firm_file.close();				
-			root.close();
+			SD.root.close();
 		
 			sd_on=0;
 			
@@ -5864,7 +5903,7 @@ void WaspXBeeCore::upload_firmware()
 			// close SD files
 			boot_file.close();				
 			firm_file.close();				
-			root.close();
+			SD.root.close();
 		
 			sd_on = 0;	
 			
@@ -6016,7 +6055,7 @@ void WaspXBeeCore::request_bootlist()
 	
 		if( sd_on )
 		{
-			if(boot_file.open(&root, BOOT_LIST, O_READ))
+			if(boot_file.open(&SD.root, BOOT_LIST, O_READ))
 			{
 				previous=millis();
 				
@@ -6082,7 +6121,7 @@ void WaspXBeeCore::request_bootlist()
 				// close SD files
 				boot_file.close();				
 				firm_file.close();				
-				root.close();
+				SD.root.close();
 		
 				sd_on=0;
 				
@@ -6213,7 +6252,7 @@ void WaspXBeeCore::checkNewProgram()
 	char buffer[33];
 	char data[70];
 	    
-	pinMode(SPI_SCK_PIN, INPUT);
+	pinMode(SD_SCK, INPUT);
 	for(it=0;it<32;it++)
 	{
 		current_ID[it]= Utils.readEEPROM(it+34);
@@ -6427,17 +6466,17 @@ void WaspXBeeCore::delete_firmware()
 			file_to_delete[7]='\0';
 			
 			// Open boot list
-			if(boot_file.open(&root, BOOT_LIST, O_READ))
+			if(boot_file.open(&SD.root, BOOT_LIST, O_READ))
 			{
 				// Delete firmware file from SD
-				if(!firm_file.remove(&root, file_to_delete))
+				if(!firm_file.remove(&SD.root, file_to_delete))
 				{
 					error=true;
 				}
 				firm_file.close();
 				
 				// Create auxiliary file called FILEAUX using the firm_file object
-				if(!firm_file.open(&root, file_aux, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND)) 
+				if(!firm_file.open(&SD.root, file_aux, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND)) 
 				{
 					error=true;
 				}
@@ -6490,15 +6529,15 @@ void WaspXBeeCore::delete_firmware()
 				boot_file.close();
 				
 				// Delete previous boot_list
-				if(!boot_file.remove(&root,BOOT_LIST)) error=true;
+				if(!boot_file.remove(&SD.root,BOOT_LIST)) error=true;
 				
 				// Create a new boot_list file and copy the content of auxiliary file
-				if(!boot_file.open(&root, BOOT_LIST, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND) ) 
+				if(!boot_file.open(&SD.root, BOOT_LIST, O_WRITE | O_CREAT | O_EXCL | O_SYNC | O_APPEND) ) 
 				{
 					error=true;
 				}
 				
-				if(firm_file.open(&root, file_aux, O_READ))
+				if(firm_file.open(&SD.root, file_aux, O_READ))
 				{
 					previous=millis();
 					while( millis()-previous<60000 && !end_file)
@@ -6527,7 +6566,7 @@ void WaspXBeeCore::delete_firmware()
 						if( millis() < previous ) previous=millis(); 
 					}
 					firm_file.close();
-					firm_file.remove(&root,file_aux);
+					firm_file.remove(&SD.root,file_aux);
 				}
 				else error=true;
 			}
@@ -6629,7 +6668,7 @@ void WaspXBeeCore::delete_firmware()
 	// close SD files
 	boot_file.close();
 	firm_file.close();
-	root.close();
+	SD.root.close();
 
 	sd_on=0;	
 }
@@ -6698,7 +6737,7 @@ uint8_t WaspXBeeCore::checkOtapTimeout()
 		{
 			// Reach Timeout 
 			programming_ON=0;
-			firm_file.remove(&root,firm_info.name_file);
+			firm_file.remove(&SD.root,firm_info.name_file);
 			firm_info.packets_received=0;
 			firm_info.paq_disordered=0;
 			firm_info.already_init = 0;

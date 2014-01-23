@@ -146,13 +146,15 @@ unsigned long millis()
 	// disable interrupts while we read timer0_millis or we might get an
 	// inconsistent value (e.g. in the middle of a write to timer0_millis)
 	cli();
-	//~ m = timer0_overflow_count * 64UL * 2UL / (F_CPU / 128000UL);
-	// ¿¿¿¿¿¿¿¿avoid OVERFLOW when calculating???????
-	m = timer0_overflow_count / 9UL;
-	m = m * 10UL;
+	
+	//~ m = timer0_overflow_count * 64UL * 2UL / (F_CPU / 128000UL);	
+	/* We must do the cast to (unsigned long long) so as to avoid the overflow
+	 * when calculating the correct 'm' value after '*10UL'
+	 */
+	m = (unsigned long long)timer0_overflow_count *10UL / 9UL;
 	SREG = oldSREG;
 
-	return (unsigned long) m;
+	return (unsigned long)m;
 }
 
 unsigned long millisTim2()

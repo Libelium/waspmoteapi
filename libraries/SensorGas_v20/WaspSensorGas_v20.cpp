@@ -52,7 +52,10 @@ WaspSensorGas_v20::WaspSensorGas_v20()
 	digitalWrite(DIGITAL3,LOW);
 	digitalWrite(DIGITAL1,LOW);
 	digitalWrite(SENS_PW_3V3,LOW);
-	digitalWrite(SENS_PW_5V,LOW);
+	digitalWrite(SENS_PW_5V,LOW);	
+	
+	// update Waspmote Control Register
+	WaspRegister |= REG_GASES;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -90,13 +93,15 @@ int8_t	WaspSensorGas_v20::setBoardMode(uint8_t mode)
 {
 	switch( mode )
 	{
-		case	SENS_ON :	digitalWrite(SENS_PW_3V3,HIGH);
-							digitalWrite(SENS_PW_5V,HIGH);
+		case	SENS_ON :	// switch on the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_ON);
+							PWR.setSensorPower(SENS_5V, SENS_ON);
 							// Sets RTC on to enable I2C
 							if(!RTC.isON) RTC.setMode(RTC_ON, RTC_I2C_MODE);
 							break;
-		case	SENS_OFF:	digitalWrite(SENS_PW_3V3,LOW);
-							digitalWrite(SENS_PW_5V,LOW);
+		case	SENS_OFF:	// switch off the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_OFF);
+							PWR.setSensorPower(SENS_5V, SENS_OFF);
 							break;
 		default			:	return 0;
 	}
@@ -448,6 +453,55 @@ float WaspSensorGas_v20::calculateResistance(uint16_t sensor, float value, uint8
 	}
 	
 	return resistor;
+}
+
+/*	calculateConcentration: converts the resistance value read from one sensor into
+ * 					   		ppm or ppb using the calibration parameters of the sensor
+ *	Parameters:	int calibrationConcentration[3] : array containing the gas concentration
+ * 												  values at which the sensor was calibrated
+ * 				float calibrationOutput[3]		: sensor's output at the previous
+ * 												  concentration values
+ * 				float inputValue				: resistance of the sensor measured
+ *  Return:		float gasConcentration : concentration of gas measured by the sensor
+ * 										 in ppm or ppb
+ * 
+ */
+float WaspSensorGas_v20::calculateConcentration(	int calibrationConcentration[3],
+													float calibrationOutput[3],
+													float inputValue)
+{
+	float logx[4];
+	float logy[4];
+	float sumx;
+	float sumy;
+	float summul;
+	float sumxsqr;
+	float alpha;
+	float beta;
+	float gasConcentration;
+	int i;
+
+	for (i=0;i<3;i++)
+	{
+		logx[i]=log10(calibrationConcentration[i]);
+		logy[i]=log10(calibrationOutput[i]);
+	}
+	  
+	sumx = logx[0]+logx[1]+logx[2];
+	sumy = logy[0]+logy[1]+logy[2];
+	summul = logx[0]*logy[0] + logx[1]*logy[1] + logx[2]*logy[2];
+	sumxsqr = logx[0]*logx[0] + logx[1]*logx[1] + logx[2]*logx[2];
+
+	alpha = (3*summul - sumx*sumy) / (3*sumxsqr - sumx*sumx);
+	  
+	beta = sumy/3 - alpha * sumx/3;
+	beta = pow(10,beta);
+
+	gasConcentration=pow((inputValue/beta),(1/alpha));    
+
+	  
+	return gasConcentration;
+
 }
 // Private Methods //////////////////////////////////////////////////////////////
 

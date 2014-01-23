@@ -52,3 +52,9 @@ volatile	uint16_t	intConf;
 volatile 	uint8_t	intCounter;
 volatile 	uint8_t	intArray[8];
 
+
+/*! \def WaspRegister
+    \brief Bitmap used for managing the different modules and power supplies 
+    by different libraries
+ */
+volatile uint16_t WaspRegister;

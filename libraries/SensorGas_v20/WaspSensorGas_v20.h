@@ -302,6 +302,18 @@ class WaspSensorGas_v20
 	\return the resistance of the sensor as a float
 	 */
 	float calculateResistance(uint16_t sensor, float value, uint8_t gain, float load);
+	
+	//! It calculates the gas concentration from the sensor resistance 
+	//! using the calibration parameters of the sensor
+  	/*!
+	\param float calibrationConcentration : the gas concentrations in calibration
+	\param float calibrationOutput : the sensor output in each calibration point
+	\param float inputValue : the resistance of the sensor measured
+	\return the gas concentration
+	 */
+	float calculateConcentration(	int calibrationConcentration[3],
+									float calibrationOutput[3],
+									float inputValue);
 };
 
 extern WaspSensorGas_v20 SensorGasv20;

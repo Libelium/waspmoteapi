@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -28,6 +28,23 @@
 /*******************************************************************************
  * 
 *******************************************************************************/
+
+/*
+ * User provided date time callback function.
+ * See SdFile::dateTimeCallback() for usage.
+ */
+void dateTime(uint16_t* date, uint16_t* time) 
+{
+  // User gets date and time from GPS or real-time
+  // clock in real callback function
+  // return date using FAT_DATE macro to format fields
+  *date = FAT_DATE(RTC.year+2000, RTC.month, RTC.date);
+
+  // return time using FAT_TIME macro to format fields
+  *time = FAT_TIME(RTC.hour, RTC.minute, RTC.second);
+}
+
+
 
 /*  getNextPathComponent ( path, *p_offset, *buffer) - Parse individual 
  * path components from a path.
@@ -155,7 +172,7 @@ boolean walkPath(	char *filepath,
       break;
     }
     
-    boolean exists = (*p_child).open(*p_parent, buffer, O_RDONLY);
+    boolean exists = (*p_child).open(p_parent, buffer, O_RDONLY);
 
     // If it's one we've created then we
     // don't need the parent handle anymore.
@@ -214,7 +231,7 @@ boolean callback_pathExists(	SdFile& parentDir,
 
   SdFile child;
 
-  boolean exists = child.open(parentDir, filePathComponent, O_RDONLY);
+  boolean exists = child.open(&parentDir, filePathComponent, O_RDONLY);
   
   if (exists) {
      child.close(); 
@@ -241,7 +258,7 @@ boolean callback_makeDirPath(	SdFile& parentDir,
   
 	result = callback_pathExists(parentDir, filePathComponent, isLastComponent, object);
 	if (!result) {
-		result = child.makeDir(parentDir, filePathComponent);
+		result = child.makeDir(&parentDir, filePathComponent);
 	} 
   
 	return result;
@@ -259,7 +276,7 @@ boolean callback_remove(	SdFile& parentDir,
 							void *object) 
 {
 	if (isLastComponent) {
-		return SdFile::remove(parentDir, filePathComponent);
+		return SdFile::remove(&parentDir, filePathComponent);
 	}
 	return true;
 }
@@ -276,7 +293,7 @@ boolean callback_rmdir(	SdFile& parentDir,
 {
 	if (isLastComponent) {
 		SdFile f;
-		if (!f.open(parentDir, filePathComponent, O_READ)) return false;
+		if (!f.open(&parentDir, filePathComponent, O_READ)) return false;
 		return f.rmDir();
 	}
 	return true;
@@ -296,10 +313,10 @@ boolean callback_rmRfdir(	SdFile& parentDir,
 	if (isLastComponent) 
 	{
 		SdFile f;
-		if (!f.open(parentDir, filePathComponent, O_READ)) 
+		if (!f.open(&parentDir, filePathComponent, O_READ)) 
 		{
 			// delete possible "damaged" file			
-			SdFile::remove(parentDir, filePathComponent);			
+			SdFile::remove(&parentDir, filePathComponent);			
 			return false;
 		}
 		// remove all contents and directory			
@@ -340,8 +357,8 @@ WaspSD::WaspSD()
 uint8_t WaspSD::ON(void)
 {
 	// enable Chip select
-	pinMode(SS_PIN, OUTPUT);
-	digitalWrite(SS_PIN, LOW);	
+	pinMode(SD_SS, OUTPUT);
+	digitalWrite(SD_SS, LOW);	
 		
 	// mandatory delay
 	delay(100);	
@@ -463,8 +480,8 @@ void WaspSD::close()
 	root.close();	
   
 	// SD_SS (SD chip select) is disabled 
-  	pinMode(SS_PIN, OUTPUT);
-	digitalWrite(SS_PIN, HIGH);	
+  	pinMode(SD_SS, OUTPUT);
+	digitalWrite(SD_SS, HIGH);	
     
   	// switch SD off
 	pinMode(MEM_PW, OUTPUT);
@@ -593,6 +610,12 @@ char* WaspSD::print_disk_info()
  */
 boolean WaspSD::mkdir(char *filepath) 
 {
+	// Get the 5V and 3V3 power supply actual state
+	bool set5V = WaspRegister & REG_5V;
+	bool set3V3 = WaspRegister & REG_3V3;	
+	
+	// set date for directory creation
+	setFileDate();
 	
 	// check if the card is there or not
 	if (!isSD())
@@ -849,7 +872,7 @@ SdFile WaspSD::getDir(const char *filepath, int *index)
 		char subdirname[13];
 		strncpy(subdirname, filepath, idx);
 		subdirname[idx] = 0;
-
+		
 		// close the subdir (we reuse them) if open
 		subdir->close();
 		if (! subdir->open(parent, subdirname, O_READ)) 
@@ -872,7 +895,7 @@ SdFile WaspSD::getDir(const char *filepath, int *index)
 	// there isn't any '/' character left
 	// copy directory name in order to open it	
 	char * pch;	
-	char str[strlen(filepath)];
+	char str[strlen(filepath)+1];
 	strncpy(str,filepath, strlen(filepath));
 	str[strlen(filepath)]='\0';
 	pch = strtok (str,"/");
@@ -883,8 +906,8 @@ SdFile WaspSD::getDir(const char *filepath, int *index)
 	}
 	
 	// close the subdir (we reuse them) if open
-	subdir->close();
-	
+	subdir->close();	
+
 	if (! subdir->open(parent, pch, O_READ)) 
 	{
 		// failed to open one of the subdirectories		
@@ -977,7 +1000,7 @@ uint8_t WaspSD::openFile(const char* filepath, SdFile* file, uint8_t mode)
 	// there is a special case for the Root directory since its a static dir
 	if (parentdir.isRoot()) 
 	{
-		if ( ! file->open(root, filepath, mode)) 
+		if ( ! file->open(&root, filepath, mode)) 
 		{
 			// failed to open the file 			
 			return 0;
@@ -986,7 +1009,7 @@ uint8_t WaspSD::openFile(const char* filepath, SdFile* file, uint8_t mode)
 	} 
 	else 
 	{
-		if ( ! file->open(parentdir, filepath, mode)) 
+		if ( ! file->open(&parentdir, filepath, mode)) 
 		{			
 			return 0;
 		}
@@ -1232,10 +1255,13 @@ uint8_t* WaspSD::catBin(const char* filepath, int32_t offset, uint16_t scope)
 	
   	// Read first time from file, 'maxBuffer' bytes
 	uint8_t readRet = file.read(bufferSD, sizeof(bufferSD));
+	
+	// clear 'bufferBin'
+	memset(bufferBin, 0x00, sizeof(bufferBin) );
 
 	// second, read the data and store it in the buffer
 	// Breaks in the case it exceeds its size.
-	while(readRet > 0 && scope > 0 && cont < BIN_BUFFER_SIZE)
+	while( (readRet > 0) && (scope > 0) && (cont < BIN_BUFFER_SIZE) )
 	{
 		// Store data in buffer until scope ends, or 
 		// buffer size limit is exceeded 
@@ -1653,9 +1679,25 @@ boolean WaspSD::rmdir(const char* dirpath)
  *  
  */
 boolean WaspSD::rmRfDir(const char* dirpath)
-{  	
-	return walkPath((char*)dirpath, currentDir, callback_rmRfdir, NULL);
+{  
+	boolean answer = false;
+	answer = walkPath((char*)dirpath, currentDir, callback_rmRfdir, NULL);
+	
+	if(answer == false)
+	{
+		// if corrupted when a bad 'rmRfDir' call was done, 
+		// then try to delete the generated corrupted file
+		if( SD.isFile(dirpath) == true )
+		{	
+			answer = SD.del(dirpath);
+		}
+	}
+	
+	return answer;
 }
+
+
+
 
 
 /*
@@ -1672,6 +1714,9 @@ uint8_t WaspSD::create(const char* filepath)
 {
 	// Local variables
 	SdFile file;
+	
+	// set file date
+	setFileDate();
 	
 	// check if the card is there or not
 	if (!isSD())
@@ -2193,6 +2238,11 @@ uint16_t WaspSD::cleanFlags(void)
 }
 
 
+/*
+ * writeEndOfLine - 
+ * 
+ * Write "\r\n" in specified file
+ */
 uint8_t WaspSD::writeEndOfLine(const char* filepath)
 {	
 	uint8_t result = 1;
@@ -2220,9 +2270,406 @@ uint8_t WaspSD::writeEndOfLine(const char* filepath)
 	return result;	
 }
 
+/*
+ * format() -
+ * 
+ * Format SD card erasing all data first
+ */
+bool WaspSD::format()
+{
+	//! variables:
+	//---------------------------------------------------------------
+	uint32_t const ERASE_SIZE = 262144L;
+	uint32_t cardSizeBlocks;
+	uint16_t cardCapacityMB;
+
+	// cache for SD block
+	cache_t cache;
+
+	// MBR information
+	uint8_t partType;
+	uint32_t relSector;
+	uint32_t partSize;
+
+	// Fake disk geometry
+	uint8_t numberOfHeads;
+	uint8_t sectorsPerTrack;
+
+	// FAT parameters
+	uint16_t reservedSectors;
+	uint8_t sectorsPerCluster;
+	uint32_t fatStart;
+	uint32_t fatSize;
+	uint32_t dataStart;
+
+	// constants for file system structure
+	uint16_t const BU16 = 128;
+	uint16_t const BU32 = 8192;
+
+	//  strings needed in file system structures
+	char noName[] = "NO NAME    ";
+	char fat16str[] = "FAT16   ";
+	char fat32str[] = "FAT32   ";
+	//---------------------------------------------------------------	
+
+	//! initialization process  
+	cardSizeBlocks = card.cardSize();
+	if (cardSizeBlocks == 0)
+	{
+		#ifdef SD_DEBUG
+		USB.print(F("error cardSize"));
+		#endif
+		return 0;
+	}
+	cardCapacityMB = (cardSizeBlocks + 2047)/2048;
+
+	#ifdef SD_DEBUG
+	USB.print(F("Card Size: "));
+	USB.print(cardCapacityMB);
+	USB.println(F(" MB, (MB = 1,048,576 bytes)"));
+	#endif
+
+
+	//! Erasing process
+	#ifdef SD_DEBUG
+	USB.println(F("\nErasing\n"));
+	#endif
+	uint32_t firstBlock = 0;
+	uint32_t lastBlock;
+	uint16_t n = 0;
+
+	do {
+		lastBlock = firstBlock + ERASE_SIZE - 1;
+		if (lastBlock >= cardSizeBlocks) lastBlock = cardSizeBlocks - 1;
+		if (!card.erase(firstBlock, lastBlock)) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("erase failed"));
+			#endif
+			return 0;
+		}
+		#ifdef SD_DEBUG
+		USB.print(F("."));
+		#endif
+		if ((n++)%32 == 31) USB.println();
+		firstBlock += ERASE_SIZE;
+	} while (firstBlock < cardSizeBlocks);
+	
+	#ifdef SD_DEBUG
+	USB.println();
+	#endif
+
+	if (!card.readBlock(0, cache.data)) 
+	{
+		#ifdef SD_DEBUG
+		USB.println(F("error readBlock"));
+		#endif
+		return 0;
+	}
+		
+	#ifdef SD_DEBUG
+	USB.print(F("All data set to ")); 
+	USB.println(int(cache.data[0]),DEC);
+	USB.print(F("Erase done\n"));
+	#endif
+	
+	//! Formatting process
+	#ifdef SD_DEBUG
+	USB.println();
+	USB.print(F("Formatting\n"));
+	#endif
+	
+	// initSizes	
+	if (cardCapacityMB <= 6) 
+	{
+		#ifdef SD_DEBUG
+		USB.println(F("Card is too small."));
+		#endif
+		return 0;
+	}
+    else if (cardCapacityMB <= 16)		sectorsPerCluster = 2;
+	else if (cardCapacityMB <= 32) 		sectorsPerCluster = 4;
+	else if (cardCapacityMB <= 64) 		sectorsPerCluster = 8;
+	else if (cardCapacityMB <= 128)		sectorsPerCluster = 16;
+	else if (cardCapacityMB <= 1024) 	sectorsPerCluster = 32;
+	else if (cardCapacityMB <= 32768)   sectorsPerCluster = 64;
+	else{
+			// SDXC cards
+			sectorsPerCluster = 128;
+		}
+
+	#ifdef SD_DEBUG
+	USB.print(F("Blocks/Cluster: "));
+	USB.println(sectorsPerCluster,DEC);
+	#endif
+  
+	// set fake disk geometry
+	sectorsPerTrack = cardCapacityMB <= 256 ? 32 : 63;
+
+	if (cardCapacityMB <= 16)			numberOfHeads = 2;
+	else if (cardCapacityMB <= 32)		numberOfHeads = 4;
+	else if (cardCapacityMB <= 128)		numberOfHeads = 8;
+	else if (cardCapacityMB <= 504)		numberOfHeads = 16;
+	else if (cardCapacityMB <= 1008)	numberOfHeads = 32;
+	else if (cardCapacityMB <= 2016)	numberOfHeads = 64;
+	else if (cardCapacityMB <= 4032)	numberOfHeads = 128;
+	else{
+			numberOfHeads = 255;
+		}
+		
+	if (card.type() != SD_CARD_TYPE_SDHC) 
+	{
+		#ifdef SD_DEBUG
+		USB.print(F("FAT16\n"));
+		#endif
+		/*start makeFat16()*/
+		uint32_t nc;
+		for (dataStart = 2 * BU16;; dataStart += BU16) 
+		{
+			nc = (cardSizeBlocks - dataStart)/sectorsPerCluster;
+			fatSize = (nc + 2 + 255)/256;
+			uint32_t r = BU16 + 1 + 2 * fatSize + 32;
+			if (dataStart < r) continue;
+			relSector = dataStart - r + BU16;
+			break;
+		}
+		  
+		// check valid cluster count for FAT16 volume
+		if (nc < 4085 || nc >= 65525) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("Bad cluster count"));
+			#endif
+			return 0;
+		}
+		reservedSectors = 1;
+		fatStart = relSector + reservedSectors;
+		partSize = nc * sectorsPerCluster + 2 * fatSize + reservedSectors + 32;
+		if (partSize < 32680) {
+			partType = 0X01;
+		} else if (partSize < 65536) {
+			partType = 0X04;
+		} else {
+			partType = 0X06;
+		}
+		  
+		// write MBR
+		/*start writeMbr()*/
+			/*start clearCache(true)*/		
+			memset(&cache, 0, sizeof(cache));
+			cache.mbr.mbrSig0 = BOOTSIG0;
+			cache.mbr.mbrSig1 = BOOTSIG1;		
+			/*end clearCache(true)*/
+		part_t* p = cache.mbr.part;
+		p->boot = 0;
+		// get cylinder number for a logical block number
+		//~ uint16_t c = lbnToCylinder(relSector);
+		uint16_t c = relSector / (numberOfHeads * sectorsPerTrack);
+		if (c > 1023)
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("error MBR CHS"));
+			#endif
+			return 0;
+		}
+		p->beginCylinderHigh = c >> 8;
+		p->beginCylinderLow = c & 0XFF;
+		//get head number for a logical block number
+		//~ p->beginHead = lbnToHead(relSector);
+		p->beginHead = (relSector % (numberOfHeads * sectorsPerTrack)) / sectorsPerTrack;
+		//get sector number for a logical block number
+		//~ p->beginSector = lbnToSector(relSector);
+		p->beginSector = (relSector % sectorsPerTrack) + 1;
+		p->type = partType;
+		uint32_t endLbn = relSector + partSize - 1;
+		//get cylinder number for a logical block number
+		//~ c = lbnToCylinder(endLbn);
+		c = endLbn / (numberOfHeads * sectorsPerTrack);
+		if (c <= 1023) {
+			p->endCylinderHigh = c >> 8;
+			p->endCylinderLow = c & 0XFF;
+			//get head number for a logical block number
+			//~ p->endHead = lbnToHead(endLbn);		
+			p->endHead = (endLbn % (numberOfHeads * sectorsPerTrack)) / sectorsPerTrack;	
+			//get sector number for a logical block number
+			//~ p->endSector = lbnToSector(endLbn);	
+			p->endSector = (endLbn % sectorsPerTrack) + 1;
+			//get sector number for a logical block number
+			//~ p->endSector = lbnToSector(endLbn);	
+			p->endSector = (endLbn % sectorsPerTrack) + 1;
+		} else {
+			// Too big flag, c = 1023, h = 254, s = 63
+			p->endCylinderHigh = 3;
+			p->endCylinderLow = 255;
+			p->endHead = 254;
+			p->endSector = 63;
+		}
+		p->firstSector = relSector;
+		p->totalSectors = partSize;
+		//~ if (!writeCache(0)) 
+		if (!card.writeBlock(0, cache.data)) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("error write MBR"));
+			#endif
+			return 0;
+		}
+		/*end writeMbr()*/
+		  
+		/*start clearCache(true)*/		
+		memset(&cache, 0, sizeof(cache));
+		cache.mbr.mbrSig0 = BOOTSIG0;
+		cache.mbr.mbrSig1 = BOOTSIG1;		
+		/*end clearCache(true)*/
+		fat_boot_t* pb = &cache.fbs;
+		pb->jump[0] = 0XEB;
+		pb->jump[1] = 0X00;
+		pb->jump[2] = 0X90;
+		for (uint8_t i = 0; i < sizeof(pb->oemId); i++) {
+			pb->oemId[i] = ' ';
+		}
+		pb->bytesPerSector = 512;
+		pb->sectorsPerCluster = sectorsPerCluster;
+		pb->reservedSectorCount = reservedSectors;
+		pb->fatCount = 2;
+		pb->rootDirEntryCount = 512;
+		pb->mediaType = 0XF8;
+		pb->sectorsPerFat16 = fatSize;
+		pb->sectorsPerTrack = sectorsPerTrack;
+		pb->headCount = numberOfHeads;
+		pb->hidddenSectors = relSector;
+		pb->totalSectors32 = partSize;
+		pb->driveNumber = 0X80;
+		pb->bootSignature = EXTENDED_BOOT_SIG;
+		//~ pb->volumeSerialNumber = volSerialNumber();
+		pb->volumeSerialNumber = (cardSizeBlocks << 8) + millis();
+		memcpy(pb->volumeLabel, noName, sizeof(pb->volumeLabel));
+		memcpy(pb->fileSystemType, fat16str, sizeof(pb->fileSystemType));
+		// write partition boot sector
+		//~ if (!writeCache(relSector)) 
+		if (!card.writeBlock(relSector, cache.data)) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("FAT16 write PBS failed"));
+			#endif
+			return 0;
+		}
+		// clear FAT and root directory
+		/* start clearFatDir(fatStart, dataStart - fatStart);*/			
+		/*start clearCache(false)*/		
+		memset(&cache, 0, sizeof(cache));
+		/*end clearCache(false)*/
+		if (!card.writeStart(fatStart, dataStart - fatStart)) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("Clear FAT/DIR writeStart failed"));
+			#endif			
+			return 0;
+		}
+		for (uint32_t i = 0; i < (dataStart - fatStart); i++) 
+		{
+			if ((i & 0XFF) == 0) 
+			{
+				#ifdef SD_DEBUG
+				USB.print(F("."));
+				#endif
+			}
+			if (!card.writeData(cache.data)) 
+			{
+				#ifdef SD_DEBUG
+				USB.println(F("Clear FAT/DIR writeData failed"));
+				#endif
+				return 0;
+			}
+		}
+		if (!card.writeStop()) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("Clear FAT/DIR writeStop failed"));
+			#endif
+			return 0;
+		}		
+		#ifdef SD_DEBUG
+		USB.println();
+		#endif
+		/* end clearFatDir(fatStart, dataStart - fatStart);*/	
+		/*start clearCache(false)*/		
+		memset(&cache, 0, sizeof(cache));
+		/*end clearCache(false)*/
+		cache.fat16[0] = 0XFFF8;
+		cache.fat16[1] = 0XFFFF;
+		// write first block of FAT and backup for reserved clusters
+		//~ if (!writeCache(fatStart) || !writeCache(fatStart + fatSize)) {
+		if(	!card.writeBlock(fatStart, cache.data) || 
+			!card.writeBlock(fatStart + fatSize, cache.data) ) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("FAT16 reserve failed"));
+			#endif
+			return 0;
+		}
+	} 	
+
+	// print info
+	#ifdef SD_DEBUG
+	USB.print(F("partStart: "));   USB.println(relSector,DEC);
+	USB.print(F("partSize: "));    USB.println(partSize,DEC);
+	USB.print(F("reserved: "));    USB.println(reservedSectors,DEC);
+	USB.print(F("fatStart: "));    USB.println(fatStart,DEC);
+	USB.print(F("fatSize: "));     USB.println(fatSize,DEC);
+	USB.print(F("dataStart: "));   USB.println(dataStart,DEC);
+	USB.print(F("clusterCount: "));USB.println( (relSector + partSize - dataStart)/sectorsPerCluster,DEC);
+	USB.println();
+	USB.print(F("Heads: "));       USB.println(int(numberOfHeads),DEC);
+	USB.print(F("Sectors: "));     USB.println(int(sectorsPerTrack),DEC);
+	USB.print(F("Cylinders: "));   USB.println(cardSizeBlocks/(numberOfHeads*sectorsPerTrack),DEC);
+
+	USB.print(F("Format done\n"));	
+	#endif
+	
+	return 1;
+}
+
+
 
 // Private Methods /////////////////////////////////////////////////////////////
 
+
+/*
+ * setFileDate() - 
+ * 
+ * Set the proper Date and Time for creating directories and files 
+ */
+void WaspSD::setFileDate()
+{	
+	// Get the 5V and 3V3 power supply actual state
+	bool set5V = WaspRegister & REG_5V;
+	bool set3V3 = WaspRegister & REG_3V3;	
+	
+	// Get RTC data for creation time and date
+	// It is necessary to switch on the power supply if any Sensor Board is 
+	// connected to Waspmote so as not to cause intereferences in the I2C bus
+	PWR.setSensorPower(SENS_5V,SENS_ON);
+	PWR.setSensorPower(SENS_3V3,SENS_ON);	
+	
+	RTC.ON();
+	RTC.getTime();	
+		
+	if( !set3V3 )
+	{
+		PWR.setSensorPower(SENS_3V3,SENS_OFF);
+	}	
+	if( !set5V )
+	{
+		PWR.setSensorPower(SENS_5V,SENS_OFF);
+	}
+	
+	// set date time callback function
+	SdFile::dateTimeCallback(dateTime);
+	
+}
+
+	
 // Preinstantiate Objects //////////////////////////////////////////////////////
 
 WaspSD SD = WaspSD();

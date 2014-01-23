@@ -53,6 +53,9 @@ WaspSensorEvent_v20::WaspSensorEvent_v20()
 	digitalWrite(DIGITAL7,LOW);
 	digitalWrite(DIGITAL8,LOW);
 	digitalWrite(SENS_PW_3V3,LOW);
+	
+	// update Waspmote Control Register
+	WaspRegister |= REG_EVENTS;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -89,11 +92,13 @@ int8_t	WaspSensorEvent_v20::setBoardMode(uint8_t mode)
 {
 	switch( mode )
 	{
-		case	SENS_ON :	digitalWrite(SENS_PW_3V3,HIGH);
+		case	SENS_ON :	// switch on the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_ON);
 							// Sets RTC on to enable I2C
 							if(!RTC.isON) RTC.setMode(RTC_ON, RTC_I2C_MODE);
 							break;
-		case	SENS_OFF:	digitalWrite(SENS_PW_3V3,LOW);
+		case	SENS_OFF:	// switch on the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_OFF);
 							break;
 		default 		: 	return 0;
 	}

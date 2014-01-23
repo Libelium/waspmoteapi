@@ -61,6 +61,9 @@ WaspSensorAgr_v20::WaspSensorAgr_v20()
 	digitalWrite(ANA0,LOW);
 	digitalWrite(SENS_PW_3V3,LOW);
 	digitalWrite(SENS_PW_5V,LOW);	
+	
+	// update Waspmote Control Register
+	WaspRegister |= REG_AGRICULTURE;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -72,7 +75,7 @@ WaspSensorAgr_v20::WaspSensorAgr_v20()
  */
 void	WaspSensorAgr_v20::ON(void)
 {
-	setBoardMode(SENS_ON);
+	setBoardMode(SENS_ON);	
 }
 
 /*	OFF: Calls the setBoardMode function to turn off the board
@@ -98,14 +101,16 @@ int8_t	WaspSensorAgr_v20::setBoardMode(uint8_t mode)
 	
 	switch( mode )
 	{
-		case	SENS_ON :	digitalWrite(SENS_PW_3V3,HIGH);
-							digitalWrite(SENS_PW_5V,HIGH);
+		case	SENS_ON :	// switch on the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_ON);
+							PWR.setSensorPower(SENS_5V, SENS_ON);
 							// Sets RTC on to enable I2C
 							if(!RTC.isON) RTC.setMode(RTC_ON, RTC_I2C_MODE);
 							digitalWrite(DIGITAL5,HIGH);
 							break;
-		case	SENS_OFF:	digitalWrite(SENS_PW_3V3,LOW);
-							digitalWrite(SENS_PW_5V,LOW);
+		case	SENS_OFF:	// switch off the power supplies
+							PWR.setSensorPower(SENS_3V3, SENS_OFF);
+							PWR.setSensorPower(SENS_5V, SENS_OFF);
 							digitalWrite(DIGITAL5,LOW);
 							break;
 		default			:	return 0;
@@ -468,10 +473,9 @@ void	WaspSensorAgr_v20::sleepAgr(const char* time2wake,
 	// Keep sensor supply powered down if selected
 	if( option & SENS_OFF )
 	{
-		pinMode(SENS_PW_3V3,OUTPUT);
-		digitalWrite(SENS_PW_3V3,LOW);	
-		pinMode(SENS_PW_5V,OUTPUT);
-		digitalWrite(SENS_PW_5V,LOW);
+		// switch off the power supplies
+		PWR.setSensorPower(SENS_3V3, SENS_OFF);
+		PWR.setSensorPower(SENS_5V, SENS_OFF);
 	}
 		
 }

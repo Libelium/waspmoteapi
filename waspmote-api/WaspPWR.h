@@ -147,6 +147,7 @@ extern volatile uint16_t	intFlag;
 extern volatile uint16_t 	intConf;
 extern volatile uint8_t		intCounter;
 extern volatile uint8_t		intArray[8];
+extern volatile uint16_t 	WaspRegister;
 
 
 /******************************************************************************

@@ -50,6 +50,9 @@ WaspRadiationBoard::WaspRadiationBoard()
 	ledArray[2] = DIGITAL4;
 	ledArray[3] = DIGITAL2;
 	ledArray[4] = DIGITAL3;
+	
+	// update Waspmote Control Register
+	WaspRegister |= REG_RADIATION;
 
 }
 
@@ -62,9 +65,10 @@ WaspRadiationBoard::WaspRadiationBoard()
  Values: 
 */
 void WaspRadiationBoard::ON()
-{
-	PWR.setSensorPower(SENS_5V,SENS_ON); 
-  	PWR.setSensorPower(SENS_3V3,SENS_ON);
+{	
+	// switch on the power supplies
+	PWR.setSensorPower(SENS_3V3, SENS_ON);
+	PWR.setSensorPower(SENS_5V, SENS_ON);
   	delay(1000);
   	
   	init();
@@ -77,9 +81,10 @@ void WaspRadiationBoard::ON()
  Values: 
 */
 void WaspRadiationBoard::OFF()
-{
-	PWR.setSensorPower(SENS_5V,SENS_OFF); 
-  	PWR.setSensorPower(SENS_3V3,SENS_OFF);
+{	
+	// switch off the power supplies
+	PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	disableInterrupts(RAD_INT);
 }
 
