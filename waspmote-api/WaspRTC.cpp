@@ -268,7 +268,7 @@ void WaspRTC::readRTC(uint8_t endAddress)
 	// transmit to device #104 (0x68)
 	Wire.beginTransmission(RTC_ADDRESS);
   
-	Wire.send(RTC_START_ADDRESS);  // start from address zero
+	Wire.write(RTC_START_ADDRESS);  // start from address zero
 	Wire.endTransmission();
   
 	// START READING
@@ -279,7 +279,7 @@ void WaspRTC::readRTC(uint8_t endAddress)
 	{ 
 		if (Wire.available())
 		{
-			uint8_t c = Wire.receive(); // receive a byte as character
+			uint8_t c = Wire.read(); // receive a byte as character
 			registersRTC[timecount] = c;
 			switch (timecount)
 			{
@@ -332,7 +332,7 @@ void WaspRTC::writeRTC()
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
-	Wire.send(RTC_START_ADDRESS);  // start from address zero
+	Wire.write(RTC_START_ADDRESS);  // start from address zero
 
 	registersRTC[RTC_SECONDS_ADDRESS] = byte2BCD(second);
 	registersRTC[RTC_MINUTES_ADDRESS] = byte2BCD(minute);
@@ -344,7 +344,7 @@ void WaspRTC::writeRTC()
 
 	for(timecount = 0; timecount <= 0x06; timecount++)
 	{
-		Wire.send(registersRTC[timecount]);
+		Wire.write(registersRTC[timecount]);
 	}
 
 	Wire.endTransmission();
@@ -363,7 +363,7 @@ void WaspRTC::writeRTCalarm1()
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
-	Wire.send(RTC_ALM1_START_ADDRESS);
+	Wire.write(RTC_ALM1_START_ADDRESS);
 
 	registersRTC[RTC_ALM1_SECONDS_ADDRESS] 	= 0x7F & byte2BCD(second_alarm1);
 	registersRTC[RTC_ALM1_MINUTES_ADDRESS] 	= 0x7F & byte2BCD(minute_alarm1);
@@ -372,7 +372,7 @@ void WaspRTC::writeRTCalarm1()
 
 	for(timecount = 7; timecount <= 0x0A; timecount++)
 	{
-		Wire.send(registersRTC[timecount]);
+		Wire.write(registersRTC[timecount]);
 	}
 
 	Wire.endTransmission();
@@ -391,7 +391,7 @@ void WaspRTC::writeRTCalarm2()
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
-	Wire.send(RTC_ALM2_START_ADDRESS);
+	Wire.write(RTC_ALM2_START_ADDRESS);
 
 	registersRTC[RTC_ALM2_MINUTES_ADDRESS] 	= 0x7F & byte2BCD(minute_alarm2);
 	registersRTC[RTC_ALM2_HOURS_ADDRESS] 	= 0x7F & byte2BCD(hour_alarm2);
@@ -400,7 +400,7 @@ void WaspRTC::writeRTCalarm2()
 
 	for(timecount = 0X0B; timecount <= 0x0D; timecount++)
 	{
-		Wire.send(registersRTC[timecount]);
+		Wire.write(registersRTC[timecount]);
 	}
 
 	Wire.endTransmission();
@@ -678,10 +678,10 @@ void WaspRTC::writeRTCregister(uint8_t theAddress)
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
-	Wire.send(theAddress);  // start from address theAddress
+	Wire.write(theAddress);  // start from address theAddress
 
 	// START SENDING
-	Wire.send(registersRTC[theAddress]);
+	Wire.write(registersRTC[theAddress]);
 	Wire.endTransmission();
 }
 
@@ -699,7 +699,7 @@ void WaspRTC::readRTCregister(uint8_t theAddress)
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
-	Wire.send(theAddress);  // start from address theAddress
+	Wire.write(theAddress);  // start from address theAddress
 	Wire.endTransmission();
   
 	// START READING
@@ -707,7 +707,7 @@ void WaspRTC::readRTCregister(uint8_t theAddress)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
 	while(!Wire.available()) {};
-	registersRTC[theAddress] = Wire.receive();
+	registersRTC[theAddress] = Wire.read();
 	Wire.endTransmission();
 }
 

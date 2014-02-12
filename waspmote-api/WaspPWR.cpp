@@ -605,8 +605,8 @@ void    WaspPWR::setLowBatteryThreshold(float threshold)
 	if( !Wire.I2C_ON ) Wire.begin();
 	delay(200);
 	Wire.beginTransmission(0x56);    // Address
-	Wire.send(0x11);                 // Write command
-	Wire.send(dig);                  // Data
+	Wire.write(0x11);                // Write command
+	Wire.write(dig);                 // Data
 	Wire.endTransmission();
 	if( Wire.I2C_ON ) closeI2C();
 } 

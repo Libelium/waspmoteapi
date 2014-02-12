@@ -796,13 +796,13 @@ int16_t WaspACC::readRegister(uint8_t regNum)
 
 	uint8_t aux = 0;
 	Wire.beginTransmission(i2cID);
-	Wire.send(regNum);
+	Wire.write(regNum);
 	Wire.endTransmission();
 
 	Wire.requestFrom(i2cID, 1);
 	if(Wire.available())
 	{
-		aux = Wire.receive();
+		aux = Wire.read();
 		return aux;
 	}
 
@@ -820,8 +820,8 @@ uint8_t WaspACC::writeRegister(uint8_t address, uint8_t val)
 	flag &= ~(ACC_ERROR_WRITING);
 
 	Wire.beginTransmission(i2cID);
-	Wire.send(address); 
-	Wire.send(val);
+	Wire.write(address);
+	Wire.write(val);
 	Wire.endTransmission();
 
 	if (readRegister(address) != val)
