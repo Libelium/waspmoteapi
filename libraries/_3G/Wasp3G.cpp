@@ -8265,10 +8265,13 @@ void Wasp3G::show_APN(){
 	USB.print(F("APN: "));
 	USB.println(_3G_APN);
 	USB.print(F("LOGIN: "));
+	#ifdef _3G_LOGIN
 	USB.println(_3G_LOGIN);
+	#endif
 	USB.print(F("PASSWORD: "));
+	#ifdef _3G_PASSW
 	USB.println(_3G_PASSW);
-
+	#endif
 }
 
 #if TRANSMISSION_FUSE
