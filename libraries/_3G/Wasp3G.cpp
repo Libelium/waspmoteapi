@@ -6309,12 +6309,12 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 	{
 		// TCP client, single connection mode
 		case 0:
-			sprintf(buffer_3G, "%s\"TCP\",0,0", str_aux1);
+			sprintf(buffer_3G, "%s\"TCP\",%u,0", str_aux1, port);
 			break;
 			
 		// UDP client, single connection mode
 		case 1:
-			sprintf(buffer_3G, "%s\"UDP\",0,0", str_aux1);
+			sprintf(buffer_3G, "%s\"UDP\",%u,0", str_aux1, port);
 			break;
 			
 		// TCP server
@@ -7575,10 +7575,12 @@ int8_t Wasp3G::getRSSI(){
 				answer = -111;
 				break;
 			case 31:
-				answer = 0;
+				answer = -51;
 				break;
+			case 99:
+				return 0;
 			default:
-				answer = (answer * 2) - 109;
+				answer = (answer * 2) - 113;
 		}
 		
 		return answer;
