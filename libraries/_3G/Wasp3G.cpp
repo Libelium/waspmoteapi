@@ -6745,13 +6745,11 @@ int8_t Wasp3G::closeMultiSocket(uint8_t n_link){
 int16_t Wasp3G::readIPdata(){
 
 	int counter;
-	int16_t data_length = 0;
 	int8_t answer;
-	
+	data_length = 0;	
 	
 	#if _3G_debug_mode>0
 		USB.print(F("Inside readIPdata: "));
-		USB.println(IP_dir);
 	#endif	
 	// Checks if there is the IP address and port:
 	if (parse(buffer_3G, "RECV FROM:"))
