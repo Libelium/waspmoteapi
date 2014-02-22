@@ -6684,7 +6684,9 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 						USB.print(" ");
 					#endif	
 				}
-				answer = waitForData(OK_RESPONSE, DEFAULT_TIMEOUT, 0, 0);
+				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[13])));
+				sprintf(str_aux2, "%s %d, %d", str_aux1, length, length);
+				answer = waitForData(str_aux2, DEFAULT_TIMEOUT, 0, 0);
 				#if _3G_debug_mode>0	
 					USB.print(F("Answer for send: "));
 					USB.println(answer, DEC);
