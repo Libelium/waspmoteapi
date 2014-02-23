@@ -354,6 +354,7 @@ class Wasp3G
 	char IP_dir[22]; // XXX.XXX.XXX.XXX:XXXXX
 	char n_connection;
 	char tlfNumber[16];
+	int16_t data_length;
 	
 	//! Variable : 
 	/*!

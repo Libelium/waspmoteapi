@@ -6309,12 +6309,12 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 	{
 		// TCP client, single connection mode
 		case 0:
-			sprintf(buffer_3G, "%s\"TCP\",0,0", str_aux1);
+			sprintf(buffer_3G, "%s\"TCP\",%u,0", str_aux1, port);
 			break;
 			
 		// UDP client, single connection mode
 		case 1:
-			sprintf(buffer_3G, "%s\"UDP\",0,0", str_aux1);
+			sprintf(buffer_3G, "%s\"UDP\",%u,0", str_aux1, port);
 			break;
 			
 		// TCP server
@@ -6684,7 +6684,9 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 						USB.print(" ");
 					#endif	
 				}
-				answer = waitForData(OK_RESPONSE, DEFAULT_TIMEOUT, 0, 0);
+				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[13])));
+				sprintf(str_aux2, "%s %d, %d", str_aux1, length, length);
+				answer = waitForData(str_aux2, DEFAULT_TIMEOUT, 0, 0);
 				#if _3G_debug_mode>0	
 					USB.print(F("Answer for send: "));
 					USB.println(answer, DEC);
@@ -6743,13 +6745,11 @@ int8_t Wasp3G::closeMultiSocket(uint8_t n_link){
 int16_t Wasp3G::readIPdata(){
 
 	int counter;
-	int16_t data_length = 0;
 	int8_t answer;
-	
+	data_length = 0;	
 	
 	#if _3G_debug_mode>0
 		USB.print(F("Inside readIPdata: "));
-		USB.println(IP_dir);
 	#endif	
 	// Checks if there is the IP address and port:
 	if (parse(buffer_3G, "RECV FROM:"))
@@ -6820,9 +6820,8 @@ int16_t Wasp3G::readIPdata(){
 	counter+=2;
 	if (data_length != 0)
 	{
-		strncpy(buffer_3G, buffer_3G + counter + answer, data_length);
-		buffer_3G[data_length] = '\0';
-		
+		memcpy(buffer_3G, buffer_3G + counter + answer, data_length);
+		buffer_3G[data_length] = '\0';	
 	}
 	
 	return data_length;
@@ -7575,10 +7574,12 @@ int8_t Wasp3G::getRSSI(){
 				answer = -111;
 				break;
 			case 31:
-				answer = 0;
+				answer = -51;
 				break;
+			case 99:
+				return 0;
 			default:
-				answer = (answer * 2) - 109;
+				answer = (answer * 2) - 113;
 		}
 		
 		return answer;
