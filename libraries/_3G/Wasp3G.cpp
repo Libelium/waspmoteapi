@@ -6820,9 +6820,8 @@ int16_t Wasp3G::readIPdata(){
 	counter+=2;
 	if (data_length != 0)
 	{
-		strncpy(buffer_3G, buffer_3G + counter + answer, data_length);
-		buffer_3G[data_length] = '\0';
-		
+		memcpy(buffer_3G, buffer_3G + counter + answer, data_length);
+		buffer_3G[data_length] = '\0';	
 	}
 	
 	return data_length;
