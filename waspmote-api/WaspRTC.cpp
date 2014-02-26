@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -435,7 +435,7 @@ void WaspRTC::configureAlarmMode (uint8_t alarmNum, uint8_t alarmMode)
 	if (alarmNum == 1)
 	{
 		// activate the INT/SQW output on alarm match
-		registersRTC[RTC_CONTROL_ADDRESS] &= B11111101; 
+		registersRTC[RTC_CONTROL_ADDRESS] &= B11111110; 
 		registersRTC[RTC_CONTROL_ADDRESS] |= B00000101;
 		writeRTCregister(RTC_CONTROL_ADDRESS);
 		// reset the alarm flags
@@ -570,7 +570,7 @@ void WaspRTC::configureAlarmMode (uint8_t alarmNum, uint8_t alarmMode)
 	if (alarmNum == 2)
 	{
 		// activate the INT/SQW output on alarm match
-		registersRTC[RTC_CONTROL_ADDRESS] &= B11111110;
+		registersRTC[RTC_CONTROL_ADDRESS] &= B11111101;
 		registersRTC[RTC_CONTROL_ADDRESS] |= B00000110;
 		writeRTCregister(RTC_CONTROL_ADDRESS);
 		// reset the alarm flags

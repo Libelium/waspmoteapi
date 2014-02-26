@@ -1,7 +1,7 @@
 /*! \file WaspWIFI.cpp
  *  \brief Library for managing WIFI modules
  *
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -525,7 +525,7 @@ uint8_t WaspWIFI::checkAnswer(char* pattern)
 	// check available data
     while(serialAvailable(_uartWIFI))
     {
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -564,7 +564,7 @@ uint8_t WaspWIFI::readData(uint8_t len)
 		while(serialAvailable(_uartWIFI))
 		{
 			// While serial available over the uart...
-			if ((i<512)&&((answer[i]=serialRead(_uartWIFI))!='\0'))
+			if ((i<(sizeof(answer)-1))&&((answer[i]=serialRead(_uartWIFI))!='\0'))
 			{
 				i++; 
 			}
@@ -769,9 +769,9 @@ uint8_t WaspWIFI::openHTTP()
 	{
 		return 0;
 	}
-	while(serialAvailable(_uartWIFI))
+	while( serialAvailable(_uartWIFI) && i<(sizeof(answer)-1) )
 	{
-		if((i<512)&&((answer[i]=serialRead(_uartWIFI))!='\0'))
+		if((i<(sizeof(answer)-1))&&((answer[i]=serialRead(_uartWIFI))!='\0'))
 		{
 			i++;
 		}
@@ -1160,7 +1160,7 @@ void WaspWIFI::scan()
 	}
 	while(serialAvailable(_uartWIFI))
 	{
-		if( ((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512) )
+		if( ((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)) )
 		{
 			i++;
 		}
@@ -1375,7 +1375,7 @@ void WaspWIFI::sendPing(ipAddr ip)
 	}
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -2359,7 +2359,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 			{
 				while(serialAvailable(_uartWIFI))
 				{
-					if( (i<512) && ((answer[i]=serialRead(_uartWIFI))!='\0') )
+					if( (i<(sizeof(answer)-1)) && ((answer[i]=serialRead(_uartWIFI))!='\0') )
 					{
 						i++;
 					}
@@ -2564,7 +2564,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 				}
 				while(serialAvailable(_uartWIFI) && !timeout )
 				{
-					if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+					if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 					{
 						i++;
 					}
@@ -2663,6 +2663,8 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 //! Sets the http config and opens an HTTP connection.
 uint8_t WaspWIFI::getURL(uint8_t opt, char* host, char* request)
 {
+	uint8_t result=0;
+	char aux[sizeof(answer)];
 	char question[128];
 	char buffer[20];
 	uint8_t u1,u2,u3,u4,u5;
@@ -2715,35 +2717,57 @@ uint8_t WaspWIFI::getURL(uint8_t opt, char* host, char* request)
 		if(openHTTP())  
 		{ 			
 			// Reads the answer of the HTTP query.
-			read(NOBLO,20000); 			
+			read(NOBLO,20000); 
+			
+			// backup copy of the answer			
+			memcpy(aux, answer, sizeof(answer));			
 			
 			if(findPattern((uint8_t*)answer,CLOS_pattern,length)==-1)
 			{	
 				#ifdef DEBUG_WIFI
 				USB.println(F("CLOS not found"));		
 				#endif	
-				ON(_uartWIFI);
-				return 0;
+				result = 0;
 			}
-			
-			ON(_uartWIFI);
-			return 1;
+			else
+			{	
+				// HTTP OK
+				result = 1;
+			}
 		}
 		else
 		{
 			#ifdef DEBUG_WIFI
 			USB.print(F("openHTTP failed."));		
 			#endif	
-			OFF();
-			delay(2000);
-			ON(_uartWIFI);
-			return 0;
+			result = 0;
 		}
 	}
+	else
+	{
+		result = 0;
+	}
 
-	OFF();
-	delay(2000);
-	return 0;  
+	/* When HTTP retrieve is done, the WiFi module exits command mode so 
+	 * it is mandatory to enter command mode again. Then, the module is 
+	 * suposed to be already joined to network and a second 'getURL' call
+	 * could be done as a retry if the first one fails
+	 */
+	if(commandMode()!=1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("CMD not entered"));	
+		#endif	
+		result = 0;
+	}	
+	
+	if( result == 1)	
+	{
+		// get the backup of the answer when OK
+		memcpy(answer, aux, sizeof(answer));
+	}
+	
+	return result;  
 }
 
 
@@ -2758,7 +2782,9 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 							uint8_t* frame, 
 							uint16_t len)
 {	
+	uint8_t result=0;
 	char question[300];
+	char aux[sizeof(answer)];
 	char buffer[20];
 	unsigned long WTX_aux=0;
 	unsigned long numBytes=0;
@@ -2766,7 +2792,7 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
   
 	// If the address is given by a IP address.
 	if (opt==IP)
-	{						
+	{
 		// Copy "set i h "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
 		sprintf(question,"%s%s\r", buffer, host);
@@ -2775,7 +2801,7 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 	}
 	// If the address is given by a URL address.
 	else
-	{		
+	{
 		// Turn on DNS. set ip host 0. 			
 		// Copy "set i h 0\r"
 		strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[54])));
@@ -2813,7 +2839,7 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 	
 	// If everything is Ok, even it is correctly connected.
 	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(u5==1)&&(isConnected()))
-	{ 
+	{
 		delay(300);
 		
 		// Opens the HTTP connection.
@@ -2827,25 +2853,30 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 			// Reads the answer of the HTTP query.
 			read(NOBLO,20000); 			
 			
+			// backup copy of the answer			
+			memcpy(aux, answer, sizeof(answer));
+			
 			if( strstr(answer,CLOS_pattern) == NULL )
 			{	
 				#ifdef DEBUG_WIFI
 				USB.println(F("CLOS not found"));		
-				#endif	
-				ON(_uartWIFI);
-				return 0;
+				#endif
+				result = 0;
 			}
 						
-			// Enters in command mode again.
+			/* When HTTP retrieve is done, the WiFi module exits command mode so 
+			 * it is mandatory to enter command mode again. Then, the module is 
+			 * suposed to be already joined to network and a second 'getURL' call
+			 * could be done as a retry if the first one fails
+			 */
 			if(commandMode()!=1)
 			{
 				#ifdef DEBUG_WIFI
 				USB.println(F("CMD no entered"));	
 				#endif	
-				ON(_uartWIFI);
-				return 0;
+				result = 0;
 			}
-			 			
+
 			// update stats	
 			getStats();
 			WTX_aux=WTX-WTX_aux;
@@ -2862,30 +2893,44 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 				#ifdef DEBUG_WIFI
 				USB.println(F("TX failed"));
 				#endif
-				OFF();
-				delay(2000);
-				ON(_uartWIFI);
-				return 0;				
+				result = 0;	
 			}
-					
-			return 1;
+			
+			// HTTP OK				
+			result = 1;
 		}
 		else
 		{
 			#ifdef DEBUG_WIFI
 			USB.println(F("openHTTP failed"));
 			#endif
-			OFF();
-			delay(2000);
-			ON(_uartWIFI);
-			return 0;
+			result = 0;
 		}
 	}
+	else
+	{
+		result = 0;
+	}
+
+	if( result == 1 )
+	{
+		// get the backup of the answer when OK
+		memcpy(answer, aux, sizeof(answer));
+	}
+	else
+	{
+		// when no success no commandMode function has been called
+		// so, we enter in command mode in that case
+		if(commandMode()!=1)
+		{
+			#ifdef DEBUG_WIFI
+			USB.println(F("CMD no entered"));	
+			#endif	
+			result = 0;
+		}
+	}	
 	
-	OFF();
-	delay(2000);
-	return 0;  
-		
+	return result;  
 }
 
 
@@ -3058,9 +3103,9 @@ int WaspWIFI::read(uint8_t blo, unsigned long time)
 	}  
 	
 	// Read all incoming data and store it in 'answer' buffer
-	while(serialAvailable(_uartWIFI))
+	while( serialAvailable(_uartWIFI) && (length<(sizeof(answer)-1)) )
 	{
-		if (((answer[length]=serialRead(_uartWIFI))!='\0')&&(length<512))
+		if (((answer[length]=serialRead(_uartWIFI))!='\0')&&(length<(sizeof(answer)-1)))
 		{
 			length++; 
 		}
@@ -3211,7 +3256,7 @@ void WaspWIFI::reset()
 	}
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3285,7 +3330,7 @@ int WaspWIFI::resolve(char* name)
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3358,7 +3403,7 @@ bool WaspWIFI::isConnected()
 	aux_previous=millis();	
 	while(serialAvailable(_uartWIFI) && !aux_timeout)
 	{
-		if ((i<512)&&((answer[i]=serialRead(_uartWIFI))!='\0'))
+		if ((i<(sizeof(answer)-1))&&((answer[i]=serialRead(_uartWIFI))!='\0'))
 		{
 			i++;
 		}
@@ -3422,7 +3467,7 @@ void WaspWIFI::getConnectionInfo()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3499,7 +3544,7 @@ void WaspWIFI::getAPstatus()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3547,7 +3592,7 @@ void WaspWIFI::getRSSI()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3604,7 +3649,7 @@ void WaspWIFI::getStats()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3762,7 +3807,7 @@ void WaspWIFI::getUpTime()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3809,7 +3854,7 @@ void WaspWIFI::getAdhocSettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3856,7 +3901,7 @@ void WaspWIFI::getBroadcastSettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3903,7 +3948,7 @@ void WaspWIFI::getComSettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3950,7 +3995,7 @@ void WaspWIFI::getDNSsettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -3997,7 +4042,7 @@ void WaspWIFI::getFTPsettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4048,7 +4093,7 @@ void WaspWIFI::getIP()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4097,7 +4142,7 @@ void WaspWIFI::getMAC()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4144,7 +4189,7 @@ void WaspWIFI::getOptionSettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4191,7 +4236,7 @@ void WaspWIFI::getSystemSettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4239,7 +4284,7 @@ void WaspWIFI::getTime()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4286,7 +4331,7 @@ void WaspWIFI::getWLANsettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4333,7 +4378,7 @@ void WaspWIFI::getUARTsettings()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}
@@ -4380,7 +4425,7 @@ void WaspWIFI::getVersion()
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
-		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<512))
+		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{
 			i++;
 		}

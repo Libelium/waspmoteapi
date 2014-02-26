@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa
 */
@@ -288,37 +288,37 @@
     \brief Bit dedicated to the 5V power supply
  */
 /*! \def REG_3V3
-    \brief Bit dedicated to 
+    \brief Bit dedicated to the 3V3 power supply
  */
 /*! \def REG_SOCKET0
-    \brief 
+    \brief Bit dedicated to the SOCKET0 power supply
  */
 /*! \def REG_SOCKET1
-    \brief 
+    \brief Bit dedicated to the SOCKET1 power supply
  */
 /*! \def REG_METERING
-    \brief 
+    \brief Bit dedicated to the presence of the Smart Metering Board
  */
 /*! \def REG_AGRICULTURE
-    \brief 
+    \brief Bit dedicated to the presence of the Agriculture Board
  */
 /*! \def REG_GASES
-    \brief 
+    \brief Bit dedicated to the presence of the Gases Board
  */
 /*! \def REG_CITIES
-    \brief 
+    \brief Bit dedicated to the presence of the Smart Cities Board
  */
 /*! \def REG_RADIATION
-    \brief 
+    \brief Bit dedicated to the presence of the Radiation Board
  */
 /*! \def REG_PROTOTYPING
-    \brief 
+    \brief Bit dedicated to the presence of the Prototyping Board
  */
 /*! \def REG_PARKING
-    \brief 
+    \brief Bit dedicated to the presence of the Parking Board
  */
 /*! \def REG_VIDEO_CAMERA
-    \brief 
+    \brief Bit dedicated to the presence of the Video Camera Board
  */
 #define	REG_5V				1 
 #define	REG_3V3				2 

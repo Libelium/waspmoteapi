@@ -1,7 +1,7 @@
 /*! \file WaspGPRS_Pro.h
     \brief Library for managing the SIM900 module
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -169,6 +169,19 @@
     \brief Constants for AT commands. Port used in AT commands functions in this case
  */
 #define PORT_USED  1
+
+
+/*! \def GET
+ */
+#define	GET 0
+
+/*! \def POST
+ */
+#define	POST 1
+
+/*! \def HEAD
+ */
+#define	HEAD 2
 
 
 
@@ -469,7 +482,9 @@ class WaspGPRS_Pro
 						int length,
 						uint8_t n_conf);
 	
-	int sendHTTP(uint8_t n_conf);
+	int8_t setPOSTdata(uint8_t* POST_data, int length);
+	
+	int sendHTTP(uint8_t n_conf, uint8_t method);
 	
 	int16_t readHTTP(	uint16_t HTTP_total_data,
 						uint8_t n_conf);
@@ -1020,11 +1035,121 @@ class WaspGPRS_Pro
 		'-13' if error setting the url the HTTP service with CME error code available,
 		'-14' if error getting data from url with CME error code available,
 		'-15' if error closing the HTTP service with CME error code available,
+		'-16' if error configuring the HTTP content parameter,
+		'-17' if error configuring the HTTP content parameter with CME error code available,
+		'-18' if error sending the POST data,
+		'-19' if error sending the POST data with CME error code available,
+		'-20' if error getting data from url with CME error code available
 	 */
-	int readURL(const char* url, uint8_t n_conf);
-	int readURL(const char* url, uint8_t* data, int length, uint8_t n_conf);
+	int readURL(const char* url, uint8_t n_conf);	//GET
 	
+	//! It accesses to the specified URL and stores the info read in 'data_URL' variable
+    /*!
+	It stores in 'buffer_GPRS' variable up to 255 bytes
+	\param const char* url : the URL to get the information from
+	\param uint8_t* data: the pointer to a buffer with a frame or non ASCII data
+	\param int length: the length of the frame or the non ASCII data
+	\param uint8_t n_conf : number of HTTP/FTP profile
+	\return '1' on success 
+		'2' if buffer_GPRS is full. The answer from the server is limited by the 
+			length of buffer_GPRS. To increase the length of the answer, increase the 
+			BUFFER_SIZE constant.
+		'0' if error, 
+		'-1' if no GPRS connection,
+		'-2' if error opening the connection,
+		'-3' if error getting the IP address,
+		'-4' if error initializing the HTTP service,
+		'-5' if error setting CID the HTTP service,
+		'-6' if error setting the url the HTTP service,
+		'-7' if error setting the url the HTTP service,
+		'-8' if error getting data from url,
+		'-9' if error closing the HTTP service,
+		'-10' if error initializing the HTTP service with CME error code available,
+		'-11' if error setting CID the HTTP service with CME error code available,
+		'-12' if error setting the url the HTTP service with CME error code available,
+		'-13' if error setting the url the HTTP service with CME error code available,
+		'-14' if error getting data from url with CME error code available,
+		'-15' if error closing the HTTP service with CME error code available,
+		'-16' if error configuring the HTTP content parameter,
+		'-17' if error configuring the HTTP content parameter with CME error code available,
+		'-18' if error sending the POST data,
+		'-19' if error sending the POST data with CME error code available,
+		'-20' if error getting data from url with CME error code available
+	 */
 	
+	int readURL(const char* url, uint8_t* data, int length, uint8_t n_conf);	//GET
+	
+	//! It accesses to the specified URL and stores the info read in 'data_URL' variable
+    /*!
+	It stores in 'buffer_GPRS' variable up to 255 bytes
+	\param const char* url : the URL to get the information from
+	\param uint8_t* data: the data to use with POST request
+	\param uint8_t n_conf : number of HTTP/FTP profile
+	\return '1' on success 
+		'2' if buffer_GPRS is full. The answer from the server is limited by the 
+			length of buffer_GPRS. To increase the length of the answer, increase the 
+			BUFFER_SIZE constant.
+		'0' if error, 
+		'-1' if no GPRS connection,
+		'-2' if error opening the connection,
+		'-3' if error getting the IP address,
+		'-4' if error initializing the HTTP service,
+		'-5' if error setting CID the HTTP service,
+		'-6' if error setting the url the HTTP service,
+		'-7' if error setting the url the HTTP service,
+		'-8' if error getting data from url,
+		'-9' if error closing the HTTP service,
+		'-10' if error initializing the HTTP service with CME error code available,
+		'-11' if error setting CID the HTTP service with CME error code available,
+		'-12' if error setting the url the HTTP service with CME error code available,
+		'-13' if error setting the url the HTTP service with CME error code available,
+		'-14' if error getting data from url with CME error code available,
+		'-15' if error closing the HTTP service with CME error code available,
+		'-16' if error configuring the HTTP content parameter,
+		'-17' if error configuring the HTTP content parameter with CME error code available,
+		'-18' if error sending the POST data,
+		'-19' if error sending the POST data with CME error code available,
+		'-20' if error getting data from url with CME error code available
+	 */
+	int readURL(const char* url, const char* data, uint8_t n_conf);	//POST
+	
+		//! It accesses to the specified URL and stores the info read in 'data_URL' variable
+    /*!
+	It stores in 'buffer_GPRS' variable up to 255 bytes
+	\param const char* url : the URL to get the information from
+	\param uint8_t* data: the pointer to a buffer with a frame, non ASCII data
+		or a data for the POST request
+	\param int length: the length of the frame or the non ASCII data
+	\param uint8_t n_conf : number of HTTP/FTP profile
+	\param uint8_t mode : GET or POST
+	\return '1' on success 
+		'2' if buffer_GPRS is full. The answer from the server is limited by the 
+			length of buffer_GPRS. To increase the length of the answer, increase the 
+			BUFFER_SIZE constant.
+		'0' if error, 
+		'-1' if no GPRS connection,
+		'-2' if error opening the connection,
+		'-3' if error getting the IP address,
+		'-4' if error initializing the HTTP service,
+		'-5' if error setting CID the HTTP service,
+		'-6' if error setting the url the HTTP service,
+		'-7' if error setting the url the HTTP service,
+		'-8' if error getting data from url,
+		'-9' if error closing the HTTP service,
+		'-10' if error initializing the HTTP service with CME error code available,
+		'-11' if error setting CID the HTTP service with CME error code available,
+		'-12' if error setting the url the HTTP service with CME error code available,
+		'-13' if error setting the url the HTTP service with CME error code available,
+		'-14' if error getting data from url with CME error code available,
+		'-15' if error closing the HTTP service with CME error code available,
+		'-16' if error configuring the HTTP content parameter,
+		'-17' if error configuring the HTTP content parameter with CME error code available,
+		'-18' if error sending the POST data,
+		'-19' if error sending the POST data with CME error code available,
+		'-20' if error getting data from url with CME error code available
+	 */
+	int readURL(const char* url, uint8_t* data, int length, uint8_t n_conf, uint8_t mode);
+		
 	uint8_t isConnected( uint8_t n_conf );
 #endif
 	

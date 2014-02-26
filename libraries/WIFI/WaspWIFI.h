@@ -1,7 +1,7 @@
 /*! \file WaspWIFI.h
     \brief Library for managing WIFI modules
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Joaquín Ruiz, Yuri Carmona
 
@@ -550,7 +550,7 @@ class WaspWIFI
     //! Sets the http config and opens an HTTP connection.
     /*!
       \param uint8_t opt : specifies if the host is given by an IP address 
-      (IP), or is given by a DNS name or webpage (URL).
+      (IP), or is given by a DNS name or webpage (DNS).
       \param char* host : specifies the IP address host or URL host.
       \param char* request : specifies the string that is sent to the 
       remote host.
@@ -561,7 +561,7 @@ class WaspWIFI
     //! Sets the http config and opens an HTTP connection.
     /*!
       \param uint8_t opt : specifies if the host is given by an IP address 
-      (IP), or is given by a DNS name or webpage (URL).
+      (IP), or is given by a DNS name or webpage (DNS).
       \param char* host : specifies the IP address host or URL host.
       \param char* request : specifies the string that is sent to the 
       remote host.

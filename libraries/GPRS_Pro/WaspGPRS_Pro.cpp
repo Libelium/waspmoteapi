@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -28,15 +28,9 @@
 
 #include "WaspGPRS_Pro.h"
 
-#define	AT_GPRS_APN		"movistar.es"
-#define	AT_GPRS_LOGIN	"movistar"
-#define	AT_GPRS_PASSW	"movistar"
-// #define	AT_GPRS_APN		"m2mc.webtrial"
-// #define	AT_GPRS_LOGIN	""
-// #define	AT_GPRS_PASSW	""
-// #define	AT_GPRS_APN		"airtelwap.es"
-// #define	AT_GPRS_LOGIN	"wap@wap"
-// #define	AT_GPRS_PASSW	"wap125"
+#define	AT_GPRS_APN		"APN"
+#define	AT_GPRS_LOGIN	"LOGIN"
+#define	AT_GPRS_PASSW	"PASSW"
 
 #define	AT_COMMAND	"AT"
 #define OK_RESPONSE "OK"
@@ -261,7 +255,7 @@ const char* const table_GSM[] PROGMEM =
 #if FTP_FUSE
 
 const unsigned long AT_FTP_WAIT_CONFIG = 10000;
-const unsigned long AT_FTP_WAIT_CONNEC = 45000; // milliseconds
+const unsigned long AT_FTP_WAIT_CONNEC = 60000; // milliseconds
 const unsigned long AT_FTP_MAX_TIME = 300000; 	// milliseconds
 
 const char AT_FTP_ID[]			PROGMEM = "+FTPCID=";		//0
@@ -309,12 +303,15 @@ const unsigned long HTTP_CONF_TIMEOUT = 15000;	// Timeout for HTTP and HTTPS fun
 const char AT_HTTP_INIT[]		PROGMEM = "+HTTPINIT";			//0
 const char AT_HTTP_PARAM[]		PROGMEM = "+HTTPPARA=";			//1
 const char AT_HTTP_ACTION[]		PROGMEM = "+HTTPACTION=";		//2
-const char AT_HTTP_ACTION_R[]	PROGMEM = "+HTTPACTION:0,";		//3
+const char AT_HTTP_ACTION_R[]	PROGMEM = "+HTTPACTION:";		//3
 const char AT_HTTP_READ[]		PROGMEM = "+HTTPREAD";			//4
 const char AT_HTTP_READ_R[]		PROGMEM = "+HTTPREAD:";			//5
 const char AT_HTTP_TERM[]		PROGMEM = "+HTTPTERM";			//6
 const char AT_HTTP_CID[]		PROGMEM = "CID";				//7
 const char AT_HTTP_URL[]		PROGMEM = "URL";				//8
+const char AT_HTTP_DATA[]		PROGMEM = "+HTTPDATA=";			//9
+const char AT_HTTP_DATA_R[]		PROGMEM = "DOWNLOAD";			//10
+const char AT_HTTP_PARA_CONT[]	PROGMEM = "+HTTPPARA=\"CONTENT\",\"application/x-www-form-urlencoded\"";			//11
 
 
 const char* const table_HTTP[] PROGMEM = 
@@ -328,6 +325,9 @@ const char* const table_HTTP[] PROGMEM =
 	AT_HTTP_TERM,		//6
 	AT_HTTP_CID,		//7
 	AT_HTTP_URL,		//8
+	AT_HTTP_DATA,		//9
+	AT_HTTP_DATA_R,		//10
+	AT_HTTP_PARA_CONT,	//11
 };
 #endif
 
@@ -2202,7 +2202,7 @@ int8_t WaspGPRS_Pro::initHTTP(	const char* url,
 	// SET URL: AT+HTTPPARA="URL",<url>
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[1])));	//AT_HTTP_PARAM
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[8])));	//AT_HTTP_URL
-	sprintf(buffer_GPRS, "AT%s\"%s\",\"%s", str_aux1, str_aux2, url);
+	sprintf(buffer_GPRS, "AT%s\"%s\",\"%s", str_aux1, str_aux2, url);	
 
 	counter=strlen(buffer_GPRS);
 
@@ -2237,10 +2237,65 @@ int8_t WaspGPRS_Pro::initHTTP(	const char* url,
 }
 
 
+/* setPOSTdata
+ * 
+ * Configures the HTTP content parameter and sends the POST data to the module
+ * 
+ * Returns
+ * '1' on success 
+ * '-16' if error configuring the HTTP content parameter,
+ * '-17' if error configuring the HTTP content parameter with CME error code available,
+ * '-18' if error sending the POST data
+ * '-19' if error sending the POST data with CME error code available
+*/
+int8_t WaspGPRS_Pro::setPOSTdata(uint8_t* POST_data, int length)
+{
+	
+	int8_t answer;
+	
+	
+	strcpy_P(buffer_GPRS, (char*)pgm_read_word(&(table_HTTP[11])));	//+HTTPPARA...
+	answer = sendCommand2(buffer_GPRS,  OK_RESPONSE, ERROR_CME, HTTP_CONF_TIMEOUT, SEND_ONCE);
+	
+	if (answer == 0)
+	{
+		return -16;		
+	}
+	else if (answer == 2)
+	{
+		return -17;
+	}
+	
+	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[9])));	//+HTTPDATA=
+	sprintf(str_aux1, "%s%d,30000", str_aux2, length);
+	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[10])));	//DOWNLOAD
+	answer = sendCommand2(str_aux1,  str_aux2, ERROR_CME, HTTP_CONF_TIMEOUT, SEND_ONCE);
+	if (answer == 1)
+	{
+		for(int16_t x = 0; x < length; x++)
+		{
+			printByte(POST_data[x], _socket);
+		}
+		
+		answer = waitForData(OK_RESPONSE, millis(), DEFAULT_TIMEOUT, 0);
+		
+		if (answer == 1)
+		{
+			return 1;
+		}
+		else
+		{
+			return -19;
+		}
+	}
+	
+	return -18;
+	
+}
 
 /* sendHTTP
  * 
- * Initializes HTTP connection
+ * Send the HTTP request
  * 
  * Returns
  * 'HTTP_total_data" when ok with the number of bytes 
@@ -2249,7 +2304,7 @@ int8_t WaspGPRS_Pro::initHTTP(	const char* url,
  * '-20' if error getting data from url with CME error code available,
  * 
 */
-int WaspGPRS_Pro::sendHTTP(uint8_t n_conf)
+int WaspGPRS_Pro::sendHTTP(uint8_t n_conf, uint8_t method)
 {
 	int8_t answer;
 	uint8_t i = 0;
@@ -2268,9 +2323,10 @@ int WaspGPRS_Pro::sendHTTP(uint8_t n_conf)
 		
 		// START HTTP SESSION: +HTTPACTION=0
 		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[2])));	//+HTTPACTION=
-		sprintf(str_aux1, "%s0", str_aux2);							
-		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[3])));	//+HTTPACTION:0,
-		answer = sendCommand2(str_aux1, str_aux2, ERROR_CME, HTTP_TIMEOUT, SEND_ONCE);
+		sprintf(str_aux1, "%s%d", str_aux2, method);							
+		strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[3])));	//+HTTPACTION:
+		sprintf(str_aux2, "%s%d,", str_aux3, method);
+		answer = sendCommand2(str_aux1,  str_aux2, ERROR_CME, HTTP_TIMEOUT, SEND_ONCE);
 		if (answer == 1)
 		{
 			//Reads the HTTP status codes
@@ -2476,6 +2532,16 @@ int16_t WaspGPRS_Pro::readHTTP(	uint16_t HTTP_total_data,
 	
 }
 
+/* closeHTTP
+ * 
+ * Close the HTTP service
+ * 
+ * Returns
+ * '1' on success 
+ * '-9' if error closing the HTTP service
+ * '-15' if error closing the HTTP service with CME error code available
+ * 
+*/
 int8_t WaspGPRS_Pro::closeHTTP(){
 
 	uint8_t answer;
@@ -4595,7 +4661,9 @@ int8_t WaspGPRS_Pro::downloadFile(	const char* file,
 #if HTTP_FUSE
 
 /* readURL(const char*, uint8_t) - access to the specified URL and stores the 
- * info read in 'buffer_GPRS' variable
+ * info read in 'buffer_GPRS' variable.
+ * 
+ * USE IT ONLY WITH GET REQUESTS
  *
  * This function access to the specified URL and stores the info read in 
  * 'buffer_GPRS' variable
@@ -4615,12 +4683,17 @@ int8_t WaspGPRS_Pro::downloadFile(	const char* file,
  * '-7' if error starting HTTP session
  * '-8' if error getting data from url
  * '-9' if error closing the HTTP service
- * '-10' if error initializing the HTTP service with CME error code available,
- * '-11' if error setting CID the HTTP service with CME error code available,
- * '-12' if error setting the url the HTTP service with CME error code available,
- * '-13' if error starting HTTP sesion with CME error code available,
- * '-14' if error getting data from url with CME error code available,
- * '-15' if error closing the HTTP service with CME error code available,
+ * '-10' if error initializing the HTTP service with CME error code available
+ * '-11' if error setting CID the HTTP service with CME error code available
+ * '-12' if error setting the url the HTTP service with CME error code available
+ * '-13' if error starting HTTP sesion with CME error code available
+ * '-14' if error getting data from url with CME error code available
+ * '-15' if error closing the HTTP service with CME error code available
+ * '-16' if error configuring the HTTP content parameter
+ * '-17' if error configuring the HTTP content parameter with CME error code available
+ * '-18' if error sending the POST data
+ * '-19' if error sending the POST data with CME error code available
+ * '-20' if error getting data from url with CME error code available
  */
 int WaspGPRS_Pro::readURL(	const char* url, 
 								uint8_t n_conf)
@@ -4630,6 +4703,8 @@ int WaspGPRS_Pro::readURL(	const char* url,
 
 /* readURL(const char*, uint8_t, int, uint8_t) - access to the specified URL 
  * and stores the info read in 'buffer_GPRS' variable
+ * 
+ * USE IT ONLY TO SEND FRAMES WITH GET REQUESTS
  *
  * This function access to the specified URL and stores the info read in 
  * 'buffer_GPRS' variable
@@ -4649,17 +4724,110 @@ int WaspGPRS_Pro::readURL(	const char* url,
  * '-7' if error starting HTTP session
  * '-8' if error getting data from url
  * '-9' if error closing the HTTP service
- * '-10' if error initializing the HTTP service with CME error code available,
- * '-11' if error setting CID the HTTP service with CME error code available,
- * '-12' if error setting the url the HTTP service with CME error code available,
- * '-13' if error starting HTTP sesion with CME error code available,
- * '-14' if error getting data from url with CME error code available,
- * '-15' if error closing the HTTP service with CME error code available,
+ * '-10' if error initializing the HTTP service with CME error code available
+ * '-11' if error setting CID the HTTP service with CME error code available
+ * '-12' if error setting the url the HTTP service with CME error code available
+ * '-13' if error starting HTTP sesion with CME error code available
+ * '-14' if error getting data from url with CME error code available
+ * '-15' if error closing the HTTP service with CME error code available
+ * '-16' if error configuring the HTTP content parameter
+ * '-17' if error configuring the HTTP content parameter with CME error code available
+ * '-18' if error sending the POST data
+ * '-19' if error sending the POST data with CME error code available
+ * '-20' if error getting data from url with CME error code available
  */
 int WaspGPRS_Pro::readURL(	const char* url, 
-								uint8_t* data, 
-								int length, 
-								uint8_t n_conf)
+							uint8_t* data, 
+							int length, 
+							uint8_t n_conf)
+{
+	return readURL(url, data, length, n_conf, GET);
+}
+
+/* readURL(const char*, uint8_t, int, uint8_t) - access to the specified URL 
+ * and stores the info read in 'buffer_GPRS' variable
+ * 
+ * USE IT ONLY WITH POST REQUESTS
+ *
+ * This function access to the specified URL and stores the info read in 
+ * 'buffer_GPRS' variable
+ *
+ * Returns 
+ * '0' if error 
+ * '1' on success 
+ * '2' if buffer_GPRS is full. The answer from the server is limited by the 
+ * 		length of buffer_GPRS. To increase the length of the answer, increase the 
+ * 		BUFFER_SIZE constant.
+ * '-1' if no GPRS connection
+ * '-2' if error opening the connection,
+ * '-3' if error getting the IP address,
+ * '-4' if error initializing the HTTP service
+ * '-5' if error setting CID the HTTP service
+ * '-6' if error setting the url the HTTP service
+ * '-7' if error starting HTTP session
+ * '-8' if error getting data from url
+ * '-9' if error closing the HTTP service
+ * '-10' if error initializing the HTTP service with CME error code available
+ * '-11' if error setting CID the HTTP service with CME error code available
+ * '-12' if error setting the url the HTTP service with CME error code available
+ * '-13' if error starting HTTP sesion with CME error code available
+ * '-14' if error getting data from url with CME error code available
+ * '-15' if error closing the HTTP service with CME error code available
+ * '-16' if error configuring the HTTP content parameter
+ * '-17' if error configuring the HTTP content parameter with CME error code available
+ * '-18' if error sending the POST data
+ * '-19' if error sending the POST data with CME error code available
+ * '-20' if error getting data from url with CME error code available
+ */
+int WaspGPRS_Pro::readURL(	const char* url, 
+							const char* data, 
+							uint8_t n_conf)
+{
+	return readURL(url, (uint8_t*)data, strlen(data), n_conf, POST);
+
+}
+
+
+/* readURL(const char*, uint8_t, int, uint8_t) - access to the specified URL 
+ * and stores the info read in 'buffer_GPRS' variable
+ * 
+ * Base function
+ *
+ * This function access to the specified URL and stores the info read in 
+ * 'buffer_GPRS' variable
+ *
+ * Returns 
+ * '0' if error 
+ * '1' on success 
+ * '2' if buffer_GPRS is full. The answer from the server is limited by the 
+ * 		length of buffer_GPRS. To increase the length of the answer, increase the 
+ * 		BUFFER_SIZE constant.
+ * '-1' if no GPRS connection
+ * '-2' if error opening the connection,
+ * '-3' if error getting the IP address,
+ * '-4' if error initializing the HTTP service
+ * '-5' if error setting CID the HTTP service
+ * '-6' if error setting the url the HTTP service
+ * '-7' if error starting HTTP session
+ * '-8' if error getting data from url
+ * '-9' if error closing the HTTP service
+ * '-10' if error initializing the HTTP service with CME error code available
+ * '-11' if error setting CID the HTTP service with CME error code available
+ * '-12' if error setting the url the HTTP service with CME error code available
+ * '-13' if error starting HTTP sesion with CME error code available
+ * '-14' if error getting data from url with CME error code available
+ * '-15' if error closing the HTTP service with CME error code available
+ * '-16' if error configuring the HTTP content parameter
+ * '-17' if error configuring the HTTP content parameter with CME error code available
+ * '-18' if error sending the POST data
+ * '-19' if error sending the POST data with CME error code available
+ * '-20' if error getting data from url with CME error code available
+ */
+int WaspGPRS_Pro::readURL(	const char* url, 
+							uint8_t* data, 
+							int length, 
+							uint8_t n_conf, 
+							uint8_t mode)
 {
 	// define variables
 	int answer;	
@@ -4678,15 +4846,38 @@ int WaspGPRS_Pro::readURL(	const char* url,
 	
 	do
 	{	
-		// Inits the HTTP service and configures url and CID
-		answer = initHTTP( url, data, length, n_conf);	
-		if (answer != 1)
+		
+		if (mode == GET)
 		{
-			return answer;
+			// Inits the HTTP service and configures url and CID
+			answer = initHTTP( url, data, length, n_conf);			
+			if (answer != 1)
+			{
+				return answer;
+			}
 		}
+		else
+		{
+			// Inits the HTTP service and configures url and CID
+			answer = initHTTP( url, data, 0, n_conf);		
+			if (answer != 1)
+			{
+				return answer;
+			}
+			
+			// Sets the HTTP request
+			answer = setPOSTdata(data, length);
+			//answer = setPOSTdata(data);
+			if (answer != 1)
+			{
+				return answer;
+			}
+			
+		}	
 	
 		// Sends the request to the url and waits for url data
-		answer = sendHTTP( n_conf);	
+		answer = sendHTTP( n_conf, mode);	
+		
 		HTTP_code = CME_CMS_code;
 
 		if(answer == -20 )
@@ -4728,7 +4919,6 @@ int WaspGPRS_Pro::readURL(	const char* url,
 		
 	return answer;
 }
-
 
 
 /* isConnected

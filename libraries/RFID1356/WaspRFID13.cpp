@@ -1,7 +1,7 @@
 /*! \file WaspRFID.cpp
  *  \brief Library for managing WIFI modules
  *
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.1
+ *  Version:			1.0
  *  Design:				David Gascón
  *  Implementation:		Ahmad Saad, Javier Solobera
  */
@@ -40,46 +40,52 @@
 	 /*!
      \param uint8_t socket: The uart por used
     */ 	void WaspRFID::ON(uint8_t socket)
-	{	
-	  delay(1);
-      pinMode(MUX_PW, OUTPUT);     
-      pinMode(MUX_USB_XBEE, OUTPUT);
-      digitalWrite(MUX_PW, HIGH);  
-      digitalWrite(MUX_USB_XBEE, LOW);
-      delay(1); 
-	  
-			if (socket == 1) {			
-				//USB.begin();
-				beginSerial(RFID_RATE, 1);
-			    pinMode(DIGITAL6, OUTPUT);
-				digitalWrite(DIGITAL6, HIGH);
-				Utils.setMuxSocket1();
-				_uart = 1;
-			
-			} else {
-			
-				beginSerial(RFID_RATE, 0);
-				pinMode(XBEE_PW,OUTPUT);
-				digitalWrite(XBEE_PW,HIGH);
-				_uart = 0;
-			}
+	{
+		delay(1);
+		//~ pinMode(MUX_PW, OUTPUT);   
+		//~ pinMode(MUX_USB_XBEE, OUTPUT);
+		//~ digitalWrite(MUX_PW, HIGH);  
+		//~ digitalWrite(MUX_USB_XBEE, LOW);
+		delay(1); 
+		
+		if (socket == 1)
+		{
+			Utils.setMuxSocket1();
+			beginSerial(RFID_RATE, 1);
+			pinMode(DIGITAL6, OUTPUT);
+			digitalWrite(DIGITAL6, HIGH);
+			_uart = 1;
+		} 
+		else
+		{
+			beginSerial(RFID_RATE, 0);
+			pinMode(XBEE_PW,OUTPUT);
+			digitalWrite(XBEE_PW,HIGH);
+			_uart = 0;
+		}
 
-			delay(100);
-			getFirmware();
-			configureSAM();
+		serialFlush(_uart);
+		delay(100);
+		getFirmware();
+		configureSAM();
 	}
 
 	//! Switches OFF the module and closes the UART.
 	 /*!
     */void WaspRFID::OFF(void)
 	{
-			closeSerial(_uart);
-			
-			if (_uart == 1) {
-				digitalWrite(DIGITAL6, LOW);
-			} else {
-				digitalWrite(XBEE_PW,LOW);
-			}
+		// close UART
+		closeSerial(_uart);
+		
+		// power off depending on the socket
+		if (_uart == 1) 
+		{
+			digitalWrite(DIGITAL6, LOW);
+		} 
+		else 
+		{
+			digitalWrite(XBEE_PW,LOW);
+		}
     }
 
 	
@@ -166,11 +172,12 @@
     */   bool WaspRFID::getFirmware(void)  //! It is needed to launch a simple command to sycnchronize
   	{
 		delay(_delay);
-		digitalWrite(MUX_USB_XBEE, HIGH); 
+		//~ digitalWrite(MUX_USB_XBEE, HIGH); 
 		delay(_delay);
 		printString("                  ", _uart);		
 		
-		memset(dataTX, 0x00, 35);  
+		serialFlush(_uart);
+		memset(dataTX, 0x00, sizeof(dataTX));  
 		dataTX[0] = 0x02; // Length
 		lengthCheckSum(dataTX); // Length Checksum
 		dataTX[2] = HOSTTOPN532; // CODE
@@ -179,14 +186,16 @@
  
 		sendTX(dataTX , 5 , 17);  
 		
-		USB.print("Your Firmware version is : ");
+		USB.print(F("Your Firmware version is : "));
 		
 		for (int i = 11; i < (15) ; i++)
 		{
 			USB.printHex(dataRX[i]);
-			USB.print(" ");
+			USB.print(F(" "));
 		}
-			USB.print("\n"); 
+		USB.println(); 
+		
+		serialFlush(_uart);
 	}
 	
  	//!Write 16 bytes in address .
@@ -248,7 +257,7 @@
 		checkSum(dataTX);
 
 		sendTX(dataTX , 8, 30);  
-		memset(readData, 0x00, 16);  
+		memset(readData, 0x00, sizeof(readData) );  
 
 		if ((dataRX[9]== 0xD5) & (dataRX[10] == 0x41) & (dataRX[11] == 0x00)) {             
 			for (int i = 12; i < 28; i++) {
@@ -376,9 +385,9 @@
 		for (int i = 0; i < length ; i++)
 		{
 			USB.printHex(_data[i]);
-			USB.print(" ");   
+			USB.print(F(" "));
 		}
-			USB.print("\n"); 	
+			USB.print(F("\n"));
 	}	
 	
 	//!It compares 2 UIDs
@@ -532,7 +541,9 @@
 		dataTX[7] = 0x00; // Clean checkSum position
 		checkSum(dataTX);
 		
-				sendTX(dataTX , 8, 13);  
+		sendTX(dataTX , 8, 13);  
+				
+		serialFlush(_uart);
 	}
 	
 	//!Send data stored in dataTX
@@ -549,14 +560,15 @@
 		for (int i = 0; i<length; i++) {
 			printByte(dataTX[i], _uart);
 		}
-			printByte(POSTAMBLE, _uart);			
-			getACK(); 
-			waitResponse();    // 1C - receive response
-			getData(outLength); 
 			
+		printByte(POSTAMBLE, _uart);			
+		getACK(); 
+		waitResponse();    // 1C - receive response
+		getData(outLength); 
+		
 		digitalWrite(MUX_USB_XBEE, LOW); 
 		delay(_delay);
-		}
+	}
 	
 	//!Wait for ACK response and stores it in the dataRX buffer
 	void WaspRFID::getACK(void)
