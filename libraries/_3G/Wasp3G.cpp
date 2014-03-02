@@ -8055,8 +8055,20 @@ int8_t Wasp3G::changeBaudrate(long baudrate){
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::sendATCommand(const char* ATcommand){
+	return sendATCommand(ATcommand, DEFAULT_TIMEOUT, 0);
+}
+
+/* sendATCommand(ATcommand) - sends any command to 3G module
+ *
+ * This function sends any command to 3G module
+ *
+ * It stores in 'buffer_3G' the answer returned by the 3G module
+ *
+ * Returns '1' on success, '0' if error
+*/
+int8_t Wasp3G::sendATCommand(const char* ATcommand, int MAX_TIMEOUT, int sendOnce){
 	
-	uint8_t timeout=0;
+	int timeout=0;
 	uint16_t i=0;
 	
 	// Cleans 'buffer_3G':
@@ -8070,14 +8082,19 @@ int8_t Wasp3G::sendATCommand(const char* ATcommand){
 	sprintf(buffer_3G, "AT%s%c%c", ATcommand,'\r','\n');
 
 	serialFlush(_socket);
-	
+
 	// Sends the command to the 3G module:
-	while (!serialAvailable(_socket))
+	while(!serialAvailable(_socket) && (timeout < MAX_TIMEOUT))
 	{
-		printString(buffer_3G,_socket);
+		if (!sendOnce || !timeout)
+		{
+			printString(buffer_3G,_socket);
+		}
 		delay(DELAY_ON_SEND);
-	}
+		timeout++;
+	};
 	
+	timeout = 0;
 	// Waits and reads the answer from the 3G module:	
 	while ( timeout < 10 )
 	{

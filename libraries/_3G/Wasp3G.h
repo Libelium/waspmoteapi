@@ -1507,11 +1507,20 @@ class Wasp3G
 	int8_t changeBaudrate(long baudrate);
 	
 	//! It sends any AT command to the 3G module
-    /*!
+	/*!
 	\param char* ATcommand : the command to send to the 3G module
 	\return '1' on success, '0' if error. The answer is stored into 'buffer_3G'
 	 */
 	int8_t sendATCommand(const char* ATcommand);
+	
+	//! It sends any AT command to the 3G module
+	/*!
+	\param char* ATcommand : the command to send to the 3G module
+	\param int MAX_TIMEOUT : specifies the maximum timeout
+	\param int sendOnce : specifies if the data is sent once
+	\return '1' on success, '0' if error. The answer is stored into 'buffer_3G'
+	 */
+	int8_t sendATCommand(const char* ATcommand, int MAX_TIMEOUT, int sendOnce);
 	
 	//! Selects speaker or loudspeaker output for calls
     /*!
