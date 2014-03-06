@@ -262,6 +262,7 @@ char* WaspRTC::getTimestamp()
 void WaspRTC::readRTC(uint8_t endAddress) 
 {
 	uint16_t timecount = 0;
+	uint16_t timeout = 0;
 	// ADDRESSING FROM MEMORY POSITION ZERO
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
@@ -275,7 +276,7 @@ void WaspRTC::readRTC(uint8_t endAddress)
 	Wire.requestFrom(RTC_ADDRESS, RTC_DATA_SIZE);  
 
 	// slave may send less than requested
-	while(timecount <= endAddress)    
+	while((timecount <= endAddress) && (timeout < 10))
 	{ 
 		if (Wire.available())
 		{
@@ -313,6 +314,11 @@ void WaspRTC::readRTC(uint8_t endAddress)
 						break;
 			}
 			timecount++;
+		}
+		// No data on I2C bus
+		else
+		{
+			timeout++;
 		}
 	}
 	
@@ -695,6 +701,8 @@ void WaspRTC::writeRTCregister(uint8_t theAddress)
  */
 void WaspRTC::readRTCregister(uint8_t theAddress) 
 {
+	uint16_t timeout = 0;
+	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
@@ -706,7 +714,10 @@ void WaspRTC::readRTCregister(uint8_t theAddress)
 	Wire.requestFrom(RTC_ADDRESS, 0x01); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
-	while(!Wire.available()) {};
+	while(!Wire.available() && (timeout < 10))
+	{
+		timeout++;
+	}
 	registersRTC[theAddress] = Wire.receive();
 	Wire.endTransmission();
 }
