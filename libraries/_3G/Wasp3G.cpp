@@ -1070,7 +1070,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 			{
 				if ((expectedAnswer1 == ERROR_CME)||(expectedAnswer1 == ERROR_CMS))
 				{
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.print(F("special error"));
 					#endif
 					while  (serialRead(_socket) != ' ');
@@ -1082,7 +1082,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 						CME_CMS_code+=aux-0x30;
 						aux=serialRead(_socket);
 					}while (aux != '\r');
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.println(CME_CMS_code, DEC);
 					#endif
 				}
@@ -1099,7 +1099,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 			{
 				if ((expectedAnswer2 == ERROR_CME)||(expectedAnswer2 == ERROR_CMS))
 				{
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.print(F("special error"));
 					#endif
 					while  (serialRead(_socket) != ' ');
@@ -1111,7 +1111,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 						CME_CMS_code+=aux-0x30;
 						aux=serialRead(_socket);
 					}while (aux != '\r');
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.println(CME_CMS_code, DEC);
 					#endif
 				}
@@ -1296,7 +1296,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 			{
 				if ((expectedAnswer1 == ERROR_CME)||(expectedAnswer1 == ERROR_CMS))
 				{
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.print(F("special error"));
 					#endif
 					while  (serialRead(_socket) != ' ');
@@ -1308,7 +1308,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 						CME_CMS_code+=aux-0x30;
 						aux=serialRead(_socket);
 					}while (aux != '\r');
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.println(CME_CMS_code, DEC);
 					#endif
 				}
@@ -1570,7 +1570,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 			{
 				if ((expectedAnswer1 == ERROR_CME)||(expectedAnswer1 == ERROR_CMS))
 				{
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.print(F("special error"));
 					#endif
 					while  (serialRead(_socket) != ' ');
@@ -1582,7 +1582,7 @@ uint8_t Wasp3G::waitForData(const char* expectedAnswer1, const char* expectedAns
 						CME_CMS_code+=aux-0x30;
 						aux=serialRead(_socket);
 					}while (aux != '\r');
-					#if GPRS_debug_mode>0
+					#if _3G_debug_mode>0
 						USB.println(CME_CMS_code, DEC);
 					#endif
 				}
