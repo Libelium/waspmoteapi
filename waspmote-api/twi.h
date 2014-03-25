@@ -22,13 +22,8 @@
 #define twi_h
 
   #include <inttypes.h>
-
-  //#define ATMEGA8
-
-  #ifndef CPU_FREQ
-  #define CPU_FREQ 8000000L
-  #endif
-
+ 
+  //! Define the SCL frequency
   #ifndef TWI_FREQ
   #define TWI_FREQ 100000L
   #endif

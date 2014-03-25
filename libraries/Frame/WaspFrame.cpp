@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -38,6 +38,13 @@ WaspFrame::WaspFrame()
     // store number zero to EEPROM in roder to start 
     // with this first frame sequence number
     storeSequence(0);
+	
+	//! This code should be used when Hibernate feature is used instead of the 
+	//! previous storeSequence(0) calling
+    //~ if( !( digitalRead(RTC_INT_PIN_MON) && (Utils.readEEPROM(HIB_ADDR)==HIB_VALUE) ))
+	//~ {
+		//~ storeSequence(0);
+	//~ }
     
     // set default maximum frame size. It might be changed using 'setFrameSize' 
     // function when using an XBee module

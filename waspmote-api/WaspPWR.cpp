@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -173,7 +173,11 @@ void WaspPWR::setWatchdog(uint8_t mode, uint8_t timer)
  */
 void WaspPWR::switchesOFF(uint8_t option)
 {
-	
+	// set this pin LOW to decrease consumption
+	// if hibernate is not used
+	pinMode(RTC_SLEEP, OUTPUT);
+	digitalWrite(RTC_SLEEP, LOW);
+		
 	// unset I2C bus        
     pinMode(I2C_SDA,OUTPUT);
 	digitalWrite(I2C_SDA,LOW);
@@ -226,6 +230,17 @@ void WaspPWR::switchesOFF(uint8_t option)
 	// switch off the battery monitor power supply
 	pinMode(BAT_MONITOR_PW,OUTPUT);
 	digitalWrite(BAT_MONITOR_PW,LOW);
+	
+	// check if a Smart Metering baord has been switched and proceed to disable 
+	// the digital pins so as not to waste energy
+	if( WaspRegister & REG_METERING )
+	{
+		setSensorPower(SENS_3V3,SENS_ON);
+		pinMode(DIGITAL3, OUTPUT);
+		pinMode(DIGITAL4, OUTPUT);
+		digitalWrite(DIGITAL3, HIGH);
+		digitalWrite(DIGITAL4, HIGH);
+	}
 	
 }
 
@@ -292,6 +307,11 @@ void WaspPWR::sleep(uint8_t option)
 			return (void)0;
 		}
 	}
+	
+	// mandatory delay to wait for MUX_RX stabilization 
+	// after switching off the sensor boards 
+	delay(100);	
+	
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sleep_enable();
 	sleep_mode();
@@ -424,6 +444,10 @@ void WaspPWR::deepSleep(	const char* time2wake,
 			return (void)0;
 		}
 	}
+	
+	// mandatory delay to wait for MUX_RX stabilization 
+	// after switching off the sensor boards 
+	delay(100);	
 	
 	// set sleep mode
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -701,11 +725,14 @@ void	WaspPWR::ifHibernate()
 		Utils.setLED(LED1,LED_OFF);
 	}	
 	
-	// make sure both digital pins are off
-	while(digitalRead(RTC_SLEEP)||digitalRead(RST_RTC))
-	{
-		digitalWrite(RTC_SLEEP,LOW);
-		digitalWrite(RST_RTC, LOW);
+	// make sure both digital pins are off depending on the boot version
+	if( Utils.getBootVersion() < 'E')
+	{	
+		if(digitalRead(RTC_SLEEP)||digitalRead(RST_RTC))
+		{
+			digitalWrite(RTC_SLEEP,LOW);
+			digitalWrite(RST_RTC, LOW);
+		}
 	}
 }
 

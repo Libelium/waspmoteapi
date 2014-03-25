@@ -26,6 +26,11 @@
 #include <avr/signal.h>
 #include <compat/twi.h>
 
+#include "WaspVariables.h"
+#ifndef __WASPCONSTANTS_H__
+  #include "WaspConstants.h"
+#endif
+
 #ifndef cbi
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #endif
@@ -60,10 +65,12 @@ static volatile uint8_t twi_rxBufferIndex;
  * Output   none
  */
 void twi_init(void)
-{
-	int i=0;
-  // initialize state
-  twi_state = TWI_READY;
+{	
+	// initialize state
+	twi_state = TWI_READY;
+	
+	// re initialize TWI
+	cbi(PRR0,PRTWI);
 
   #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__)
     // activate internal pull-ups for twi
@@ -78,30 +85,23 @@ void twi_init(void)
     sbi(PORTD, 1);
   #endif
 
-  // initialize twi prescaler and bit rate
-  cbi(TWSR, TWPS0);
-  cbi(TWSR, TWPS1);
-  TWBR = ((CPU_FREQ / TWI_FREQ) - 16) / 2; // FIXME!!
+	// initialize twi prescaler and bit rate
+	cbi(TWSR, TWPS0);
+	cbi(TWSR, TWPS1);
+	TWBR = ((F_CPU / TWI_FREQ) - 16) / 2; 
 
-  /* twi bit rate formula from atmega128 manual pg 204
-  SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR))
-  note: TWBR should be 10 or higher for master mode
-  It is 72 for a 16mhz Wiring board with 100kHz TWI */
+	/* twi bit rate formula from atmega128 manual pg 204
+	SCL Frequency = CPU Clock Frequency / (16 + (2 * TWBR))
+	note: TWBR should be 10 or higher for master mode
+	It is 72 for a 16mhz Wiring board with 100kHz TWI */
 
-  // enable twi module, acks, and twi interrupt
-	TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);
+	// enable twi module, acks, and twi interrupt
+	TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA);	
 	
-  // allocate buffers
-    for(i=0;i<TWI_BUFFER_LENGTH;i++) twi_masterBuffer[i]=0;
-    for(i=0;i<TWI_BUFFER_LENGTH;i++) twi_txBuffer[i]=0;
-    for(i=0;i<TWI_BUFFER_LENGTH;i++) twi_rxBuffer[i]=0;
-
-	
-// 	printString("Reservo twi_masterBuffer, twi_txBuffer y twi_rxBuffer",0);
-// 	printNewline(0);
-//   twi_masterBuffer = (uint8_t*) calloc(TWI_BUFFER_LENGTH, sizeof(uint8_t));
-//   twi_txBuffer = (uint8_t*) calloc(TWI_BUFFER_LENGTH, sizeof(uint8_t));
-//   twi_rxBuffer = (uint8_t*) calloc(TWI_BUFFER_LENGTH, sizeof(uint8_t));
+	// clear buffers
+	memset(twi_masterBuffer, 0x00, sizeof(twi_masterBuffer) );
+	memset(twi_txBuffer, 0x00, sizeof(twi_txBuffer) );
+	memset(twi_rxBuffer, 0x00, sizeof(twi_rxBuffer) );
 }
 
 /* 
@@ -322,23 +322,33 @@ void twi_releaseBus(void)
 
 void twi_close()
 {	
-	// de-activate internal pull-up resistors
-	cbi(PORTD, 0);
-	cbi(PORTD, 1);
+	// de-activate internal pull-up resistors: SDA and SCL pins set to '0'
+	cbi(PORTD, 0); 
+	cbi(PORTD, 1);	
 	
-	
+	// set pre-scaler bits to 64 prescaler value
 	sbi(TWSR, TWPS0);
 	sbi(TWSR, TWPS1);
 	
-  // disable twi module, acks, and twi interrupt
+	// disable twi module, acks, and twi interrupt
 	sbi(TWCR,TWINT);
 	sbi(TWCR,TWSTO);
 	cbi(TWCR,TWEA);
 	cbi(TWCR,TWSTA);
 	cbi(TWCR,TWWC);
-	sbi(TWCR,TWEN);
+	// switch off TWI depending on wether a sensor board is plugged or not
+	if(		(WaspRegister & REG_GASES) 
+		||	(WaspRegister & REG_CITIES_V14) 
+		||	(WaspRegister & REG_PROTOTYPING) )
+	{
+		cbi(TWCR,TWEN);
+	}
+	else
+	{
+		sbi(TWCR,TWEN);
+	}
 	cbi(TWCR,TWIE);
-	cbi(PRR0,PRTWI);
+	sbi(PRR0,PRTWI);
 }
 
 

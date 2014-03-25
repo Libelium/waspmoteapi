@@ -305,8 +305,11 @@
 /*! \def REG_GASES
     \brief Bit dedicated to the presence of the Gases Board
  */
-/*! \def REG_CITIES
-    \brief Bit dedicated to the presence of the Smart Cities Board
+/*! \def REG_CITIES_V14
+    \brief Bit dedicated to the presence of the Smart Cities Board v1.4
+ */
+/*! \def REG_CITIES_V15
+    \brief Bit dedicated to the presence of the Smart Cities Board v1.5
  */
 /*! \def REG_RADIATION
     \brief Bit dedicated to the presence of the Radiation Board
@@ -328,11 +331,12 @@
 #define	REG_AGRICULTURE		32 
 #define	REG_GASES			64 
 #define	REG_EVENTS			128
-#define	REG_CITIES			256
-#define	REG_RADIATION		512
-#define	REG_PROTOTYPING		1024
-#define	REG_PARKING			2048
-#define	REG_VIDEO_CAMERA	4096
+#define	REG_CITIES_V14		256
+#define	REG_CITIES_V15		512
+#define	REG_RADIATION		1024
+#define	REG_PROTOTYPING		2048
+#define	REG_PARKING			4096
+#define	REG_VIDEO_CAMERA	8192
 
 
 /*******************************************************************************

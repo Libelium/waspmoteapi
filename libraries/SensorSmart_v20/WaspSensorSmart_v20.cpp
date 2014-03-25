@@ -56,7 +56,7 @@ WaspSensorSmart_v20::WaspSensorSmart_v20()
 	digitalWrite(SENS_PW_5V,LOW);
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_CITIES;
+	WaspRegister |= REG_METERING;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////

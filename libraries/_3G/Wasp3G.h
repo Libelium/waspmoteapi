@@ -102,17 +102,22 @@
 /*! \def DELAY_ON_SEND
     \brief Constants for AT commands. Delay after every sending attempt in this case
  */
-#define DELAY_ON_SEND 100
+#define DELAY_ON_SEND 250
 
 /*! \def DEFAULT_TIMEOUT
-    \brief Constants for AT commands. Default attempts to try in this case. Steps of 10 ms
+    \brief Constants for AT commands. Default attempts to try in this case. 
  */
-#define DEFAULT_TIMEOUT 200
+#define DEFAULT_TIMEOUT 10000
 
 /*! \def SEND_ONCE
     \brief Constants for AT commands. Sending only once in this case
  */
 #define SEND_ONCE 1
+
+/*! \def SEND_DEFAULT
+    \brief Constants for AT commands. Sending 10 times in this case
+ */
+#define SEND_DEFAULT 10
 
 /*! \def PORT_USED
     \brief Constants for AT commands. Port used in AT commands functions in this case
@@ -184,6 +189,7 @@ class Wasp3G
 	//! Variable : stores if the module is ready or not (0:not ready, 1:ready)
    uint8_t ready;
    
+   //! Variables: aux strings that store commands and answer extracted from flash memory   
 	char str_aux1[20];
 	char str_aux2[20];
 	char str_aux3[20];
@@ -196,116 +202,89 @@ class Wasp3G
 	 */
 	void getIfReady();
 	
+
 	
-	//! Parses 'data_expected' into 'data' string
-	/*!
-	\param char* data : string of data  
-	\param char* data_expected : string of data to find
-	\return '1' if data_expected is in data, '0' if not.
-	*/
-	uint8_t parse(const char* data,const char* data_expected);
-	
+	int8_t check3Gconnection(unsigned long time);
 	
 	//! It checks if 3G connection is attached or not
     /*!
 	\param void
 	\return '1' on success, '0' if error
 	 */
-	uint8_t check3Gconnection();
+	uint8_t check3Gattach();
 	
 	uint8_t getXModemCheckSum(uint8_t* data);
 	
+	uint16_t sendXModemCheckSum(char* ptr);
 	
 	//! It sends an AT command to the module
     /*!
 	\param char* theText : string to send to the module
-	\param char* expectedAnswer : string expected to be answered by the module
-	\return '1' on success, '0' if error
-	 */	
-	uint8_t sendCommand1(const char* theText, const char* expectedAnswer1);
+	\param char* expectedAnswer1 : string expected to be answered by the module
+	\return  '1' if expectedAnswer1 was found and '0' if no answer was found
+	 */
+	uint8_t sendCommand1( const char* theText, const char* expectedAnswer1);
 	
 	//! It sends an AT command to the module
     /*!
 	\param char* theText : string to send to the module
-	\param char* endOfCommand : string to send to the module
-	\param char* expectedAnswer : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
+	\param char* expectedAnswer1 : string expected to be answered by the module
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
 	\param int sendOnce : specifies if the data is sent once	
-	\return '1' on success, '0' if error
+	\return  '1' if expectedAnswer1 was found and '0' if no answer was found
 	 */
-	uint8_t sendCommand1(const char* theText, const char* expectedAnswer, int MAX_TIMEOUT, int sendOnce);
-	
-	//! It waits for data from the module
-    /*!
-	\param char* expectedAnswer : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
-	\param int seconds : specifies the number of seconds to wait before listening to the module
-	\return '1' on success, '0' if error
-	 */
-	uint8_t waitForData(const char* expectedAnswer, int MAX_TIMEOUT, int timeout, int seconds);
-	
-	//!functions with two answers
+	uint8_t sendCommand1(	const char* theText, const char* expectedAnswer1, 
+							unsigned long MAX_TIMEOUT, int sendOnce);
+
+	//functions with two answers	
 	//! It sends an AT command to the module
     /*!
 	\param char* theText : string to send to the module
-	\param char* endOfCommand : string to send to the module
 	\param char* expectedAnswer1 : string expected to be answered by the module
 	\param char* expectedAnswer2 : string expected to be answered by the module
-	\param int sendOnce : specifies if the data is sent once	
-	\return '1' on success, '0' if error
+	\return  '1' if expectedAnswer1 was found, '2' if expectedAnswer2 was found
+		and '0' if no answer was found
 	 */
-	uint8_t sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2);
+	uint8_t sendCommand2(	const char* theText, 
+							const char* expectedAnswer1, 
+							const char* expectedAnswer2);
 	
 	//! It sends an AT command to the module
     /*!
 	\param char* theText : string to send to the module
-	\param char* endOfCommand : string to send to the module
 	\param char* expectedAnswer1 : string expected to be answered by the module
 	\param char* expectedAnswer2 : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
 	\param int sendOnce : specifies if the data is sent once	
-	\return '1' on success, '0' if error
+	\return  '1' if expectedAnswer1 was found, '2' if expectedAnswer2 was found 
+		and '0' if no answer was found
 	 */
-	uint8_t sendCommand2(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int sendOnce);
-	
-	//! It waits for data from the module
-    /*!
-	\param char* expectedAnswer1 : string 1 expected to be answered by the module
-	\param char* expectedAnswer2 : string 2 expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
-	\param int seconds : specifies the number of seconds to wait before listening to the module
-	\return '1' on success, '0' if error
-	 */
-	uint8_t waitForData(const char* expectedAnswer1, const char* expectedAnswer2, int MAX_TIMEOUT, int timeout, int seconds);
-	
-	//!functions with three answers
+	uint8_t sendCommand2(	const char* theText, 
+							const char* expectedAnswer1, 
+							const char* expectedAnswer2, 
+							unsigned long MAX_TIMEOUT, 
+							int sendOnce);
+
+	//function with three answers	
 	//! It sends an AT command to the module
     /*!
 	\param char* theText : string to send to the module
 	\param char* expectedAnswer1 : string expected to be answered by the module
 	\param char* expectedAnswer2 : string expected to be answered by the module
 	\param char* expectedAnswer3 : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
 	\param int sendOnce : specifies if the data is sent once	
-	\return '1' on success, '0' if error
+	\return  '1' if expectedAnswer1 was found, '2' if expectedAnswer2 was found, 
+		'3' if expectedAnswer2 was found and '0' if no answer was found
 	 */
-	uint8_t sendCommand3(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int sendOnce);
-	
-	//! It waits for data from the module
-    /*!
-	\param char* expectedAnswer1 : string 1 expected to be answered by the module
-	\param char* expectedAnswer2 : string 2 expected to be answered by the module
-	\param char* expectedAnswer3 : string 3 expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
-	\param int seconds : specifies the number of seconds to wait before listening to the module
-	\return '1' on success, '0' if error
-	 */
-	uint8_t waitForData(const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, int MAX_TIMEOUT, int timeout, int seconds);
-	
-	//!functions with four answers
+	uint8_t sendCommand3(	const char* theText, 
+							const char* expectedAnswer1, 
+							const char* expectedAnswer2, 
+							const char* expectedAnswer3, 
+							unsigned long MAX_TIMEOUT, 
+							int sendOnce);
+
+	//function with four answers
 	//! It sends an AT command to the module
     /*!
 	\param char* theText : string to send to the module
@@ -313,29 +292,95 @@ class Wasp3G
 	\param char* expectedAnswer2 : string expected to be answered by the module
 	\param char* expectedAnswer3 : string expected to be answered by the module
 	\param char* expectedAnswer4 : string expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
 	\param int sendOnce : specifies if the data is sent once	
-	\return '1' on success, '0' if error
+	\return  '1' if expectedAnswer1 was found, '2' if expectedAnswer2 was found, 
+		'3' if expectedAnswer2 was found, '4' if expectedAnswer2 was found and
+		'0' if no answer was found
 	 */
-	uint8_t sendCommand4(const char* theText, const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, const char* expectedAnswer4, int MAX_TIMEOUT, int sendOnce);
-	
+	uint8_t sendCommand4(	const char* theText, 
+							const char* expectedAnswer1, 
+							const char* expectedAnswer2, 
+							const char* expectedAnswer3, 
+							const char* expectedAnswer4, 
+							unsigned long MAX_TIMEOUT, 
+							int sendOnce);
+							
+
+	//! It waits for data from the module
+    /*!
+	\param char* expectedAnswer1 : string 1 expected to be answered by the module
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long timeout : specifies the timeout
+	\param int seconds : specifies the number of seconds to wait before listening to the module
+	\return '1' if expectedAnswer1 was found and '0' if no answer was found
+	 */
+	uint8_t waitForData(	const char* expectedAnswer1, 
+							unsigned long MAX_TIMEOUT, 
+							unsigned long timeout,
+							int seconds);
+							
+	//! It waits for data from the module
+    /*!
+	\param char* expectedAnswer1 : string 1 expected to be answered by the module
+	\param char* expectedAnswer2 : string 2 expected to be answered by the module
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long timeout : specifies the timeout
+	\param int seconds : specifies the number of seconds to wait before listening to the module
+	\return '1' if expectedAnswer1 was found, '2' if expectedAnswer2 was found
+		and '0' if no answer was found
+	 */
+	uint8_t waitForData(	const char* expectedAnswer1,
+							const char* expectedAnswer2, 
+							unsigned long MAX_TIMEOUT, 
+							unsigned long timeout,
+							int seconds);
+							
+	//! It waits for data from the module
+    /*!
+	\param char* expectedAnswer1 : string 1 expected to be answered by the module
+	\param char* expectedAnswer2 : string 2 expected to be answered by the module
+	\param char* expectedAnswer3 : string 3 expected to be answered by the module
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long timeout : specifies the timeout
+	\param int seconds : specifies the number of seconds to wait before listening to the module
+	\return '1' if expectedAnswer1 was found, '2' if expectedAnswer2 was found, 
+		'3' if expectedAnswer2 was found and '0' if no answer was found
+	 */
+	uint8_t waitForData(	const char* expectedAnswer1,
+							const char* expectedAnswer2, 
+							const char* expectedAnswer3, 
+							unsigned long MAX_TIMEOUT, 
+							unsigned long timeout,
+							int seconds);
 	//! It waits for data from the module
     /*!
 	\param char* expectedAnswer1 : string 1 expected to be answered by the module
 	\param char* expectedAnswer2 : string 2 expected to be answered by the module
 	\param char* expectedAnswer3 : string 3 expected to be answered by the module
 	\param char* expectedAnswer4 : string 3 expected to be answered by the module
-	\param int MAX_TIMEOUT : specifies the maximum timeout	
-	\param int timeout : specifies the timeout
+	\param unsigned long MAX_TIMEOUT : specifies the maximum timeout	
+	\param unsigned long timeout : specifies the timeout
 	\param int seconds : specifies the number of seconds to wait before listening to the module
-	\return '1' on success, '0' if error
+	\return '1' if expectedAnswer1 was found, '2' if expectedAnswer2 was found, 
+		'3' if expectedAnswer2 was found, '4' if expectedAnswer2 was found and
+		'0' if no answer was found
 	 */
-	uint8_t waitForData(const char* expectedAnswer1, const char* expectedAnswer2, const char* expectedAnswer3, const char* expectedAnswer4, int MAX_TIMEOUT, int timeout, int seconds);
+	uint8_t waitForData(	const char* expectedAnswer1, 
+							const char* expectedAnswer2, 
+							const char* expectedAnswer3, 
+							const char* expectedAnswer4, 
+							unsigned long MAX_TIMEOUT, 
+							unsigned long timeout,
+							int seconds, 
+							int n_answers);
+
+
 	
 	
 	
 	public:
-		
+	
 	//! Variable : power mode
     /*!
 	Possible values are: _3G_ON, _3G_FULL, _3G_MINIMUM, _3G_OFFLINE and _3G_OFF;
@@ -449,9 +494,13 @@ class Wasp3G
 	//! It checks if 3G is connected to the network
     /*!
 	\param uint8_t time: time to wait 
-	\return Returns '1' when connected and '0' if not
+	\return Returns '1' when connected,
+		'0' if not registered and the module is not currently searching a new operator,
+		'-2' if not registered, but the module is currently searching a new operator,
+		'-3' if registration denied
+		and '-4' if the state is unknown
 	 */
-	int8_t check(uint16_t time);
+	int8_t check(unsigned long time);
 	
 		//! Sets time and date to 3G module from RTC
 	/*!
@@ -489,7 +538,10 @@ class Wasp3G
     int8_t getIMEI();
 	
 	
+	
 	int8_t	manageIncomingData();
+	
+	int8_t	manageIncomingData(unsigned long waiting_time);
 	
 	
 	//!*****************************************************************
@@ -648,48 +700,70 @@ class Wasp3G
 	//! Initializes the camera
     /*!
 	\param void
-	\return Returns '1' on success , '0' if error, '-2' if camera not detected, '-3' if camera is already started.
+	\return Returns '1' on success,
+		'0' if error,
+		'-2' if camera not detected,
+		'-3' if camera is already started.
 	 */
 	int8_t startCamera();
 	
 	//! Stops the camera
     /*!
 	\param void
-	\return Returns '1' on success , '0' if error, '-2' if camera not started
+	\return Returns '1' on success,
+		'0' if error,
+		'-2' if camera not started
 	 */
 	int8_t stopCamera();
 	
 	//! Take a picture and saves it.
 	/*!
 	\param uint8_t location: '0' from module location, '1' from 3G SD location
-	\return Returns '1' on success , '0' if error, '2' error setting the store location, '3' if camera not detected, '4' if camera not started,
-		'5' if camera is in invalid state, '6' if there isn't memory enough 
+	\return Returns '1' on success,
+		'0' if error,
+		'2' error setting the store location,
+		'3' if camera not detected,
+		'4' if camera not started,
+		'5' if camera is in invalid state,
+		'6' if there isn't memory enough 
 		Buffer_3G contains the picture name.
 	 */
 	int8_t takePicture();
 
 	//! Starts video capture
 	/*!
-	\return Returns '1' on success , '0' if error, '-2' if camera not started,
-		'-3' if camera is in invalid state, '4' if there isn't memory enough
+	\return Returns '1' on success ,
+		'0' if error,
+		'-2' if camera not started,
+		'-3' if camera is in invalid state,
+		'4' if there isn't memory enough
 	 */
 	int8_t startVideo();
 	
 	//! Pauses video capture
 	/*!
-	\return '1' on success , '0' if error, '-2' if camera not started, '-3' if camera is in invalid state
+	\return '1' on success,
+		'0' if error,
+		'-2' if camera not started,
+		'-3' if camera is in invalid state
 	 */
 	int8_t pauseVideo();
 
 	//! Resumes video capture
 	/*!
-	\return '1' on success , '0' if error, '-2' if camera not started, '-3' if camera is in invalid state
+	\return '1' on success,
+		'0' if error,
+		'-2' if camera not started,
+		'-3' if camera is in invalid state
 	 */
 	int8_t resumeVideo();
 	
 	//! Stops video capture
 	/*!
-	\return Returns '1' on success , '0' if error, '-2' if camera not started, '-3' if camera is in invalid state
+	\return Returns '1' on success,
+		'0' if error,
+		'-2' if camera not started,
+		'-3' if camera is in invalid state
 	 */
 	int8_t stopVideo();
 	
@@ -703,28 +777,46 @@ class Wasp3G
 	//! Sets the camera rotation
 	/*!
 	\param const char* rotation: "0" degrees, "90" degrees, "180" degrees and "270" degrees
-	\return Returns '1' on success , '0' if error,'-2' if camera not started and '-3' if camera is in invalid state
+	\return Returns '1' on success,
+		'0' if error,
+		'-2' if camera not started
+		'-3' if camera is in invalid state
 	 */
 	int8_t cameraRotation(const char* rotation);
 
 	//!  Sets camera brightness
 	/*!
 	\param uint8_t mode: 0 to 6 (0 is the lowest, 6 is the highest)
-	\return Returns '1' on success , '0' if error,'-2' if camera not started, '-3' if camera is in invalid state
+	\return Returns '1' on success,
+		'0' if error,
+		'-2' if camera not started,
+		'-3' if camera is in invalid state
 	 */
 	int8_t cameraBrightness(uint8_t mode);
 	
 	//!  Sets camera resolution
 	/*!
-	\param uint8_t resolution:  '0' for STAMP, '1' for QQVGA, '2' for QCIF, '3' for QVGA, '4' for CIF, '5' for VGA and '6' for XGA
-	\return '1' on success , '0' if error, '-2' if camera not detected and '-3' if camera not started
+	\param uint8_t resolution: '0' for STAMP,
+								'1' for QQVGA,
+								'2' for QCIF,
+								'3' for QVGA,
+								'4' for CIF,
+								'5' for VGA
+								'6' for XGA
+	\return '1' on success,
+		'0' if error,
+		'-2' if camera not detected
+		'-3' if camera not started
 	 */
 	int8_t cameraResolution(uint8_t resolution);
 	
 	//!  Sets FPS
 	/*!
-	\param uint8_t fps: '0' for 7.5 fps, '1' for 10 fps and '2' for 15 fps
-	\return '1' on success , '0' if error,'-2' if camera not started, '-3' if camera is in invalid state
+	\param uint8_t fps:	'0' for 7.5 fps, '1' for 10 fps and '2' for 15 fps
+	\return '1' on success,
+		'0' if error,
+		'-2' if camera not started,
+		'-3' if camera is in invalid state
 	 */
 	int8_t cameraFPS(uint8_t fps);
 	
@@ -747,7 +839,10 @@ class Wasp3G
 
 	//! Powers the IR LEDs of the Video Camera Sensor Board
 	/*! 
-	\param uint8_t blockIR: '0' powers off all LEDs, '1' powers on block 1, '2' powers on block 2 and '3'powers all LEDs
+	\param uint8_t blockIR:	'0' powers off all LEDs,
+							'1' powers on block 1,
+							'2' powers on block 2
+							'3'powers all LEDs
 	\return nothing
 	*/
 	void powerIRLED(int8_t blockIR);
@@ -772,11 +867,16 @@ class Wasp3G
 	//!  Makes a videocall
 	/*!
 	\param const char* phone_number: number to call
-	\param int8_t record: '0'  not record video, '1' only record far-end video,
-		'2' only record near-end video and '3' record both far-end and near-end
-	\return '1' if success, '0' if error, '-1' if error connecting to the other party,
-		'-2' if error with setup or the other party hangs the call, '-3'  if error connecting the videocall
-		and '-4' if error recording the call (videocall is active)
+	\param int8_t record:	'0' not record video,
+							'1' only record far-end video,
+							'2' only record near-end video
+							'3' record both far-end and near-end
+	\return '1' if success,
+		'0' if error,
+		'-1' if error connecting to the other party,
+		'-2' if error with setup or the other party hangs the call,
+		'-3'  if error connecting the videocall
+		'-4' if error recording the call (videocall is active)
 	 */
 	int8_t makeVideoCall(const char* phone_number, int8_t record);
 	
@@ -814,41 +914,69 @@ class Wasp3G
 	\param const char* password:string with the FTP password
 	\param uint8_t mode:FTP mode (active or passive)
 	\param const char* type:string with the FTP type (ASCII or Binary)
-	\return '1' on success, '-2' if error setting the connection parameters (APN), '-3' if error setting the FTP server ('-13' if CME error available),
-		'-4' if error setting the FTP port ('-14' if CME error available), '-5' if error setting the FTP mode ('-15' if CME error available),
-		'-6' if error setting the FTP type ('-16' if CME error available), '-7' if error setting the user name ('-17' if CME error available)
-		'-8' if error setting the FTP password ('-18' if CME error available),
+	\return '1' on success,
+		'-2' if error setting the connection parameters (APN),
+		'-3' if error setting the FTP server ('-13' if CME error available),
+		'-4' if error setting the FTP port ('-14' if CME error available),
+		'-5' if error setting the FTP mode ('-15' if CME error available),
+		'-6' if error setting the FTP type ('-16' if CME error available),
+		'-7' if error setting the user name ('-17' if CME error available)
+		'-8' if error setting the FTP password ('-18' if CME error available)
 	 */
-	int8_t configureFTP(const char* server, const char* port, const char* user_name, const char* password, uint8_t mode, const char* type);
+	int8_t configureFTP(	const char* server,
+							const char* port,
+							const char* user_name,
+							const char* password,
+							uint8_t mode,
+							const char* type);
 
 	//!  Uploads a file from 3G board to FTP server
 	/*!
 	\param const char* destination_path: path in the FTP server where uploads the file
-	\param uint8_t origin: The directory to where is file . 0 – current directory, 1 – “C:/Picture” directory, 2 – “C:/Video” directory,
-		3 – “C:/VideoCall” directory, 4 – “D:/Picture” directory, 5 – “D:/Video” directory, 6 – “D:/VideoCall” directory, 7 – “C:/Audio” directory,
+	\param uint8_t origin: The directory to where is file .
+		0 – current directory,
+		1 – “C:/Picture” directory,
+		2 – “C:/Video” directory,
+		3 – “C:/VideoCall” directory,
+		4 – “D:/Picture” directory,
+		5 – “D:/Video” directory,
+		6 – “D:/VideoCall” directory,
+		7 – “C:/Audio” directory,
 		8 – “D:/Audio” directory
-	\return '1' on success, '0' if error, '-2' if error with CME code (FTP errors)
+	\return '1' on success,
+		'0' if error,
+		'-2' if error with CME code (FTP errors)
 	 */
 	int8_t uploadFile(uint8_t origin, const char* destination_path);
 	
 	//!  Downloads a file from FTP server to 3G board
 	/*!
 	\param const char* origin_path: path in the FTP server where the file to download is located
-	\param uint8_t destination: The directory to save the downloaded file . 0 – current directory, 1 – “C:/Picture” directory, 2 – “C:/Video” directory,
-		3 – “C:/VideoCall” directory, 4 – “D:/Picture” directory, 5 – “D:/Video” directory, 6 – “D:/VideoCall” directory, 7 – “C:/Audio” directory,
+	\param uint8_t destination: The directory to save the downloaded file . 0 – current directory,
+		1 – “C:/Picture” directory,
+		2 – “C:/Video” directory,
+		3 – “C:/VideoCall” directory,
+		4 – “D:/Picture” directory,
+		5 – “D:/Video” directory,
+		6 – “D:/VideoCall” directory,
+		7 – “C:/Audio” directory,
 		8 – “D:/Audio” directory
 	\param uint16_t max_time: value of time out in secods to donwload the file
-	\return '1' on success, '0' if error, '-2' if error with CME code (FTP errors)
-		and '-3' if error getting the file of the size to upload
+	\return '1' on success,
+		'0' if error,
+		'-2' if error with CME code (FTP errors)
+		'-3' if error getting the file of the size to upload
 	 */
-	int8_t downloadFile(const char* origin_path, uint8_t destination, uint16_t max_time);
+	int8_t downloadFile(const char* origin_path, uint8_t destination, unsigned long max_time);
 	
 	//!  Uploads a file from Waspmote to FTP server
 	/*!
 	\param const char* SD_file: path in the Waspmote's SD with the file
 	\param const char* destination_path: path in the FTP server where uploads the file
-	\return '1' on success, '0' if error, '-2' if error with CME code (FTP error)
-		and '-3' if error getting ile size from SD
+	\return '1' on success,
+		'0' if error,
+		'-2' if error with CME code (FTP error)
+		'-3' if error getting ile size from SD
 	 */
 	int8_t uploadData(const char* SD_file, const char* destination_path);
 	
@@ -856,11 +984,19 @@ class Wasp3G
 	/*!
 	\param const char* FTP_file: path in the FTP server with the file
 	\param const char* destination_path: path in the Waspmote's SD where uploads the file
-	\param uint16_t max_time: value of time out in secods to donwload the file
-	\return '1' on success, '0' if error, '-2' if error with CME code (FTP error) 
-		and '-3' if error sending the file from 3G module to Waspmote SD
+	\return '1' on success,
+		'0' if error,
+		'-2' if error with CME code (FTP error) 
+		'-3' if error sending the file from 3G module to Waspmote SD
 	 */
-	int8_t downloadData(const char* FTP_file, const char* destination_path, uint16_t max_time);
+	int8_t downloadData(const char* FTP_file, const char* destination_path);
+	
+	//!  Gets the file size from an FTP server
+	/*!
+	\param const char* FTP_file: path in the FTP server with the file
+	\return the size of the file or '-1' if error with CME code (FTP error)
+	 */
+	unsigned long getFTPsize(const char* FTP_file);
 	
 	//! Acquires the SSL stack and logs into the FTPS server
 	/*!
@@ -868,16 +1004,29 @@ class Wasp3G
 	\param uint16_t port: string with the FTP port
 	\param const char* user_name: string with the user name
 	\param const char* password: string with the FTP password
-	\return '1' on success,'-2' if error setting the connection parameters (APN),
-		'-3' if error acquiring the SSL stack, '-4' error login into the server, '-5' if timeout when logs in
+	\return '1' on success,
+		'-2' if error setting the connection parameters (APN),
+		'-3' if error acquiring the SSL stack,
+		'-4' error login into the server,
+		'-5' if timeout when logs in
 	 */
-	int8_t loginFPTS(const char* server, uint16_t port, const char* user_name, const char* password);
+	int8_t loginFPTS(	const char* server,
+						uint16_t port,
+						const char* user_name,
+						const char* password);
 
 	//!  Uploads a file from 3G board to FTP server
 	/*!
 	\param const char* destination_path: path in the FTP server where uploads the file
-	\param uint8_t origin: The directory to where is file . 0 – current directory, 1 – “C:/Picture” directory, 2 – “C:/Video” directory,
-		3 – “C:/VideoCall” directory, 4 – “D:/Picture” directory, 5 – “D:/Video” directory, 6 – “D:/VideoCall” directory, 7 – “C:/Audio” directory,
+	\param uint8_t origin: The directory to where is file .
+		0 – current directory,
+		1 – “C:/Picture” directory,
+		2 – “C:/Video” directory,
+		3 – “C:/VideoCall” directory,
+		4 – “D:/Picture” directory,
+		5 – “D:/Video” directory,
+		6 – “D:/VideoCall” directory,
+		7 – “C:/Audio” directory,
 		8 – “D:/Audio” directory
 	\return '1' on success, '0' if error, '-2' if error with CME code (FTP errors)
 	 */
@@ -886,11 +1035,20 @@ class Wasp3G
 	//!  Downloads a file from FTP server to 3G board
 	/*!
 	\param const char* origin_path: path in the FTP server where the file to download is located
-	\param uint8_t destination: The directory to save the downloaded file . 0 – current directory, 1 – “C:/Picture” directory, 2 – “C:/Video” directory,
-		3 – “C:/VideoCall” directory, 4 – “D:/Picture” directory, 5 – “D:/Video” directory, 6 – “D:/VideoCall” directory, 7 – “C:/Audio” directory,
+	\param uint8_t destination: The directory to save the downloaded file .
+		0 – current directory,
+		1 – “C:/Picture” directory,
+		2 – “C:/Video” directory,
+		3 – “C:/VideoCall” directory,
+		4 – “D:/Picture” directory,
+		5 – “D:/Video” directory,
+		6 – “D:/VideoCall” directory, 
+		7 – “C:/Audio” directory,
 		8 – “D:/Audio” directory
-	\return '1' on success, '0' if error, '-2' if error with CME code (FTP errors)
-		and '-3' if error getting the file of the size to upload
+	\return '1' on success,
+		'0' if error,
+		'-2' if error with CME code (FTP errors)
+		'-3' if error getting the file of the size to upload
 	 */
 	int8_t downloadFileSecure(const char* origin_path, uint8_t destination, uint16_t max_time);
 		
@@ -898,8 +1056,10 @@ class Wasp3G
 	/*!
 	\param const char* SD_file: path in the Waspmote's SD with the file
 	\param const char* destination_path: path in the FTP server where uploads the file
-	\return '1' on success, '0' if error, '-2' if error with CME code (FTP error)
-		and '-3' if error getting ile size from SD
+	\return '1' on success,
+		'0' if error,
+		'-2' if error with CME code (FTP error)
+		'-3' if error getting ile size from SD
 	 */
 	int8_t uploadDataSecure(const char* SD_file, const char* destination_path);
 	
@@ -907,14 +1067,18 @@ class Wasp3G
 	/*!
 	\param const char* FTP_file: path in the FTP server with the file
 	\param const char* destination_path: path in the Waspmote's SD where uploads the file
-	\return '1' on success, '0' if error, '-2' if error with CME code (FTP error) 
-		and '-3' if error sending the file from 3G module to Waspmote SD
+	\return '1' on success,
+		'0' if error,
+		'-2' if error with CME code (FTP error) 
+		'-3' if error sending the file from 3G module to Waspmote SD
 	 */
 	int8_t downloadDataSecure(const char* FTP_file, const char* destination_path, uint16_t max_time);
 	
 	//! Logs out the FTPS server and releases the SSL stack
 	/*!
-	\return '1' on success,'-2' if error logging out of the server and '-3' if error releasing the SSL stack
+	\return '1' on success,
+		'-2' if error logging out of the server
+		'-3' if error releasing the SSL stack
 	*/
 	int8_t logoutFPTS();
 	#endif
@@ -1044,29 +1208,107 @@ class Wasp3G
 	\param const char* url: server to send the HTTP request. "www.https_server.com"
 	\param uint16_t port: number of the connection port
 	\param const char* HTTP_request: request to send to the HTTP server
-	\return '1' on success, '-1' if error setting APN, username and password, '-2' if error opening a HTTP session,
-		'-3' if error receiving data or timeout waiting data, '-4' if error changing the baudrate (data received is OK),
-		'-5' if unknown error for HTTP, '-6' if HTTP task is busy, '-7' if fail to resolve server address,
-		'-8' if HTTP timeout, '-9' if fail to transfer data, '-10' if memory error, '-11' if invalid parameter,
-		'-12' if network error, '-15' if error setting APN, username and password with CME_error code available and
+	\return '1' on success,
+		'-1' if error setting APN, username and password,
+		'-2' if error opening a HTTP session,
+		'-3' if error receiving data or timeout waiting data,
+		'-4' if error changing the baudrate (data received is OK),
+		'-5' if unknown error for HTTP,
+		'-6' if HTTP task is busy,
+		'-7' if fail to resolve server address,
+		'-8' if HTTP timeout,
+		'-9' if fail to transfer data,
+		'-10' if memory error,
+		'-11' if invalid parameter,
+		'-12' if network error,
+		'-15' if error setting APN, username and password with CME_error code available
 		'-16' if error opening a HTTP session with CME_error code available	
 	*/
 	int16_t readURL(const char* url, uint16_t port, const char* HTTP_request);
+	
+	//! Sends a request to a HTTP url and get an answer. The answer is stored in 'buffer_3G'
+	/*!
+	\param const char* url: server to send the HTTP request. "www.https_server.com"
+	\param uint16_t port: number of the connection port
+	\param const char* HTTP_request: request to send to the HTTP server
+	\return '1' on success,
+		'-1' if error setting APN, username and password,
+		'-2' if error opening a HTTP session,
+		'-3' if error receiving data or timeout waiting data,
+		'-4' if error changing the baudrate (data received is OK),
+		'-5' if unknown error for HTTP,
+		'-6' if HTTP task is busy,
+		'-7' if fail to resolve server address,
+		'-8' if HTTP timeout,
+		'-9' if fail to transfer data,
+		'-10' if memory error,
+		'-11' if invalid parameter,
+		'-12' if network error,
+		'-15' if error setting APN, username and password with CME_error code available
+		'-16' if error opening a HTTP session with CME_error code available	
+		'-17' if the response from the url is not 200 HTTP code
+		'-18' if the response from the url has not data
+	*/
+	int16_t readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse);
+	
+	//! Sets the time of Waspmote's RTC getting the time from an url
+	/*!
+	\return '1' on success,
+		'-1' if error setting APN, username and password,
+		'-2' if error opening a HTTP session,
+		'-3' if error receiving data or timeout waiting data,
+		'-4' if error changing the baudrate (data received is OK),
+		'-5' if unknown error for HTTP,
+		'-6' if HTTP task is busy,
+		'-7' if fail to resolve server address,
+		'-8' if HTTP timeout,
+		'-9' if fail to transfer data,
+		'-10' if memory error,
+		'-11' if invalid parameter,
+		'-12' if network error,
+		'-15' if error setting APN, username and password with CME_error code available
+		'-16' if error opening a HTTP session with CME_error code available	
+		'-17' if the response from the url is not 200 HTTP code
+		'-18' if the response from the url has not data
+		'-19' if fail setting the time of the internal RTC of the 3G module
+	*/
+	int16_t setTimebyURL();
+	
 	
 	//! Sends a request to a HTTPS url and get an answer. The answer is stored in 'buffer_3G'
 	/*!
 	\param const char* url: server to send the HTTPS request. "www.https_server.com"
 	\param uint16_t port: number of the connection port
 	\param const char* HTTPS_request: request to send to the HTTPS server
-	\return '1' on success, '-1' if unknown error, '-2' if 3G module is busy, '-3' if server closed,
-		'-4' if timeout, '-5' if transfer failed, '-6' if memory error, '-7' if invalid parameter,
-		'-8' if network error, '-10' if error setting APN, username and password
-		'-11' if error acquiring HTTPS protocol stack, '-12' if error opening a HTTPS session, 
-		'-13' if error changing baudrate, '-14' if error storing HTTPS request in the output buffer, 
-		'-15' if error sending the HTTPS request to the url, '-16' if error with the receive command,
-		'-17' if error closing the session (data received is OK), '-18' if error releasing the SSL stack (data received is OK), 
-		'-19' if error changing the baudrate (data received is OK), '-20' if error receiving data or timeout waiting data and
+	\return '1' on success,
+		'-1' if unknown error,
+		'-2' if 3G module is busy,
+		'-3' if server closed,
+		'-4' if timeout,
+		'-5' if transfer failed,
+		'-6' if memory error,
+		'-7' if invalid parameter,
+		'-8' if network error,
+		'-10' if error setting APN, username and password
+		'-11' if error acquiring HTTPS protocol stack,
+		'-12' if error opening a HTTPS session, 
+		'-13' if error changing baudrate,
+		'-14' if error storing HTTPS request in the output buffer, 
+		'-15' if error sending the HTTPS request to the url,
+		'-16' if error with the receive command,
+		'-17' if error closing the session (data received is OK),
+		'-18' if error releasing the SSL stack (data received is OK), 
+		'-19' if error changing the baudrate (data received is OK),
+		'-20' if error receiving data or timeout waiting data and
 		'-25' if error setting username and password with CME_error code available
+		'-31' HTTPS error code: unknown error
+		'-32' HTTPS error code: busy
+		'-33' HTTPS error code: server closed
+		'-34' HTTPS error code: timeout
+		'-35' HTTPS error code: transfer failed
+		'-36' HTTPS error code: memory error
+		'-37' HTTPS error code: invalid parameter
+		'-38' HTTPS error code: network error
 	*/
 	int8_t readURLS(const char* url, uint16_t port, const char* HTTPS_request);
 	#endif
@@ -1083,11 +1325,17 @@ class Wasp3G
 	
 	//! Starts and configures the GPS
 	/*!
-	\param uint8_t mode:'1' for stand-alone mode, '2' for UE-based mode and '3' for UE-assisted mode
+	\param uint8_t mode:	'1' for stand-alone mode,
+							'2' for UE-based mode
+							'3' for UE-assisted mode
 	\param const char* GPS_url: string with the server domain or IP
 	\param const char* GPS_port:string with the FTP port
-	\return '1' if success, '0' if error, '-2' if error setting the apn, '-3' if error setting GPS server and port,
-	 '-4' if error starting the GPS, '-5' if AGPS data are not available
+	\return '1' if success,
+			'0' if error,
+			'-2' if error setting the apn,
+			'-3' if error setting GPS server and port,
+			'-4' if error starting the GPS,
+			'-5' if AGPS data are not available
 	 */
 	int8_t startGPS(int8_t mode, const char* GPS_url, const char* GPS_port);
 	
@@ -1121,6 +1369,18 @@ class Wasp3G
 	
 	float convert2Degrees(char* input);
 	
+	//! Sets the time of Waspmote's RTC getting the time from GPS
+	/*!
+	\param unsigned long waiting_time:	waiting time for fix the GPS satellites
+	\param bool state: state of the GPS engine:'1', the GPS engine is stopped
+												'0', the GPS engine is started
+	\return '1' if success,
+			'-1' if error starting the GPS module
+			'-2' if timeout waiting for GPS data
+			'-3' if error setting the RTC time of the 3G module
+	 */
+	int8_t setTimebyGPS(unsigned long waiting_time, bool state);
+	
 	#endif
 	
 	//!*****************************************************************
@@ -1129,7 +1389,7 @@ class Wasp3G
 	
 	//! It configures 3G connection with login, password and some other parameters to use TCP or UDP connections in non-transparent mode
     /*!
-	It takes the configuration parameters from 'Wasp3G_constants.h' file
+	It takes the configuration parameters from 'Wasp3G.cpp' file
 	\return '1' on success, '-2' if error dettaching the connection, '-10' if error dettaching the connection with CME code available,
 		'-3' if error attaching the connection, '-11' if error attaching the connection with CME code available,
 		'-4' if waiting time for connection have expired, '-5' if error setting the APN,
@@ -1138,16 +1398,7 @@ class Wasp3G
 	 */
 	int8_t configureTCP_UDP();
 	
-	//! It configures 3G connection with login, password and some other parameters to use TCP or UDP connections
-    /*!
-	It takes the configuration parameters from 'Wasp3G_constants.h' file
-	\return '1' on success, '-2' if error dettaching the connection, '-10' if error dettaching the connection with CME code available,
-		'-3' if error attaching the connection, '-11' if error attaching the connection with CME code available,
-		'-4' if waiting time for connection have expired, '-5' if error setting the APN,
-		'-6' if error setting the user name and the password, '-12' if error setting the user name and the password with CME code available, 
-		and '-7' if error configurating IP parameters
-	 */
-	int8_t configureTCP_UDP(int8_t app_mode);
+
 	
 	//! It closes all sockets opened
     /*!
@@ -1333,22 +1584,12 @@ class Wasp3G
 	*/
 	int8_t QueryIPfromDomain(const char* domain);
 	
-	//! Resumes the connection and switches back from Command mode to data mode
-	/*!
-	\param void
-	\return '1' on success, '0' if error ,'2' if connection is not successfully resumed
-	 */
-	int8_t switchtoDataMode();
-	
-	//! Switch From Data Mode Or PPP Online Mode To Command Mode
-	/*!
-	\param void
-	\return '1' on success, '0' if error
-	 */
-	int8_t switchtoCommandMode();	
 	#endif
 	
-	//! It gets a file from 3G/GPRS Board and stores it in Waspmote
+	//!*****************************************************************
+	//! Xmodem functions
+	
+		//! It gets a file from 3G/GPRS Board and stores it in Waspmote
     /*!
 	\param const char* origin: the name of the file in the 3G/GPRS module
 	\param const char* destiny: the path of the file to store the file
@@ -1357,6 +1598,19 @@ class Wasp3G
 	*/
 	int8_t getXModemFile(const char* origin, const char* destiny);
 
+	//! It sends a file from Waspmote and stores it in 3G/GPRS Board
+    /*!
+	\param const char* origin: the name of the file in the SD
+	\param const char* destiny: the path of the file to store the file
+	\return '1' if succes,
+		'0' if error,
+		'-2' if error sending de data
+		'-4' if error going to root directory in Waspmote's SD,
+		'-5' if error reading the size of the file,
+		'-6' if error opnening the file
+		'-7' if error reading the file
+	*/
+	int8_t sendXModemFile(const char* origin, const char* destiny);
 	
 	//!*****************************************************************
 	//! File system functions
@@ -1511,7 +1765,7 @@ class Wasp3G
 	\param char* ATcommand : the command to send to the 3G module
 	\return '1' on success, '0' if error. The answer is stored into 'buffer_3G'
 	 */
-	int8_t sendATCommand(const char* ATcommand);
+	uint8_t sendATCommand(const char* ATcommand);
 	
 	//! Selects speaker or loudspeaker output for calls
     /*!

@@ -504,7 +504,9 @@ uint8_t WaspGPRS_Pro::getIP(){
 	unsigned long previous;
 	
 	serialFlush(_socket);
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[7])));	//AT_IP_GET_IP
+	
+	//AT_IP_GET_IP
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[7])));	//+CIFSR
 	sprintf(buffer_GPRS, "AT%s\r\n", str_aux1);
 	printString(buffer_GPRS, _socket);
 	
@@ -2295,7 +2297,9 @@ int8_t WaspGPRS_Pro::setPOSTdata(uint8_t* POST_data, int length)
 
 /* sendHTTP
  * 
- * Send the HTTP request
+ * Send the HTTP request.
+ * 
+ * 'method' stands for GET=0 or POST=1
  * 
  * Returns
  * 'HTTP_total_data" when ok with the number of bytes 
@@ -2321,7 +2325,7 @@ int WaspGPRS_Pro::sendHTTP(uint8_t n_conf, uint8_t method)
 		memset(buffer_GPRS, '\0', sizeof(buffer_GPRS) );
 		HTTP_code = 0;
 		
-		// START HTTP SESSION: +HTTPACTION=0
+		// START HTTP SESSION: +HTTPACTION=<method>
 		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[2])));	//+HTTPACTION=
 		sprintf(str_aux1, "%s%d", str_aux2, method);							
 		strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[3])));	//+HTTPACTION:
@@ -2490,7 +2494,7 @@ int16_t WaspGPRS_Pro::readHTTP(	uint16_t HTTP_total_data,
 			{
 				buffer_GPRS[counter]=serialRead(_socket);	
 				counter++;
-				#if GPRS_debug_mode>0
+				#if GPRS_debug_mode>1
 					USB.print(char(buffer_GPRS[counter-1]));
 					USB.print(F("   "));
 					USB.println(counter, DEC);
@@ -2521,7 +2525,7 @@ int16_t WaspGPRS_Pro::readHTTP(	uint16_t HTTP_total_data,
 	
 	closeHTTP();
 	
-	closeGPRS_HTTP_FTP_connection(n_conf);
+	//~ closeGPRS_HTTP_FTP_connection(n_conf);
 	
 	if (counter >= BUFFER_SIZE)
 	{
@@ -3827,7 +3831,7 @@ int8_t	WaspGPRS_Pro::manageIncomingData(){
 		strcpy_P(str_aux5, (char*)pgm_read_word(&(table_IP[53])));		//IP_MULTI_DATA
 	#endif
 	// Wait for data
-	serialFlush(_socket);
+	//serialFlush(_socket);
 	previous = millis();
 	while (((millis()-previous) < 20000) && (a < BUFFER_SIZE) && (a >= 0))
 	{
@@ -4836,10 +4840,13 @@ int WaspGPRS_Pro::readURL(	const char* url,
 	int HTTP_code;
 
 	// Opens the GPRS connection and gets IP address
-	answer = openGPRS_HTTP_FTP_connection(n_conf);	
-	if (answer != 1)
+	if( isConnected(n_conf) == 0 )
 	{
-		return answer;
+		answer = openGPRS_HTTP_FTP_connection(n_conf);	
+		if (answer != 1)
+		{
+			return answer;
+		}
 	}
 	
 	http_retries = 3;
@@ -5831,7 +5838,7 @@ int8_t WaspGPRS_Pro::sendData(uint8_t* data, int length, uint8_t n_connection){
 			printByte(data[x], _socket);
 		}
 	}
-	
+		
 	return 1;
 }
 

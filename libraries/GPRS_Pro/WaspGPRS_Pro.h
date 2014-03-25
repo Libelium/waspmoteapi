@@ -48,7 +48,7 @@
 
 #define GPRS_debug_mode 0
 
-#define BUFFER_SIZE 300		// Never must be lower than 256B
+#define BUFFER_SIZE 500		// Never must be lower than 256B
 #define BUFFER_UART 500		
 
 

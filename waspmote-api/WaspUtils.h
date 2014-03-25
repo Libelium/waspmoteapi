@@ -1,7 +1,7 @@
 /*! \file WaspUtils.h
     \brief Library containing useful general functions
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -445,7 +445,12 @@ class WaspUtils
   \return the version of the actual program
   */
   uint8_t getProgramVersion();   
-
+  
+  //! It reads the version of the bootloader from EEPROM
+  /*!
+  \return the version of the actual bootloader
+  */
+  uint8_t getBootVersion();
   
 };
 

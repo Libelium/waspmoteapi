@@ -64,7 +64,7 @@ WaspSensorCities::WaspSensorCities()
 	digitalWrite(SENS_PW_5V,LOW);
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_CITIES;
+	WaspRegister |= REG_CITIES_V15;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////

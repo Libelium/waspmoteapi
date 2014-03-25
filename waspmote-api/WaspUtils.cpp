@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -1129,6 +1129,27 @@ void WaspUtils::setProgramVersion(uint8_t version)
 uint8_t WaspUtils::getProgramVersion()
 {
 	return (eeprom_read_byte((unsigned char *) 0xE1));
+}
+
+
+/*
+ * getBootVersion () - read the version of the Bootloader from EEPROM
+ *
+ * 
+ */
+uint8_t WaspUtils::getBootVersion()
+{
+	uint8_t boot_version;
+	boot_version = eeprom_read_byte((unsigned char *) 223);
+	
+	if(boot_version != 0xFF)
+	{
+		return boot_version;
+	}
+	else
+	{
+		return 0x00;
+	}
 }
 
 

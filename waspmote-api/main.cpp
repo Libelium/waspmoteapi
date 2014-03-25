@@ -5,6 +5,13 @@ int main(void)
 {
 	init();
 
+	// proceed depending on the bootloader version
+	if( Utils.getBootVersion() >= 'E')
+	{
+		pinMode(RTC_SLEEP, OUTPUT);
+		digitalWrite(RTC_SLEEP, HIGH);
+	}
+
 	// get serial id
 	_serial_id = Utils.readSerialID();
 	

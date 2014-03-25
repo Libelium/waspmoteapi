@@ -480,6 +480,18 @@ float WaspSensorGas_v20::calculateConcentration(	int calibrationConcentration[3]
 	float beta;
 	float gasConcentration;
 	int i;
+	float OXYGEN_REF=20.9;
+	
+	// check if we have a oxygen calibration, then proceed with the linear
+	// aproximation of the oxygen value given by the reference value and the
+	// calibrated output for the sensor
+	if( (calibrationConcentration[0]==0) 
+		&&	(calibrationConcentration[1]==0) 
+		&&	(calibrationConcentration[2]==0) )
+	{
+		return  inputValue*OXYGEN_REF/calibrationOutput[0];
+	}
+		
 
 	for (i=0;i<3;i++)
 	{
