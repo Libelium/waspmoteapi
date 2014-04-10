@@ -319,6 +319,7 @@ void WaspRTC::readRTC(uint8_t endAddress)
 		else
 		{
 			timeout++;
+			delay(100);
 		}
 	}
 	
