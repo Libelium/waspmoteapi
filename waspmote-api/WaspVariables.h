@@ -1,7 +1,7 @@
 /*! \file WaspVariables.h
     \brief General variables used through the libraries
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -57,4 +57,4 @@ volatile 	uint8_t	intArray[8];
     \brief Bitmap used for managing the different modules and power supplies 
     by different libraries
  */
-volatile uint16_t WaspRegister;
+volatile unsigned long WaspRegister;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.4
  *  Design:		David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -32,8 +32,8 @@
 #define OK_RESPONSE "OK"
 
 #define	_3G_APN "apn"
-#define	_3G_LOGIN "login"
-#define	_3G_PASSW "password"
+#define	_3G_LOGIN "login"		//comment this line if you don't need login
+#define	_3G_PASSW "password"	//comment this line if you don't need password
 
 #define GSM_DCS_1800 		128
 #define GSM_EGSM_900		256
@@ -558,6 +558,14 @@ const char HTTPS_RCV[]		PROGMEM	= "+CHTTPSRECV";			//8
 const char HTTPS_DATA[]		PROGMEM	= "+CHTTPSRECV: ";			//9
 const char HTTPS_EVENT[]	PROGMEM	= "+CHTTPS: RECV EVENT";	//10
 
+const char HTTP_GET[]		PROGMEM	= "GET /getpost_frame_parser.php?frame=";					//11
+const char HTTP_POST[]		PROGMEM	= "POST /getpost_frame_parser.php";							//12
+const char HTTP_FRAME_1[]	PROGMEM	= " HTTP/1.1\r\nHost: ";									//13
+const char HTTP_FRAME_2[]	PROGMEM	= "\r\nContent-Type: application/x-www-form-urlencoded";	//14
+const char HTTP_FRAME_3[]	PROGMEM	= "\r\nContent-Length: ";									//15
+const char HTTP_END_GET[]	PROGMEM	= "0\r\n\r\n";												//16
+const char HTTP_END_POST[]	PROGMEM	= "\r\n\r\nframe=";											//17
+
 
 
 const char* const table_HTTP[] PROGMEM = 
@@ -574,6 +582,14 @@ const char* const table_HTTP[] PROGMEM =
 	HTTPS_RCV,		//8
 	HTTPS_DATA,		//9
 	HTTPS_EVENT,	//10
+	
+	HTTP_GET,		//11
+	HTTP_POST,		//12
+	HTTP_FRAME_1,	//13
+	HTTP_FRAME_2,	//14
+	HTTP_FRAME_3,	//15
+	HTTP_END_GET,	//16
+	HTTP_END_POST,	//17
 };
 #endif
 
@@ -847,6 +863,419 @@ uint16_t Wasp3G::sendXModemCheckSum(char* ptr){
     return (crc);
 }
 
+
+#if HTTP_FUSE
+
+/* initHTTP() - Configures the operator parameters
+ *
+ * This function configures the operator parameters
+ *
+ * Returns:
+ * '1' on success
+ * '-1' if error setting APN, username and password,
+ * '-3' if error receiving data or timeout waiting data
+ * '-15' if error setting APN, username and password with CME_error code available
+*/
+int8_t Wasp3G::initHTTP()
+{	
+	int8_t answer;
+	int16_t count;
+		
+	// Sets APN
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	count = 5;
+	do{
+		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
+		count--;
+	}while ((answer != 1) && (count  > 0));
+	if (count == 0)
+	{
+		return -1;
+	}	
+	
+	// Sets username and password	
+	#ifdef _3G_LOGIN
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+		count = 5;
+		do{
+			answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+			count--;
+		}while ((answer != 1) && (count  > 0));
+		if (answer == 0)
+		{
+			return -1;
+		}
+		else if (answer == 2)
+		{
+			return -15;
+		}
+	#endif
+	
+	// Sets username and password	
+	#ifndef _3G_LOGIN
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+		count = 5;
+		do{
+			answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+			count--;
+		}while ((answer != 1) && (count  > 0));
+		if (answer == 0)
+		{
+			return -1;
+		}
+		else if (answer == 2)
+		{
+			return -15;
+		}
+	#endif
+	
+	return 1;
+	
+}
+
+/* sendHTTPrequest(const char*,	uint16_t,uint8_t*,int,uint8_t) - Sends the HTTP request to the server
+ *
+ * This function sends the HTTP request to the server
+ *
+ * Returns:
+ * '1' on success
+ * '-2' if error opening a HTTP session
+ * '-3' if error receiving data or timeout waiting data
+ * '-16' if error opening a HTTP session with CME_error code available
+*/
+int8_t Wasp3G::sendHTTPrequest(		const char* url,
+									uint16_t port,
+									uint8_t* data,
+									int length,
+									uint8_t method )
+{
+	
+	int8_t answer;
+	int16_t count;		
+	char aux_conv[3];
+	memset( aux_conv, 0x00, sizeof(aux_conv) );	
+	
+	memset(buffer_3G, '\0', BUFFER_SIZE);
+	
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, url, port);
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[1])));	//HTTP_ACT_REQ
+	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, HTTP_TIMEOUT, SEND_ONCE);
+	if (answer == 0)
+	{
+		return -2;
+	}
+	else if (answer == 2)
+	{
+		return -16;
+	}
+	
+	// Sends the request with the frame to the server
+	
+	switch(method)
+	{
+		case GET:
+			// GET /getpost_frame_parser.php?frame=
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[11])));	//HTTP_GET
+			printString(str_aux3, _socket);				
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif
+				
+			for (uint16_t x=0 ; x < length; x++)
+			{
+				Utils.hex2str(&data[x], aux_conv, 1);
+				printByte(aux_conv[0], _socket);
+				printByte(aux_conv[1], _socket); 
+				#if _3G_debug_mode>0
+					USB.print(aux_conv[0]);
+					USB.print(aux_conv[1]);
+				#endif
+			}
+			
+			//  HTTP/1.1\r\nHost: 
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[13])));	//HTTP_FRAME_1
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif
+	
+			printString(url, _socket);
+			#if _3G_debug_mode>0
+				USB.print(url);
+			#endif
+				
+			// \r\nContent-Length: 
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[15])));	//HTTP_FRAME_3
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif
+			
+			// 0\r\n\r\n
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[16])));	//HTTP_END_GET
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif	
+			
+			break;
+		
+		case POST:
+			// POST /getpost_frame_parser.php
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[12])));	//HTTP_POST
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif
+			
+			//  HTTP/1.1\r\nHost: 
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[13])));	//HTTP_FRAME_1
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif
+	
+			printString(url, _socket);
+			#if _3G_debug_mode>0
+				USB.print(url);
+			#endif
+				
+			// \r\nContent-Type: application/x-www-form-urlencoded
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[14])));	//HTTP_FRAME_2
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif
+				
+			// \r\nContent-Length: 
+			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[15])));	//HTTP_FRAME_3
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux3);
+			#endif
+				
+			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[17])));	//HTTP_END_POST
+			sprintf(str_aux3, "%d%s", (length * 2) + 6, str_aux1);
+			printString(str_aux3, _socket);	
+			#if _3G_debug_mode>0
+				USB.print(str_aux1);	
+			#endif
+				
+			for (uint16_t x=0 ; x < length; x++)
+			{
+				Utils.hex2str(&data[x], aux_conv, 1);
+				printByte(aux_conv[0], _socket);
+				printByte(aux_conv[1], _socket); 
+				#if _3G_debug_mode>0
+					USB.print(aux_conv[0]);
+					USB.print(aux_conv[1]);
+				#endif
+			}	
+				
+			break;
+			
+		default:
+			break;
+	}
+	
+	
+	
+	printByte(0x1A, _socket);
+	
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[2])));	//HTTP_ACT_DATA
+	answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);	
+	if (answer != 1)
+	{
+		return -3;
+	}
+	
+	return 1;
+	
+}
+
+/* readHTTPresponse(int8_t) - Reads the response from the server
+ *
+ * This function reads the response from the server
+ *
+ * Returns:
+ * '1' on success
+ * '-3' if error receiving data or timeout waiting data
+ * '-4' if error changing the baudrate (data received is OK)
+ * '-17' if url response its not OK  (HTTP code 200)
+ * '-18' if content-length field not found
+ * '-19' if data field not found
+*/
+int8_t Wasp3G::readHTTPresponse(int8_t parse)
+{
+	int8_t answer;
+	int16_t HTTP_data, count;
+	char aux;
+	unsigned long previous;
+	char* aux_ptr;
+	uint8_t len;
+	
+	
+	memset(buffer_3G, '\0', BUFFER_SIZE);
+	
+	count = 0;
+	aux = serialRead(_socket);
+	while (aux == 'D')
+	{	// Data received
+	
+		serialRead(_socket);	// A
+		serialRead(_socket);	// T
+		serialRead(_socket);	// A
+		serialRead(_socket);	// ,
+		
+		HTTP_data = 0;
+		aux = serialRead(_socket);
+		// Gets the length of the first data string
+		do{
+			HTTP_data *= 10;
+			HTTP_data += aux - 0x30;
+			aux = serialRead(_socket);
+		}while (aux != '\r');
+		
+		serialRead(_socket); // Skips '\n'
+		
+		// Reads the incoming bytes
+		previous = millis();
+		
+		#if _3G_debug_mode>0
+			USB.print(F("HTTP data: "));
+			USB.println(HTTP_data, DEC);
+		#endif
+		
+		do{
+			aux = serialRead(_socket);
+			if (aux != -1)
+			{	
+				if (count < BUFFER_SIZE)
+				{
+					buffer_3G[count] = aux;
+					count++;
+				}
+				HTTP_data--;
+			}	
+			else
+			{
+				delay(1);
+			}			
+			
+			if (millis() < previous)
+			{
+				previous = millis();
+			}
+			
+		}while ((HTTP_data > 0) && ((millis() - previous) < 10000));
+		
+		#if _3G_debug_mode>0
+			USB.print(F("Count remainder: "));
+			USB.println(HTTP_data, DEC);
+		#endif
+		
+		// Waits for new data or the end of the request
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[2])));	//HTTP_ACT_DATA
+		answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);
+		if (answer == 1)
+		{
+			aux = serialRead(_socket);
+		}
+		else
+		{	
+			aux = 0;
+		}
+	}
+	
+	if (aux == '0')
+	{
+		// No more data
+		buffer_3G[count - 1] = '\0';
+
+		// Changes to default baudrate
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
+		snprintf(str_aux2, sizeof(str_aux2), "%s%ld", str_aux1, _baudRate);
+		answer=sendCommand2(str_aux2, OK_RESPONSE, ERROR);	
+		if (answer == 2)
+		{
+			return -4;
+		}
+		else if (answer == 1) // If the command is executed by the 3G module, changes the Waspmote baudrate
+		{
+			beginSerial(_baudRate, _socket);
+		}
+		
+		if(parse == 1)
+		{
+			//EXTRAAAAA, parseo de la info. Quita cabecera y deja sólo datos
+			// checks if the response is OK
+			if (strstr(buffer_3G, "200 ok") == NULL)
+			{
+				// url response its not OK 
+				return -17;
+			}
+			
+			// finds the data length
+			aux_ptr = strstr(buffer_3G, "content-length: ");
+			if (aux_ptr == NULL)
+			{
+				// content-length field not found
+				return -18;
+			}
+			
+			aux_ptr += strlen("content-length: ");
+			
+			strncpy(str_aux1, aux_ptr, strchr(aux_ptr, '\r') - aux_ptr);
+			sscanf(str_aux1, "%d", &len);
+			aux_ptr = strstr(buffer_3G, "\r\n\r\n");
+			if (aux_ptr == NULL)
+			{
+				// data field not found
+				return -19;
+			}
+			aux_ptr = aux_ptr + 4;
+			
+			strncpy(buffer_3G, aux_ptr, len);
+			
+			buffer_3G[len] = '\0';
+			
+		}
+		
+		return 1;
+	}
+	else if (aux == 0)
+	{
+		// Error answer received or timeout waiting data
+		return 	-3;
+	}
+	else
+	{
+		// Error code received
+		HTTP_data = 0;
+		do{
+			HTTP_data *= 10;
+			HTTP_data += aux - 0x30;
+			aux = serialRead(_socket);
+		}while (aux != '\r');
+		
+		#if _3G_debug_mode>0
+			USB.print(F("HTTP error: "));
+			USB.println(HTTP_data, DEC);
+		#endif
+		
+		HTTP_data -= 215;
+		
+		changeBaudrate(_baudRate);
+		
+		return -HTTP_data;
+	}
+}
+
+#endif
 
 // AT Comands ///////////////////////////////////////////////////////////////////
 
@@ -1635,7 +2064,7 @@ uint8_t Wasp3G::setTime(){
 	RTC.getTime(); //Gets time from RTC
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
-	sprintf( buffer_3G, "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
 
 	if (RTC_ant) // Powers off the RTC if before it was off
 	{
@@ -1666,7 +2095,7 @@ int8_t	Wasp3G::setPIN(const char* pin){
 	int8_t answer=0;
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[12])));	//SET_PIN
-	sprintf(buffer_3G, "%s%s", str_aux1, pin);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, pin);
 	answer=sendCommand3(buffer_3G, OK_RESPONSE, ERROR_CME, ERROR, 2000, SEND_ONCE);
 	
 	if (answer > 1)
@@ -1688,7 +2117,7 @@ uint8_t Wasp3G::changePIN(const char* old_pin, const char* new_pin){
 	uint8_t answer = 0;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[59])));	//CHANGE_PIN
-	sprintf(buffer_3G, "%s\"SC\",\"%s\",\"%s\"", str_aux1, old_pin, new_pin);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"SC\",\"%s\",\"%s\"", str_aux1, old_pin, new_pin);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 	
 	if (answer == 1)
@@ -1938,7 +2367,7 @@ int8_t Wasp3G::makeCall(const char* tlfNumber){
 	uint8_t answer=0;
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[0])));		//CALL
-	sprintf(buffer_3G, "%s%s;", str_aux1, tlfNumber);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s;", str_aux1, tlfNumber);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[19])));	//NO_CARRIER
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, str_aux1);
 	
@@ -1962,7 +2391,7 @@ int8_t Wasp3G::makeLostCall(const char* tlfNumber, uint8_t timeCall){
 	uint8_t answer=0;
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[0])));		//CALL
-	sprintf(buffer_3G, "%s%s;", str_aux1, tlfNumber);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s;", str_aux1, tlfNumber);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[19])));	//NO_CARRIER
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, str_aux1);
 	
@@ -2095,7 +2524,7 @@ int8_t Wasp3G::autoAnswer(uint8_t rings){
 
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[3])));		//AUTO_ANSWER
-	sprintf(buffer_3G, "%s%d", str_aux1, rings);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, rings);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 
 }
@@ -2137,7 +2566,7 @@ int8_t Wasp3G::answerCall(){
 int8_t Wasp3G::generateTone(uint8_t tone){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[5])));		//TONE
-	sprintf(buffer_3G, "%s%d", str_aux1, tone);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, tone);
 	return sendCommand1(buffer_3G, OK_RESPONSE);
 }
 
@@ -2156,18 +2585,18 @@ int8_t Wasp3G::ringerLevel(uint8_t level){
 	if (level == 0)	// If level is '0' enables the silent mode
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[6])));		//MUTE_RINGER
-		sprintf(buffer_3G, "%s1", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1", str_aux1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 	}
 	else // If level isn't '0' disables the silent mode and set the volume level
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[6])));		//MUTE_RINGER
-		sprintf(buffer_3G, "%s0", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 		answer=sendCommand1(buffer_3G, OK_RESPONSE);
 		if (answer == 1)
 		{
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[7])));		//LVL_RINGER
-			sprintf(buffer_3G, "%s%d", str_aux1, level-1);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, level-1);
 			return sendCommand1(buffer_3G, OK_RESPONSE);
 		}
 	}
@@ -2186,7 +2615,7 @@ int8_t Wasp3G::setCLIPresentation(uint8_t mode){
 	int8_t answer=0;	
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[8])));		//LINE_ID_PRES
-	sprintf(buffer_3G, "%s%u", str_aux1, mode);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 	
 	if (answer == 2)
@@ -2210,7 +2639,7 @@ int8_t Wasp3G::setCLIRestriction(uint8_t mode){
 	int8_t answer=0;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[9])));		//LINE_ID_REST
-	sprintf(buffer_3G, "%s%u", str_aux1, mode);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 	
 	if (answer == 2)
@@ -2232,7 +2661,7 @@ int8_t Wasp3G::getPhoneActStatus(){
 	int8_t answer=0;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[10])));	//PHONE_ACT
-	sprintf(str_aux2, "%s: ", str_aux1);
+	snprintf(str_aux2, sizeof(str_aux2), "%s: ", str_aux1);
 	answer = sendCommand1(str_aux1, str_aux2);
 	
 	if (answer == 1)
@@ -2273,7 +2702,7 @@ int8_t Wasp3G::sendSMS(const char* smsText, const char* tlfNumber){
 	setTextModeSMS();
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[12])));	//SEND_SMS
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, tlfNumber);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, tlfNumber);
 	
 	answer=sendCommand2(buffer_3G, ">", ERROR_CMS);
 	
@@ -2318,7 +2747,7 @@ int8_t Wasp3G::setInfoIncomingSMS(){
 	}
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[16])));	//SMS_MEMORY
-	sprintf(buffer_3G, "%s\"SM\",\"SM\",\"SM\"", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"SM\",\"SM\",\"SM\"", str_aux1);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[17])));	//SMS_MEMORY_R
 	answer=sendCommand2(buffer_3G, str_aux1, ERROR_CMS);	
 	if (answer == 0)
@@ -2346,7 +2775,7 @@ int8_t Wasp3G::readSMS(uint8_t index){
 	int counter = 0;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[14])));	//SMS_READ
-	sprintf(buffer_3G, "%s%d", str_aux1, index-1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, index-1);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[15])));	//SMS_READ_R
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CMS);
 	
@@ -2475,7 +2904,7 @@ int8_t Wasp3G::getTotalSMS(){
 	int8_t answer, count;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[16])));	//SMS_MEMORY
-	sprintf(buffer_3G, "%s\"SM\",\"SM\",\"SM\"", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"SM\",\"SM\",\"SM\"", str_aux1);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[17])));	//SMS_MEMORY_R
 	answer=sendCommand2(buffer_3G, str_aux1, ERROR_CMS);
 	
@@ -2512,7 +2941,7 @@ int8_t Wasp3G::deleteSMS(uint8_t sms_index){
 	int8_t answer;
     
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[18])));	//SMS_DELETE
-	sprintf(buffer_3G, "%s%u", str_aux1, sms_index - 1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, sms_index - 1);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CMS);
 
 	if (answer == 1)
@@ -2656,7 +3085,7 @@ int8_t Wasp3G::takePicture(){
 	strcpy_P(str_aux4, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	strcpy_P(str_aux5, (char*)pgm_read_word(&(table_CAMERA[28])));		//CAM_NO_MEM
 	
-	answer = sendCommand4(str_aux1, str_aux2, str_aux3, str_aux4, str_aux5, 4000, SEND_ONCE);
+	answer = sendCommand4(str_aux1, str_aux2, str_aux3, str_aux4, str_aux5, 10000, SEND_ONCE);
 
 	digitalWrite(FILTER_ENABLE, HIGH);
 	
@@ -2681,6 +3110,10 @@ int8_t Wasp3G::takePicture(){
 			}
 		}while ((buffer_3G[count-1] != '\r') && ((millis()-previous) < 1000));
 		buffer_3G[count-1] = '\0';
+		
+		// Waits the OK response
+		waitForData(OK_RESPONSE, DEFAULT_TIMEOUT, millis(), 0);
+		
 		return 1;
 	}
 	
@@ -2823,7 +3256,7 @@ int8_t Wasp3G::cameraRotation(const char* rotation){
 	int8_t answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[11])));		//CAM_ROT
-	sprintf(buffer_3G, "%s%s", str_aux1, rotation);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, rotation);
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
@@ -2884,7 +3317,7 @@ int8_t Wasp3G::cameraResolution(uint8_t resolution){
 			break;
 	}
 	
-	sprintf(buffer_3G, "%s%s", str_aux1, str_aux2);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, str_aux2);
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[26])));		//CAM_NO_SENSOR
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
@@ -2915,7 +3348,7 @@ int8_t Wasp3G::cameraFPS(uint8_t fps){
 	count = 5;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[10])));		//CAM_FPS
-	sprintf(buffer_3G, "%s%u", str_aux1, fps);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, fps);
 	
 	do{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
@@ -2947,7 +3380,7 @@ int8_t Wasp3G::cameraBrightness(uint8_t mode){
 	int8_t answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[14])));		//CAM_BRIGHT
-	sprintf(buffer_3G, "%s%u", str_aux1, mode);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	answer=sendCommand3(buffer_3G, OK_RESPONSE, str_aux1, str_aux2, 2000, SEND_ONCE);
@@ -2970,7 +3403,7 @@ int8_t Wasp3G::cameraBrightness(uint8_t mode){
 int8_t Wasp3G::pictureName(const char* name){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[18])));		//CAM_NAME_PIC
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, name);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, name);
 
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 }
@@ -2984,7 +3417,7 @@ int8_t Wasp3G::pictureName(const char* name){
 int8_t Wasp3G::pictureTimeStamp(uint8_t state){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[19])));		//CAM_TIME_STAMP
-	sprintf(buffer_3G, "%s%d", str_aux1, state);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, state);
 
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 
@@ -3240,7 +3673,7 @@ void Wasp3G::disablePIRInterrupt(int8_t PIRstate){
 		digitalWrite(PIR_3G_PIN_MON,LOW);
 	}
 	
-	intFlag &= ~(PIR_3G_INT);
+	//intFlag &= ~(PIR_3G_INT);
 	//while (getIfReady() == 0);
     Utils.setMuxSocket1();
 	ready=1;
@@ -3261,7 +3694,7 @@ int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[32])));		//V_CALL_START
-	sprintf(buffer_3G, "%s%s", str_aux1, phone_number);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, phone_number);
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[37])));		//V_ACCEPTED
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[41])));		//V_END
@@ -3321,7 +3754,7 @@ int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 	}
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[35])));		//V_RECORD
-	sprintf(buffer_3G, "%s%d", str_aux1, record);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, record);
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[37])));		//V_ACCEPTED
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[41])));		//V_END
@@ -3361,7 +3794,7 @@ int8_t Wasp3G::hangVideoCall(){
 int8_t Wasp3G::VideoCallQuality(int8_t VideoQuality){
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[36])));		//V_QUALITY
-	sprintf(buffer_3G, "%s%d", str_aux1, VideoQuality);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, VideoQuality);
 	if (sendCommand2(buffer_3G, OK_RESPONSE, ERROR) != 1)
 	{
 		return 0;
@@ -3379,7 +3812,7 @@ int8_t Wasp3G::VideoCallQuality(int8_t VideoQuality){
 int8_t Wasp3G::VideoCallDMTF(const char* DMTF_str){
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[34])));		//V_DMTF
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, DMTF_str);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, DMTF_str);
 	if (sendCommand2(buffer_3G, OK_RESPONSE, ERROR) != 1)
 	{
 		return 0;
@@ -3419,7 +3852,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	
 	// Sets connection parameters (apn, user_name, password)
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -3433,7 +3866,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 // Sets username and password	
 	#ifdef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3452,7 +3885,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	// Sets username and password	
 	#ifndef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3471,7 +3904,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 		
 	// Sets FTP server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[0])));		//FTP_SERVER
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, server);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, server);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3491,7 +3924,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	
 	// Sets FTP port
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[1])));		//FTP_PORT
-	sprintf(buffer_3G, "%s%s", str_aux1, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, port);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3511,7 +3944,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	
 	// Sets FTP mode
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[2])));		//FTP_MODE
-	sprintf(buffer_3G, "%s%u", str_aux1, mode);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3531,7 +3964,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	
 	// Sets FTP type
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[3])));		//FTP_TYPE
-	sprintf(buffer_3G, "%s%s", str_aux1, type);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, type);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3551,7 +3984,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	
 	// Sets FTP user name
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[4])));		//FTP_UN
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, user_name);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, user_name);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3571,7 +4004,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	
 	// Sets FTP password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[5])));		//FTP_UN
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, password);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, password);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -3721,14 +4154,21 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 	}
 
 	
+	answer = check3Gconnection(90);
+	
+	if (answer != 1)
+	{
+		return 0;
+	}
+	
 	// Send the file and selects the origin location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[10])));	//FTP_PUT_FILE
-	sprintf(buffer_3G, "%s\"%s\",%u", str_aux1, destination_path, origin);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, destination_path, origin);
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[11])));	//FTP_PUT_FILE_RES
 	count = 3;
 	do{
-		answer = sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, (file_size / 10) + 1000, SEND_ONCE);
+		answer = sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, (file_size / 10) + 10000, SEND_ONCE);
 		count--;
 	}while ((answer != 1) && (count > 0));
 	
@@ -3815,11 +4255,11 @@ int8_t Wasp3G::downloadFile(const char* origin_path, uint8_t destination, unsign
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[6])));		//FTP_GET_FILE
 	if (strchr(origin_path, '/') == strrchr(origin_path, '/'))
 	{
-		sprintf(buffer_3G, "%s\"%s\",%u", str_aux1, origin_path + 1, destination);	
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path + 1, destination);	
 	}
 	else
 	{
-		sprintf(buffer_3G, "%s\"%s\",%u", str_aux1, origin_path, destination);	
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path, destination);	
 	}
 	
 	count = 3;
@@ -3894,7 +4334,7 @@ int8_t Wasp3G::uploadData(const char* SD_file, const char* FTP_destination_path)
 	if (answer == 1)
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[10])));	//FTP_PUT_FILE
-		sprintf(buffer_3G, "%s\"%s\",0", str_aux1, FTP_destination_path);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",0", str_aux1, FTP_destination_path);
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[11])));	//FTP_PUT_FILE_RES
 		answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, file_time, SEND_ONCE);
 		
@@ -4023,7 +4463,7 @@ unsigned long Wasp3G::getFTPsize(const char* FTP_file)
 	unsigned long previous;
 		
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[26])));	//FTP_LIST
-	sprintf(buffer_3G, "%s=\"%s\"", str_aux1, FTP_file);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, FTP_file);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[27])));	//FTP_LIST_RES
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, FTP_TIMEOUT, SEND_ONCE);
 	previous = millis();
@@ -4109,7 +4549,7 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 	
 	// Sets connection parameters (apn, user_name, password)
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -4123,7 +4563,7 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 // Sets username and password	
 	#ifdef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
 	count = 5;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -4142,7 +4582,7 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 	// Sets username and password	
 	#ifndef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	count = 5;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -4172,7 +4612,7 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 
 	// Logs into the server	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[16])));	//FTPS_LOGIN
-	sprintf(buffer_3G, "%s=\"%s\",%u,\"%s\",\"%s\"", str_aux1, server, port, user_name, password);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",%u,\"%s\",\"%s\"", str_aux1, server, port, user_name, password);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 	if (answer == 2)
 	{
@@ -4255,7 +4695,7 @@ int8_t Wasp3G::uploadFileSecure(uint8_t origin, const char* destination_path){
 	
 	// Send the file and selects the origin location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[22])));	//FTPS_PUT_FILE
-	sprintf(buffer_3G, "%s\"%s\",%u", str_aux1, destination_path, origin);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, destination_path, origin);
 		
 	count = 3;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[23])));	//FTPS_PUT_FILE_RES
@@ -4317,7 +4757,7 @@ int8_t Wasp3G::downloadFileSecure(const char* origin_path, uint8_t destination, 
 		
 	// Request the file and selects the destination location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[18])));	//FTPS_GET_FILE
-	sprintf(buffer_3G, "%s\"%s\",%u", str_aux1, origin_path, destination);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path, destination);
 	
 	count=3;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[19])));	//FTPS_GET_FILE_RES
@@ -4378,7 +4818,7 @@ int8_t Wasp3G::uploadDataSecure(const char* SD_file, const char* FTP_destination
 	
 	//Sends the command to send data
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[24])));	//FTPS_PUT_FILE_SIO
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, FTP_destination_path);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, FTP_destination_path);
 		
 	count=3;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[25])));	//FTPS_PUT_FILE_RES_SIO
@@ -4566,7 +5006,7 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port, const char* user
 
 	// Sets the SMTP server address and port
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[0])));	//SMTP_SERVER
-	sprintf(buffer_3G, "%s\"%s\",%d", str_aux1, server, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, server, port);
 	answer = sendCommand1(buffer_3G, OK_RESPONSE);	
 	if (answer == 0)
 	{
@@ -4575,7 +5015,7 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port, const char* user
 	
 	// Sets the SMTP username and password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[1])));	//SMTP_AUTH
-	sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, username, password);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, username, password);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 
 }
@@ -4592,7 +5032,7 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port){
 	
 	// Sets the SMTP server address and port
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[0])));	//SMTP_SERVER
-	sprintf(buffer_3G, "%s\"%s\",%d", str_aux1, server, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, server, port);
 	answer = sendCommand1(buffer_3G, OK_RESPONSE);	
 	if (answer == 0)
 	{
@@ -4601,7 +5041,7 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port){
 	
 	// Sets the SMTP username and password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[1])));	//SMTP_AUTH
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 	
 }
@@ -4615,7 +5055,7 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port){
 int8_t Wasp3G::setSMTPfrom( const char* mail_address, const char* name){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[2])));	//SMTP_FROM
-	sprintf(buffer_3G, "%s\"%s\",\"%s\"", str_aux1, mail_address, name);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",\"%s\"", str_aux1, mail_address, name);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 	
 }
@@ -4629,7 +5069,7 @@ int8_t Wasp3G::setSMTPfrom( const char* mail_address, const char* name){
 int8_t Wasp3G::setSMTPrecipient(uint8_t kind, uint8_t index, const char* mail_address, const char* name){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[3])));	//SMTP_RCPT
-	sprintf(buffer_3G, "%s%d,%d,\"%s\",\"%s\"", str_aux1, kind, index, mail_address, name);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,\"%s\",\"%s\"", str_aux1, kind, index, mail_address, name);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 	
 }
@@ -4643,7 +5083,7 @@ int8_t Wasp3G::setSMTPrecipient(uint8_t kind, uint8_t index, const char* mail_ad
 int8_t Wasp3G::setSMTPsubject( const char* subject){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[4])));	//SMTP_SUBJECT
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, subject);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, subject);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 
 }
@@ -4657,7 +5097,7 @@ int8_t Wasp3G::setSMTPsubject( const char* subject){
 int8_t Wasp3G::setSMTPbody( const char* body){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[5])));	//SMTP_BODY
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, body);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, body);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 
 }
@@ -4671,7 +5111,7 @@ int8_t Wasp3G::setSMTPbody( const char* body){
 int8_t Wasp3G::setSMTPattach( uint8_t index, const char* file){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[6])));	//SMTP_ATTACH
-	sprintf(buffer_3G, "%s%d,\"%s\"", str_aux1, index, file);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,\"%s\"", str_aux1, index, file);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 
 }
@@ -4691,7 +5131,7 @@ int8_t Wasp3G::setSMTPsend(){
 	
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
 	count = 3;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -4705,7 +5145,7 @@ int8_t Wasp3G::setSMTPsend(){
 	// Sets username and password	
 	#ifdef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
 	count = 3;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -4724,7 +5164,7 @@ int8_t Wasp3G::setSMTPsend(){
 	// Sets username and password	
 	#ifndef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	count = 3;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -4768,7 +5208,7 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
 	count = 3;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -4782,7 +5222,7 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	// Sets username and password	
 	#ifdef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
 	count = 3;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -4801,7 +5241,7 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	// Sets username and password	
 	#ifndef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	count = 3;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -4819,7 +5259,7 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	
 	// Sets the POP3 server, port, username and password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[9])));	//POP3_SERVER
-	sprintf(buffer_3G, "%s=\"%s\",\"%s\",\"%s\",%d", str_aux1, server, username, password, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",\"%s\",\"%s\",%d", str_aux1, server, username, password, port);
 	answer = sendCommand1(buffer_3G, OK_RESPONSE);
 	if (answer == 0)
 	{
@@ -4886,7 +5326,7 @@ int Wasp3G::getPOP3list(){
 		
 		// Restores the baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-		sprintf(buffer_3G, "%s%ld", str_aux1, _baudRate);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s%ld", str_aux1, _baudRate);
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 		if (answer == 2)
 		{
@@ -4907,7 +5347,7 @@ int Wasp3G::getPOP3list(){
 	
 	// Restores the baudrate
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-	sprintf(buffer_3G, "%s%ld", str_aux1, _baudRate);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%ld", str_aux1, _baudRate);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 	if (answer == 2)
 	{
@@ -4955,7 +5395,7 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 	
 	// Request the header of the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[14])));	//POP3_HEADER
-	sprintf( buffer_3G, "%s%d", str_aux1, index);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, index);
 	answer=sendCommand1(buffer_3G, "From:");	
 	if (answer == 1)
 	{
@@ -4986,7 +5426,7 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 		
 		// Restores the baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-		sprintf(str_aux2, "%s%ld", str_aux1, _baudRate);
+		snprintf(str_aux2, sizeof(str_aux2), "%s%ld", str_aux1, _baudRate);
 		answer = sendCommand2(str_aux2, OK_RESPONSE, ERROR);
 		if (answer == 2)
 		{
@@ -5008,7 +5448,7 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 	
 	// Restores the baudrate
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-	sprintf(str_aux2, "%s%ld", str_aux1, _baudRate);
+	snprintf(str_aux2, sizeof(str_aux2), "%s%ld", str_aux1, _baudRate);
 	answer = sendCommand2(str_aux2, OK_RESPONSE, ERROR);
 	if (answer == 2)
 	{
@@ -5051,7 +5491,7 @@ int8_t Wasp3G::getPOP3mail(uint8_t index){
 		
 	// Request the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[15])));	//POP3_GET
-	sprintf(buffer_3G, "%s%d,1", str_aux1, index);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,1", str_aux1, index);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR, POP3_TIMEOUT, SEND_ONCE);	
 	if (answer == 1)
@@ -5114,7 +5554,7 @@ int8_t Wasp3G::deletePOP3mail(uint8_t index){
 	
 	// Request the header of the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[16])));	//POP3_DEL
-	sprintf( buffer_3G, "%s%d", str_aux1, index);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, index);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR);	
 	if (answer == 1)
@@ -5161,8 +5601,7 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 	return readURL( url, port, HTTP_request, 0);
 }
 
-
-/* readURL(const char*, uint16_t, uint16_t , const char*) - Sends a request to a HTTP url and get an answer
+/* readURL(const char*, uint16_t, uint16_t , const char*, bool) - Sends a request to a HTTP url and get an answer
  *
  * This function sends a request to a HTTP url and get an answer. The answer is stored in 'buffer_3G'
  *
@@ -5184,78 +5623,30 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 */
 int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse){
 	
-	int8_t answer;
-	int16_t HTTP_data, count;
-	char aux;
-	unsigned long previous;
-	char* aux_ptr;
-	uint8_t len;
+	int16_t answer;
 	
-	answer = check3Gconnection(90);
-	
+	// Checks the connection	
+	answer = check3Gconnection(90);	
 	if (answer != 1)
 	{
 		return 0;
 	}
 	
-	// Sets APN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
-	count = 5;
-	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
-		count--;
-	}while ((answer != 1) && (count  > 0));
-	if (count == 0)
+	// Configures the operator parameters
+	answer = initHTTP();
+	if (answer != 1)
 	{
-		return -1;
-	}	
+		return answer;		
+	}
 	
-	// Sets username and password	
-	#ifdef _3G_LOGIN
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
-		count = 5;
-		do{
-			answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-			count--;
-		}while ((answer != 1) && (count  > 0));
-		if (answer == 0)
-		{
-			return -1;
-		}
-		else if (answer == 2)
-		{
-			return -15;
-		}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		sprintf(buffer_3G, "%s0", str_aux1);
-		count = 5;
-		do{
-			answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-			count--;
-		}while ((answer != 1) && (count  > 0));
-		if (answer == 0)
-		{
-			return -1;
-		}
-		else if (answer == 2)
-		{
-			return -15;
-		}
-	#endif
-	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
-	
+	// Reduces the baudrate to allows manage all data from the 3G module
 	changeBaudrate(2400);
 	getIfReady();
 	
+	memset(buffer_3G, '\0', BUFFER_SIZE);
+	delay(1000);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
-	sprintf(buffer_3G, "%s\"%s\",%d", str_aux1, url, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, url, port);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[1])));	//HTTP_ACT_REQ
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, HTTP_TIMEOUT, SEND_ONCE);
 	if (answer == 0)
@@ -5285,153 +5676,8 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 	
 	memset(buffer_3G, '\0', BUFFER_SIZE);
 	
-	count = 0;
-	aux = serialRead(_socket);
-	while (aux == 'D')
-	{	// Data received
-	
-		serialRead(_socket);	// A
-		serialRead(_socket);	// T
-		serialRead(_socket);	// A
-		serialRead(_socket);	// ,
-		
-		HTTP_data = 0;
-		aux = serialRead(_socket);
-		// Gets the length of the first data string
-		do{
-			HTTP_data *= 10;
-			HTTP_data += aux - 0x30;
-			aux = serialRead(_socket);
-		}while (aux != '\r');
-		
-		serialRead(_socket); // Skips '\n'
-		
-		// Reads the incoming bytes
-		previous = millis();
-		
-		#if _3G_debug_mode>0
-			USB.print(F("HTTP data: "));
-			USB.println(HTTP_data, DEC);
-		#endif
-		
-		do{
-			aux = serialRead(_socket);
-			if (aux != -1)
-			{	
-				if (count < BUFFER_SIZE)
-				{
-					buffer_3G[count] = aux;
-					count++;
-				}
-				HTTP_data--;
-			}	
-			else
-			{
-				delay(1);
-			}			
-			
-			if (millis() < previous)
-			{
-				previous = millis();
-			}
-			
-		}while ((HTTP_data > 0) && ((millis() - previous) < 10000));
-		
-		#if _3G_debug_mode>0
-			USB.print(F("Count remainder: "));
-			USB.println(HTTP_data, DEC);
-		#endif
-		
-		// Waits for new data or the end of the request
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[2])));	//HTTP_ACT_DATA
-		answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);
-		if (answer == 1)
-		{
-			aux = serialRead(_socket);
-		}
-		else
-		{	
-			aux = 0;
-		}
-	}
-	
-	if (aux == '0')
-	{
-		// No more data
-		buffer_3G[count - 1] = '\0';
-
-		// Changes to default baudrate
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-		sprintf(str_aux2, "%s%ld", str_aux1, _baudRate);
-		answer=sendCommand2(str_aux2, OK_RESPONSE, ERROR);	
-		if (answer == 2)
-		{
-			return -4;
-		}
-		else if (answer == 1) // If the command is executed by the 3G module, changes the Wasmote baudrate
-		{
-			beginSerial(_baudRate, _socket);
-		}
-		
-		if(parse == 1)
-		{
-			//EXTRAAAAA, parseo de la info. Quita cabecera y deja sólo datos
-			// checks if the response is OK
-			if (strstr(buffer_3G, "200 ok") == NULL)
-			{
-				// url response its not OK 
-				return -17;
-			}
-			
-			// finds the data length
-			aux_ptr = strstr(buffer_3G, "\r\n\r\n");
-			if (aux_ptr == NULL)
-			{
-				// url response its not OK 
-				return -18;
-			}
-			
-			aux_ptr += 4;
-			
-			strncpy(str_aux1, aux_ptr, strchr(aux_ptr, '\r') - aux_ptr);
-			sscanf(str_aux1, "%x", &len);
-			
-			aux_ptr = aux_ptr + 4;
-			
-			strncpy(buffer_3G, aux_ptr, len);
-			
-			buffer_3G[len] = '\0';
-			
-		}
-		
-		return 1;
-	}
-	else if (aux == 0)
-	{
-		// Error answer received or timeout waiting data
-		return 	-3;
-	}
-	else
-	{
-		// Error code received
-		HTTP_data = 0;
-		do{
-			HTTP_data *= 10;
-			HTTP_data += aux - 0x30;
-			aux = serialRead(_socket);
-		}while (aux != '\r');
-		
-		#if _3G_debug_mode>0
-			USB.print(F("HTTP error: "));
-			USB.println(HTTP_data, DEC);
-		#endif
-		
-		HTTP_data -= 215;
-		
-		changeBaudrate(_baudRate);
-		
-		return -HTTP_data;
-	}
+	// Reads the response from the server ('0' header and answer, '1' only answer from Meshlium)
+	return readHTTPresponse(parse);
 }
 
 /* setTimebyURL - Sets the time of Waspmote's RTC getting the time from an url
@@ -5536,7 +5782,7 @@ int16_t Wasp3G::setTimebyURL(){
 		
 		// Sets the RTC of the 3G too 
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
-		sprintf( buffer_3G, "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
 		answer = sendCommand2( buffer_3G, OK_RESPONSE, ERROR);
 		
 		if (answer == 2)
@@ -5550,6 +5796,65 @@ int16_t Wasp3G::setTimebyURL(){
 	return answer;
 	
 	
+}
+
+/* sendHTTPframe(const char*, uint16_t, uint16_t , const char*) - Sends a frame to Meshlium
+ *
+ * This function sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
+ *
+ * Returns '1' on success,
+ * '-1' if error setting APN, username and password,
+ * '-2' if error opening a HTTP session,
+ * '-3' if error receiving data or timeout waiting data,
+ * '-4' if error changing the baudrate (data received is OK),
+ * '-5' if unknown error for HTTP,
+ * '-6' if HTTP task is busy,
+ * '-7' if fail to resolve server address,
+ * '-8' if HTTP timeout,
+ * '-9' if fail to transfer data,
+ * '-10' if memory error,
+ * '-11' if invalid parameter,
+ * '-12' if network error,
+ * '-15' if error setting APN, username and password with CME_error code available
+ * '-16' if error opening a HTTP session with CME_error code available
+ * '-17' if url response its not OK  (HTTP code 200)
+ * '-18' if content-length field not found
+ * '-19' if data field not found
+*/
+int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method ){
+	
+	int16_t answer;
+	
+	// Checks the connection
+	answer = check3Gconnection(90);
+	if (answer != 1)
+	{
+		return 0;
+	}
+		
+	// Configures the operator parameters
+	answer = initHTTP();
+	if (answer != 1)
+	{
+		return answer;		
+	}
+	
+	// Reduces the baudrate to allows manage all data from the 3G module
+	changeBaudrate(2400);
+	getIfReady();
+	
+	delay(1000);
+	
+	// Sends the HTTP request to the server	
+	answer = sendHTTPrequest(url, port, data, length, method);	
+	if (answer != 1)
+	{
+		changeBaudrate(_baudRate);
+		return answer;		
+	}
+	
+	// Reads the response from the server ('0' header and answer, '1' only answer from Meshlium)
+	return readHTTPresponse(0);	
 }
 
 /* readURLS(const char*, uint16_t, uint16_t , const char*) - Sends a request to a HTTPS url and get an answer
@@ -5595,7 +5900,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -5609,7 +5914,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	// Sets username and password	
 	#ifdef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -5628,7 +5933,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	// Sets username and password	
 	#ifndef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -5658,7 +5963,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	}
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[5])));	// HTTPS_OPEN
-	sprintf(buffer_3G, "%s=\"%s\",%d", str_aux1, url, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",%d", str_aux1, url, port);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR, HTTP_TIMEOUT, SEND_ONCE);
 	if (answer != 1)
 	{
@@ -5668,7 +5973,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	}
 		
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[7])));	//HTTPS_SEND
-	sprintf(buffer_3G, "%s=%d", str_aux1, strlen(HTTPS_request));
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, strlen(HTTPS_request));
 	answer = sendCommand2(buffer_3G, "\r\n>", ERROR, HTTP_CONF_TIMEOUT,  SEND_ONCE);
 	if (answer != 1)
 	{
@@ -5821,7 +6126,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		
 		// Changes to default baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-		sprintf(command, "%s%ld", str_aux1, _baudRate);
+		snprintf(command, sizeof(command), "%s%ld", str_aux1, _baudRate);
 		answer = sendCommand2(command, OK_RESPONSE, ERROR);	
 		if (answer == 2)
 		{
@@ -5901,13 +6206,13 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 	if (mode == 1)
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[0])));		//START_GPS
-		sprintf(buffer_3G, "%s%d", str_aux1, mode);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, mode);
 	}
 	else
 	{
 		// Sets APN
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-		sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
 		count = 5;
 		do{
 			answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -5921,7 +6226,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		// Sets username and password	
 		#ifdef _3G_LOGIN
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
 		count = 5;
 		do{
 			answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -5940,7 +6245,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		// Sets username and password	
 		#ifndef _3G_LOGIN
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		sprintf(buffer_3G, "%s0", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 		count = 5;
 		do{
 			answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -5958,7 +6263,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		
 		// Sets the GPS server and port:
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[4])));		//GPS_SERVER
-		sprintf(buffer_3G, "%s\"%s:%s\"", str_aux1, GPS_url, GPS_port);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s:%s\"", str_aux1, GPS_url, GPS_port);
 		count=10;
 		do{
 			answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -5970,7 +6275,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		}
 		
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[0])));		//START_GPS
-		sprintf(buffer_3G, "%s%d", str_aux1, mode);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, mode);
 	}
 	
 	// Starts the GPS:
@@ -6351,7 +6656,7 @@ int8_t Wasp3G::setTimebyGPS(unsigned long waiting_time, bool state){
 	
 	// Sets the RTC of the 3G too 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
-	sprintf( buffer_3G, "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
 	answer = sendCommand2( buffer_3G, OK_RESPONSE, ERROR);
 	
 	if (answer != 1)
@@ -6443,7 +6748,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 	
 	// Sets APN:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	sprintf(buffer_3G, "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -6457,7 +6762,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 	// Sets username and password	
 	#ifdef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -6476,7 +6781,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 	// Sets username and password	
 	#ifndef _3G_LOGIN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
@@ -6499,8 +6804,8 @@ int8_t Wasp3G::configureTCP_UDP(){
 	
 	// Configures answers and retries
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[18])));		//CONFIGURE_IP
-	sprintf(buffer_3G, "%s%d,%d,1,0,1", str_aux1, RETRIES, DELAY_SEND);
-	//sprintf(buffer_3G, "%s%d,%d,1,1,1", str_aux1, RETRIES, DELAY_SEND);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,1,0,1", str_aux1, RETRIES, DELAY_SEND);
+	//snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,1,1,1", str_aux1, RETRIES, DELAY_SEND);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 	
 	if ((answer == 0) || (answer == 2))
@@ -6509,7 +6814,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 	}	
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[2])));	//IP_APP_MODE
-	sprintf(buffer_3G, "%s0", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 	
 	if ((answer == 0) || (answer == 2))
@@ -6589,22 +6894,22 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 	{
 		// TCP client, single connection mode
 		case 0:
-			sprintf(buffer_3G, "%s\"TCP\",0,0", str_aux1);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"TCP\",0,0", str_aux1);
 			break;
 			
 		// UDP client, single connection mode
 		case 1:
-			sprintf(buffer_3G, "%s\"UDP\",0,0", str_aux1);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"UDP\",0,0", str_aux1);
 			break;
 			
 		// TCP server
 		case 2:
-			sprintf(buffer_3G, "%s\"TCP\",%u", str_aux1, port);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"TCP\",%u", str_aux1, port);
 			break;
 			
 		// Multiple connection mode
 		case 3:
-			sprintf(buffer_3G, "%s,,1", str_aux1);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s,,1", str_aux1);
 			break;
 	}
 
@@ -6649,7 +6954,7 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 		// TCP client, single connection mode
 		case 0:
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[5])));	//TCP_CONNECT
-			sprintf(buffer_3G, "%s\"%s\",%u", str_aux1, ip, port);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, ip, port);
 			
 			if ((IP_flags & 0x01) == 0)
 			{
@@ -6732,12 +7037,12 @@ int8_t Wasp3G::createMultiSocket(uint8_t n_link, const char* serverIP, uint16_t 
 	if (serverIP[0] == '\0')
 	{
 		// UDP connections
-		sprintf(buffer_3G, "%s%d,\"UDP\",,,%u", str_aux1, n_link,server_port);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,\"UDP\",,,%u", str_aux1, n_link,server_port);
 	}
 	else
 	{
 		// TCP connections
-		sprintf(buffer_3G, "%s%d,\"TCP\",\"%s\",%u", str_aux1, n_link, serverIP, server_port);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,\"TCP\",\"%s\",%u", str_aux1, n_link, serverIP, server_port);
 	}
 	
 	count = 3;
@@ -6851,7 +7156,7 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 		{
 			// TCP link
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[10])));		//MULTI_SEND
-			sprintf(buffer_3G, "%s%d,%d", str_aux1, n_link, length);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d", str_aux1, n_link, length);
 			answer = sendCommand3(buffer_3G, "\r\n>", ERROR_CME, ERROR_IP, 20000, SEND_DEFAULT);
 			if (answer == 1)
 			{	
@@ -6878,7 +7183,7 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 		{
 			// UDP link
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[10])));		//MULTI_SEND
-			sprintf(buffer_3G, "%s%d,%d,\"%s\",%u", str_aux1, n_link, length, ip, port);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,\"%s\",%u", str_aux1, n_link, length, ip, port);
 			answer = sendCommand3(buffer_3G, "\r\n>", ERROR_CME, ERROR_IP, 20000, SEND_DEFAULT);
 			if (answer == 1)
 			{	
@@ -6922,7 +7227,7 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 		{
 			// TCP link
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[6])));		//TCP_SEND
-			sprintf(buffer_3G, "%s%d", str_aux1, length);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, length);
 			answer = sendCommand2(buffer_3G, "\r\n>", ERROR_IP);
 			if (answer == 1)
 			{	
@@ -6949,7 +7254,7 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 		{
 			// UDP link
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[7])));		//UDP_SEND
-			sprintf(buffer_3G, "%s%d,\"%s\",%u", str_aux1, length, ip, port);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,\"%s\",%u", str_aux1, length, ip, port);
 			answer = sendCommand2(buffer_3G, "\r\n>", ERROR_IP);
 			if (answer == 1)
 			{		
@@ -6996,7 +7301,7 @@ int8_t Wasp3G::closeMultiSocket(uint8_t n_link){
 	int8_t answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[11])));		//MULTI_CLOSE
-	sprintf(buffer_3G, "%s%d", str_aux1, n_link);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, n_link);
 	answer=sendCommand3(buffer_3G, OK_RESPONSE, ERROR_CME, ERROR_IP, 10000, SEND_DEFAULT);
 	
 	if (answer == 3)
@@ -7254,7 +7559,7 @@ int8_t Wasp3G::openClient(uint8_t n_client){
 	int8_t answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[16])));		//SERVER_OPEN_CLIENT
-	sprintf(buffer_3G, "%s%u", str_aux1, n_client);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, n_client);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_IP);
 	
 	if (answer == 2)
@@ -7277,7 +7582,7 @@ int8_t Wasp3G::closeClient(uint8_t n_client){
 	int8_t answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[17])));		//SERVER_CLOSE_CLIENT
-	sprintf(buffer_3G, "%s%u", str_aux1, n_client);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, n_client);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_IP);
 	
 	if (answer == 2)
@@ -7352,7 +7657,7 @@ int8_t Wasp3G::QueryDomainfromIP(const char* ip){
 	
 	memset(buffer_3G, '\0', BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[20])));		//DOMFROMIP
-	sprintf(buffer_3G, "%s=\"%s\"", str_aux1, ip);	
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, ip);	
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR);
 	
 	if (answer == 1)
@@ -7424,7 +7729,7 @@ int8_t Wasp3G::QueryIPfromDomain(const char* domain){
 	
 	memset(buffer_3G, '\0', BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[19])));		//IPFROMDOM
-	sprintf(buffer_3G, "%s=\"%s\"", str_aux1, domain);	
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, domain);	
 	answer=sendCommand2(buffer_3G, str_aux1, ERROR);
 	
 	if (answer == 1)
@@ -7571,7 +7876,7 @@ int8_t Wasp3G::getXModemFile(const char* origin, const char* destiny){
 	
 	// Sends AT command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[50])));	//XMODEM_RECEIVE
-	sprintf(buffer_3G,"%s=\"%s\"",str_aux1, origin);
+	snprintf(buffer_3G, sizeof(buffer_3G),"%s=\"%s\"",str_aux1, origin);
 	aux=sendCommand2(buffer_3G, OK_RESPONSE, "FILE NOT EXISTING");
 	
 	if (aux == 0 || aux == 2)
@@ -7808,7 +8113,7 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 	
 	// Sends AT command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[60])));	//XMODEM_SEND
-	sprintf(buffer_3G, "%s\"%s\"", str_aux1, destiny);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, destiny);
 	answer = sendCommand3(buffer_3G, "C", ERROR, "FILE IS EXISTING", 20000, SEND_ONCE);
 	
 	if (answer == 1)
@@ -7941,11 +8246,11 @@ int8_t Wasp3G::goRoot(uint8_t unit){
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[16])));	//CHANGE_DIR
 	if (unit == 0) // selects internal memory (C: unit)
 	{
-		sprintf(buffer_3G, "%sC:", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%sC:", str_aux1);
 	}	
 	else if (unit == 1) // selects microSD memory (D: unit)
 	{
-		sprintf(buffer_3G, "%sD:", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%sD:", str_aux1);
 	}
 	
 	// first changes to the desired unit
@@ -8013,7 +8318,7 @@ int8_t Wasp3G::goRoot(uint8_t unit){
 int8_t Wasp3G::cd(const char* path){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[16])));	//CHANGE_DIR
-	sprintf(buffer_3G, "%s%s", str_aux1, path);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, path);
 	
 	if (sendCommand2(buffer_3G, OK_RESPONSE, ERROR) == 1)
 	{
@@ -8037,7 +8342,7 @@ long Wasp3G::getFileSize(const char* filename){
 	unsigned long previous;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[19])));	//FILE_ATTRIB
-	sprintf(buffer_3G, "%s%s", str_aux1, filename);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, filename);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[20])));	//FILE_ATTRIB_R
 	if (sendCommand2(buffer_3G, str_aux1, ERROR))
 	{
@@ -8095,7 +8400,7 @@ long Wasp3G::getFileSize(const char* filename){
 int8_t Wasp3G::del(const char* filename){
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[21])));	//DEL_FILE
-	sprintf(buffer_3G, "%s%s", str_aux1, filename);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, filename);
 	if (sendCommand2(buffer_3G, OK_RESPONSE, ERROR) == 1)
 	{
 		return 1;
@@ -8115,7 +8420,7 @@ int8_t Wasp3G::del(const char* filename){
 int8_t Wasp3G::isSD(){
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[22])));
-	sprintf(buffer_3G, "%s?", str_aux1);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s?", str_aux1);
 	return sendCommand1(buffer_3G, OK_RESPONSE);
 }
 
@@ -8134,7 +8439,7 @@ int8_t Wasp3G::ls(int8_t type){
 	int counter=0, answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[23])));	//LIST_DIR
-	sprintf(buffer_3G, "%s=%d", str_aux1, type);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, type);
 	answer = sendCommand3( buffer_3G, str_aux1, OK_RESPONSE, ERROR, 10000, SEND_DEFAULT);
 	if (answer == 1)
 	{
@@ -8335,7 +8640,7 @@ int8_t Wasp3G::getCellsysInfo(){
 	
 	// Changes to default baudrate
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-	sprintf(command, "%s%ld", str_aux1, _baudRate);
+	snprintf(command, sizeof(command), "%s%ld", str_aux1, _baudRate);
 	x = sendCommand2(command, OK_RESPONSE, ERROR);	
 	if (x == 2)
 	{
@@ -8464,7 +8769,7 @@ int8_t Wasp3G::getCellradioparam(){
 int8_t Wasp3G::setPreferedServiceDomain(uint8_t mode){
 		
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[29])));	//PREF_SERV_DOM
-	sprintf(buffer_3G, "%s=%d", str_aux1, mode);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, mode);
 	// Sends the command:
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 }
@@ -8485,12 +8790,12 @@ int8_t Wasp3G::scanNetworkchannels(int chn_start, int chn_end, bool mode){
 	if (mode == 0)
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[39])));	//CHN_SCAN_STR
-		sprintf(buffer_3G, "%s=%d,%d", str_aux1, chn_start, chn_end);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d,%d", str_aux1, chn_start, chn_end);
 	}
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[40])));	//CHN_SCAN_NUM
-		sprintf(buffer_3G, "%s=%d,%d", str_aux1, chn_start, chn_end);	
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d,%d", str_aux1, chn_start, chn_end);	
 	}
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[41])));	//NET_START_SCAN
@@ -8726,13 +9031,13 @@ int8_t Wasp3G::setNetworkMode(uint8_t mode){
 	switch (mode)
 	{
 		case 0:
-			sprintf(buffer_3G, "%s=2", str_aux1);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s=2", str_aux1);
 			break;
 		case 1:
-			sprintf(buffer_3G, "%s=13", str_aux1);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s=13", str_aux1);
 			break;
 		case 2:
-			sprintf(buffer_3G, "%s=14", str_aux1);
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s=14", str_aux1);
 			break;
 	}
 	
@@ -8750,7 +9055,7 @@ int8_t Wasp3G::setNetworkBand(int high_zone, int mid_zone, int low_zone){
 	
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[27])));	//PREF_BAND
-	sprintf(buffer_3G, "%s=0x%04X0000%04X%04X", str_aux1, high_zone, mid_zone, low_zone);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=0x%04X0000%04X%04X", str_aux1, high_zone, mid_zone, low_zone);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 }
 
@@ -8766,7 +9071,7 @@ int8_t Wasp3G::modeAcquisitionsOrder(uint8_t mode){
 	
 	// Selects the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[28])));	//ACQ_ORDER
-	sprintf(buffer_3G, "%s=%d", str_aux1, mode);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, mode);
 	// Sends the command:
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 }
@@ -8782,7 +9087,7 @@ int8_t Wasp3G::selectStorage(uint8_t destination){
 	int8_t answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[42])));
-	sprintf(buffer_3G, "%s%d", str_aux1, destination);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, destination);
 	
 	// Sends the command:
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -8806,7 +9111,7 @@ int8_t Wasp3G::changeBaudrate(long baudrate){
 	int8_t answer;
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
-	sprintf(buffer_3G, "%s%ld", str_aux1, baudrate);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%ld", str_aux1, baudrate);
 	
 	// Sends the command:
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -8841,7 +9146,7 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
 	
 	i = 0;
 	
-	sprintf(buffer_3G, "AT%s%c%c", ATcommand,'\r','\n');
+	snprintf(buffer_3G, sizeof(buffer_3G), "AT%s%c%c", ATcommand,'\r','\n');
 
 	serialFlush(_socket);
 	
@@ -8903,7 +9208,7 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
 int8_t Wasp3G::selectAudioOutput(uint8_t output){
 		
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[44])));	//AUDIO_OUT
-	sprintf(buffer_3G, "%s%d", str_aux1, ((output * 2) + 1));
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, ((output * 2) + 1));
 	return sendCommand1(buffer_3G, OK_RESPONSE);
 }
 
@@ -8921,16 +9226,16 @@ int8_t Wasp3G::micGain(uint8_t gain){
 	if (gain == 0)	// If gain is '0' enables the mute of the microphone
 	{
 		
-		sprintf(buffer_3G, "%s1", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1", str_aux1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 	}
 	else // If gain isn't '0' disables the mute and set the gain level
 	{
-		sprintf(buffer_3G, "%s0", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 		sendCommand1(buffer_3G, OK_RESPONSE);
 
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[46])));	//GAIN_MIC
-		sprintf(buffer_3G, "%s%d", str_aux1, gain-1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, gain-1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 
 	}
@@ -8951,15 +9256,15 @@ int8_t Wasp3G::loudspeakerLevel(uint8_t volume){
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[48])));	//MUTE_SPEAKER
 	if (volume == 0)	// If volume is '0' enables the silent mode
 	{		
-		sprintf(buffer_3G, "%s1", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1", str_aux1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 	}
 	else // If volume isn't '0' disables the silent mode and set the volume level
 	{
-		sprintf(buffer_3G, "%s0", str_aux1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 		sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[49])));	//LVL_SPEAKER
-		sprintf(buffer_3G, "%s%d", str_aux1, volume-1);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, volume-1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 	}
 	
@@ -9129,7 +9434,7 @@ int8_t Wasp3G::sendFiletoMeshlium(char* origin_path, char* destiny_name, char* M
 	delay(5000);
 	
 	// Assemble the INITIAL frame	
-	sprintf(frame,"<=>0%lu#%s#%d#", _serial_id, destiny_name, total_packets);
+	snprintf(frame, sizeof(frame), "<=>0%lu#%s#%d#", _serial_id, destiny_name, total_packets);
 	frame[3] = INITIAL_PACKET;
 	
 	#if _3G_debug_mode>0
@@ -9189,7 +9494,7 @@ int8_t Wasp3G::sendFiletoMeshlium(char* origin_path, char* destiny_name, char* M
 	
 	// Sends AT command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[50])));
-	sprintf(frame, "%s=\"%s\"", str_aux1, origin_path);
+	snprintf(frame, sizeof(frame), "%s=\"%s\"", str_aux1, origin_path);
 	aux = sendCommand2(frame, OK_RESPONSE, "FILE NOT EXISTING");
 	
 	if (aux == 0 || aux == 2)
@@ -10202,6 +10507,8 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 	char programID[8];
 	char path[60];
 	
+//	memset(path, 0x00, strlen(path));
+	//memset(aux_name, 0x00, strlen(aux_name));
 	
 	SD.ON();
 	SD.goRoot();
@@ -10252,7 +10559,7 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 					if (str_pointer != NULL)
 					{
 					
-						strncpy(aux_ver, strchr(str_pointer, ':') + 1, strchr(str_pointer, '\n') - (strchr(str_pointer, ':')));					
+						strncpy(aux_ver, strchr(str_pointer, ':') + 1, strchr(str_pointer, '\n') - (strchr(str_pointer, ':')));
 						aux_ver[strchr(aux_ver, '\n') - aux_ver] = '\0';
 						
 						version = atoi(aux_ver);
@@ -10271,6 +10578,13 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 							if (((strcmp(aux_name, programID) == 0) && (version > Utils.getProgramVersion())) || (strcmp(aux_name, programID) != 0))
 							{		
 								delay(10000);
+								USB.println("Downloading OTA file");	
+								#if _3G_debug_mode>0
+									USB.print(F("File to download: "));
+									USB.println(path);
+									USB.print(F("File to save: "));
+									USB.println(aux_name);
+								#endif
 								answer = downloadData(path, aux_name);
 								if (answer == 1)
 								{

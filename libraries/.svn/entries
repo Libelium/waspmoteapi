@@ -1,58 +1,0 @@
-9
-
-dir
-800
-http://arduino.googlecode.com/svn/trunk/hardware/libraries
-http://arduino.googlecode.com/svn
-
-
-
-2009-08-05T14:41:27.980546Z
-747
-tom.igoe
-
-
-svn:special svn:externals svn:needs-lock
-
-
-
-
-
-
-
-
-
-
-
-5a7bb8b8-8b4a-0410-973d-494203d638bc
-
-Stepper
-dir
-
-Firmata
-dir
-
-Matrix
-dir
-
-Sprite
-dir
-
-Wire
-dir
-
-EEPROM
-dir
-
-LiquidCrystal
-dir
-
-SoftwareSerial
-dir
-
-Servo
-dir
-
-Ethernet
-dir
-

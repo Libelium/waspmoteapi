@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -499,6 +499,10 @@ uint8_t WaspXBee802::resetACKcounter()
  * |	0x7E	  | + | MSB | LSB | + |    Frame Data    | + |	1 Byte	|
  * |______________|   |_____|_____|   |__________________|   |__________|
  * 
+ * Remarks: 
+ * It is necessary to set the MY address to 0xFFFF when sending in
+ * order to insert the source mac address within the packet. Thus, the
+ * receiver will be able to know the source's mac address
 */
 uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 {	
@@ -513,55 +517,58 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
     uint8_t old_netAddress[2];
     uint8_t net_Address_changed = 0;    
 
-    clearCommand();
-
-    error_TX=2;
+    error_TX = 2;
     
     // clear TX variable where the frame is going to be filled
 	memset(TX,0x00,120);
     
     // Create the XBee frame
-    TX[0]=0x7E;
-    TX[1]=0x00;
+    TX[0] = 0x7E;
+    TX[1] = 0x00;
     
     // set frame ID as 0x01, so response message will be sent
-    TX[4]=0x01;
+    TX[4] = 0x01;
     
-    it=0;
-    error_AT=2;
+    // init variables
+    it = 0;
+    error_AT = 2;
  
-	// initialize variable
-    old_netAddress[0]=0x00;
-    old_netAddress[1]=0x00;
+	// NOTE: It is necessary to set the MY address to 0xFFFF when sending in 
+	// order to insert the source mac address within the packet. Thus, the 
+	// receiver will be able to know the source's mac address
+	// Initialize variable
+    old_netAddress[0] = 0x00;
+    old_netAddress[1] = 0x00;
  
 	// BROADCAST MODE
-    if(packet->mode==BROADCAST)
+    if( packet->mode == BROADCAST )
 	{
-		tipo=15;
+		tipo = 15;
 		
 		// set packet length
-		TX[2]=11+packet->data_length; 
+		TX[2] = 11+packet->data_length; 
 		
 		// set TX request frame (0x00)
-		TX[3]=0x00;
+		TX[3] = 0x00;
 	    
-		previous=millis();
-		error_AT=2;
-		while( ((error_AT==1) || (error_AT==2)) && (millis()-previous<500) )
+	    // get the backup MY address
+		previous = millis();
+		error_AT = 2;
+		while( ((error_AT == 1) || (error_AT == 2)) && (millis()-previous<500) )
 		{
-			estado=getOwnNetAddress();
+			estado = getOwnNetAddress();
 			
 			 //avoid millis overflow problem
 			if( millis() < previous ) previous=millis();
         }
 			
-        old_netAddress[0]=sourceNA[0];
-        old_netAddress[1]=sourceNA[1];
+        old_netAddress[0] = sourceNA[0];
+        old_netAddress[1] = sourceNA[1];
 	    
-	    previous=millis();
-        error_AT=2;
-        
-        while( ((error_AT==1) || (error_AT==2)) && (millis()-previous<500) )
+	    // disable the MY address to include the MAC address as source address
+	    previous = millis();
+        error_AT = 2;        
+        while( ((error_AT == 1) || (error_AT == 2)) && (millis()-previous<500) )
         {
 			estado=setOwnNetAddress(0xFF,0xFF);
 			net_Address_changed = 1;
@@ -569,67 +576,68 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 			//avoid millis overflow problem
 			if( millis() < previous ) previous=millis();
         }
-        error=2;
+        error = 2;
 		
 		// set BROADCAST address
-        TX[5]=0x00;
-		TX[6]=0x00;
-		TX[7]=0x00;
-		TX[8]=0x00;
-		TX[9]=0x00;
-		TX[10]=0x00;
-		TX[11]=0xFF;
-		TX[12]=0xFF;
+        TX[5] = 0x00;
+		TX[6] = 0x00;
+		TX[7] = 0x00;
+		TX[8] = 0x00;
+		TX[9] = 0x00;
+		TX[10] = 0x00;
+		TX[11] = 0xFF;
+		TX[12] = 0xFF;
 		
 		// set Options enabling ACK 
-		TX[13]=0x00;
-		it=0;
+		TX[13] = 0x00;
+		it = 0;
 		
 		// generate RF Data payload which is composed by [Api header]+[Data]
 		genDataPayload(packet,TX,14);
 				
 		// set checksum
-		TX[packet->data_length+14]=getChecksum(TX); 
+		TX[packet->data_length+14] = getChecksum(TX); 
     }   
-    else if(packet->mode==UNICAST)
+    else if(packet->mode == UNICAST)
 	{
 		// 64-bit Destination Address
 		if( packet->address_type == _64B )
 		{
-			tipo=15;
+			tipo = 15;
 			
 			// set fragment length			 
-			TX[2]=11+packet->data_length;
+			TX[2] = 11+packet->data_length;
 			
 			// set TX Request Frame Type (64-bit address)
-			TX[3]=0x00;
+			TX[3] = 0x00;
 			
 			// set chosen address in setDestinationParams function
-			TX[5]=packet->macDH[0];
-			TX[6]=packet->macDH[1];
-			TX[7]=packet->macDH[2];
-			TX[8]=packet->macDH[3];
-			TX[9]=packet->macDL[0];
-			TX[10]=packet->macDL[1];
-			TX[11]=packet->macDL[2];
-			TX[12]=packet->macDL[3];  
+			TX[5] = packet->macDH[0];
+			TX[6] = packet->macDH[1];
+			TX[7] = packet->macDH[2];
+			TX[8] = packet->macDH[3];
+			TX[9] = packet->macDL[0];
+			TX[10] = packet->macDL[1];
+			TX[11] = packet->macDL[2];
+			TX[12] = packet->macDL[3];  
 			
-			previous=millis();
-			error_AT=2;
-			while( ((error_AT==1) || (error_AT==2)) && (millis()-previous<500) )
+			// get the backup MY address
+			previous = millis();
+			error_AT = 2;
+			while( ((error_AT == 1) || (error_AT == 2)) && (millis()-previous<500) )
 			{
-				estado=getOwnNetAddress();
+				estado = getOwnNetAddress();
 				
 				// avoid millis overflow problem
 				if( millis() < previous ) previous=millis(); 
-            }
+            }			
+			old_netAddress[0] = sourceNA[0];
+			old_netAddress[1] = sourceNA[1];
 			
-			old_netAddress[0]=sourceNA[0];
-			old_netAddress[1]=sourceNA[1];
-			
+			// disable the MY address to include the MAC address as source address
 			previous=millis();
-			error_AT=2;
-			while( ((error_AT==1) || (error_AT==2)) && (millis()-previous<500) )
+			error_AT = 2;
+			while( ((error_AT == 1) || (error_AT == 2)) && (millis()-previous<500) )
 			{
 				estado=setOwnNetAddress(0xFF,0xFF);
 				net_Address_changed = 1;
@@ -638,40 +646,40 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 				if( millis() < previous ) previous=millis(); 
             }
 			
-			error=2;
-			TX[13]=0x00;
-			it=0;
+			error = 2;
+			TX[13] = 0x00;
+			it = 0;
 
 			// generate RF Data payload which is composed by [Api header]+[Data]
 			genDataPayload(packet,TX,14);
 					
 			// setting checksum
-			TX[packet->data_length+14]=getChecksum(TX);
+			TX[packet->data_length+14] = getChecksum(TX);
         }
 		// 16-Bit Destination Address
 		else if( packet->address_type == _16B)
 		{
-			tipo=9;
+			tipo = 9;
 			
 			// set TX Request frame Type (16-bit address)
-			TX[3]=0x01;
+			TX[3] = 0x01;
 			
 			// set Destination Address
-			TX[5]=packet->naD[0];
-			TX[6]=packet->naD[1];
+			TX[5] = packet->naD[0];
+			TX[6] = packet->naD[1];
 			
 			// Set Options enabling ACK
-			TX[7]=0x00;
+			TX[7] = 0x00;
 			it=0;
 			
 			// generate RF Data payload which is composed by [Api header]+[Data]
 			genDataPayload(packet,TX,8);
 			
 			// fragment length
-			TX[2]=5+packet->data_length;			
+			TX[2] = 5+packet->data_length;			
 
             // set checksum
-            TX[packet->data_length+8]=getChecksum(TX);
+            TX[packet->data_length+8] = getChecksum(TX);
 		}
 	}
 	else
@@ -683,12 +691,12 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
     // Generate the escaped API frame (it is necessary because AP=2)
 	gen_frame_ap2(packet,TX,protegido,tipo);
    
-	counter=0;
+	counter = 0;
 	// send frame through correspondent UART
-	while(counter<(packet->data_length+tipo+protegido))
+	while( counter < (packet->data_length+tipo+protegido) )
 	{
 		// switch MUX in case SOCKET1 is used
-		if( uart==SOCKET1 )
+		if( uart == SOCKET1 )
 		{
 			Utils.setMuxSocket1();
 		}
@@ -696,22 +704,23 @@ uint8_t WaspXBee802::sendXBeePriv(struct packetXBee* packet)
 		printByte(TX[counter], uart); 
 		counter++;
 	}
-	counter=0;
+	counter = 0;
 	
 	// read XBee response to TX request
 	error_TX = txStatusResponse();
     error = error_TX; 
     
     // set delivery status
-	packet->deliv_status=delivery_status;
+	packet->deliv_status = delivery_status;
 		
-	if( net_Address_changed )
+	// reset the backup MY address
+	if( net_Address_changed == 1 )
 	{
-		error_AT=2;
-		previous=millis();
-		while( ((error_AT==1) || (error_AT==2)) && (millis()-previous<500) )
+		error_AT = 2;
+		previous = millis();
+		while( ((error_AT == 1) || (error_AT == 2)) && (millis()-previous<500) )
 		{
-			estado=setOwnNetAddress(old_netAddress[0],old_netAddress[1]);
+			estado = setOwnNetAddress(old_netAddress[0],old_netAddress[1]);
 			
 			//avoid millis overflow problem
 			if( millis() < previous ) previous=millis(); 

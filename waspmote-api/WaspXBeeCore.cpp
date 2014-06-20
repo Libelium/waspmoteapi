@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -4936,7 +4936,7 @@ uint8_t WaspXBeeCore::getChecksum(uint8_t* TX)
 */
 void WaspXBeeCore::clearCommand()
 {    
-    memset(command,0x00,30);
+    memset(command,0x00,sizeof(command));
 }
 
 
@@ -6265,7 +6265,7 @@ void WaspXBeeCore::checkNewProgram()
 	}
 	MID[16]='\0';
 	
-	if( Utils.readEEPROM(0x01)==0x01 )
+	if( WaspRegister & REG_OTA)
 	{
 		// Checking if programID and currentID are the same --> the program has been changed properly
 		for(it = 0;it<32;it++)
@@ -6281,8 +6281,8 @@ void WaspXBeeCore::checkNewProgram()
 			}
 		}
 		
-		// set OTA Flag to '0'
-		eeprom_write_byte((unsigned char *) 0x01, 0x00);
+		// unset OTA Flag in Waspmote Control Register
+		WaspRegister &= ~(REG_OTA);
 		
 		// If both IDs are equal a confirmation message is sent to the trasmitter
 		if (reprogrammingOK)

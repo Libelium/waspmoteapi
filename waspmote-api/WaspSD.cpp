@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -360,6 +360,9 @@ uint8_t WaspSD::ON(void)
 	pinMode(SD_SS, OUTPUT);
 	digitalWrite(SD_SS, LOW);	
 		
+	// update Waspmote Control Register
+	WaspRegister |= REG_SD;
+		
 	// mandatory delay
 	delay(100);	
 		
@@ -382,8 +385,14 @@ uint8_t WaspSD::ON(void)
  */
 void WaspSD::OFF(void)
 {
+	// delay for waiting pending operations
+	delay(100);
+	// closes the root directory, the SPI bus and the power supply
 	close();
 	setMode(SD_OFF);
+	
+	// update Waspmote Control Register
+	WaspRegister &= ~(REG_SD);
 }
 
 
@@ -576,7 +585,7 @@ char* WaspSD::print_disk_info()
     card.readCID(&cid);
  
 	//Compose buffer to return
-    sprintf(buffer, "" \
+    snprintf(buffer, sizeof(buffer), "" \
 		"manuf:  0x%x\n" \   
 		"oem:    %c%c\n" \     
 		"prod:   %x\n" \     
@@ -622,7 +631,7 @@ boolean WaspSD::mkdir(char *filepath)
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= DIR_CREATION_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer), "%s", CARD_NOT_PRESENT_em);
 		return false;
 	}	
 	
@@ -1104,7 +1113,7 @@ char* WaspSD::cat(const char* filepath, int32_t offset, uint16_t scope)
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= FILE_OPEN_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		return buffer;
 	}
     
@@ -1119,7 +1128,7 @@ char* WaspSD::cat(const char* filepath, int32_t offset, uint16_t scope)
 	// exit if error and modify the general flag with FILE_OPEN_ERROR
 	if(!openFile((char*)filepath, &file, O_RDONLY))
 	{
-		sprintf(buffer, "error opening %s", filepath);
+		snprintf(buffer, sizeof(buffer), "error opening %s", filepath);
 		flag |= FILE_OPEN_ERROR;
 		return buffer;
 	}
@@ -1138,7 +1147,7 @@ char* WaspSD::cat(const char* filepath, int32_t offset, uint16_t scope)
 	// first jump over the offset
 	if(!file.seekSet(offset))	
 	{
-		sprintf(buffer, "error seeking on: %s\n", filepath);
+		snprintf(buffer, sizeof(buffer), "error seeking on: %s\n", filepath);
 		flag |= FILE_SEEKING_ERROR;
 		file.close();
 		return buffer;
@@ -1216,7 +1225,7 @@ uint8_t* WaspSD::catBin(const char* filepath, int32_t offset, uint16_t scope)
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= FILE_OPEN_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		USB.println(buffer);
 		return bufferBin;
 	}
@@ -1232,7 +1241,7 @@ uint8_t* WaspSD::catBin(const char* filepath, int32_t offset, uint16_t scope)
 	// exit if error and modify the general flag with FILE_OPEN_ERROR
 	if(!openFile((char*)filepath, &file, O_RDONLY))
 	{
-		sprintf(buffer, "error opening %s", filepath);
+		snprintf(buffer, sizeof(buffer), "error opening %s", filepath);
 		USB.println(buffer);
 		flag |= FILE_OPEN_ERROR;
 		return bufferBin;
@@ -1246,7 +1255,7 @@ uint8_t* WaspSD::catBin(const char* filepath, int32_t offset, uint16_t scope)
 	// first jump over the offset
 	if(!file.seekSet(offset))	
 	{
-		sprintf(buffer, "error seeking on: %s\n", filepath);
+		snprintf(buffer, sizeof(buffer), "error seeking on: %s\n", filepath);
 		USB.println(buffer);
 		flag |= FILE_SEEKING_ERROR;
 		file.close();
@@ -1327,7 +1336,7 @@ char* WaspSD::catln (const char* filepath, uint32_t offset, uint16_t scope)
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= FILE_OPEN_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		return buffer;
 	}
     
@@ -1345,7 +1354,7 @@ char* WaspSD::catln (const char* filepath, uint32_t offset, uint16_t scope)
 	// exit if error and modify the general flag with FILE_OPEN_ERROR
 	if(!openFile((char*)filepath, &file, O_RDONLY))
 	{
-		sprintf(buffer, "error opening %s", filepath);
+		snprintf(buffer, sizeof(buffer), "error opening %s", filepath);
 		flag |= FILE_OPEN_ERROR;
 		return buffer;
 	}
@@ -1470,7 +1479,7 @@ int32_t WaspSD::indexOf (const char* filepath, const char* pattern, uint32_t off
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= FILE_OPEN_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		return -1;
 	}
 
@@ -1481,7 +1490,7 @@ int32_t WaspSD::indexOf (const char* filepath, const char* pattern, uint32_t off
 	// exit if error and modify the general flag with FILE_OPEN_ERROR
 	if(!openFile((char*)filepath, &file, O_RDONLY))
 	{
-		sprintf(buffer, "error opening %s", filepath);
+		snprintf(buffer, sizeof(buffer), "error opening %s", filepath);
 		flag |= FILE_OPEN_ERROR;
 		return -2;
 	}
@@ -1526,8 +1535,8 @@ int32_t WaspSD::indexOf (const char* filepath, const char* pattern, uint32_t off
 	}
 
 	// to debug the code in the library it is possible to 
-	// use the buffer together with sprintf, e.g.
-	//~ sprintf(buffer,"%s - %c%c%c%c - %lu - %u -%lu", 
+	// use the buffer together with snprintf, e.g.
+	//~ snprintf(buffer, sizeof(buffer),"%s - %c%c%c%c - %lu - %u -%lu", 
 				//~ pattern, 
 				//~ cmpPattern[0], 
 				//~ cmpPattern[1], 
@@ -1723,7 +1732,7 @@ uint8_t WaspSD::create(const char* filepath)
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= FILE_CREATION_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		return 0;
 	}
 
@@ -1790,7 +1799,7 @@ uint8_t WaspSD::writeSD(	const char* filepath,
     {
         flag = CARD_NOT_PRESENT;
         flag |= FILE_WRITING_ERROR;
-        sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+        snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
         return 0;
     }
 
@@ -1800,7 +1809,7 @@ uint8_t WaspSD::writeSD(	const char* filepath,
 	// search file in current directory and open it in write mode
     if(!openFile(filepath, &file, O_READ | O_WRITE | O_SYNC))    
     {
-        sprintf(buffer, "error opening: %s\n", filepath);        
+        snprintf(buffer, sizeof(buffer), "error opening: %s\n", filepath);        
         flag |= FILE_WRITING_ERROR;
         return 0;
     }
@@ -1808,7 +1817,7 @@ uint8_t WaspSD::writeSD(	const char* filepath,
 	// jump over the 'offset'
 	if(!file.seekSet(offset))
 	{
-		sprintf(buffer, "error seeking on: %s\n", filepath);
+		snprintf(buffer, sizeof(buffer), "error seeking on: %s\n", filepath);
 		file.close();		
 		flag |= FILE_SEEKING_ERROR;
 		return 0;
@@ -1823,7 +1832,7 @@ uint8_t WaspSD::writeSD(	const char* filepath,
 	// write text to file
     if(file.write((uint8_t*) str, length) != length)
     {
-        sprintf(buffer, "error writing to: %s\n", filepath);
+        snprintf(buffer, sizeof(buffer), "error writing to: %s\n", filepath);
         file.close();    
         flag |= FILE_WRITING_ERROR;
         return 0;    
@@ -1879,7 +1888,7 @@ uint8_t WaspSD::writeSD(const char* filepath, uint8_t* str, int32_t offset, uint
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= FILE_WRITING_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		return 0;
 	}
 
@@ -1889,7 +1898,7 @@ uint8_t WaspSD::writeSD(const char* filepath, uint8_t* str, int32_t offset, uint
 	// search file in current directory and open it
     if(!openFile(filepath, &file, O_READ | O_WRITE | O_SYNC))
     {
-        sprintf(buffer, "error opening: %s\n", filepath);        
+        snprintf(buffer, sizeof(buffer), "error opening: %s\n", filepath);        
         flag |= FILE_WRITING_ERROR;
         return 0;
     }
@@ -1897,7 +1906,7 @@ uint8_t WaspSD::writeSD(const char* filepath, uint8_t* str, int32_t offset, uint
 	// jump over the 'offset'
 	if(!file.seekSet(offset))
 	{
-		sprintf(buffer, "error seeking on: %s\n", filepath);
+		snprintf(buffer, sizeof(buffer), "error seeking on: %s\n", filepath);
 		file.close();		
 		flag |= FILE_SEEKING_ERROR;
 		return 0;
@@ -1906,7 +1915,7 @@ uint8_t WaspSD::writeSD(const char* filepath, uint8_t* str, int32_t offset, uint
 	// write text to file
     if(file.write((uint8_t*) str, length) != length)
     {
-        sprintf(buffer, "error writing to: %s\n", filepath);
+        snprintf(buffer, sizeof(buffer), "error writing to: %s\n", filepath);
         file.close();    
         flag |= FILE_WRITING_ERROR;
         return 0;    
@@ -2082,7 +2091,7 @@ int32_t WaspSD::numln(const char* filepath)
 	{
 		flag = CARD_NOT_PRESENT;
 		flag |= FILE_OPEN_ERROR;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		return -1;
 	}
     
@@ -2093,7 +2102,7 @@ int32_t WaspSD::numln(const char* filepath)
 	// exit if error and modify the general flag with FILE_OPEN_ERROR	
     if(!openFile(filepath, &file, O_READ))
     {
-        sprintf(buffer, "error opening: %s\n", filepath);        
+        snprintf(buffer, sizeof(buffer), "error opening: %s\n", filepath);        
         flag |= FILE_WRITING_ERROR;
         return 0;
     }
@@ -2198,7 +2207,7 @@ int8_t WaspSD::numFiles()
 	if (!isSD())
 	{
 		flag = CARD_NOT_PRESENT;
-		sprintf(buffer,"%s", CARD_NOT_PRESENT_em);
+		snprintf(buffer, sizeof(buffer),"%s", CARD_NOT_PRESENT_em);
 		return -1;
 	}
 
@@ -2669,6 +2678,27 @@ void WaspSD::setFileDate()
 	
 }
 
+
+
+void WaspSD::showFile(char* filepath)
+{	
+	int32_t size = SD.getFileSize(filepath);
+	
+	// show file    
+	USB.println(F("\n-------------------"));	
+	beginSerial(USB_RATE, 0);
+	digitalWrite(MUX_PW,HIGH);
+	digitalWrite(MUX_USB_XBEE,LOW);
+	
+	for(int i=0 ; i<size ; i++)
+	{
+		SD.cat(filepath, i, 1);    		
+		printByte(SD.buffer[0], 0);
+	}
+	delay(3);
+	digitalWrite(MUX_USB_XBEE,HIGH);
+	USB.println(F("\n-------------------"));
+}
 	
 // Preinstantiate Objects //////////////////////////////////////////////////////
 

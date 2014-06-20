@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -58,7 +58,9 @@ WaspSensorSW::WaspSensorSW()
 	digitalWrite(DIGITAL4, HIGH);
 
 	SW_condFrequency = 0;
-
+	
+	// update Waspmote Control Register
+	WaspRegister |= REG_WATER;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////

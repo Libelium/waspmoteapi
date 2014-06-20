@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -217,7 +217,7 @@ int8_t  WaspBT_Pro::waitInquiryAnswer(	unsigned long inquiryTime,
 
 	if (!limited)
 	{
-		sprintf(number, "%02u", numberOfDevices);
+		snprintf(number, sizeof(number), "%02u", numberOfDevices);
 		#ifdef DEBUG_MODE
 		// Compare total of devices found and total of devices saved. 
 		
@@ -343,7 +343,7 @@ uint8_t WaspBT_Pro::getSetDateID()
 
 	// Build data and time string
 	char dateTime[28];
-	sprintf(dateTime,aux,RTC.date,RTC.month,RTC.year,RTC.hour,RTC.minute, identifier);
+	snprintf(dateTime, sizeof(dateTime), aux,RTC.date,RTC.month,RTC.year,RTC.hour,RTC.minute, identifier);
 
 	if(!(SD.append(INQFILE,dateTime)))
 	{
@@ -589,8 +589,7 @@ uint8_t WaspBT_Pro::parseBlock(char* block)
 		
 	// Handsfree
 	if (CoD[3]=='4')
-	{
-		//sprintf(devClass, "C"); // 'C' means Car
+	{		
 		devClass[0] = 'C';	// 'C' means Car
 	}
 	else 
@@ -612,7 +611,7 @@ uint8_t WaspBT_Pro::parseBlock(char* block)
 	char aux[20];
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[2])));    
   
-	sprintf(dev, aux, mac_address, CoD, RSSI, devClass[0]);
+	snprintf(dev, sizeof(dev), aux, mac_address, CoD, RSSI, devClass[0]);
 		
 	// Inside data, Check inquiry file
 	if ((SD.isFile(INQFILE))!=1) 
@@ -796,7 +795,7 @@ uint16_t WaspBT_Pro::lookForAnswer(char* data, const char* expectedAnswer)
 void WaspBT_Pro::sendCommand(const char* theText) 
 {
     
-    sprintf(theCommand, "%s\r\n", theText);		// Adds CR+LF
+    snprintf(theCommand, sizeof(theCommand), "%s\r\n", theText);		// Adds CR+LF
   	serialFlush(_uartBT);	
     printString(theCommand,_uartBT);
     delay(100);
@@ -846,7 +845,7 @@ void WaspBT_Pro::changeInquiryPower(int8_t power)
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[3])));   
     
 	// Sets first two values to maximum by default
-	sprintf(theCommand, aux, TX_POWER_DEFAULT_WT12, TX_POWER_MAX_WT12, power);
+	snprintf(theCommand, sizeof(theCommand), aux, TX_POWER_DEFAULT_WT12, TX_POWER_MAX_WT12, power);
 	sendCommand(theCommand);
 	
 	// clear variable
@@ -1506,7 +1505,7 @@ uint8_t WaspBT_Pro::setOwnName(char * publicName)
 		strcpy_P(aux, (char*)pgm_read_word(&(table_BT[13]))); 
 		 
 		// add end char for parsing public name
-		sprintf(namePublic,aux,publicName);	
+		snprintf(namePublic, sizeof(namePublic), aux, publicName);	
 		sendCommand(namePublic);
 		delay(200);
 	}
@@ -1572,7 +1571,7 @@ int8_t WaspBT_Pro::scanNetwork(uint8_t time, int8_t power)
 	// copy "inquiry %u" from flash memory
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[15]))); 
 	
-	sprintf(theCommand, aux, time);		
+	snprintf(theCommand, sizeof(theCommand), aux, time);		
 	sendCommand(theCommand);
 	
 	numberOfDevices = 0;
@@ -1743,7 +1742,7 @@ int16_t WaspBT_Pro::scanDevice(char* Mac, uint8_t maxTime, int8_t power)
 
 	// copy "inquiry %u" from flash memory
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[15])));
-	sprintf(theCommand, aux, maxTime);				
+	snprintf(theCommand, sizeof(theCommand), aux, maxTime);				
 	sendCommand(theCommand);
 
 	numberOfDevices = 0;
@@ -1849,7 +1848,7 @@ int8_t WaspBT_Pro::scanNetworkName(uint8_t time, int8_t power)
 	// copy "inquiry %u name" from flash memory
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[21])));
 	
-	sprintf(theCommand, aux, time);		
+	snprintf(theCommand, sizeof(theCommand), aux, time);		
 	sendCommand(theCommand);
 	
 	numberOfDevices = 0;
@@ -1922,7 +1921,7 @@ uint8_t WaspBT_Pro::createConnection(char * mac)
 
 
 	// Build call command. Example: CALL 00:07:80:80:52:27 1101 RFCOMM
-	sprintf(theCommand, aux, mac, target, connectMode);	
+	snprintf(theCommand, sizeof(theCommand), aux, mac, target, connectMode);	
 	
 	// Send call command
 	sendCommand(theCommand);
@@ -2007,7 +2006,7 @@ uint8_t WaspBT_Pro::removeConnection()
 
 	// send close command CLOSE {link_id}
 	// Build call command. By default, linkID=0.
-	sprintf(theCommand, aux);	
+	snprintf(theCommand, sizeof(theCommand), aux);	
 	
 	// Send call command
 	sendCommand(theCommand);
@@ -2300,7 +2299,7 @@ uint8_t WaspBT_Pro::getRSSI(uint8_t linkID)
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[32])));	
 
 	// send rssi command RSSI {link_id}
-	sprintf(theCommand, aux, linkID);	
+	snprintf(theCommand, sizeof(theCommand), aux, linkID);	
 	
 	// Send call command
 	sendCommand(theCommand);
@@ -2384,7 +2383,7 @@ uint8_t WaspBT_Pro::pair(char* macAddress, char * pinCode)
 	char dummy[3];
 	char aux[20];
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[37])));   
-    sprintf(theCommand, aux, pinCode);
+    snprintf(theCommand, sizeof(theCommand), aux, pinCode);
 	sendCommand(theCommand);
 	
 	// clear variable
@@ -2393,7 +2392,7 @@ uint8_t WaspBT_Pro::pair(char* macAddress, char * pinCode)
 	
 	// Now try to pair, copy from flash "PAIR %s"
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[38])));  	
-	sprintf(theCommand, aux, macAddress);
+	snprintf(theCommand, sizeof(theCommand), aux, macAddress);
 	sendCommand(theCommand);
 	
 	memset(aux, 0x00, sizeof(aux) );	

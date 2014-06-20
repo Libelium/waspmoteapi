@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -217,9 +217,16 @@ void WaspPWR::switchesOFF(uint8_t option)
 	
 	// close UART1
 	closeSerial(SOCKET1);	
-	// set SOCKET1 power supply off	
-	pinMode(GPS_PW, OUTPUT);
-	digitalWrite(GPS_PW, LOW);
+	
+	// set Expansion board power supply off	unless a 
+	// Smart Cities board remains powered on 
+	if( ( option & SENS_OFF ) 
+		&&  !(WaspRegister & REG_CITIES_V14) 
+		&&  !(WaspRegister & REG_CITIES_V15)  )
+	{
+		pinMode(DIGITAL6, OUTPUT);
+		digitalWrite(DIGITAL6, LOW);
+	}
 	
 	// switch off the RTC power supply
 	RTC.close();
@@ -231,7 +238,7 @@ void WaspPWR::switchesOFF(uint8_t option)
 	pinMode(BAT_MONITOR_PW,OUTPUT);
 	digitalWrite(BAT_MONITOR_PW,LOW);
 	
-	// check if a Smart Metering baord has been switched and proceed to disable 
+	// check if a Smart Metering board has been switched and proceed to disable 
 	// the digital pins so as not to waste energy
 	if( WaspRegister & REG_METERING )
 	{
@@ -240,6 +247,13 @@ void WaspPWR::switchesOFF(uint8_t option)
 		pinMode(DIGITAL4, OUTPUT);
 		digitalWrite(DIGITAL3, HIGH);
 		digitalWrite(DIGITAL4, HIGH);
+	}
+	
+	// check if a Gases Sensor Board is used. In this case, switch off the 
+	// digital pins so as not to waste energy
+	if( WaspRegister & REG_GASES )
+	{
+		digitalWrite(DIGITAL4,LOW);
 	}
 	
 }
@@ -612,28 +626,7 @@ void	WaspPWR::closeI2C()
 	Wire.close();
 }
 
-// inits the value of the digipot used in the battery detector
-void    WaspPWR::setLowBatteryThreshold(float threshold)
-{
-	if ( threshold > 3.4 )
-	{
-		threshold = 3.4;
-	}
-	if ( threshold < 3.1 )
-	{
-		threshold = 3.1;
-	}
-	uint8_t dig=0;
-	uint8_t rpot=200;
-	dig = uint8_t (rpot-(((threshold-1.15)*470/1.15)-806))*255/rpot;
-	if( !Wire.I2C_ON ) Wire.begin();
-	delay(200);
-	Wire.beginTransmission(0x56);    // Address
-	Wire.send(0x11);                 // Write command
-	Wire.send(dig);                  // Data
-	Wire.endTransmission();
-	if( Wire.I2C_ON ) closeI2C();
-} 
+
 
 /*
  * ifHibernate - Check if Hibernate has generated the reset
@@ -733,6 +726,10 @@ void	WaspPWR::ifHibernate()
 			digitalWrite(RTC_SLEEP,LOW);
 			digitalWrite(RST_RTC, LOW);
 		}
+	}
+	else
+	{
+		digitalWrite(RST_RTC, LOW);		
 	}
 }
 

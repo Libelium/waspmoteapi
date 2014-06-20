@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.1
- *  Design:		David Gascón
+ *  Version:		1.0
+ *  Design:			David Gascón
  *  Implementation:	Jim Studt, Alberto Bielsa
  */
  
@@ -132,8 +132,8 @@ uint8_t WaspOneWire::resetSerialID() {
 // more certain timing.
 //
 void WaspOneWire::write_bit(uint8_t v) {
-    static uint8_t lowTime[] = { 100, 10 };
-    static uint8_t highTime[] = { 10, 100};
+    static uint8_t lowTime[] = { 55, 5 };
+    static uint8_t highTime[] = { 5, 55};
     
     v = (v&1);
     *modeReg |= bitmask;  // make pin an output, do first since we

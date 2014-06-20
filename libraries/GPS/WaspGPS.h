@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Javier Siscart
 
@@ -43,9 +43,9 @@
  /*! \def GPS_DEBUG
     \brief Enables debug mode.
 	Setting this constant to 1 some debug messages will be pronted by USB
-	Setting this option to 0 the debug messages will be disabled.
+	Commenting this line, the debug messages will be disabled.
  */
- #define GPS_DEBUG 1
+ //#define GPS_DEBUG 1
 
 
 /*! \def OSP_MODE

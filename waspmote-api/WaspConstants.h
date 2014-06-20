@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.3
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa
 */
@@ -271,11 +271,16 @@
 
 /*******************************************************************************
  * WASPMOTE CONTROL REGISTER FOR POWER SUPPLIES AND MODULES 
-   ______________________________________________
-  |       |         |       |           |        |
-  | Video | Parking | Proto | Radiation | Cities |
-  |_______|_________|_______|___________|________|
-     12        11      10         9         8
+   _________________________________________________
+  |     |     |     |     |     |     |     |       |   
+  |     |     |     |     |     |     |     |  SD   | 
+  |_____|_____|_____|_____|_____|_____|_____|_______|
+    23     22   21    20    19    18    17     16
+   _______________________________________________________________________
+  |     |       |       |         |       |     |            |            |
+  | OTA | Water | Video | Parking | Proto | Rad | Cities v15 | Cities v14 |
+  |_____|_______|_______|_________|_______|_____|____________|____________|
+    15     14      13        12      11     10         9            8
    ________________________________________________________________________
   |        |       |             |          |         |         |     |    |
   | Events | Gases | Agriculture | Metering | Socket1 | Socket0 | 3V3 | 5V |
@@ -323,20 +328,32 @@
 /*! \def REG_VIDEO_CAMERA
     \brief Bit dedicated to the presence of the Video Camera Board
  */
-#define	REG_5V				1 
-#define	REG_3V3				2 
-#define	REG_SOCKET0			4 
-#define	REG_SOCKET1			8 
-#define	REG_METERING		16 
-#define	REG_AGRICULTURE		32 
-#define	REG_GASES			64 
-#define	REG_EVENTS			128
-#define	REG_CITIES_V14		256
-#define	REG_CITIES_V15		512
-#define	REG_RADIATION		1024
-#define	REG_PROTOTYPING		2048
-#define	REG_PARKING			4096
-#define	REG_VIDEO_CAMERA	8192
+/*! \def REG_WATER
+    \brief Bit dedicated to the presence of the Smart Water Board
+ */
+/*! \def REG_OTA
+    \brief Bit dedicated to the marking of the OTA process
+ */
+/*! \def REG_SD
+    \brief Bit dedicated to the marking of the SD module 
+ */
+#define	REG_5V				1		// bit 0
+#define	REG_3V3				2 		// bit 1
+#define	REG_SOCKET0			4 		// bit 2
+#define	REG_SOCKET1			8 		// bit 3
+#define	REG_METERING		16 		// bit 4
+#define	REG_AGRICULTURE		32 		// bit 5
+#define	REG_GASES			64 		// bit 6
+#define	REG_EVENTS			128		// bit 7
+#define	REG_CITIES_V14		256		// bit 8	
+#define	REG_CITIES_V15		512		// bit 9
+#define	REG_RADIATION		1024	// bit 10
+#define	REG_PROTOTYPING		2048	// bit 11
+#define	REG_PARKING			4096	// bit 12
+#define	REG_VIDEO_CAMERA	8192	// bit 13
+#define	REG_WATER			16384	// bit 14
+#define	REG_OTA				32768	// bit 15
+#define	REG_SD				65536	// bit 16
 
 
 /*******************************************************************************

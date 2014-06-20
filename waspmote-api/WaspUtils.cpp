@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -253,10 +253,12 @@ void WaspUtils::setMuxUSB()
 */
 void WaspUtils::muxOFF()
 {
-  pinMode(MUX_PW,OUTPUT);
-  pinMode(MUX_USB_XBEE,OUTPUT);
-  digitalWrite(MUX_PW,LOW);
-  digitalWrite(MUX_USB_XBEE,LOW);
+	pinMode(MUX_PW,OUTPUT);
+	pinMode(MUX_USB_XBEE,OUTPUT);
+	digitalWrite(MUX_PW,LOW);
+	digitalWrite(MUX_USB_XBEE,LOW);  
+	digitalWrite(MUX_0, LOW);
+	digitalWrite(MUX_1, LOW);
 }
 
 /* setMuxSocket0() - set multiplexer on UART_0 to SOCKET0
@@ -274,7 +276,7 @@ void WaspUtils::setMuxSocket0()
  *
  * It reads from the EEPROM specified address
  * 
- * EEPROM has 512 Bytes of memory
+ * EEPROM has 4096 Bytes of memory
  */
 uint8_t WaspUtils::readEEPROM(int address)
 {
@@ -286,13 +288,13 @@ uint8_t WaspUtils::readEEPROM(int address)
  *
  * It writes the specified value into the specified address
  * 
- * EEPROM has 512 Bytes of memory
+ * EEPROM has 4096 Bytes of memory
  */
 void WaspUtils::writeEEPROM(int address, uint8_t value)
 {
 	if( address >= EEPROM_START )
 	{	
-		eeprom_write_byte((unsigned char *) address, value);
+		eeprom_write_byte((uint8_t*) address, value);
 	}
 }
 
@@ -307,13 +309,13 @@ void WaspUtils::setID(char* moteID)
 	// set zeros in EEPROM addresses
 	for( int i=0 ; i<16 ; i++ )
 	{
-		eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, 0x00);
+		eeprom_write_byte( (uint8_t*)(i+MOTEID_ADDR), 0x00);
 	}
 	
 	// set the mote ID to EEPROM memory
 	for( int i=0 ; i<16 ; i++ )
 	{		
-		eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, moteID[i]);
+		eeprom_write_byte( (uint8_t*)(i+MOTEID_ADDR), moteID[i] );
 		// break if end of string
 		if( moteID[i] == '\0') 
 		{
@@ -686,7 +688,7 @@ uint16_t WaspUtils::str2hex(char* str, uint8_t* array)
 	uint16_t length=strlen(str)/2;
 	
     // Conversion from ASCII to HEX    
-    for(int j=0; j<length; j++)
+    for(uint16_t j=0; j<length; j++)
     {    
 		array[j] = Utils.str2hex(&str[j*2]);      
     }
@@ -934,9 +936,6 @@ void WaspUtils::loadOTA(const char* filename, uint8_t version)
   // set OTA flag in EEPROM to '1'
   eeprom_write_byte((unsigned char *) 0x01, 0x01);
   
-  // get EEPROM map
-  //readEEPROM();
-  
   // sets the new program version into EEPROM
   setProgramVersion( version);
   
@@ -1020,7 +1019,7 @@ int8_t WaspUtils::checkNewProgram()
   for(it = 0; it < 32; it++)
   {
     current_ID[it] = Utils.readEEPROM(it + 34);
-    eeprom_write_byte((unsigned char *) it + 66, current_ID[it]);
+    eeprom_write_byte((uint8_t *)(it + 66), current_ID[it]);
   }
 
   // get MID
@@ -1032,26 +1031,26 @@ int8_t WaspUtils::checkNewProgram()
 
 
   // check OTA flag
-  if( Utils.readEEPROM(0x01) == 0x01 )
+  if( WaspRegister & REG_OTA)
   {
     // Checking if programID and currentID are the same --> the program has been changed properly
     for(it = 0;it<32;it++)
     {
       // get PID
-      buffer_OTA[it] = eeprom_read_byte((unsigned char *) it+2);
+      buffer_OTA[it] = eeprom_read_byte((uint8_t*)(it+2));
     }
 
     for(it = 0;it<32;it++)
     {
       // compare PID vs CID
-      if (buffer_OTA[it] != eeprom_read_byte((unsigned char *) it+34))
+      if (buffer_OTA[it] != eeprom_read_byte( (uint8_t*)(it+34) ) )
       {
         reprogrammingOK = false;
       }
     }
 
-    // set OTA Flag to '0'
-    eeprom_write_byte((unsigned char *) 0x01, 0x00);
+    // unset OTA Flag in Waspmote Control Register
+    WaspRegister &= ~(REG_OTA);
 
     // If both IDs are equal a confirmation message is sent to the trasmitter
     if(reprogrammingOK)

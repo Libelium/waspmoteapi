@@ -1,7 +1,7 @@
 /*! \file WaspFrame.h
     \brief Library for creating formated frames
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -206,7 +206,7 @@
  */
 
 
-/// Smart meetering sensor measurements
+/// Smart Metering sensor measurements
 
 /*! \def SENSOR_CU
     \brief Current measurement type
@@ -267,6 +267,27 @@
     \brief String type
  */
 
+/// Smart Water
+
+/*! \def SENSOR_PH
+    \brief pH measurement type
+ */
+/*! \def SENSOR_ORP
+    \brief Oxidation Reduction Potential measurement type
+ */
+/*! \def SENSOR_DI
+    \brief Disolved Ion measurement type
+ */
+/*! \def SENSOR_DO
+    \brief Disolved Oxygen measurement type
+ */
+/*! \def SENSOR_COND
+    \brief Conductivity measurement type
+ */
+/*! \def SENSOR_WT
+    \brief Water Temperature measurement type
+ */
+ 
 // Gases
 #define SENSOR_CO	 	0
 #define SENSOR_CO2 		1
@@ -359,8 +380,22 @@
 #define SENSOR_UID		68
 #define SENSOR_RB	 	69
 
-
-
+// Smart Water
+#define SENSOR_PH		70
+#define SENSOR_ORP	 	71
+#define SENSOR_DO	 	72
+#define SENSOR_COND	 	73
+#define SENSOR_WT	 	74
+#define SENSOR_DINA	 	75
+#define SENSOR_DICA	 	76
+#define SENSOR_DIF	 	77
+#define SENSOR_DICL	 	78
+#define SENSOR_DIBR	 	79
+#define SENSOR_DII	 	80
+#define SENSOR_DICU2	81
+#define SENSOR_DIK	 	82
+#define SENSOR_DIMG2	83
+#define SENSOR_DINO3	84
 
 // define MACROS in order to manage bits inside Bytes
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
@@ -506,7 +541,7 @@ private:
     //! Variable : maximum frame size 
     /*!
      */ 
-    uint8_t _maxSize;
+    uint16_t _maxSize;
     
 public:
 
@@ -605,10 +640,7 @@ public:
 
     void setID(char* moteID);
     void getID(char* moteID);
-    
-    // Sends Waspmote unique ID with the frame
-    void setCloudCompatibility(void);
-    
+        
     //! Variable : buffer where the frame is created in
     /*!
      */ 

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -404,7 +404,7 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 		char str[16];		
 		
 		// _serial_id is read in main.cxx
-		sprintf(str,"%lu",_serial_id);
+		snprintf(str, sizeof(str), "%lu",_serial_id);
 		
 		for( int i=0 ; i<strlen(str) ; i++ )
 		{
@@ -846,8 +846,8 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
 		
 	if(_mode == ASCII)
 	{
-		// convert from integer to string
-		Utils.float2String(value, str, N);
+		// convert from float to string		
+		dtostrf( value,	N, N, str );
 		
 		// get name of sensor from table
 		char name[10];
@@ -1035,9 +1035,10 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 		char numDecimals;
 		numDecimals =(uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
 				
-		// convert from integer to string
-		Utils.float2String(val1, str1, numDecimals);
-		Utils.float2String(val2, str2, numDecimals);
+		
+		// convert from float to string		
+		dtostrf( val1,	numDecimals, numDecimals, str1 );
+		dtostrf( val2,	numDecimals, numDecimals, str2 );
 
 		// get name of sensor from table
 		char name[10];
@@ -1471,10 +1472,10 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 		char numDecimals;
 		numDecimals =(uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
 		
-		// convert from integer to string
-		Utils.float2String(val1, str1, numDecimals);
-		Utils.float2String(val2, str2, numDecimals);
-		Utils.float2String(val3, str3, numDecimals);
+		// convert from float to string		
+		dtostrf( val1,	numDecimals, numDecimals, str1 );
+		dtostrf( val2,	numDecimals, numDecimals, str2 );
+		dtostrf( val3,	numDecimals, numDecimals, str3 );
 
 		// get name of sensor from table
 		char name[10];
@@ -1628,38 +1629,6 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 	return 1;
 }
 
-
-
-
-
-/*
- * setCloudCompatibility() - sends Waspmote unique ID with frame
- * 
- * Parameters:
-
- * 
- * Returns: 
- * 
- */
-void WaspFrame::setCloudCompatibility()
-{	
-	// At the moment, this function only sends a dummy unique ID.
-	// In the future will be more actions.
-	
-	
-	// Waspmote Unique ID = 64 bit (6 Bytes)
-	char uniqueID[7] =  "123456";
-	
-	// Here, unique ID should be read.
-	// uniqueID = Utils.readSerial();
-	
-	
-	// Now add it to frame
-	
-	// TO DO
-	
-	
-}
 
 
 

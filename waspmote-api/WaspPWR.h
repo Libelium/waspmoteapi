@@ -1,7 +1,7 @@
 /*! \file WaspPWR.h
     \brief Library for managing Waspmote Power & Energy Modes
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
 
@@ -43,10 +43,10 @@
  ******************************************************************************/
 
 /*! \def WTD_ON
-    \brief Watchdog possible states. ON in this case
+ \brief Watchdog possible states. ON in this case
  */
 /*! \def WTD_OFF
-    \brief Watchdog possible states. OFF in this case
+ \brief Watchdog possible states. OFF in this case
  */
 #define	WTD_ON	1
 #define	WTD_OFF	2
@@ -97,15 +97,6 @@
 #define	WTD_8S		9
 
 
-/*! \def BAT_MIN
-    \brief Battery level. Minimum value pre-defined
- */
-/*! \def BAT_MAX
-    \brief Battery level. Maximum value pre-defined
- */
-#define	BAT_MIN	512 // 3.3V / 2
-#define	BAT_MAX	651 // 4.2V / 2
-
 
 /*******************************************************************************
  * SLEEP OPTIONS
@@ -147,7 +138,7 @@ extern volatile uint16_t	intFlag;
 extern volatile uint16_t 	intConf;
 extern volatile uint8_t		intCounter;
 extern volatile uint8_t		intArray[8];
-extern volatile uint16_t 	WaspRegister;
+extern volatile unsigned long 	WaspRegister;
 
 
 /******************************************************************************
@@ -195,8 +186,7 @@ class WaspPWR
 	
 	// CONSTRUCTOR
 	//! class constructor
-    	/*!
-		It does nothing
+    /*!	It does nothing
 	\param void
 	\return void
 	 */ 
@@ -305,13 +295,6 @@ class WaspPWR
 	\return void
 	 */
 	void 	closeI2C();
-	
-	//! It inits the value of the digipot used in the battery detector
-    /*!
-	\param float threshold : threshold to init the battery detector (from 3V to 3.4V)
-	\return void
-	 */
-	void	setLowBatteryThreshold(float threshold);
 	
 	//! It checks if Hibernate has generated the reset
     /*!

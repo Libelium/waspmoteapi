@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.3
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -335,7 +335,7 @@ uint8_t WaspWIFI::commandMode()
 		{				
 			// Copy "set u b "
 			strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[70])));
-			sprintf(question, "%s%lu\r", buffer, WIFI_BAUDRATE);	
+			snprintf(question, sizeof(question), "%s%lu\r", buffer, WIFI_BAUDRATE);	
 			printString(question,_uartWIFI); 	
 			delay(500);
 			for(int j = 0; j < 3 ; j++)
@@ -980,7 +980,7 @@ uint8_t WaspWIFI::setChannel(uint8_t val)
 	// Copy "set w c "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[7]))); 
 	
-	sprintf(question, "%s%d\r",buffer,val);
+	snprintf(question, sizeof(question), "%s%d\r",buffer,val);
 	return sendCommand(question);
 }
 
@@ -992,7 +992,7 @@ uint8_t WaspWIFI::setAutojoinAuth(uint8_t val)
 	
 	// Copy "set w a "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[8]))); 
-	sprintf(question, "%s%d\r",buffer,val);
+	snprintf(question, sizeof(question), "%s%d\r",buffer,val);
 	return sendCommand(question);
 }
 
@@ -1010,7 +1010,7 @@ uint8_t WaspWIFI::setJoinMode(uint8_t val)
 	
 	// Copy "set w j "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[9]))); 
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	 
 	// First: send command to join wlan 
 	// Second: save current configuration and reboot the device
@@ -1079,7 +1079,7 @@ uint8_t WaspWIFI::setAuthKey(uint8_t secMode, char* pass)
 	{
 		while (i<13)
 		{
-			sprintf(numch,"%x",pass[i]); 
+			snprintf(numch, sizeof(numch), "%x",pass[i]); 
 			/*serialFlush(_usb);
 			serialWrite(numch[0],_usb); serialWrite(numch[1],_usb); 
 			serialWrite('\n',_usb);*/
@@ -1091,14 +1091,14 @@ uint8_t WaspWIFI::setAuthKey(uint8_t secMode, char* pass)
 	
 		// Copy "set w k "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[10]))); 
-		sprintf(question, "%s%s\r", buffer, pass2); 
+		snprintf(question, sizeof(question), "%s%s\r", buffer, pass2); 
 	}
 	// If not, sets passphrase in ASCII.
 	else
 	{
 		// Copy "set w p "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[11]))); 	  
-		sprintf(question, "%s%s\r", buffer, pass); 
+		snprintf(question, sizeof(question), "%s%s\r", buffer, pass); 
 	}
 	// Sends the command over the UART.
 	return sendCommand(question);
@@ -1112,7 +1112,7 @@ uint8_t WaspWIFI::setAPretries(uint8_t val)
 	
 	// Copy "set w l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[12]))); 
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);
 }
 	
@@ -1126,7 +1126,7 @@ uint8_t WaspWIFI::setScanOptions(uint16_t time, char* mask, bool passive)
 	
 	// Copy "set w m "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[13]))); 
-	sprintf(question, "%s%s\r", buffer, mask);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, mask);
 	return sendCommand(question);
 }
 	
@@ -1143,11 +1143,11 @@ void WaspWIFI::scan()
 	// Sets the command depending of if it is Passive.
 	if (scanPassive==false)
     { 
-		sprintf(question, "%s%d\r", buffer, scanTime);
+		snprintf(question, sizeof(question), "%s%d\r", buffer, scanTime);
 	}
 	else 
     {
-		sprintf(question, "%s%d P\r", buffer, scanTime);
+		snprintf(question, sizeof(question), "%s%d P\r", buffer, scanTime);
 	}
 	serialFlush(_uartWIFI);
 	
@@ -1181,7 +1181,7 @@ uint8_t WaspWIFI::setESSID(char* ssid)
 	
 	// Copy "set w s "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[15]))); 
-	sprintf(question, "%s%s\r", buffer, ssid);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ssid);
 	return sendCommand(question);
 }
 	
@@ -1193,7 +1193,7 @@ uint8_t WaspWIFI::setTXRate(uint8_t val)
 	
 	// Copy "set w r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[16]))); 
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);
 }
 	
@@ -1205,7 +1205,7 @@ uint8_t WaspWIFI::setTXPower(uint8_t val)
 	
 	// Copy "set w tx "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[17]))); 
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);  
 }
 	
@@ -1217,7 +1217,7 @@ uint8_t WaspWIFI::setIPWindow(uint16_t val)
 	
 	// Copy "set w w "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[18]))); 
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);
 }
 	
@@ -1234,7 +1234,7 @@ uint8_t WaspWIFI::join(char* ssid)
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[19]))); 
 	
 	// Sends command to join an Access Point.
-	sprintf(question, "%s%s\r", buffer, ssid);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ssid);
 	serialFlush(_uartWIFI); 
 	
 	// send command
@@ -1311,7 +1311,7 @@ uint8_t WaspWIFI::joinAPnum(uint8_t val)
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[20]))); 
 	
 	// Sends command to join an Access Point.
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	serialFlush(_uartWIFI); //serialFlush(_usb);
 	if(sendCommand(question))
 	{
@@ -1346,7 +1346,7 @@ uint8_t WaspWIFI::setJoinTime(uint16_t val)
 	
 	// Copy "set o j "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[22]))); 
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);
 }
 
@@ -1363,7 +1363,7 @@ void WaspWIFI::sendPing(ipAddr ip)
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[23]))); 
 	
 	// Sends the command over the uart.
-	sprintf(question, "%s%s 10\r", buffer, ip);
+	snprintf(question, sizeof(question), "%s%s 10\r", buffer, ip);
 	serialFlush(_uartWIFI);
 	
 	printString(question,_uartWIFI);
@@ -1395,17 +1395,17 @@ uint8_t WaspWIFI::setTimeFromServer(ipAddr ip, uint16_t port, uint8_t interval)
 	
 	// Copy "set t a "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[24])));
-	sprintf(question, "%s%s\r", buffer, ip);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ip);
 	u1=sendCommand(question);
 	
 	// Copy "set t p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[25])));
-	sprintf(question, "%s%d\r", buffer, port);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, port);
 	u2=sendCommand(question);
 	
 	// Copy "set t e "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[26])));
-	sprintf(question, "%s%d\r", buffer, interval);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, interval);
 	u3=sendCommand(question);
 	
 	if ((u1==1)&&(u2==1)&&(u3==1))
@@ -1423,12 +1423,12 @@ uint8_t WaspWIFI::setSleep(uint8_t sTime, uint8_t sCycle)
 	
 	// Copy "set s w "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[27])));
-	sprintf(question, "%s%d\r", buffer, sTime);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, sTime);
 	u1= sendCommand(question);
 	
 	// Copy "set s s "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[28])));
-	sprintf(question, "%s%d\r", buffer, sCycle);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, sCycle);
 	u2= sendCommand(question);
 	
 	if ((u1==1)&&(u2==1))
@@ -1458,7 +1458,7 @@ uint8_t WaspWIFI::setDebugMode(uint8_t val)
 	
 	// Copy "set s p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[29])));
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);
 }
 
@@ -1470,7 +1470,7 @@ uint8_t WaspWIFI::setGW(ipAddr ip)
 	
 	// Copy "set i g "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[30])));
-	sprintf(question, "%s%s\r", buffer, ip);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ip);
 	return sendCommand(question);
 }
 
@@ -1482,7 +1482,7 @@ uint8_t WaspWIFI::setNetmask(ipAddr netmask)
 	
 	// Copy "set i n "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[31])));
-	sprintf(question, "%s%s\r", buffer, netmask);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, netmask);
 	return sendCommand(question);  
 }
 
@@ -1494,13 +1494,13 @@ uint8_t WaspWIFI::setRemoteHost(ipAddr ip, uint16_t port)
 	
 	// Copy "set i h "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
-	sprintf(question, "%s%s\r", buffer, ip);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ip);
   
 	if (sendCommand(question)==1)
 	{	
 		// Copy "set i r "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));
-		sprintf(question, "%s%d\r", buffer, port);
+		snprintf(question, sizeof(question), "%s%d\r", buffer, port);
 		return sendCommand(question);
 	}
 	return 0;
@@ -1514,7 +1514,7 @@ uint8_t WaspWIFI::setLocalPort(uint16_t port)
 	
 	// Copy "set i l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
-	sprintf(question, "%s%d\r", buffer, port);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, port);
 	return sendCommand(question);  
 }
 
@@ -1526,7 +1526,7 @@ uint8_t WaspWIFI::setIp(ipAddr ip)
 	
 	// Copy "set i a "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[35])));
-	sprintf(question, "%s%s\r", buffer, ip);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ip);
 	return sendCommand(question);  
 }
 
@@ -1540,7 +1540,7 @@ uint8_t WaspWIFI::setDHCPoptions(uint8_t val)
 	
 	// Copy "set i d "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[36])));
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);  
 }
 
@@ -1552,7 +1552,7 @@ uint8_t WaspWIFI::setIPoptions(uint8_t val)
 	
 	// Copy "set i f "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[37])));
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);
 }
 
@@ -1565,7 +1565,7 @@ uint8_t WaspWIFI::setConnectionOptions(uint8_t val)
 	
 	// Copy "set i p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[38])));
-	sprintf(question, "%s%d\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	return sendCommand(question);  
 }
 	
@@ -1581,7 +1581,7 @@ uint8_t WaspWIFI::setTCPpassw(char* password)
 	
 	// Copy "set o p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[39])));
-	sprintf(question, "%s%s\r", buffer, password);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, password);
 	return sendCommand(question);  
 }
 
@@ -1596,7 +1596,7 @@ uint8_t WaspWIFI::setDNS(uint8_t type, ipAddr ip, char* name)
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[40])));
   
 	// Sets the dns address.
-	sprintf(question, "%s%s\r", buffer, ip);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ip);
 	if(sendCommand(question)==1)
 	{
 		// Depending on MAIN or AUX, sets DNS name or backup.
@@ -1604,14 +1604,14 @@ uint8_t WaspWIFI::setDNS(uint8_t type, ipAddr ip, char* name)
 		{	
 			// Copy "set d n "
 			strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[41])));
-			sprintf(question, "%s%s\r", buffer, name);
+			snprintf(question, sizeof(question), "%s%s\r", buffer, name);
 			return sendCommand(question);
 		}
 		else
 		{	
 			// Copy "set d b "
 			strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[42])));
-			sprintf(question, "%s%s\r", buffer, name);
+			snprintf(question, sizeof(question), "%s%s\r", buffer, name);
 			return sendCommand(question);
 		}
 	}
@@ -1630,22 +1630,22 @@ uint8_t WaspWIFI::setFTP(	ipAddr ip,
 	
 	// Copy "set f a "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[43])));
-	sprintf(question, "%s%s\r", buffer, ip);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ip);
 	u1=sendCommand(question);
 		
 	// Copy "set f r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[44])));
-	sprintf(question, "%s%d\r", buffer, port);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, port);
 	u2=sendCommand(question);
 		
 	// Copy "set f m "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[45])));
-	sprintf(question, "%s%d\r", buffer, mode);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, mode);
 	u3=sendCommand(question);
 		
 	// Copy "set f t "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[46])));
-	sprintf(question, "%s%d\r", buffer, timeout*8);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, timeout*8);
 	u4=sendCommand(question);
 	
 	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1))
@@ -1663,12 +1663,12 @@ uint8_t WaspWIFI::openFTP(char* user, char* password)
 		
 	// Copy "set f u "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[47])));
-	sprintf(question, "%s%s\r", buffer, user);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, user);
 	u1=sendCommand(question);
 			
 	// Copy "set f p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[48])));
-	sprintf(question, "%s%s\r", buffer, password);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, password);
 	u2=sendCommand(question);
   
 	// Reboots
@@ -1723,6 +1723,18 @@ uint8_t WaspWIFI::getFile(	char* filename,
 	{
 		// root directory selected 
 		// do nothing
+	}
+	else if( SD.isDir(local_folder) == 1 )
+	{
+		// Selects SD card local folder		
+		if( !SD.cd(local_folder) )
+		{	
+			#ifdef DEBUG_WIFI
+			USB.println(F("Error: SD cd"));  
+			#endif 
+			SD.OFF();
+			return 0;
+		}
 	}
 	else if( SD.isDir(local_folder) == -1 )
 	{
@@ -1801,14 +1813,14 @@ uint8_t WaspWIFI::getFile(	char* filename,
 	// Sets the directory in the FTP server to get the file
 	// Copy "set f d "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[49])));
-	sprintf(question, "%s%s\r", buffer, remote_folder);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, remote_folder);
 	
 	if (sendCommand(question)==1)
 	{			
 		// Sends the command that gets the file.
 		// Copy "ftp g "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[50])));
-		sprintf(question, "%s%s\r", buffer, filename);		
+		snprintf(question, sizeof(question), "%s%s\r", buffer, filename);		
 		serialFlush(_uartWIFI);
 			
 		#ifdef DEBUG_WIFI
@@ -2181,9 +2193,6 @@ uint8_t WaspWIFI::getFile(	char* filename,
 			// get statistics
 			getStats();	
 			#endif	
-			SD.OFF();	
-			//~ baud_rate=WIFI_BAUDRATE;
-			//~ ON(_uartWIFI);
 			
 			// CHANGE BAUDRATE TO 115200 bps
 			printString("set uart instant 115200\r",_uartWIFI);
@@ -2194,7 +2203,8 @@ uint8_t WaspWIFI::getFile(	char* filename,
 			beginSerial(baud_rate,_uartWIFI);
 			delay(100);
 			serialFlush(_uartWIFI);
-			delay(100);	
+			delay(100);
+			SD.OFF();		
 			return 1;
 		}
 		else
@@ -2297,7 +2307,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[49])));
  
 	// Sets the directory in the FTP server to upload the file
-	sprintf(question, "%s%s\r", buffer, remote_folder);	
+	snprintf(question, sizeof(question), "%s%s\r", buffer, remote_folder);	
 	
 	if( sendCommand(question) == 1 )
 	{
@@ -2305,7 +2315,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[52])));
 		
 		// Sends the command that uploads the file.
-		sprintf(question, "%s%s\r", buffer, filename);
+		snprintf(question, sizeof(question), "%s%s\r", buffer, filename);
 		serialFlush(_uartWIFI);		
 		
 		#ifdef DEBUG_WIFI
@@ -2675,7 +2685,7 @@ uint8_t WaspWIFI::getURL(uint8_t opt, char* host, char* request)
 	{						
 		// Copy "set i h "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
-		sprintf(question,"%s%s\r", buffer, host);
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
 		u1=sendCommand(question);
 		u2=1;
 	}
@@ -2690,7 +2700,7 @@ uint8_t WaspWIFI::getURL(uint8_t opt, char* host, char* request)
 		// Set the web server name			
 		// Copy "set d n "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[41])));		
-		sprintf(question,"%s%s\r", buffer, host);
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
 		u2=sendCommand(question);
 	}
 	
@@ -2702,7 +2712,7 @@ uint8_t WaspWIFI::getURL(uint8_t opt, char* host, char* request)
 	// set com remote
 	// Copy "set c r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));
-	sprintf(question,"%s%s\r", buffer, request);
+	snprintf(question, sizeof(question),"%s%s\r", buffer, request);
 	u4=sendCommand(question);
 	
 	// Send header automatically when connection is open	
@@ -2795,7 +2805,7 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 	{
 		// Copy "set i h "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
-		sprintf(question,"%s%s\r", buffer, host);
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
 		u1=sendCommand(question);
 		u2=1;
 	}
@@ -2810,7 +2820,7 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 		// Set the web server name			
 		// Copy "set d n "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[41])));		
-		sprintf(question,"%s%s\r", buffer, host);
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
 		u2=sendCommand(question);
 	}
 	
@@ -2822,8 +2832,8 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 	// set com remote
 	// Copy "set c r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));	
-	sprintf(question,"%s%s\r", buffer, request);	
-	//~ sprintf(question,"%s%s\r", buffer, request);	
+	snprintf(question, sizeof(question),"%s%s\r", buffer, request);	
+	//~ snprintf(question, sizeof(question),"%s%s\r", buffer, request);	
 	u4=sendCommand(question);
 	
 	// Append sensor data in ASCII hex format
@@ -2950,19 +2960,19 @@ uint8_t WaspWIFI::setTCPclient(	ipAddr ip_remote,
 	// set ip host address
 	// Copy "set i h "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
-	sprintf(question,"%s%s\r", buffer, ip_remote);
+	snprintf(question, sizeof(question),"%s%s\r", buffer, ip_remote);
 	u1=sendCommand(question);
   
 	// set the remote host port number
 	// Copy "set i r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));
-	sprintf(question,"%s%u\r", buffer, port_remote);
+	snprintf(question, sizeof(question),"%s%u\r", buffer, port_remote);
 	u2=sendCommand(question);
 	
 	// set the local port number
 	// Copy "set i l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
-	sprintf(question, "%s%u\r", buffer, port_local);
+	snprintf(question, sizeof(question), "%s%u\r", buffer, port_local);
 	u3=sendCommand(question);
 	
 	// Checks if everything is Ok, even if It's correctly connected.
@@ -2996,7 +3006,7 @@ uint8_t WaspWIFI::setTCPserver(uint16_t port_local)
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
 	
 	// Configures TCP port and listens on the connection.
-	sprintf(question, "%s%d\r", buffer, port_local);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, port_local);
 	u1=sendCommand(question);
 	
 	// Checks if everything is Ok, even if It's correctly connected.
@@ -3020,17 +3030,17 @@ uint8_t WaspWIFI::setUDPclient(	ipAddr ip_remote,
 	
 	// Copy "set i h "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
-	sprintf(question,"%s%s\r", buffer, ip_remote);
+	snprintf(question, sizeof(question),"%s%s\r", buffer, ip_remote);
 	u1=sendCommand(question);
 	
 	// Copy "set i r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));	
-	sprintf(question,"%s%u\r", buffer, port_remote);
+	snprintf(question, sizeof(question),"%s%u\r", buffer, port_remote);
 	u2=sendCommand(question);
 		
 	// Copy "set i l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
-	sprintf(question, "%s%u\r", buffer, port_local);
+	snprintf(question, sizeof(question), "%s%u\r", buffer, port_local);
 	u3=sendCommand(question);
 	
 	// Checks if everything is Ok, even if It's correctly connected.
@@ -3056,7 +3066,7 @@ uint8_t WaspWIFI::setUDPserver(uint16_t port_local)
 	// Configures UDP port. 		
 	// Copy "set i l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
-	sprintf(question, "%s%u\r", buffer, port_local);
+	snprintf(question, sizeof(question), "%s%u\r", buffer, port_local);
 	u1=sendCommand(question);
 	
 	// Checks if everything is Ok, even if It's correctly connected.
@@ -3179,25 +3189,25 @@ uint8_t WaspWIFI::sendAutoBroadcast(ipAddr ip_network,
 	// set broadcast address
 	// Copy "set b a "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[60])));
-	sprintf(question, "%s%s\r", buffer, ip_network);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, ip_network);
 	u1=sendCommand(question);
  
 	// set broadcast interval
 	// Copy "set b i "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[61])));
-	sprintf(question, "%s%d\r", buffer, interval); //2-256
+	snprintf(question, sizeof(question), "%s%d\r", buffer, interval); //2-256
 	u2=sendCommand(question);
 		
 	// set broadcast port
 	// Copy "set b p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[62])));
-	sprintf(question, "%s%u\r", buffer, port_remote);
+	snprintf(question, sizeof(question), "%s%u\r", buffer, port_remote);
 	u3=sendCommand(question);
 		
 	// set configurable Device ID (this is part of the UDP packet sent)
 	// Copy "set o d "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[63])));
-	sprintf(question, "%s%s\r", buffer, id);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, id);
 	u4=sendCommand(question);
 	
 	if ((u0==1)&&(u1==1)&&(u2==1)&&(u3==1)&&(u4==1))
@@ -3219,12 +3229,12 @@ uint8_t WaspWIFI::setAdhocOptions(uint16_t beacon, uint16_t probe_interval)
 		
 	// Copy "set a b "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[64])));
-	sprintf(question, "%s%d\r", buffer, beacon);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, beacon);
 	u1=sendCommand(question);
 		
 	// Copy "set a p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[65])));
-	sprintf(question, "%s%d\r", buffer, probe_interval);
+	snprintf(question, sizeof(question), "%s%d\r", buffer, probe_interval);
 	u2=sendCommand(question);
 	
 	if ((u0==1)&&(u1==1)&&(u2==1))
@@ -3314,7 +3324,7 @@ int WaspWIFI::resolve(char* name)
 	// Sends lookup command.
 	// Copy "lookup "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[69])));
-	sprintf(question, "%s%s\r", buffer, name);
+	snprintf(question, sizeof(question), "%s%s\r", buffer, name);
 	
 	serialFlush(_uartWIFI);
 	
@@ -3358,7 +3368,7 @@ uint8_t WaspWIFI::setBaudRate(long val)
 	
 	// Copy "set u b "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[70])));
-	sprintf(question, "%s%lu\r", buffer, val);
+	snprintf(question, sizeof(question), "%s%lu\r", buffer, val);
 	return sendCommand(question);
 }
 	
@@ -4462,7 +4472,7 @@ uint8_t WaspWIFI::setCommSize(unsigned int val)
 	// Copy "set c s "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[92]))); 
 	
-	sprintf(question, "%s%d\r",buffer,val);
+	snprintf(question, sizeof(question), "%s%d\r",buffer,val);
 	return sendCommand(question);
 }
 
@@ -4479,7 +4489,7 @@ uint8_t WaspWIFI::setCommTimer(unsigned int val)
 	// Copy "set c t "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[93]))); 
 	
-	sprintf(question, "%s%d\r",buffer,val);
+	snprintf(question, sizeof(question), "%s%d\r",buffer,val);
 	return sendCommand(question);
 }
 

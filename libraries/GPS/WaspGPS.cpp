@@ -1,7 +1,7 @@
 /*
  *  Library for managing the GPS v2.0 JN3 receiver
  * 
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -264,7 +264,7 @@ uint8_t WaspGPS::init(const char* _coordinateLat,
 	char aux[40];
     strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[1])));
 	// create LLANavigationInitialization command	
-	sprintf(_dataBuffer, aux, _coordinateLat, _coordinateLon,
+	snprintf(_dataBuffer, sizeof(_dataBuffer), aux, _coordinateLat, _coordinateLon,
 															_coordinateAl,
 															_clkOffset,
 															_timeOfWeek,
@@ -273,7 +273,7 @@ uint8_t WaspGPS::init(const char* _coordinateLat,
 															_resetCfg);
 	// sencoCommand() not used here.
 	setChecksum(_dataBuffer);
-	sprintf(_dataBuffer,"%s\r\n", _dataBuffer);
+	snprintf(_dataBuffer, sizeof(_dataBuffer), "%s\r\n", _dataBuffer);
 	serialFlush(_uart);
 	printString(_dataBuffer,_uart);
 	
@@ -1697,7 +1697,7 @@ void WaspGPS::sendCommand(char * NMEAcommand)
 	char aux[10];
     strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[8])));
 	//Set checksum on command and ads CR+LF
-	sprintf(_dataBuffer,aux, setChecksum(NMEAcommand));
+	snprintf(_dataBuffer, sizeof(_dataBuffer), aux, setChecksum(NMEAcommand));
 	
 	#ifdef GPS_DEBUG
 	USB.print(F("Command:\t"));

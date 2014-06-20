@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -47,7 +47,8 @@ const char rtc_string_13[] 	PROGMEM = 	"[Date : hours : minutes ] -> ";
 const char rtc_string_14[] 	PROGMEM = 	"[Hours : minutes] -> ";
 const char rtc_string_15[] 	PROGMEM = 	"[Minutes] -> ";	
 const char rtc_string_16[] 	PROGMEM = 	"Once per minute";	
-const char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";	
+const char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";
+const char rtc_string_18[] 	PROGMEM = 	"error";	
 
 
 const char* const table_RTC[] PROGMEM = 	  
@@ -69,7 +70,8 @@ const char* const table_RTC[] PROGMEM =
 	rtc_string_14, 		// 14
 	rtc_string_15,		// 15
 	rtc_string_16,		// 16
-	rtc_string_17,		// 16
+	rtc_string_17,		// 17
+	rtc_string_18,		// 18
 };
 
 
@@ -217,27 +219,30 @@ char* WaspRTC::getTimestamp()
 {
 	// define local buffer
 	char buffer[40];
+	char error_string[20];
 	
 	// buffer <-- "%s, %02u/%02u/%02u, %02u:%02u:%02u"
-	strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[17])));		
+	strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[17])));	
+	// error_string <-- "error"
+	strcpy_P(error_string,  (char*)pgm_read_word(&(table_RTC[18])));		
 	
 	switch (day) 
 	{
-	case 1:	sprintf (timeStamp, buffer, DAY_1, year, month, date, hour, minute, second);
+	case 1:	snprintf(timeStamp, sizeof(timeStamp), buffer, DAY_1, year, month, date, hour, minute, second);
 			break;
-	case 2:	sprintf (timeStamp, buffer, DAY_2, year, month, date, hour, minute, second);
+	case 2:	snprintf(timeStamp, sizeof(timeStamp), buffer, DAY_2, year, month, date, hour, minute, second);
 			break;
-	case 3:	sprintf (timeStamp, buffer, DAY_3, year, month, date, hour, minute, second);
+	case 3:	snprintf(timeStamp, sizeof(timeStamp), buffer, DAY_3, year, month, date, hour, minute, second);
 			break;
-	case 4:	sprintf (timeStamp, buffer, DAY_4, year, month, date, hour, minute, second);
+	case 4:	snprintf(timeStamp, sizeof(timeStamp), buffer, DAY_4, year, month, date, hour, minute, second);
 			break;
-	case 5:	sprintf (timeStamp, buffer, DAY_5, year, month, date, hour, minute, second);
+	case 5:	snprintf(timeStamp, sizeof(timeStamp), buffer, DAY_5, year, month, date, hour, minute, second);
 			break;
-	case 6:	sprintf (timeStamp, buffer, DAY_6, year, month, date, hour, minute, second);
+	case 6:	snprintf(timeStamp, sizeof(timeStamp), buffer, DAY_6, year, month, date, hour, minute, second);
 			break;
-	case 7:	sprintf (timeStamp, buffer, DAY_7, year, month, date, hour, minute, second);
+	case 7:	snprintf(timeStamp, sizeof(timeStamp), buffer, DAY_7, year, month, date, hour, minute, second);
 			break;
-	default:sprintf (timeStamp, "error");
+	default:snprintf(timeStamp, sizeof(timeStamp), error_string);
 			break;
   }
   return timeStamp;
@@ -1185,7 +1190,7 @@ char* WaspRTC::getAlarm1()
 			// buffer_format <-- "[%02u:%02u:%02u:%02u]"
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[8])));
 			
-			sprintf(auxiliar, buffer_format,
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											day_alarm1,
 											hour_alarm1,
 											minute_alarm1,
@@ -1202,7 +1207,7 @@ char* WaspRTC::getAlarm1()
 			// buffer_format <-- "[%02u:%02u:%02u:%02u]"
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[8])));
 			
-			sprintf(auxiliar,buffer_format,
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											day_alarm1,
 											hour_alarm1,
 											minute_alarm1,
@@ -1219,7 +1224,7 @@ char* WaspRTC::getAlarm1()
 			// buffer_format <-- "[%02u:%02u:%02u]"
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
 			
-			sprintf(auxiliar,buffer_format,
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											hour_alarm1,
 											minute_alarm1,
 											second_alarm1);
@@ -1235,7 +1240,7 @@ char* WaspRTC::getAlarm1()
 			// buffer_format <-- "[%02u:%02u]"
 			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[10])));
 	
-			sprintf(auxiliar,buffer_format,												
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,												
 											minute_alarm1,
 											second_alarm1);
 			strcat(timeStamp, auxiliar);
@@ -1250,7 +1255,7 @@ char* WaspRTC::getAlarm1()
 			// buffer_format <-- "[%02u]"
 			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[11]))); 
 	
-			sprintf(auxiliar,buffer_format,	second_alarm1);
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,	second_alarm1);
 			strcat(timeStamp, auxiliar);
 			break;
 			
@@ -1264,7 +1269,7 @@ char* WaspRTC::getAlarm1()
 		default:
 			// buffer <-- "Incorrect alarm mode"
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[7])));
-			sprintf(timeStamp, buffer);	
+			snprintf(timeStamp, sizeof(timeStamp), buffer);	
 	}	
 			
 	return timeStamp;
@@ -1476,7 +1481,7 @@ char* WaspRTC::getAlarm2()
 						
 			// buffer_format <-- "[%02u:%02u:%02u]"			
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
-			sprintf(auxiliar, buffer_format,
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											day_alarm2,
 											hour_alarm2,
 											minute_alarm2);
@@ -1491,7 +1496,7 @@ char* WaspRTC::getAlarm2()
 			
 			// buffer_format <-- "[%02u:%02u:%02u]"			
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
-			sprintf(auxiliar, buffer_format,
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											day_alarm2,
 											hour_alarm2,
 											minute_alarm2);
@@ -1506,7 +1511,7 @@ char* WaspRTC::getAlarm2()
 			
 			// buffer_format <-- "[%02u:%02u]"
 			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[10])));			
-			sprintf(auxiliar, buffer_format, hour_alarm2, minute_alarm2);
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format, hour_alarm2, minute_alarm2);
 			strcat(timeStamp, auxiliar);
 			break;
 			
@@ -1518,7 +1523,7 @@ char* WaspRTC::getAlarm2()
 			
 			// buffer_format <-- "[%02u]"
 			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[11]))); 
-			sprintf(auxiliar, buffer_format, minute_alarm2);
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format, minute_alarm2);
 			strcat(timeStamp, auxiliar);
 			break;
 			
@@ -1531,7 +1536,7 @@ char* WaspRTC::getAlarm2()
 		default:
 			// buffer <-- "Incorrect alarm mode"
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[7])));
-			sprintf(timeStamp, buffer);	
+			snprintf(timeStamp, sizeof(timeStamp), buffer);	
 	}	
 	
 	return timeStamp;
@@ -1589,21 +1594,22 @@ void WaspRTC::disableAlarm2()
  */
 uint8_t WaspRTC::BCD2byte(uint8_t number) 
 {
-  return (number>>4)*10 | (number & 0x0F);
+	return (number>>4)*10 | (number & 0x0F);
 }
 
 /* BCD2byte ( high, low ) - converts a BCD number to an integer
  */
 uint8_t WaspRTC::BCD2byte(uint8_t high, uint8_t low) 
 {
-  return high*10 + low;
+	return high*10 + low;
 }
 
 /* byte2BCD ( number ) - converts an integer number to a BCD number
  */
 uint8_t WaspRTC::byte2BCD(uint8_t theNumber) 
 {
-  return (theNumber%10 | ((theNumber-theNumber%10)/10)<<4);  // note that binary operations have preference on the others
+	// note that binary operations have preference on the others
+	return (theNumber%10 | ((theNumber-theNumber%10)/10)<<4);  
 }
 
 

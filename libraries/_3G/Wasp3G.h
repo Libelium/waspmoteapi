@@ -1,7 +1,7 @@
 /*! \file Wasp3G.h
     \brief Library for managing the SIM5218 module
     
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
 
     Design:		David Gascón
 
@@ -169,7 +169,13 @@
  */
 #define	INVOKE_CLIR	2
 
+/*! \def GET
+ */
+#define	GET 0
 
+/*! \def POST
+ */
+#define	POST 1
 
 
 
@@ -192,9 +198,10 @@ class Wasp3G
    //! Variables: aux strings that store commands and answer extracted from flash memory   
 	char str_aux1[20];
 	char str_aux2[20];
-	char str_aux3[20];
+	char str_aux3[60];
 	char str_aux4[20];
 	char str_aux5[20];
+	
    
 	//! It gets if GPRS module is ready or not
     /*!
@@ -216,6 +223,47 @@ class Wasp3G
 	uint8_t getXModemCheckSum(uint8_t* data);
 	
 	uint16_t sendXModemCheckSum(char* ptr);
+	
+	#if HTTP_FUSE
+		//! It configures the operator parameters
+		/*!
+		\return  '1' on success
+			'-1' if error setting APN, username and password,
+			'-3' if error receiving data or timeout waiting data
+			'-15' if error setting APN, username and password with CME_error code available
+		*/
+		int8_t initHTTP();
+		
+		//! It sends the HTTP request to the server
+		/*!
+		\param const char* url : url or IP address of the server
+		\param uint16_t port : server port
+		\param uint8_t* data : frame data to send
+		\param int length : length of the frame
+		\param uint8_t method : GET or POST
+		\return  '1' on success
+			'-2' if error opening a HTTP session
+			'-3' if error receiving data or timeout waiting data
+			'-16' if error opening a HTTP session with CME_error code available
+		*/
+		int8_t sendHTTPrequest(	const char* url,
+								uint16_t port,
+								uint8_t* data,
+								int length,
+								uint8_t method );
+		
+		//! It reads the response from the server
+		/*!
+		\param int8_t parse : '0' header and answer, '1' only answer from Meshlium
+		\return  '1' on success
+			'-3' if error receiving data or timeout waiting data
+			'-4' if error changing the baudrate (data received is OK)
+			'-17' if url response its not OK  (HTTP code 200)
+			'-18' if content-length field not found
+			'-19' if data field not found
+		*/
+		int8_t readHTTPresponse(int8_t parse);
+	#endif
 	
 	//! It sends an AT command to the module
     /*!
@@ -1246,8 +1294,9 @@ class Wasp3G
 		'-12' if network error,
 		'-15' if error setting APN, username and password with CME_error code available
 		'-16' if error opening a HTTP session with CME_error code available	
-		'-17' if the response from the url is not 200 HTTP code
-		'-18' if the response from the url has not data
+		'-17' if url response its not OK (HTTP code 200)
+		'-18' if content-length field not found
+		'-19' if data field not found
 	*/
 	int16_t readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse);
 	
@@ -1274,6 +1323,33 @@ class Wasp3G
 	*/
 	int16_t setTimebyURL();
 	
+	//! Sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
+	/*!
+	\param const char* url : url or IP address of the server
+	\param uint16_t port : server port
+	\param uint8_t* data : frame data to send
+	\param int length : length of the frame
+	\param uint8_t method : GET or POST
+	\return '1' on success,
+		'-1' if error setting APN, username and password,
+		'-2' if error opening a HTTP session,
+		'-3' if error receiving data or timeout waiting data,
+		'-4' if error changing the baudrate (data received is OK),
+		'-5' if unknown error for HTTP,
+		'-6' if HTTP task is busy,
+		'-7' if fail to resolve server address,
+		'-8' if HTTP timeout,
+		'-9' if fail to transfer data,
+		'-10' if memory error,
+		'-11' if invalid parameter,
+		'-12' if network error,
+		'-15' if error setting APN, username and password with CME_error code available
+		'-16' if error opening a HTTP session with CME_error code available	
+		'-17' if url response its not OK (HTTP code 200)
+		'-18' if content-length field not found
+		'-19' if data field not found
+	*/
+	int16_t sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method );
 	
 	//! Sends a request to a HTTPS url and get an answer. The answer is stored in 'buffer_3G'
 	/*!

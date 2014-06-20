@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
@@ -680,6 +680,12 @@ public:
 	
 	bool format();
   
+	//! It writes all the contents of the file specified
+	/*!
+	\param const char* filepath : the file to read from
+	\return void
+	*/
+	void showFile(char* filepath);
 
 };
 

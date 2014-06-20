@@ -110,6 +110,25 @@ const char	str_MWIFI[] PROGMEM	= "MWIFI";	// 67
 const char	str_UID[] 	PROGMEM	= "UID";	// 68
 const char	str_RB[] 	PROGMEM	= "RB";		// 69
 
+// Smart Water
+const char	str_PH[] 	PROGMEM	= "PH";		// 70
+const char	str_ORP[] 	PROGMEM	= "ORP";	// 71
+const char	str_DO[] 	PROGMEM	= "DO";		// 72
+const char	str_COND[] 	PROGMEM	= "COND";	// 73
+const char	str_WT[] 	PROGMEM	= "WT";		// 74
+const char	str_DINA[] 	PROGMEM	= "DINA";	// 75
+const char	str_DICA[] 	PROGMEM	= "DICA";	// 76
+const char	str_DIF[] 	PROGMEM	= "DIF";	// 77
+const char	str_DICL[] 	PROGMEM	= "DICL";	// 78
+const char	str_DIBR[] 	PROGMEM	= "DIBR";	// 79
+const char	str_DII[] 	PROGMEM	= "DII";	// 80
+const char	str_DICU2[] PROGMEM	= "DICU2";	// 81
+const char	str_DIK[] 	PROGMEM	= "DIK";	// 82
+const char	str_DIMG2[] PROGMEM	= "DIMG2";	// 83
+const char	str_DINO3[] PROGMEM	= "DINO3";	// 84
+
+
+
 
 /******************************************************************************* 
  * SENSOR_TABLE - Sensor label table
@@ -209,7 +228,24 @@ const char* const SENSOR_TABLE[] PROGMEM=
 
 	// RFID
 	str_UID,		// 68
-	str_RB			// 69
+	str_RB,			// 69
+	
+	// Smart Water
+	str_PH,			// 70
+	str_ORP,		// 71
+	str_DO,			// 72
+	str_COND,		// 73
+	str_WT, 		// 74
+	str_DINA,		// 75
+	str_DICA,		// 76
+	str_DIF,		// 77
+	str_DICL,		// 78
+	str_DIBR,		// 79
+	str_DII,		// 80
+	str_DICU2,		// 81
+	str_DIK,		// 82
+	str_DIMG2,		// 83
+	str_DINO3,		// 84
 	
 };
 
@@ -320,7 +356,24 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 
 	// RFID
 	3,	//str_UID		// 68
-	3	//str_RB		// 69
+	3,	//str_RB		// 69
+	
+	// Smart Water	
+	2, // str_PH,		// 70
+	2, // str_ORP,		// 71
+	2, // str_DO,		// 72
+	2, // str_COND,		// 73
+	2, // str_WT, 		// 74
+	2, // str_DINA,		// 75
+	2, // str_DICA,		// 76
+	2, // str_DIF,		// 77
+	2, // str_DICL,		// 78
+	2, // str_DIBR,		// 79
+	2, // str_DII,		// 80
+	2, // str_DICU2,	// 81
+	2, // str_DIK,		// 82
+	2, // str_DIMG2,	// 83
+	2, // str_DINO3,	// 84	
 	
 };
 
@@ -426,7 +479,24 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 
 	// RFID
 	1, //str_UID		// 68
-	1  //str_RB			// 69
+	1,  //str_RB		// 69
+	
+	// Smart Water
+	1, //str_PH,		// 70
+	1, //str_ORP,		// 71
+	1, //str_DO,		// 72
+	1, //str_COND,		// 73
+	1, //str_WT, 		// 74
+	1, //str_DINA,		// 75
+	1, //str_DICA,		// 76
+	1, //str_DIF,		// 77
+	1, //str_DICL,		// 78
+	1, //str_DIBR,		// 79
+	1, //str_DII,		// 80
+	1, //str_DICU2,		// 81
+	1, //str_DIK,		// 82
+	1, //str_DIMG2,		// 83
+	1, //str_DINO3,		// 84
 	
 };
 
@@ -530,7 +600,24 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 
 	// RFID
 	0, //str_UID		// 68
-	0  //str_RB			// 69
+	0,  //str_RB		// 69
+	
+	// Smart Water
+	2, //str_PH,		// 70
+	3, //str_ORP,		// 71
+	1, //str_DO,		// 72
+	1, //str_COND,		// 73
+	2, //str_WT, 		// 74
+	3, //str_DINA,		// 75
+	3, //str_DICA,		// 76
+	3, //str_DIF,		// 77
+	3, //str_DICL,		// 78
+	3, //str_DIBR,		// 79
+	3, //str_DII,		// 80
+	3, //str_DICU2,		// 81
+	3, //str_DIK,		// 82
+	3, //str_DIMG2,		// 83
+	3, //str_DINO3,		// 84
 	
 };
 
