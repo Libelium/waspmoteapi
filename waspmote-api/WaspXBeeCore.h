@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Yuri Carmona
 
@@ -82,7 +82,7 @@
 #define	MAC_TYPE	1
 
 //Variable for debugging
-#define	DEBUG       0
+#define	DEBUG_XBEE	0
 
 // Replacement Policy
 #define	XBEE_LIFO	0
@@ -438,7 +438,7 @@ public:
 	//! Structure Variable : Time in which last OTA packet arrived
 	/*!    
 	 */
-	long	time_arrived;
+	unsigned long	time_arrived;
 		
 	//! Structure Variable : New firmware ID
 	/*!    

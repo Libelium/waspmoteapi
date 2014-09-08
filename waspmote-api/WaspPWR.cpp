@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.5
+ *  Version:		1.7
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -437,10 +437,26 @@ void WaspPWR::deepSleep(	const char* time2wake,
 	pinMode(XBEE_MON,OUTPUT);
 	digitalWrite(XBEE_MON,LOW);
 	
-	// Set RTC alarm to wake up from Sleep Power Down Mode
+	// RTC ON
 	RTC.ON();
-	RTC.setAlarm1(time2wake,offset,mode);  
-    RTC.OFF();
+	// set Alarm
+	RTC.setAlarm1(time2wake,offset,mode); 
+	// get backup of selected Alarm	
+	uint8_t day_aux = RTC.day_alarm1; 
+	uint8_t hour_aux = RTC.hour_alarm1; 
+	uint8_t minute_aux = RTC.minute_alarm1; 
+	uint8_t second_aux = RTC.second_alarm1; 
+	// get Alarm
+	RTC.getAlarm1();
+	// check Alarm was correctly set	
+	if(	( day_aux != RTC.day_alarm1 ) 
+	||	( hour_aux != RTC.hour_alarm1 )
+	||	( minute_aux != RTC.minute_alarm1 )
+	||	( second_aux != RTC.second_alarm1 ) )
+	{
+		return (void)0;
+	}
+    RTC.OFF();    
     	
 	// switches off depending on the option selected  
 	switchesOFF(option);
@@ -498,33 +514,51 @@ void WaspPWR::deepSleep(	const char* time2wake,
  */
 void WaspPWR::hibernate(const char* time2wake, uint8_t offset, uint8_t mode)
 {
-   // set EEPROM Hibernate flag
-   eeprom_write_byte((unsigned char *) HIB_ADDR, HIB_VALUE);
+	int retries = 3;
+	
+	// set EEPROM Hibernate flag
+	eeprom_write_byte((unsigned char *) HIB_ADDR, HIB_VALUE);
    
-   pinMode(XBEE_PW,OUTPUT);
-   digitalWrite(XBEE_PW, LOW);
-   //~ closeSerial(0);
-   //~ while(digitalRead(GPS_PW))
-   //~ {              
-       //~ digitalWrite(GPS_PW,LOW);
-   //~ }
+	pinMode(XBEE_PW,OUTPUT);
+	digitalWrite(XBEE_PW, LOW);
+	//~ closeSerial(0);
+	//~ while(digitalRead(GPS_PW))
+	//~ {              
+		//~ digitalWrite(GPS_PW,LOW);
+	//~ }
    
-   // switch multiplexers power supply 
-   Utils.muxOFF();
+	// switch multiplexers power supply 
+	Utils.muxOFF();
       
-   RTC.ON();
-   // Set RTC alarme to wake up from Sleep Power Down Mode
-   RTC.setAlarm1(time2wake,offset,mode);
-   //RTC.close();
-   RTC.setMode(RTC_OFF, RTC_NORMAL_MODE);
+	RTC.ON();
+	// Set RTC alarme to wake up from Sleep Power Down Mode
+	RTC.setAlarm1(time2wake,offset,mode);
+	// get backup of selected Alarm	
+	uint8_t day_aux = RTC.day_alarm1; 
+	uint8_t hour_aux = RTC.hour_alarm1; 
+	uint8_t minute_aux = RTC.minute_alarm1; 
+	uint8_t second_aux = RTC.second_alarm1; 
+	// get Alarm
+	RTC.getAlarm1();
+	// check Alarm was correctly set	
+	if(	( day_aux != RTC.day_alarm1 ) 
+	||	( hour_aux != RTC.hour_alarm1 )
+	||	( minute_aux != RTC.minute_alarm1 )
+	||	( second_aux != RTC.second_alarm1 ) )
+	{
+		return (void)0;
+	}
+	RTC.OFF();
    
-   pinMode(RTC_SLEEP,OUTPUT);
-   digitalWrite(RTC_SLEEP,HIGH);
-   delay(50);
-   digitalWrite(RTC_SLEEP,LOW);
-   // To avoid executing any other function after calling hibernate
-   while(1);
-   {
+	pinMode(RTC_SLEEP,OUTPUT);
+	digitalWrite(RTC_SLEEP,HIGH);
+	delay(50);
+	digitalWrite(RTC_SLEEP,LOW);
+   
+	// To avoid executing any other function after calling hibernate
+	while( retries > 0 ) 
+	{
+	   retries--;
        pinMode(RTC_SLEEP,OUTPUT);
        digitalWrite(RTC_SLEEP,HIGH);
        delay(50);

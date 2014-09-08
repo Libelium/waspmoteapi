@@ -1,5 +1,6 @@
 /* Arduino SdSpi Library
- * Copyright (C) 2013 by William Greiman
+ * Copyright (C) 2013 by William Greiman 
+ * Modified in 2014 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino SdSpi Library
  *
@@ -65,20 +66,24 @@ void SdSpi::send(uint8_t data) {
   while (!(SPSR & (1 << SPIF)));
 }
 //------------------------------------------------------------------------------
-void SdSpi::send(const uint8_t* buf , size_t n) {
-  if (n == 0) return;
-  SPDR = buf[0];
-  if (n > 1) {
-    uint8_t b = buf[1];
-    size_t i = 2;
-    while (1) {
-      while (!(SPSR & (1 << SPIF)));
-      SPDR = b;
-      if (i == n) break;
-      b = buf[i++];
-    }
-  }
-  while (!(SPSR & (1 << SPIF)));
+void SdSpi::send(const uint8_t* buf , size_t n) 
+{
+	if (n == 0) return;
+	SPDR = buf[0];
+	if (n > 1) 
+	{
+		uint8_t b = buf[1];
+		size_t i = 2;
+		// while loop controlled by 'n' size input
+		while(1) 
+		{
+			while (!(SPSR & (1 << SPIF)));
+			SPDR = b;
+			if (i == n) break;
+			b = buf[i++];
+		}
+	}
+	while (!(SPSR & (1 << SPIF)));
 }
 #endif  // !USE_AVR_NATIVE_SPI_INLINE
 #endif  // USE_NATIVE_AVR_SPI

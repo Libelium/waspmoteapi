@@ -1,5 +1,6 @@
 /* Arduino Sd2Card Library
  * Copyright (C) 2012 by William Greiman
+ * Modified in 2014 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino Sd2Card Library
  *
@@ -256,23 +257,26 @@ bool Sd2Card::eraseSingleBlockEnable() {
  * the value zero, false, is returned for failure.  The reason for failure
  * can be determined by calling errorCode() and errorData().
  */
-bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor) {
-  m_errorCode = m_type = 0;
-  m_chipSelectPin = chipSelectPin;
-  // 16-bit init start time allows over a minute
-  uint16_t t0 = (uint16_t)millis();
-  uint32_t arg;
+bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor) 
+{
+	m_errorCode = m_type = 0;
+	m_chipSelectPin = chipSelectPin;
+ 
+	// 16-bit init start time allows over a minute
+	uint16_t t0 = (uint16_t)millis();
+	uint32_t arg;
+	int retries = 512;
 
-  pinMode(m_chipSelectPin, OUTPUT);
-  digitalWrite(m_chipSelectPin, HIGH);
-  m_spi.begin();
+	pinMode(m_chipSelectPin, OUTPUT);
+	digitalWrite(m_chipSelectPin, HIGH);
+	m_spi.begin();
 
-  // set SCK rate for initialization commands
-  m_sckDivisor = SPI_SCK_INIT_DIVISOR;
-  m_spi.init(m_sckDivisor);
+	// set SCK rate for initialization commands
+	m_sckDivisor = SPI_SCK_INIT_DIVISOR;
+	m_spi.init(m_sckDivisor);
 
-  // must supply min of 74 clock cycles with CS high.
-  for (uint8_t i = 0; i < 10; i++) m_spi.send(0XFF);
+	// must supply min of 74 clock cycles with CS high.
+	for (uint8_t i = 0; i < 10; i++) m_spi.send(0XFF);
 
 	// command to go idle in SPI mode
 	while (cardCommand(CMD0, 0) != R1_IDLE_STATE) 
@@ -284,16 +288,21 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor) {
 		}
 		if(t0>millis()) t0 = (uint16_t)millis();
 	}
-#if USE_SD_CRC
-  if (cardCommand(CMD59, 1) != R1_IDLE_STATE) {
-    error(SD_CARD_ERROR_CMD59);
-    goto fail;
-  }
-#endif  // USE_SD_CRC
-  // check SD version
 	
-	while (1) 
+	#if USE_SD_CRC
+	if (cardCommand(CMD59, 1) != R1_IDLE_STATE) 
 	{
+		error(SD_CARD_ERROR_CMD59);
+		goto fail;
+	}
+	#endif  // USE_SD_CRC
+	
+	// check SD version
+	
+	while( retries > 0) 
+	{
+		retries--;
+		
 		if (cardCommand(CMD8, 0x1AA) == (R1_ILLEGAL_COMMAND | R1_IDLE_STATE)) 
 		{
 			type(SD_CARD_TYPE_SD1);
@@ -312,8 +321,9 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor) {
 		}
 		if(t0>millis()) t0 = (uint16_t)millis();
 	}
-  // initialize card and send host supports SDHC if SD2
-  arg = type() == SD_CARD_TYPE_SD2 ? 0X40000000 : 0;
+  
+	// initialize card and send host supports SDHC if SD2
+	arg = type() == SD_CARD_TYPE_SD2 ? 0X40000000 : 0;
 
 	while (cardAcmd(ACMD41, arg) != R1_READY_STATE) 
 	{

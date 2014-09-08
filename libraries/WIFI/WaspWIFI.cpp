@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.5
+ *  Version:		1.7
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -133,6 +133,17 @@ const char str_set_comm_size[]		PROGMEM	= "set c s ";			// 92
 const char str_set_comm_timer[]		PROGMEM	= "set c t ";			// 93
 const char str_opt_format_7[]		PROGMEM	= "set o f 7\r";		// 94
 const char str_sys_io_7[]			PROGMEM	= "set s i 0x7\r";		// 95
+const char request_http_frame[]		PROGMEM	= "GET$/getpost_frame_parser.php?frame=";	// 96
+const char uart_mode[]				PROGMEM	= "set u m %u\r";		// 97
+const char http_ok[]				PROGMEM	= "200 OK";				// 98
+const char cmd_mode_request[]		PROGMEM	= "$$$";				// 99
+const char cmd_mode_answer[]		PROGMEM	= "CMD";				// 100
+const char save_answer[]			PROGMEM	= "Storing in config";	// 101
+const char ok_answer[]				PROGMEM	= "OK";					// 102
+const char reboot_answer[]			PROGMEM	= "*Reboot*";			// 103	
+const char aok_answer[]				PROGMEM	= "AOK";				// 104
+const char exit_answer[]			PROGMEM	= "EXIT";				// 105	
+const char ftp_error_answer[]		PROGMEM	= "FTP ERR";			// 106
 
 
 
@@ -236,6 +247,16 @@ const char* const table_WIFI[] PROGMEM=
 	str_set_comm_timer,		// 93
 	str_opt_format_7,		// 94
 	str_sys_io_7,			// 95
+	request_http_frame,		// 96
+	uart_mode,				// 97
+	http_ok,				// 98
+	cmd_mode_request,		// 99
+	cmd_mode_answer,		// 100
+	save_answer,			// 101
+	ok_answer,				// 102
+	reboot_answer,			// 103
+	aok_answer,				// 104
+	exit_answer,			// 105
 };
 
 
@@ -255,7 +276,20 @@ uint8_t WaspWIFI::commandMode()
 	bool cmdMode=false;
 	bool timeout=false;
 	unsigned long prev;
-		
+	
+	char cmd_mode_request[20];
+	char cmd_mode_answer[20];
+	char save_answer[20];
+	char ok_answer[20];
+	char reboot_answer[20];
+
+	// Copy strings from Flash memory
+	strcpy_P(cmd_mode_request, (char*)pgm_read_word(&(table_WIFI[99]))); // "$$$"
+	strcpy_P(cmd_mode_answer, (char*)pgm_read_word(&(table_WIFI[100]))); // "CMD"
+	strcpy_P(save_answer, (char*)pgm_read_word(&(table_WIFI[101]))); // "Storing in config"
+	strcpy_P(ok_answer, (char*)pgm_read_word(&(table_WIFI[102]))); // "OK"	
+	strcpy_P(reboot_answer, (char*)pgm_read_word(&(table_WIFI[103]))); // "*Reboot*"	
+	
 	//////////////////////////////////////////////
 	// Check first if the module has already been set
 	//////////////////////////////////////////////		
@@ -269,11 +303,11 @@ uint8_t WaspWIFI::commandMode()
 	delay(1000); 
 	retries=0;
 	prev=millis();
-	printString("$$$",_uartWIFI); 		
+	printString(cmd_mode_request,_uartWIFI); // "$$$"	
 	delay(1000);
 	while( !timeout )
 	{
-		if( checkAnswer("CMD") == 1 )
+		if( checkAnswer(cmd_mode_answer) == 1 )
 		{	
 			#ifdef DEBUG_WIFI
 			USB.print(F("enter CMD at ")); 
@@ -306,11 +340,11 @@ uint8_t WaspWIFI::commandMode()
 	retries=0;
 	while( retries < CMD_retries)
 	{
-		printString("$$$",_uartWIFI); 		
+		printString(cmd_mode_request,_uartWIFI); 		
 		delay(1000);
 		for(int j = 0; j < CMD_retries ; j++)
 		{
-			if( checkAnswer("CMD") == 1 )
+			if( checkAnswer(cmd_mode_answer) == 1 )
 			{
 				#ifdef DEBUG_WIFI
 				USB.println(F("enter CMD at 9600")); 
@@ -340,7 +374,7 @@ uint8_t WaspWIFI::commandMode()
 			delay(500);
 			for(int j = 0; j < 3 ; j++)
 			{
-				if( checkAnswer("OK") == 1 )
+				if( checkAnswer(ok_answer) == 1 )
 				{
 					#ifdef DEBUG_WIFI
 					USB.print(F("set baudrate to ")); 
@@ -367,7 +401,7 @@ uint8_t WaspWIFI::commandMode()
 			delay(500);
 			for(int j = 0; j < 3 ; j++)
 			{
-				if( checkAnswer("OK") == 1 )
+				if( checkAnswer(ok_answer) == 1 )
 				{
 					#ifdef DEBUG_WIFI
 					USB.println(F("set print debug")); 
@@ -394,7 +428,7 @@ uint8_t WaspWIFI::commandMode()
 			delay(500);
 			for(int j = 0; j < 3 ; j++)
 			{
-				if( checkAnswer("OK") == 1 )
+				if( checkAnswer(ok_answer) == 1 )
 				{
 					#ifdef DEBUG_WIFI
 					USB.println(F("LEDs disabled")); 
@@ -421,7 +455,7 @@ uint8_t WaspWIFI::commandMode()
 			delay(500);
 			for(int j = 0; j < 3 ; j++)
 			{
-				if( checkAnswer("Storing in config") == 1 )
+				if( checkAnswer(save_answer) == 1 )
 				{
 					#ifdef DEBUG_WIFI
 					USB.println(F("save done")); 
@@ -447,7 +481,7 @@ uint8_t WaspWIFI::commandMode()
 			delay(500);
 			for(int j = 0; j < 3 ; j++)
 			{
-				if( checkAnswer("*Reboot*") == 1 )
+				if( checkAnswer(reboot_answer) == 1 )
 				{
 					#ifdef DEBUG_WIFI
 					USB.println(F("reboot done")); 
@@ -475,11 +509,11 @@ uint8_t WaspWIFI::commandMode()
 	retries=0;
 	while( retries < CMD_retries)
 	{
-		printString("$$$",_uartWIFI); 		
+		printString(cmd_mode_request,_uartWIFI); 		
 		delay(1000);
 		for(int j = 0; j < CMD_retries ; j++)
 		{
-			if( checkAnswer("CMD") == 1 )
+			if( checkAnswer(cmd_mode_answer) == 1 )
 			{	
 				#ifdef DEBUG_WIFI
 				USB.print(F("enter CMD at ")); 
@@ -546,9 +580,21 @@ uint8_t WaspWIFI::checkAnswer(char* pattern)
 
 //! Reads data over the UART.
 uint8_t WaspWIFI::readData(uint8_t len)
-{
+{	
 	uint16_t i=0;
 	length=0;
+	
+	char str_aok[20];
+	char str_error[20];
+	char str_failed[20];
+	char str_exit[20];
+
+	// Copy strings from Flash memory
+	strcpy_P( str_aok, (char*)pgm_read_word(&(table_WIFI[104]))); 	// "AOK"
+	strcpy_P( str_error, (char*)pgm_read_word(&(table_WIFI[1]))); 	// "ERR"
+	strcpy_P( str_failed, (char*)pgm_read_word(&(table_WIFI[3]))); 	// "FAILED"
+	strcpy_P( str_exit, (char*)pgm_read_word(&(table_WIFI[105]))); 	// "EXIT"	
+	
 	
 	if (serialAvailable(_uartWIFI))
 	{ 
@@ -576,15 +622,15 @@ uint8_t WaspWIFI::readData(uint8_t len)
 	length=i;
 	
 	// Checks the answer.
-	if (contains(answer,"AOK"))
+	if (contains(answer, str_aok))
 	{
 		return 1;
 	}
 	else
 	{
-		if( contains(answer,"ERR")	||
-			contains(answer,Disconn_pattern)||
-			contains(answer,"FAILED")	)
+		if( contains(answer, str_error)	||
+			contains(answer, Disconn_pattern)||
+			contains(answer, str_failed)	)
 		{  
 			#ifdef DEBUG_WIFI
 			USB.println(answer); 
@@ -594,7 +640,7 @@ uint8_t WaspWIFI::readData(uint8_t len)
 		else 
 		{  	
 			// checking for UDP conenctions
-			if (contains(answer,"EXIT"))
+			if (contains( answer, str_exit))
 			{
 				return 1;
 			}
@@ -1226,12 +1272,16 @@ uint8_t WaspWIFI::join(char* ssid)
 {
 	char question[128];
 	char buffer[20];
+	char str_get_ip_answer[20];
 	bool timeout=false;
 	bool retry=false;
 	unsigned long prev;
 	
+	
 	// Copy "join "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[19]))); 
+	// Copy "IF=UP"
+	strcpy_P(str_get_ip_answer, (char*)pgm_read_word(&(table_WIFI[73])));	
 	
 	// Sends command to join an Access Point.
 	snprintf(question, sizeof(question), "%s%s\r", buffer, ssid);
@@ -1258,7 +1308,7 @@ uint8_t WaspWIFI::join(char* ssid)
 	while( !timeout )
 	{
 		// check correct answer
-		if( checkAnswer("IF=UP") == 1 )
+		if( checkAnswer(str_get_ip_answer) == 1 )
 		{	
 			serialFlush(_uartWIFI); 
 			return 1;
@@ -1276,8 +1326,8 @@ uint8_t WaspWIFI::join(char* ssid)
 		if( millis()-prev > 40000)
 		{
 			timeout=true;
-		}		
-				
+		}	
+		
 		if( !retry && (millis()-prev > 20000) )
 		{
 			// retry
@@ -1917,14 +1967,23 @@ uint8_t WaspWIFI::getFile(	char* filename,
 		readRet=i;	
 		
 		
-		/// RECEPTION OF FILE
+		/// RECEPTION OF FILE		
+		
+		
+		char ftp_error_answer[20];
+		char str_open[20];
+
+		// Copy strings from Flash memory
+		strcpy_P( ftp_error_answer, (char*)pgm_read_word(&(table_WIFI[106]))); 	// "FTP ERR"
+		strcpy_P( str_open, (char*)pgm_read_word(&(table_WIFI[5]))); 	// "*OPEN*"
+			
 		
 		// If there is no problem *OPEN* should appear 
 		// but no "FTP ERR" should be received
-		if( (contains(answer, buffer4)) && (!contains(answer, "FTP ERR")) )
+		if( (contains(answer, buffer4)) && (!contains(answer, ftp_error_answer)) )
 		{	
 			// find starting pattern	
-			char* pointer = strstr((const char*)answer, "*OPEN*");	
+			char* pointer = strstr((const char*)answer, str_open);	
 			if( pointer != NULL)
 			{
 				i = (int)pointer - (int)answer;
@@ -1945,7 +2004,7 @@ uint8_t WaspWIFI::getFile(	char* filename,
 			
 			// set the index to the beginning of the file and start storing the 
 			// file until the ending pattern appears: *CLOS*
-			i=i+strlen("*OPEN*");
+			i=i+strlen(str_open);
 						
 			// set number of bytes to be checked in 'answer'
 			readRet=readRet-i;	
@@ -2152,7 +2211,7 @@ uint8_t WaspWIFI::getFile(	char* filename,
 			{			
 				#ifdef DEBUG_WIFI
 				USB.println(F("FTP_TIMEOUT")); 
-				for(int t = 0; t < sizeof(answer); t++)
+				for(uint16_t t = 0; t < sizeof(answer); t++)
 				{
 					USB.printHex(answer[t]);
 				}
@@ -2247,13 +2306,13 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 	char buffer[20];
 	uint16_t i=0, plong=0;
 	long int size, size_aux=0;
-	uint8_t readRet;
+	int readRet;
 	int count;	
 	int flwSet_aux=0;
-	unsigned long WTX_aux=0;
+	long int WTX_aux=0;
 	bool timeout;
 	unsigned long previous;
-	unsigned long total=0;
+	long int total=0;
 	
 	// Local variable  
 	SdFile file;	
@@ -2267,8 +2326,8 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 	getStats();
 	
 	// store the actual statistics
-	flwSet_aux=flwSet;		
-	WTX_aux=WTX;		
+	flwSet_aux = flwSet;		
+	WTX_aux = WTX;		
 	
 	// check stats are OK
 	if(flwSet_aux == -1)
@@ -2279,7 +2338,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 		return 0;
 	}	
 	
-	if(WTX_aux == (unsigned long)-1)
+	if( WTX_aux == -1 )
 	{	
 		#ifdef DEBUG_WIFI
 		USB.println(F("WTX_aux==-1")); 
@@ -2495,7 +2554,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 			while( (readRet > 0) && (size > 0) )
 			{	
 				// Send data stored in bufferSD until file ends
-				for(unsigned long int j=0; j<readRet; ++j)
+				for( int j=0; j<readRet; ++j)
 				{
 					printByte(bufferSD[j],_uartWIFI);
 					size--;
@@ -2670,72 +2729,137 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 
 // Connection Configuration Methods ///////////////////////////////////////////
 
-//! Sets the http config and opens an HTTP connection.
+/*******************************************************************************
+ * getURL
+ * 
+ * This function expects the HTTP request as a string. The request and body must
+ * be included within the 'request' input
+ * 
+ * The input parameters:
+ * 	'opt': option for addressing: 'DNS' or 'IP'
+ * 	'host': url of server
+ * 	'request': request of the HTTP query
+ * 
+ * Example of use:
+ * 	WIFI.getURL(	DNS, 
+ * 					"pruebas.libelium.com", 
+ * 					"GET$/test-get-post.php?value=1");
+ * 
+ ******************************************************************************/
 uint8_t WaspWIFI::getURL(uint8_t opt, char* host, char* request)
+{
+	// call HTTP request with port number 80 (default)
+	return getURL(opt, host, 80, request);	
+}	
+	
+	
+/*******************************************************************************
+ * getURL
+ * 
+ * This function expects the HTTP request as a string. The request and body must
+ * be included within the 'request' input
+ * 
+ * The input parameters:
+ * 	'opt': option for addressing: 'DNS' or 'IP'
+ * 	'host': url of server
+ * 	'port': server port
+ * 	'request': request of the HTTP query
+ * 
+ * Example of use:
+ * 	WIFI.getURL(	DNS, 
+ * 					"pruebas.libelium.com", 
+ * 					80,
+ * 					"GET$/test-get-post.php?value=1");
+ * 
+ ******************************************************************************/
+uint8_t WaspWIFI::getURL(	uint8_t opt, 
+							char* host, 
+							int port, 
+							char* request)
 {
 	uint8_t result=0;
 	char aux[sizeof(answer)];
-	char question[128];
+	char question[512];
 	char buffer[20];
-	uint8_t u1,u2,u3,u4,u5;
+	char HTTP_OK[20];
+	uint8_t u1,u2,u3,u4,u5,u6;
   
   
 	// If the address is given by a IP address.
-	if (opt==IP)
+	if ( opt == IP )
 	{						
 		// Copy "set i h "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
 		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
-		u1=sendCommand(question);
-		u2=1;
+		u1 = sendCommand(question);
+		u2 = 1;
 	}
 	// If the address is given by a URL address.
-	else
+	else if( opt == DNS )
 	{		
 		// Turn on DNS. set ip host 0. 			
 		// Copy "set i h 0\r"
 		strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[54])));
-		u1=sendCommand(question);	
+		u1 = sendCommand(question);	
 		
 		// Set the web server name			
 		// Copy "set d n "
 		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[41])));		
 		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
-		u2=sendCommand(question);
+		u2 = sendCommand(question);
 	}
+	else
+	{
+		return 0;
+	}
+		
+	// Set the web server port introduced as input		
+	// Copy "set i r "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));
+	snprintf(question, sizeof(question),"%s%u\r", buffer, port );		
+	u3 = sendCommand(question);
 	
-	// Set the web server port, 80 is standard			
-	// Copy "set i r 80\r"
-	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[55])));	
-	u3=sendCommand(question);
-						
 	// set com remote
 	// Copy "set c r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));
 	snprintf(question, sizeof(question),"%s%s\r", buffer, request);
-	u4=sendCommand(question);
+	u4 = sendCommand(question);
 	
 	// Send header automatically when connection is open	
 	// Copy "set o f 1\r"
 	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[57])));
-	u5=sendCommand(question);
+	u5 = sendCommand(question);
+	
+	// Use UART mode by default
+	// Copy "set u m %u\r"
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[97])));
+	snprintf(question, sizeof(question), buffer, 0);
+	u6 = sendCommand(question);
 	
 	// If everything is Ok, even it is correctly connected.
-	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(u5==1) )//&&(isConnected()))
-	{ 
-		// Opens the HTTP connection.
+	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(u5==1)&&(u6==1) )
+	{ 		
+		// introduce a 500ms delay to wait for configuration before 
+		// opening the HTTP connection
+		delay(500);
+		
+		// Opens the HTTP connection. With the default UART mode, 
+		// the request is sent when opening the connection
 		if(openHTTP())  
 		{ 			
 			// Reads the answer of the HTTP query.
 			read(NOBLO,20000); 
 			
 			// backup copy of the answer			
-			memcpy(aux, answer, sizeof(answer));			
+			memcpy(aux, answer, sizeof(answer));	
 			
-			if(findPattern((uint8_t*)answer,CLOS_pattern,length)==-1)
+			// Copy "200 OK"
+			strcpy_P(HTTP_OK, (char*)pgm_read_word(&(table_WIFI[98])));
+			
+			if(findPattern((uint8_t*)answer, HTTP_OK, length)==-1)
 			{	
 				#ifdef DEBUG_WIFI
-				USB.println(F("CLOS not found"));		
+				USB.println(F("200 OK Not Found"));		
 				#endif	
 				result = 0;
 			}
@@ -2781,21 +2905,290 @@ uint8_t WaspWIFI::getURL(uint8_t opt, char* host, char* request)
 }
 
 
-//! Sets the http config and opens an HTTP connection.
-/*
+
+/*******************************************************************************
+ * getURL
+ * 
+ * This function expects the HTTP request as a string. The request and body must
+ * be included within the 'request' input
+ * 
+ * The input parameters:
+ * 	'opt': option for addressing: 'DNS' or 'IP'
+ * 	'host': url of server
+ * 	'url': url of the HTTP query
+ * 	'body': body of the HTTP get query
+ *  
+ * Example of use:
+ * 	WIFI.getURL(	DNS, 
+ * 					"pruebas.libelium.com", 
+ * 					"GET$/test-get-post.php?",
+ * 					"value1=1&value2=2&value3=3&value4=4&value5=5&value6=6");
+ * 
+ ******************************************************************************/
+uint8_t WaspWIFI::getURL(	uint8_t opt, 
+							char* host, 
+							char* url, 
+							char* body)
+{
+	return getURL(opt, host, 80, url, body);
+}
+
+/*******************************************************************************
+ * getURL
+ * 
+ * This function expects the HTTP request as a string. The request and body must
+ * be included within the 'request' input
+ * 
+ * The input parameters:
+ * 	'opt': option for addressing: 'DNS' or 'IP'
+ * 	'host': url of server
+ * 	'port': port of server
+ * 	'url': url of the HTTP query
+ * 	'body': body of the HTTP get query
+ * 
+ * Example of use:
+ * 	WIFI.getURL(	DNS, 
+ * 					"pruebas.libelium.com", 
+ * 					80, 
+ * 					"GET$/test-get-post.php?",
+ * 					"value1=1&value2=2&value3=3&value4=4&value5=5&value6=6");
+ * 
+ ******************************************************************************/
+uint8_t WaspWIFI::getURL(	uint8_t opt, 
+							char* host, 
+							int port, 
+							char* url, 
+							char* body)
+{
+	uint8_t result=0;
+	char aux[sizeof(answer)];
+	char question[512];
+	char buffer[20];
+	char HTTP_OK[20];
+	uint8_t u1,u2,u3,u4,u5,u6;
+  
+  
+	// If the address is given by a IP address.
+	if( opt == IP )
+	{						
+		// Copy "set i h "
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
+		u1 = sendCommand(question);
+		u2 = 1;
+	}
+	// If the address is given by a URL address.
+	else if( opt == DNS )
+	{		
+		// Turn on DNS. set ip host 0. 			
+		// Copy "set i h 0\r"
+		strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[54])));
+		u1 = sendCommand(question);	
+		
+		// Set the web server name			
+		// Copy "set d n "
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[41])));		
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
+		u2 = sendCommand(question);
+	}
+	else
+	{
+		return 0;
+	}
+			
+	// Set the web server port introduced as input		
+	// Copy "set i r "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));
+	snprintf(question, sizeof(question),"%s%u\r", buffer, port );		
+	u3 = sendCommand(question);
+	
+	// set com remote
+	// Copy "set c r "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));
+	snprintf(question, sizeof(question),"%s%s\r", buffer, url);
+	u4 = sendCommand(question);
+	
+	// Send header automatically when connection is open	
+	// Copy "set o f 1\r"
+	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[57])));
+	u5 = sendCommand(question);
+	
+	// Use UART data trigger mode, which causes the module to make a TCP/HTTP 
+	// connection upon incoming UART data
+	// Copy "set u m %u\r"
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[97])));
+	snprintf(question, sizeof(question), buffer, 2);
+	u6 = sendCommand(question);
+	
+	// If everything is Ok, even it is correctly connected.
+	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(u5==1)&&(u6==1) )
+	{ 		
+		// introduce a 500ms delay to wait for configuration before 
+		// opening the HTTP connection
+		delay(500);
+		
+		// Opens the HTTP connection.
+		if(openHTTP())  
+		{ 		
+			// Once the connection is open, we send the string with 
+			// the body of the HTTP GET request
+			printString( body, _uartWIFI);
+			
+			// Reads the answer of the HTTP query.
+			read(NOBLO,20000); 
+			
+			// backup copy of the answer			
+			memcpy(aux, answer, sizeof(answer));			
+			
+			// Copy "200 OK"
+			strcpy_P(HTTP_OK, (char*)pgm_read_word(&(table_WIFI[98])));			
+			
+			if(findPattern((uint8_t*)answer, HTTP_OK, length)==-1)
+			{	
+				#ifdef DEBUG_WIFI
+				USB.println(F("200 OK not found"));		
+				#endif	
+				result = 0;
+			}
+			else
+			{	
+				// HTTP OK
+				result = 1;
+			}
+		}
+		else
+		{
+			#ifdef DEBUG_WIFI
+			USB.print(F("openHTTP failed."));		
+			#endif	
+			result = 0;
+		}
+	}
+	else
+	{
+		result = 0;
+	}
+
+	/* When HTTP retrieve is done, the WiFi module exits command mode so 
+	 * it is mandatory to enter command mode again. Then, the module is 
+	 * suposed to be already joined to network and a second 'getURL' call
+	 * could be done as a retry if the first one fails
+	 */
+	if(commandMode()!=1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("CMD not entered"));	
+		#endif	
+		result = 0;
+	}	
+	
+	if( result == 1)	
+	{
+		// get the backup of the answer when OK
+		memcpy(answer, aux, sizeof(answer));
+	}
+	
+	return result;  
+}
+
+
+
+
+ 
+/*******************************************************************************
+ * getURL
+ * 
  * This function expects an array of bytes including the info about the sensor
  * data. This function has been created to be used with the Waspmote Frame Class
- */
+ * 
+ * The input parameters:
+ * 	'opt': option for addressing: 'DNS' or 'IP'
+ * 	'host': url of the Meshlium device
+ * 	'request': request of the HTTP query
+ * 	'frame': pointer to the array of bytes of the frame
+ * 	'len': length of the data frame 
+ * 
+ ******************************************************************************/
 uint8_t WaspWIFI::getURL(	uint8_t opt, 
 							char* host, 
 							char* request, 
 							uint8_t* frame, 
 							uint16_t len)
 {	
+	// use the 80 remote port as default port	
+	return sendHTTPframe( opt, host, 80, request, frame, len );	
+}
+
+
+
+/*******************************************************************************
+ * sendHTTPframe
+ * 
+ * This function is used to send Waspmote Frames from Waspmote to Meshlium
+ * using the Sensor Parser of the Meshlium machine so as to store all Data 
+ * Frames inside the DataBase of Meshlium.
+ * 
+ * These are the input parameters:
+ * 	'opt': option for addressing: 'DNS' or 'IP'
+ * 	'host': url of the Meshlium device
+ * 	'port': port number 
+ * 	'frame': pointer to the array of bytes of the frame
+ * 	'len': length of the data frame
+ * 
+ * Example of use:
+ * 	WIFI.sendHTTPframe(IP, "10.10.10.1", 80, frame.buffer, frame.length);
+ * 
+ ******************************************************************************/
+uint8_t WaspWIFI::sendHTTPframe(uint8_t opt, 
+								char* host, 
+								int port, 
+								uint8_t* frame, 
+								uint16_t len)
+{		
+	// define local buffer
+	char request[100];
+	
+	// Copy "GET$/getpost_frame_parser.php?frame="
+	strcpy_P(request, (char*)pgm_read_word(&(table_WIFI[96])));
+	
+	return sendHTTPframe( opt, host, port, request, frame, len );	
+}
+
+/*******************************************************************************
+ * sendHTTPframe
+ * 
+ * This function is used to send Waspmote Frames from Waspmote to Meshlium
+ * using the Sensor Parser of the Meshlium machine so as to store all Data 
+ * Frames inside the DataBase of Meshlium.
+ * 
+ * These are the input parameters:
+ * 	'opt': option for addressing: 'DNS' or 'IP'
+ * 	'host': url of the Meshlium device
+ * 	'port': port number 
+ * 	'request': request of the HTTP query
+ * 	'frame': pointer to the array of bytes of the frame
+ * 	'len': length of the data frame
+ * 
+ * Example of use:
+ * 	WIFI.sendHTTPframe(	IP
+ * 						, "10.10.10.1"
+ * 						, 80
+ * 						, "GET$/getpost_frame_parser_pruebas.php?frame="
+ * 						, frame.buffer, frame.length);
+ * 
+ ******************************************************************************/
+uint8_t WaspWIFI::sendHTTPframe(uint8_t opt, 
+								char* host, 
+								int port, 
+								char* request, 
+								uint8_t* frame, 
+								uint16_t len)
+{	
 	uint8_t result=0;
 	char question[300];
 	char aux[sizeof(answer)];
 	char buffer[20];
+	char HTTP_OK[20];
 	unsigned long WTX_aux=0;
 	unsigned long numBytes=0;
 	uint8_t u1,u2,u3,u4,u5;	  
@@ -2824,19 +3217,23 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 		u2=sendCommand(question);
 	}
 	
-	// Set the web server port, 80 is standard			
-	// Copy "set i r 80\r"
-	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[55])));	
-	u3=sendCommand(question);
+	// Set the web server port introduced as input		
+	// Copy "set i r \r"
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));
+	snprintf(question, sizeof(question),"%s%u\r", buffer, port );		
+	u3 = sendCommand(question);
 						
 	// set com remote
 	// Copy "set c r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));	
 	snprintf(question, sizeof(question),"%s%s\r", buffer, request);	
-	//~ snprintf(question, sizeof(question),"%s%s\r", buffer, request);	
 	u4=sendCommand(question);
 	
 	// Append sensor data in ASCII hex format
+	/* For example, if the incoming UART data is 6 bytes of binary data with 
+	* hex values 0x01, 0xAB, 0x03, 0xFF, 0x05, and 0x06, the module sends this
+	* string GET /user-prog.php?DATA=01AB03FF0506\n\n to the web server.
+	*/
 	// Copy "set o f 7\r"
 	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[94])));
 	u5=sendCommand(question);
@@ -2845,17 +3242,19 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 	
 	// update stats
 	getStats();
-	WTX_aux=WTX;	
+	WTX_aux = WTX;	
 	
 	// If everything is Ok, even it is correctly connected.
 	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(u5==1)&&(isConnected()))
-	{
-		delay(300);
+	{		
+		// introduce a 500ms delay to wait for configuration before 
+		// opening the HTTP connection
+		delay(500);
 		
 		// Opens the HTTP connection.
 		if(openHTTP())  
 		{		
-			for(int i = 0; i < len; i++)
+			for(uint16_t i = 0; i < len; i++)
 			{
 				printByte(frame[i],_uartWIFI);				
 			}	
@@ -2866,10 +3265,13 @@ uint8_t WaspWIFI::getURL(	uint8_t opt,
 			// backup copy of the answer			
 			memcpy(aux, answer, sizeof(answer));
 			
-			if( strstr(answer,CLOS_pattern) == NULL )
+			// Copy "200 OK"
+			strcpy_P(HTTP_OK, (char*)pgm_read_word(&(table_WIFI[98])));			
+			
+			if( strstr(answer, HTTP_OK ) == NULL )
 			{	
 				#ifdef DEBUG_WIFI
-				USB.println(F("CLOS not found"));		
+				USB.println(F("200 OK not found"));
 				#endif
 				result = 0;
 			}
@@ -3113,9 +3515,9 @@ int WaspWIFI::read(uint8_t blo, unsigned long time)
 	}  
 	
 	// Read all incoming data and store it in 'answer' buffer
-	while( serialAvailable(_uartWIFI) && (length<(sizeof(answer)-1)) )
+	while( serialAvailable(_uartWIFI) && (length < (int)(sizeof(answer)-1) ) )
 	{
-		if (((answer[length]=serialRead(_uartWIFI))!='\0')&&(length<(sizeof(answer)-1)))
+		if (((answer[length]=serialRead(_uartWIFI))!='\0')&&( length < (int)(sizeof(answer)-1) ))
 		{
 			length++; 
 		}
@@ -3147,7 +3549,7 @@ void WaspWIFI::send(char* data)
 void WaspWIFI::send(uint8_t* data, uint16_t len)
 { 
 	// Writes what we want to send on the UART. 
-	for (int i=0; i<len; i++)
+	for (uint16_t i=0; i<len; i++)
 	{
 		printByte(data[i],_uartWIFI);
 	}   
@@ -3508,15 +3910,14 @@ void WaspWIFI::getConnectionInfo()
 		temp = int(ptr[2])-int('A')+10;
 	else
 		temp = int(ptr[2])-int('0');
-	
-	#ifdef DEBUG_WIFI
-	if (temp&1==1)
+		
+	if ( (temp & 1) == 1 )
 		USB.println(F("Assoc: OK"));	
-	if (temp&2==2)
+	if ( (temp & 2) == 2 )
 		USB.println(F("Authen: OK"));	
-	if (temp&4==4)
+	if ( (temp & 4) == 4 )
 		USB.println(F("DNS server = contacted"));
-	if (temp&8==8)
+	if ( (temp & 8) == 8 )
 		USB.println(F("DNS found = resolved"));
 	if (ptr[3]=='0')
 		USB.println(F("TCP status = Idle"));
@@ -3525,8 +3926,7 @@ void WaspWIFI::getConnectionInfo()
 	if (ptr[3]=='3')
 		USB.println(F("TCP status = NOIP"));
 	if (ptr[3]=='4')
-		USB.println(F("TCP status = Connecting")); 
-	#endif
+		USB.println(F("TCP status = Connecting")); 	
 }
 	
 	
@@ -3610,6 +4010,28 @@ void WaspWIFI::getRSSI()
 	}
 	answer[i]='\0';	
 	
+	/* The response is something like:
+		RSSI=(-43) dBm
+		<2.32> 
+	 */ 
+	
+	// init variable
+	this->rssi = 0;
+	char rssi_str[10];
+	char* start_val = strchr(answer,'(');
+	char* end_val = strchr(answer,')');
+	if( (start_val != NULL)&&(end_val != NULL) )
+	{
+		int len = (int)end_val-(int)start_val -1 ;
+		if( len < (int)sizeof(rssi_str) )
+		{
+			memset(rssi_str, 0x00, sizeof(rssi_str) );
+			memcpy(rssi_str, start_val+1, len);
+			this->rssi = atoi(rssi_str);
+		}
+	}
+	
+	
 	#ifdef DEBUG_WIFI
 	// seek start of info in 'answer
 	char* start=strstr(answer,"RSSI");
@@ -3632,8 +4054,8 @@ void WaspWIFI::getStats()
 	uint16_t i=0;  
 	char* start;
     char* end;
-    char value[50];
-    int m;
+    char value[50];	
+    uint16_t m;	
     
 	// Copy "show s\r"
 	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[77])));
@@ -3689,8 +4111,9 @@ void WaspWIFI::getStats()
 		end=strchr((const char*)start,',');		
 		if( end != NULL)
 		{
-			// get value in characters			
-			for(m = 0; m < sizeof(value); m++)
+			// get value in characters	
+			memset(value, 0x00, sizeof(value) );
+			for(m = 0; m < sizeof(value)-1; m++)
 			{
 				value[m]=start[m];
 				if( start[m] == ',' )
@@ -3700,16 +4123,16 @@ void WaspWIFI::getStats()
 			}
 			value[m]='\0';
 			// convert from string to integer
-			WRX=(unsigned long) atol(value);			
+			WRX = atol(value);			
 		}
 		else
 		{
-			WRX=(unsigned long)-1;			
+			WRX = -1;			
 		}		
 	}
 	else
 	{
-		WRX=(unsigned long)-1;
+		WRX = -1;
 	}
 	
 	
@@ -3725,8 +4148,9 @@ void WaspWIFI::getStats()
 		end=strchr((const char*)start,',');		
 		if( end != NULL)
 		{
-			// get value in characters			
-			for(m = 0; m < sizeof(value); m++)
+			// get value in characters	
+			memset(value, 0x00, sizeof(value) );		
+			for(m = 0; m < sizeof(value)-1; m++)
 			{
 				value[m]=start[m];
 				if( start[m] == ',' )
@@ -3736,16 +4160,16 @@ void WaspWIFI::getStats()
 			}
 			value[m]='\0';
 			// convert from string to integer
-			WTX=(unsigned long) atol(value);			
+			WTX = atol(value);			
 		}
 		else
 		{
-			WTX=-1;			
+			WTX = -1;			
 		}		
 	}
 	else
 	{
-		WTX=-1;
+		WTX = -1;
 	}
 	
 	
@@ -3760,8 +4184,9 @@ void WaspWIFI::getStats()
 		end=strchr((const char*)start,',');		
 		if( end != NULL)
 		{
-			// get value in characters			
-			for(m = 0; m < sizeof(value); m++)
+			// get value in characters	
+			memset(value, 0x00, sizeof(value) );		
+			for(m = 0; m < sizeof(value)-1; m++)
 			{
 				value[m]=start[m];
 				if( start[m] == ',' )
@@ -4603,9 +5028,12 @@ int8_t WaspWIFI::requestOTA()
 	char aux_name[8];
 	char path[60];
 	char aux_str[10];
-	unsigned long aux_size;
+	long int aux_size;
 	uint8_t aux_version;
 	int len;
+	char slash[] = "/";
+	char dot[] = ".";
+
 
 	// set to zero the buffer 'path'
 	memset(path, 0x00, sizeof(path));
@@ -4621,7 +5049,7 @@ int8_t WaspWIFI::requestOTA()
 	#endif
 	
 	// get OTA_ver_file
-	ans = getFile(OTA_ver_file,"/",".");
+	ans = getFile( (char*)OTA_ver_file, slash, dot);
 	
     // check if file was downloaded correctly
     if( ans == 1)
@@ -4720,15 +5148,15 @@ int8_t WaspWIFI::requestOTA()
 		// copy the SIZE contents
 		len=strchr(str_pointer, '\n')-1-strchr(str_pointer, ':');
 		// check length does not overflow
-		if(len>=sizeof(aux_str))
+		if( len >= (int)sizeof(aux_str) )
 		{
-			len=sizeof(aux_str)-1;
+			len = sizeof(aux_str)-1;
 		}
 		strncpy(aux_str, strchr(str_pointer, ':')+1, len);
 		aux_str[len] = '\0';
 		
 		// converto from string to int
-		aux_size=atol(aux_str);
+		aux_size = atol(aux_str);
 					
 		#ifdef DEBUG_WIFI
 		USB.print(F("SIZE:"));
@@ -4749,11 +5177,11 @@ int8_t WaspWIFI::requestOTA()
 	if (str_pointer != NULL)
 	{
 		// copy the SIZE contents
-		len=strchr(str_pointer, '\n')-1-strchr(str_pointer, ':');
+		len = strchr(str_pointer, '\n')-1-strchr(str_pointer, ':');
 		// check length does not overflow
-		if(len>=sizeof(aux_str))
+		if( len >= (int)sizeof(aux_str))
 		{
-			len=sizeof(aux_str)-1;
+			len = sizeof(aux_str)-1;
 		}
 		strncpy(aux_str, strchr(str_pointer, ':')+1, len);
 		aux_str[len] = '\0';	
@@ -4806,19 +5234,19 @@ int8_t WaspWIFI::requestOTA()
 	#endif	
 	
 	// check if path matches root directory, then set "."				
-	if(strcmp(path,"/")==0)
+	if(strcmp(path,slash)==0)
 	{
-		strncpy(path,".",strlen("."));
+		strncpy( path, dot, strlen(dot) );
 	}		
 	
 	// get binary file
-	ans = getFile(aux_name,"/",path);
+	ans = getFile((char*)aux_name, slash, path);
 		
 	if (ans == 1)
 	{
 		// check if size matches
 		SD.ON();
-		if(SD.getFileSize(aux_name)!=aux_size)
+		if( SD.getFileSize(aux_name) != aux_size )
 		{
 			#ifdef DEBUG_WIFI
 			USB.println(F("Size does not match"));

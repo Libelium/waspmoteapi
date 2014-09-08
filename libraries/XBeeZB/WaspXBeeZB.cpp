@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -1093,16 +1093,10 @@ uint8_t WaspXBeeZB::sendXBeePriv(struct packetXBee* packet)
 {
 	// Local variables
 	uint8_t TX[120];
-    uint8_t counter=0;   
-    long previous=0;
-    uint16_t aux=0;
+    uint8_t counter=0;  
     uint8_t protegido=0;
     uint8_t tipo=0;
-    uint8_t estado=1;
-    int8_t error=2;
-    uint8_t ByteIN[20];  
-    uint8_t old_netAddress[2];
-    uint8_t net_Address_changed = 0;   
+    int8_t error=2;   
 
     clearCommand();
 
@@ -1124,8 +1118,7 @@ uint8_t WaspXBeeZB::sendXBeePriv(struct packetXBee* packet)
     if( (packet->mode==BROADCAST) || (packet->mode==UNICAST) )
     {
 		// fragment length
-        TX[2]=14+packet->data_length; 
-        aux=0;
+        TX[2]=14+packet->data_length;         
         
         // set Frame Type
         TX[3]=0x10; 
@@ -1246,6 +1239,15 @@ uint8_t WaspXBeeZB::sendXBeePriv(struct packetXBee* packet)
     // Generate the escaped API frame (it is necessary because AP=2)  
     gen_frame_ap2(packet,TX,protegido,tipo);
     
+	#if DEBUG_XBEE > 0
+	USB.print(F("[debug] TX:"));
+    for(uint16_t i = 0; i < (packet->data_length+tipo+protegido) ; i++)
+	{
+		USB.printHex(TX[i]);
+	}
+	USB.println();
+	#endif
+    
     // send frame through correspondent UART
     while(counter<(packet->data_length+tipo+protegido))
     {	    
@@ -1263,7 +1265,7 @@ uint8_t WaspXBeeZB::sendXBeePriv(struct packetXBee* packet)
     counter=0;  
       
 	// read XBee's answer to TX request	
-	error_TX=txZBStatusResponse();
+	error_TX = txZBStatusResponse();
 	error = error_TX; 
 	
     packet->deliv_status=delivery_status;

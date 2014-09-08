@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Javier Siscart
 
@@ -209,12 +209,7 @@ class WaspBLE
 	*/
 	uint8_t answer[MAX_PACKET_SIZE];
     
- 	//! Variable : Variable used as a counter
-    	/*!
-	*/
-	uint8_t i;
-    
-    //! Variable : Variable to store device addresses in scanning functions
+ 	//! Variable : Variable to store device addresses in scanning functions
     	/*!
 	*/
     uint8_t previousMAC[6];

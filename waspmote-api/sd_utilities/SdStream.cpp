@@ -1,5 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
+ * Modified in 2014 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -93,20 +94,26 @@ void SdStreamBase::putch(char c) {
   if (writeError) setstate(badbit);
 }
 //------------------------------------------------------------------------------
-void SdStreamBase::putstr(const char* str) {
-  size_t n = 0;
-  while (1) {
-    char c = str[n];
-    if (c == '\0' || (c == '\n' && !(getmode() & ios::binary))) {
-      if (n > 0) write(str, n);
-      if (c == '\0') break;
-      write('\r');
-      str += n;
-      n = 0;
-    }
-    n++;
-  }
-  if (writeError) setstate(badbit);
+void SdStreamBase::putstr(const char* str) 
+{
+	size_t n = 0;
+	int retries = 512;
+	
+	while( retries > 0 ) 
+	{
+		retries--;
+		char c = str[n];
+		if (c == '\0' || (c == '\n' && !(getmode() & ios::binary))) 
+		{
+			if (n > 0) write(str, n);
+			if (c == '\0') break;
+			write('\r');
+			str += n;
+			n = 0;
+		}
+		n++;
+	}
+	if (writeError) setstate(badbit);
 }
 //------------------------------------------------------------------------------
 /** Internal do not use

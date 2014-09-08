@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -522,9 +522,8 @@ float WaspSensorSmart_v20::readTempDS1820()
    
 }
 
-
 /*	flowReading: reads the analog to digital converter input indicated
- * 						   in socket and converts the value into distance in
+ * 						   in socket and converts the value into a flow value in
  * 						   function of the sensor selected in mode
  *	Parameters:	uint16_t socket : digital input to be read
  * 				uint8_t model
@@ -532,7 +531,7 @@ float WaspSensorSmart_v20::readTempDS1820()
  * 						- SENS_FLOW_FS200A : Selects FS200A flow sensor 
  * 						- SENS_FLOW_FS400A : Selects FS400A flow sensor
  *
- *  Return:		float flow : flow measured by the sensor in litres/minute
+ *  Return:		float flow : flow measured by the sensor in liters/minute
  * 							 -1.0 for error in sensor type selection
  * 
  */
@@ -543,21 +542,34 @@ float WaspSensorSmart_v20::readTempDS1820()
 	long start = 0;
 	int previous_reading = 0;
 	int reading = 0;
+	
+	// Measure flow sensor pulses during 1 second, to obtain pulses per second.
 	start = millis();
-	while((millis()-start)<=1000)
+	while( (millis() - start) <= 1000 )
 	{
-	  previous_reading = reading;
-	  reading = digitalRead(socket);
-	  
-	  if((previous_reading == 1)&&(reading == 0))
-	  {
-	    value++;
-	  }
-		if (millis() < start) start = millis();	//to avoid millis overflow
+		previous_reading = reading;
+		reading = digitalRead(socket);
+		
+		if((previous_reading == 1) && (reading == 0))
+		{
+		value++;
+		}
+		
+		// to avoid millis overflow
+		if (millis() < start) start = millis();	
 	}
+	
 	delay(100);
 
-
+	/* Now calculate the liters per minute magnitude, depending on the flow sensor used.
+	 * Example:  Flow sensor FS200A has 450 pulses/liter, so:
+	 * 
+	 * flow [liters/minute] = value [pulses/second] / (450 [pulses / liter] / 60 )
+	 * 
+	 * flow = value / (450/60) = value / 7.5
+	 * 
+	 * Note: FS100A has 3900 pulses/liter. FS400 has 390 pulses/liter
+	 */
 	switch(model)
 	{
 		case SENS_FLOW_FS100	:	flow = float(value) / 65;
@@ -575,7 +587,5 @@ float WaspSensorSmart_v20::readTempDS1820()
 
 	return flow;
 }
-
-
 
 WaspSensorSmart_v20 SensorSmartv20=WaspSensorSmart_v20();

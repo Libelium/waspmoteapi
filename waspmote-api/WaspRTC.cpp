@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -118,15 +118,15 @@ void WaspRTC::OFF(void)
  * Returns nothing
  */ 
 void WaspRTC::begin()
-{
+{	
 	// Powers RTC UP
 	setMode(RTC_ON, RTC_NORMAL_MODE);
+	
 	// Inits I2C bus
 	if( !Wire.I2C_ON ) Wire.begin();
  
 	// clear the alarm flags
 	clearAlarmFlag();
-  
 	// initialize the variables used to store the data from the RTC
 	resetVars();
   
@@ -156,18 +156,21 @@ void WaspRTC::close()
  */
 void WaspRTC::setMode(uint8_t mode, uint8_t I2C_mode)
 {
-	_pwrMode=mode;
+	_pwrMode = mode;
 	pinMode(RTC_PW,OUTPUT);
 	switch(_pwrMode)
 	{
-		case RTC_ON 	: digitalWrite(RTC_PW,HIGH);
-				  if( I2C_mode==RTC_I2C_MODE ) isON = 2;
-				  else if( I2C_mode==RTC_NORMAL_MODE ) isON = 1;
-			      	  break;
-		case RTC_OFF 	: digitalWrite(RTC_PW,LOW);
-				  isON = 0;
-				  break;
+		case RTC_ON 	: 	digitalWrite(RTC_PW,HIGH);
+							if( I2C_mode==RTC_I2C_MODE ) isON = 2;
+							else if( I2C_mode==RTC_NORMAL_MODE ) isON = 1;
+							break;
+		case RTC_OFF 	: 	digitalWrite(RTC_PW,LOW);
+							isON = 0;
+							break;
 	}
+	
+	// stabilization time after switching on
+	delay(10);
 }
 
 
@@ -267,6 +270,8 @@ char* WaspRTC::getTimestamp()
 void WaspRTC::readRTC(uint8_t endAddress) 
 {
 	uint16_t timecount = 0;
+	uint16_t timeout = 0;	
+	
 	// ADDRESSING FROM MEMORY POSITION ZERO
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
@@ -280,7 +285,7 @@ void WaspRTC::readRTC(uint8_t endAddress)
 	Wire.requestFrom(RTC_ADDRESS, RTC_DATA_SIZE);  
 
 	// slave may send less than requested
-	while(timecount <= endAddress)    
+	while((timecount <= endAddress) && (timeout < 10))   
 	{ 
 		if (Wire.available())
 		{
@@ -318,6 +323,11 @@ void WaspRTC::readRTC(uint8_t endAddress)
 						break;
 			}
 			timecount++;
+		}
+		// No data on I2C bus
+		else
+		{
+			timeout++;
 		}
 	}
 	
@@ -700,6 +710,8 @@ void WaspRTC::writeRTCregister(uint8_t theAddress)
  */
 void WaspRTC::readRTCregister(uint8_t theAddress) 
 {
+	uint16_t timeout = 0;
+	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
@@ -711,7 +723,10 @@ void WaspRTC::readRTCregister(uint8_t theAddress)
 	Wire.requestFrom(RTC_ADDRESS, 0x01); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
-	while(!Wire.available()) {};
+	while(!Wire.available() && (timeout < 10))
+	{
+		timeout++;
+	}
 	registersRTC[theAddress] = Wire.receive();
 	Wire.endTransmission();
 }

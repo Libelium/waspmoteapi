@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
- *  Implementation:	Jim Studt, Alberto Bielsa
+ *  Implementation:	Jim Studt, Alberto Bielsa, Yuri Carmona
  */
  
 
@@ -52,7 +52,7 @@ WaspOneWire::WaspOneWire( uint8_t pinArg)
 uint8_t WaspOneWire::reset() {
     uint8_t r;
     uint8_t retries = 125;
-    long a = 0;
+    unsigned long a = 0;
 
     // wait until the wire is high... just in case
     pinMode(pin,INPUT);
@@ -96,7 +96,7 @@ uint8_t WaspOneWire::reset() {
 uint8_t WaspOneWire::resetSerialID() {
     uint8_t r;
     uint8_t retries = 125;
-    long a = 0;
+    unsigned long a = 0;
 
     // wait until the wire is high... just in case
     pinMode(pin,INPUT);

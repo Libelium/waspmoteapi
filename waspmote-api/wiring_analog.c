@@ -1,6 +1,7 @@
 /*
  *  Copyright (c) 2005-2006 David A. Mellis
- *
+ *  Modified for Waspmote by Libelium, 2014
+ 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
@@ -23,18 +24,27 @@ int analogRead(uint8_t pin)
 {
 	uint8_t low, high, ch = analogInPinToBit(pin);
 
+	// store channel previously set
+	uint8_t channel = (ADMUX & (unsigned int) 0x0f);
+	
+	// enables the ADC
 	sbi(ADCSRA,ADEN);
-   
-	// the low 4 bits of ADMUX select the ADC channel
-	ADMUX = (ADMUX & (unsigned int) 0xf0) | (ch & (unsigned int) 0x0f);
+	
+	// check if there is need to change the channel and wait for stabilization
+	if( channel != ch )
+	{
+		// the low 4 bits of ADMUX select the ADC channel
+		ADMUX = (ADMUX & (unsigned int) 0xf0) | (ch & (unsigned int) 0x0f);
 
-	// without a delay, we seem to read from the wrong channel
-	//delay(1);
+		// without a delay, we seem to read from the wrong channel
+		delay(1);		
+	}
 
-	// start the conversion
+	// start the conversion. 
 	sbi(ADCSRA, ADSC);
 
-	// ADSC is cleared when the conversion finishes
+	// When the conversion is complete, ADSC bit 
+	// (inside ADCSRA register) returns to zero.
 	while (bit_is_set(ADCSRA, ADSC));
 
 	// we have to read ADCL first; doing so locks both ADCL

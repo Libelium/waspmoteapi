@@ -1,7 +1,7 @@
 /*! \file WaspRFDI.h
 
 	\brief Library for managing the accelerometer LIS3LV02DL
-	Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -17,8 +17,8 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:	0.1
-	Design:		David Gascón
+	Version:		1.0
+	Design:			David Gascón
 	Implementation:	Ahmad Saad, Javier Solobera
 */
  
@@ -51,22 +51,18 @@
 
 //! PN532 Commands
 #define GETFIRMWAREVERSION (0x02)
-#define GETGENERALSTATUS (0x04)
 #define READREGISTER (0x06)
 #define WRITEREGISTER (0x08)
 #define READGPIO (0x0C)
 #define WRITEGPIO (0x0E)
 #define SETSERIALBAUDRATE (0x10)
 #define SETPARAMETERS (0x12)
-#define SAMCONFIGURATION (0x14)
 #define POWERDOWN (0x16)
 #define RFCONFIGURATION (0x32)
 #define RFREGULATIONTEST (0x58)
 
-#define INLISTPASSIVETARGET (0x4A)
 #define INATR (0x50)
 #define INPSL (0x4E)
-#define INDATAEXCHANGE (0x40)
 #define INCOMMUNICATETHRU (0x42)
 #define INDESELECT (0x44)
 #define INRELEASE (0x52)

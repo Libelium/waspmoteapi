@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,11 +15,13 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
- *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova
+ *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova, Javier Siscart
+ * 
+ * 	Based on K. Townsend Library.
+ * 
  */
-
 
 #ifndef __WPROGRAM_H__
 #include <WaspClasses.h>
@@ -40,8 +42,7 @@ WaspSensorAmbient::WaspSensorAmbient()
 	pinMode(SENS_AMBIENT_SENSIRION_CLK,OUTPUT);
 	pinMode(SENS_AMBIENT_SENSIRION_DATA, OUTPUT);
 	pinMode(SENS_AMBIENT_LDR_GND, OUTPUT);
-		
-	
+
 	digitalWrite(SENS_AMBIENT_LDR_PWR,LOW);
 	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,LOW);
 	digitalWrite(SENS_AMBIENT_SENSIRION_GND,LOW);
@@ -53,57 +54,130 @@ WaspSensorAmbient::WaspSensorAmbient()
 
 }
 
-// Public Methods //////////////////////////////////////////////////////////////
+// Private Methods //////////////////////////////////////////////////////////////
 
-/*	setSensorMode: It sets ON/OFF the different sensor switches
- *	Parameters:	uint8_t mode 
- * 						- SENS_ON : turn on the sensor
- * 						- SENS_OFF : turn off the sensor
- * 				uint16_t sensor
- * 							- SENS_AMBIENT_TEMPERATURE : Temperature Sensor
- * 							- SENS_AMBIENT_HUMIDITY : Humidity Sensor
- * 							- SENS_AMBIENT_LDR : Luminosity Sensor
- *  Return:		int8_t error
- * 						1 : success
- * 						0 : wrong mode selected
- * 						-1: wrong sensor selected
- * 
- */
-int8_t	WaspSensorAmbient::setSensorMode(uint8_t mode, uint16_t sensor)
-{	
-	if( mode==SENS_ON )
-	{
-		switch( sensor )
-		{
-			case	SENS_AMBIENT_LDR		:	digitalWrite(SENS_AMBIENT_LDR_PWR,HIGH);
-												break;
-			case	SENS_AMBIENT_TEMPERATURE:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,HIGH);
-												break;
-			case	SENS_AMBIENT_HUMIDITY	:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,HIGH);
-												break;
-			case	SENS_AMBIENT_LUX	:		digitalWrite(SENS_AMBIENT_LUX_PWR,HIGH);
-												break;
-			default						:	return -1;
-		}
-	} else if( mode==SENS_OFF )
-	{
-		switch( sensor )
-		{
-			case	SENS_AMBIENT_LDR		:	digitalWrite(SENS_AMBIENT_LDR_PWR,LOW);
-												break;
-			case	SENS_AMBIENT_TEMPERATURE:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,LOW);
-												break;
-			case	SENS_AMBIENT_HUMIDITY	:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,LOW);
-												break;
-			case	SENS_AMBIENT_LUX	:		digitalWrite(SENS_AMBIENT_LUX_PWR,LOW);
-												break;
-			default							:	return -1;
-		}
-	} else return 0;
-	
-	return 1;
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
+void WaspSensorAmbient::TSL2561(uint8_t addr) 
+{
+  _addr = addr;
+  _initialized = false;
+  _integration = TSL2561_INTEGRATIONTIME_13MS;
+  _gain = TSL2561_GAIN_16X;
+
+  // we cant do wire initialization till later, because we havent loaded Wire yet
 }
 
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
+boolean WaspSensorAmbient::begin(void) 
+{
+  Wire.begin();
+
+ // Initialise I2C
+  Wire.beginTransmission(_addr);
+
+  Wire.send(TSL2561_REGISTER_ID);
+
+  Wire.endTransmission();
+  Wire.requestFrom(_addr, 1);
+
+  int x = Wire.receive();
+  
+  if (x & 0x0A ) 
+  {} 
+  else 
+  {
+    return false;
+  }
+  _initialized = true;
+
+  // Set default integration time and gain
+  setTiming(_integration);
+  setGain(_gain);
+  
+  // Note: by default, the device is in power down mode on bootup
+  disable();
+
+  return true;
+}
+
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
+void WaspSensorAmbient::enable(void)
+{
+  if (!_initialized) begin();
+
+  // Enable the device by setting the control bit to 0x03
+  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_CONTROL, TSL2561_CONTROL_POWERON);
+  delay(100);
+}
+
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
+void WaspSensorAmbient::disable(void)
+{
+  if (!_initialized) begin();
+
+  // Disable the device by setting the control bit to 0x03
+  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_CONTROL, TSL2561_CONTROL_POWEROFF);
+}
+
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
+void WaspSensorAmbient::setGain(tsl2561Gain_t gain) 
+{
+  if (!_initialized) begin();
+
+  enable();
+  _gain = gain;
+  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_TIMING, _integration | _gain);  
+  disable();
+}
+
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
+void WaspSensorAmbient::setTiming(tsl2561IntegrationTime_t integration)
+{
+  if (!_initialized) begin();
+
+  enable();
+  _integration = integration;
+  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_TIMING, _integration | _gain);  
+  disable();
+}
+
+
+/*
+ Function: Read the sensirion temperature
+ Returns: float temperature in ºC
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readSensirionTemperature(void)
 {
 	float temperature;
@@ -113,6 +187,12 @@ float WaspSensorAmbient::readSensirionTemperature(void)
 	return temperature;
 }
 
+/*
+ Function: Read the sensirion humidity
+ Returns: float humidity value
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readSensirionHumidity(void)
 {
 	float humidity;
@@ -123,20 +203,25 @@ float WaspSensorAmbient::readSensirionHumidity(void)
 	
 }
 
+/*
+ Function: Read the LDR sensor 
+ Returns: Return luminosity in Volts
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readLDR(void)
 {
 	float luminosity;
 	int aux;
 
+	// LDR is powered at 3V3 with a 10K pull down. The ADC is 10 bits
 	aux = analogRead(ANALOG6);
 	luminosity = 3.3*aux/1023;
 
+	// The conversion to R (Ohms) would be R = (3V3/V) -1) * 10K 
+
 	return luminosity;
 }
-
-
-// Public Methods //////////////////////////////////////////////////////////////
-
 
 /*	readSensirion: reads the temperature or humidity value from the Sensirion
  * 				   digital temperature and humidity sensor
@@ -157,13 +242,18 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 	const byte TEMPERATURE = B00000011;
 	
 	
-
-	if( parameter==SENS_AMBIENT_TEMPERATURE ) parameter=TEMPERATURE;
-	else if( parameter==SENS_AMBIENT_HUMIDITY ) parameter=HUMIDITY;
+	if( parameter==SENS_AMBIENT_TEMPERATURE ) 
+	{
+		parameter=TEMPERATURE;
+	}
+	else if( parameter==SENS_AMBIENT_HUMIDITY ) 
+	{
+		parameter=HUMIDITY;
+	}
 	else return 0;
 		
-  //************************************* 
-  // First Transmission cycle (START)
+	//************************************* 
+	// First Transmission cycle (START)
   
 	pinMode(SENS_AMBIENT_SENSIRION_DATA,  OUTPUT);
 	pinMode(SENS_AMBIENT_SENSIRION_CLK, OUTPUT);
@@ -178,8 +268,8 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 	delayMicroseconds(1);
 	digitalWrite(SENS_AMBIENT_SENSIRION_CLK, LOW);
 
-  //***************************************
-  // Write the command (3 first bits: always 000, last five bits: command)
+	//***************************************
+	// Write the command (3 first bits: always 000, last five bits: command)
 
 	//parameter: B00000011 for temperature and B00000101 for humidity
 	shiftOut(SENS_AMBIENT_SENSIRION_DATA, SENS_AMBIENT_SENSIRION_CLK, MSBFIRST, parameter);  
@@ -205,8 +295,8 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 		if (millis() < a) a = millis();	//to avoid millis overflow
 	}
   
-  //****************************************
-  //Wait for a complete conversion
+	//****************************************
+	//Wait for a complete conversion
   
 	ack = digitalRead(SENS_AMBIENT_SENSIRION_DATA);
 	a = millis();
@@ -215,8 +305,8 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 		ack = digitalRead(SENS_AMBIENT_SENSIRION_DATA);
 	}
  
-  //*****************************************
-  //Read the 8 most significative bits
+	//*****************************************
+	//Read the 8 most significative bits
 
 	a = millis();
 	for(int i = 0; i < 8; i++)
@@ -234,8 +324,8 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 		if (millis() < a) a = millis();	//to avoid millis overflow
 	}
   
-  //****************************************
-  //ACK from the  microcontroller
+	//****************************************
+	//ACK from the  microcontroller
 	pinMode(SENS_AMBIENT_SENSIRION_DATA, OUTPUT);
 	digitalWrite(SENS_AMBIENT_SENSIRION_DATA, LOW);
 	delayMicroseconds(1);
@@ -245,8 +335,8 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 	pinMode(SENS_AMBIENT_SENSIRION_DATA, INPUT);
 	digitalWrite(SENS_AMBIENT_SENSIRION_DATA, HIGH);
    
-  //***************************************
-  //Read the 8 least significative bits
+	//***************************************
+	//Read the 8 least significative bits
 	a = millis();
 	for(int i = 0; i < 8; i++)
 	{
@@ -255,26 +345,29 @@ float WaspSensorAmbient::readSensirion(uint8_t parameter)
 		digitalWrite(SENS_AMBIENT_SENSIRION_CLK, LOW);
 	}
 	
-
-  
-  //**************************************
-  //CRC not taken into account
-  
+ 
+	//**************************************
+	//CRC not taken into account
 	pinMode(SENS_AMBIENT_SENSIRION_DATA, OUTPUT);
 	digitalWrite(SENS_AMBIENT_SENSIRION_DATA, HIGH);
 	digitalWrite(SENS_AMBIENT_SENSIRION_CLK, HIGH);
 	delayMicroseconds(400);
 	digitalWrite(SENS_AMBIENT_SENSIRION_CLK, LOW);
-	
 	digitalWrite(SENS_AMBIENT_SENSIRION_DATA, LOW);
   
-	if( parameter==TEMPERATURE ) return temperatureConversion(val_read,SENS_PREC_HIGH);
-	else if( parameter==HUMIDITY ) return humidityConversion(val_read,SENS_PREC_HIGH);
+	if( parameter==TEMPERATURE ) 
+	{
+		return temperatureConversion(val_read,SENS_PREC_HIGH);
+	}
+	else if( parameter==HUMIDITY ) 
+	{
+		return humidityConversion(val_read,SENS_PREC_HIGH);
+	}
 	else return 0;
 } 
 
 /*	temperatureConversion: converts the value read from the Sensirion into a
- * 						   temperature value
+ * 						   temperature value in ºC
  *	Parameters:	int readValue : value read from the Sensirion
  * 				int precision : format at which the sensor was read
  *  Return:		float value : temperature measured by the sensor in ºC
@@ -330,7 +423,7 @@ float WaspSensorAmbient::humidityConversion(int readValue, int precision)
 		default			  	:	;
 	}
   
-	//in case of saturation
+	// in case of saturation
 	if( humidity > 99.0 )
 	{
 		humidity = 100.0;
@@ -339,93 +432,13 @@ float WaspSensorAmbient::humidityConversion(int readValue, int precision)
 	return(humidity);
 }
 
-/*	LUXConversion: converts the value read from the LUX Sensor into a
- * 						   LUX value
- *	Parameters:	int readValue : value read from the Sensirion
- * 				int precision : format at which the sensor was read
- *  Return:		float value : temperature measured by the sensor in ºC
- * 
- */
-void WaspSensorAmbient::TSL2561(uint8_t addr) {
-  _addr = addr;
-  _initialized = false;
-  _integration = TSL2561_INTEGRATIONTIME_13MS;
-  _gain = TSL2561_GAIN_16X;
 
-  // we cant do wire initialization till later, because we havent loaded Wire yet
-}
-
-boolean WaspSensorAmbient::begin(void) {
-  Wire.begin();
-
- // Initialise I2C
-  Wire.beginTransmission(_addr);
-#if ARDUINO >= 100
-  Wire.write(TSL2561_REGISTER_ID);
-#else
-  Wire.send(TSL2561_REGISTER_ID);
-#endif
-  Wire.endTransmission();
-  Wire.requestFrom(_addr, 1);
-#if ARDUINO >= 100
-  int x = Wire.read();
-#else
-  int x = Wire.receive();
-#endif
-  
-  if (x & 0x0A ) {
-
-  } else {
-    return false;
-  }
-  _initialized = true;
-
-  // Set default integration time and gain
-  setTiming(_integration);
-  setGain(_gain);
-  // Note: by default, the device is in power down mode on bootup
-  disable();
-
-  return true;
-}
-
-void WaspSensorAmbient::enable(void)
-{
-  if (!_initialized) begin();
-
-  // Enable the device by setting the control bit to 0x03
-  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_CONTROL, TSL2561_CONTROL_POWERON);
-  delay(100);
-}
-
-void WaspSensorAmbient::disable(void)
-{
-  if (!_initialized) begin();
-
-  // Disable the device by setting the control bit to 0x03
-  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_CONTROL, TSL2561_CONTROL_POWEROFF);
-}
-
-
-void WaspSensorAmbient::setGain(tsl2561Gain_t gain) {
-  if (!_initialized) begin();
-
-  enable();
-  _gain = gain;
-  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_TIMING, _integration | _gain);  
-  disable();
-}
-
-void WaspSensorAmbient::setTiming(tsl2561IntegrationTime_t integration)
-{
-  if (!_initialized) begin();
-
-  enable();
-  _integration = integration;
-  write8(TSL2561_COMMAND_BIT | TSL2561_REGISTER_TIMING, _integration | _gain);  
-  disable();
-}
-
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 uint32_t WaspSensorAmbient::calculateLux(uint16_t ch0, uint16_t ch1)
 {
   unsigned long chScale;
@@ -513,6 +526,12 @@ uint32_t WaspSensorAmbient::calculateLux(uint16_t ch0, uint16_t ch1)
   return (float)lux;
 }
 
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 uint32_t WaspSensorAmbient::getFullLuminosity (void)
 {
   if (!_initialized) begin();
@@ -543,17 +562,28 @@ uint32_t WaspSensorAmbient::getFullLuminosity (void)
 
   return x;
 }
-uint16_t WaspSensorAmbient::getLuminosity (uint8_t channel) {
+
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
+uint16_t WaspSensorAmbient::getLuminosity (uint8_t channel) 
+{
 
   uint32_t x = getFullLuminosity();
 
-  if (channel == 0) {
+  if (channel == 0) 
+  {
     // Reads two byte value from channel 0 (visible + infrared)
     return (x & 0xFFFF);
-  } else if (channel == 1) {
+  } else if (channel == 1) 
+  {
     // Reads two byte value from channel 1 (infrared)
     return (x >> 16);
-  } else if (channel == 2) {
+  } else if (channel == 2) 
+  {
     // Reads all and subtracts out just the visible!
     return ( (x & 0xFFFF) - (x >> 16));
   }
@@ -562,7 +592,12 @@ uint16_t WaspSensorAmbient::getLuminosity (uint8_t channel) {
   return 0;
 }
 
-
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 uint16_t WaspSensorAmbient::read16(uint8_t reg)
 {
   uint16_t x; uint16_t t;
@@ -588,8 +623,12 @@ uint16_t WaspSensorAmbient::read16(uint8_t reg)
   return x;
 }
 
-
-
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 void WaspSensorAmbient::write8 (uint8_t reg, uint8_t value)
 {
   Wire.beginTransmission(_addr);
@@ -603,103 +642,249 @@ void WaspSensorAmbient::write8 (uint8_t reg, uint8_t value)
   Wire.endTransmission();
 }
 
-/*	LUXConversion: converts the value read from the LUX Sensor into a
- * 						   LUX value
- *	Parameters:	int readValue : value read from the Sensirion
- * 				int precision : format at which the sensor was read
- *  Return:		float value : temperature measured by the sensor in ºC
+
+
+// Public Methods //////////////////////////////////////////////////////////////
+
+/*	setSensorMode: It sets ON/OFF the different sensor switches
+ *	Parameters:	uint8_t mode 
+ * 						- SENS_ON : turn on the sensor
+ * 						- SENS_OFF : turn off the sensor
+ * 				uint16_t sensor
+ * 							- SENS_AMBIENT_TEMPERATURE : Temperature Sensor
+ * 							- SENS_AMBIENT_HUMIDITY : Humidity Sensor
+ * 							- SENS_AMBIENT_LDR : Luminosity Sensor
+ *  Return:		int8_t error
+ * 						1 : success
+ * 						0 : wrong mode selected
+ * 						-1: wrong sensor selected
  * 
  */
+int8_t	WaspSensorAmbient::setSensorMode(uint8_t mode, uint16_t sensor)
+{	
+	if( mode==SENS_ON )
+	{
+		switch( sensor )
+		{
+			case	SENS_AMBIENT_LDR		:	digitalWrite(SENS_AMBIENT_LDR_PWR,HIGH);
+												break;
+			case	SENS_AMBIENT_TEMPERATURE:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,HIGH);
+												break;
+			case	SENS_AMBIENT_HUMIDITY	:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,HIGH);
+												break;
+			case	SENS_AMBIENT_LUX	:		digitalWrite(SENS_AMBIENT_LUX_PWR,HIGH);
+												break;
+			default						:	return -1;
+		}
+	} else if( mode==SENS_OFF )
+	{
+		switch( sensor )
+		{
+			case	SENS_AMBIENT_LDR		:	digitalWrite(SENS_AMBIENT_LDR_PWR,LOW);
+												break;
+			case	SENS_AMBIENT_TEMPERATURE:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,LOW);
+												break;
+			case	SENS_AMBIENT_HUMIDITY	:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,LOW);
+												break;
+			case	SENS_AMBIENT_LUX	:		digitalWrite(SENS_AMBIENT_LUX_PWR,LOW);
+												break;
+			default							:	return -1;
+		}
+	} else return 0;
+	
+	return 1;
+}
+
+/*	readValue: read the corresponding sensor.
+ * 			   
+ *	Parameters:	uint16_t sensor
+ * 						- SENS_AMBIENT_TEMPERATURE
+ * 						- SENS_AMBIENT_HUMIDITY
+ * 						- SENS_AMBIENT_LDR
+ * 						- SENS_AMBIENT_LUX
+ *  Return:		float value : value of the read sensor.
+ * 
+ */
+float	WaspSensorAmbient::readValue(uint8_t sensor)
+{
+	uint16_t aux=0;
+	switch( sensor )
+	{
+		case	SENS_AMBIENT_TEMPERATURE	:	aux = readSensirionTemperature();
+		break;
+		
+		case	SENS_AMBIENT_HUMIDITY		:	aux = readSensirionHumidity();
+		break;
+		
+		case	SENS_AMBIENT_LDR			:	aux = readLDR();
+		break;
+		
+		case	SENS_AMBIENT_LUX			:	aux = readLUXbright(); // bright environments by default
+		break;
+		
+		default							:	return -1.0;
+	}
+	
+	return	aux;
+}
+
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readLUXbright()
 {
-  setGain(TSL2561_GAIN_0X);         		// set no gain (for bright situtations)
-  setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-  uint32_t lum = getFullLuminosity();
-  uint16_t ir, full;
-  ir = lum >> 16;
-  full = lum & 0xFFFF;
-  return calculateLux(full, ir);
+	// set no gain (for bright situations)
+	setGain(TSL2561_GAIN_0X);
+	
+	// shortest integration time (bright light)
+	setTiming(TSL2561_INTEGRATIONTIME_13MS);  
+	uint32_t lum = getFullLuminosity();
+	uint16_t ir, full;
+	ir = lum >> 16;
+	full = lum & 0xFFFF;
+	
+	return calculateLux(full, ir);
 }
 
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readLUXmedium()
 { 
-  setGain(TSL2561_GAIN_16X);         		// set no gain (for bright situtations)
-  setTiming(TSL2561_INTEGRATIONTIME_101MS); // shortest integration time (bright light)
-  uint32_t lum = getFullLuminosity();
-  uint16_t ir, full;
-  ir = lum >> 16;
-  full = lum & 0xFFFF;
-  return calculateLux(full, ir);
+	// set gain to medium light situations
+	setGain(TSL2561_GAIN_16X); 
+	
+	// Set integration time
+	setTiming(TSL2561_INTEGRATIONTIME_101MS); 
+	uint32_t lum = getFullLuminosity();
+	uint16_t ir, full;
+	ir = lum >> 16;
+	full = lum & 0xFFFF;
+	
+	return calculateLux(full, ir);
 }
 
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readLUXdim()
 {
-  setGain(TSL2561_GAIN_16X);        		 // set no gain (for bright situtations)
-  setTiming(TSL2561_INTEGRATIONTIME_402MS);  // shortest integration time (bright light)
-  uint32_t lum = getFullLuminosity();
-  uint16_t ir, full;
-  ir = lum >> 16;
-  full = lum & 0xFFFF;
-  return calculateLux(full, ir);
+	//  set gain to medium light situations
+	setGain(TSL2561_GAIN_16X);
+	
+	// longest integration time     		 
+	setTiming(TSL2561_INTEGRATIONTIME_402MS);  
+	uint32_t lum = getFullLuminosity();
+	uint16_t ir, full;
+	ir = lum >> 16;
+	full = lum & 0xFFFF;
+	
+	return calculateLux(full, ir);
 }
 
-  // More advanced data read example. Read 32 bits with top 16 bits IR, bottom 16 bits full spectrum
-  // That way you can do whatever math and comparions you want!
+/*
+ Function: More advanced data read example. Read 32 bits with top 16 bits IR, bottom 16 bits full spectrum
+			That way you can do whatever math and comparions you want! 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readLUMINOSITYbright()
 {
 	float value;
 	
-	setGain(TSL2561_GAIN_0X);         		// set no gain (for bright situtations)
-	setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+	// set no gain (for bright situtations)
+	setGain(TSL2561_GAIN_0X);     
+	
+	// shortest integration time (bright light)    		
+	setTiming(TSL2561_INTEGRATIONTIME_13MS);  
 	uint32_t lum = getFullLuminosity();
 	uint16_t ir, full;
 	ir = lum >> 16;
 	full = lum & 0xFFFF;
 	value = calculateLux(full, ir);
+	
+	// Print calculated values
 	#ifdef SENS_AMBIENT_DEBUG
 	USB.print(F("IR: ")); USB.print(ir);   USB.print(F("\t"));
 	USB.print(F("Full: ")); USB.print(full);   USB.print(F("\t"));
 	USB.print(F("Visible: ")); USB.print(full - ir);   USB.print(F("\t"));
 	USB.print(F("Lux: ")); USB.println(value);
 	#endif
+	
 	return value;  
 }
 
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readLUMINOSITYmedium()
 {
 	float value;
-	setGain(TSL2561_GAIN_16X);         		// set no gain (for bright situtations)
-	setTiming(TSL2561_INTEGRATIONTIME_101MS); // shortest integration time (bright light)
+	
+	//  set gain to medium light situations
+	setGain(TSL2561_GAIN_16X);
+	
+	// set integration time	
+	setTiming(TSL2561_INTEGRATIONTIME_101MS); 
 	uint32_t lum = getFullLuminosity();
 	uint16_t ir, full;
 	ir = lum >> 16;
 	full = lum & 0xFFFF;
 	value = calculateLux(full, ir);
+	
+	// Print calculated values
 	#ifdef SENS_AMBIENT_DEBUG
 	USB.print(F("IR: ")); USB.print(ir);   USB.print(F("\t"));
 	USB.print(F("Full: ")); USB.print(full);   USB.print(F("\t"));
 	USB.print(F("Visible: ")); USB.print(full - ir);   USB.print(F("\t"));
 	USB.print(F("Lux: ")); USB.println(value);
 	#endif
+	
 	return value;
 }
 
+/*
+ Function: 
+ Returns: 
+ Parameters: 
+ Values: 
+*/
 float WaspSensorAmbient::readLUMINOSITYdim()
 {
 	float value;
-	setGain(TSL2561_GAIN_16X);         		// set no gain (for bright situtations)
-	setTiming(TSL2561_INTEGRATIONTIME_402MS); // shortest integration time (bright light)
+	
+	//  set gain to medium light situations
+	setGain(TSL2561_GAIN_16X);
+	
+	// longest integration time     		  
+	setTiming(TSL2561_INTEGRATIONTIME_402MS); 
 	uint32_t lum = getFullLuminosity();
 	uint16_t ir, full;
 	ir = lum >> 16;
 	full = lum & 0xFFFF;
 	value = calculateLux(full, ir);
+	
+	// Print calculated values
 	#ifdef SENS_AMBIENT_DEBUG
 	USB.print(F("IR: ")); USB.print(ir);   USB.print(F("\t"));
 	USB.print(F("Full: ")); USB.print(full);   USB.print(F("\t"));
 	USB.print(F("Visible: ")); USB.print(full - ir);   USB.print(F("\t"));
 	USB.print(F("Lux: ")); USB.println(value);
 	#endif
+	
 	return value;
 }
 

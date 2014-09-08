@@ -15,58 +15,17 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.5
  *  Design:		David Gascón
  *  Implementation:	Alejandro Gállego
  */
   
 
-#include <Wasp3G.h>
 #ifndef __WPROGRAM_H__
   #include "WaspClasses.h"
 #endif
 
-
-
-#define	AT_COMMAND	"AT"
-#define OK_RESPONSE "OK"
-
-#define	_3G_APN "apn"
-#define	_3G_LOGIN "login"		//comment this line if you don't need login
-#define	_3G_PASSW "password"	//comment this line if you don't need password
-
-#define GSM_DCS_1800 		128
-#define GSM_EGSM_900		256
-#define GSM_PGSM_900		512
-#define GSM_450				1
-#define GSM_480				2
-#define GSM_750				4
-#define GSM_850				8
-#define GSM_RGSM_900		16
-#define GSM_PCS_1900		32
-#define WCDMA_IMT_2000		64
-#define WCDMA_PCS_1900		128
-#define WCDMA_III_1700		256
-#define WCDMA_IV_1700		512
-#define WCDMA_850			1024
-#define WCDMA_800			2048
-#define WCDMA_VII_2600		1
-#define WCDMA_VIII_900		2
-#define WCDMA_IX_1700		4
-
-//Error Constants
-#define ERROR_IP 	"+IP ERROR:"
-#define ERROR_CME 	"+CME ERROR:"
-#define ERROR_CMS 	"+CMS ERROR:"
-#define ERROR		"ERROR"
-
-//Xmodem constants
-#define ACK		0x06
-#define NAK		0x15
-#define SOH		0x01
-#define EOT		0x04
-#define CAN		0x18
-
+#include <Wasp3G.h>
 
 //Power constants
 const char POWER_FULL[]			PROGMEM	= "+CFUN=1";		//0
@@ -542,7 +501,7 @@ const char* const table_MAIL[] PROGMEM =
 #if HTTP_FUSE
 	
 
-const unsigned long HTTP_TIMEOUT = 60000;		// Timeout for HTTP and HTTPS functions in miliseconds
+const unsigned long HTTP_TIMEOUT = 45000;		// Timeout for HTTP and HTTPS functions in miliseconds
 const unsigned long HTTP_CONF_TIMEOUT = 15000;	// Timeout for HTTP and HTTPS functions in miliseconds
 
 const char HTTP_ACT[] 		PROGMEM	= "+CHTTPACT=";				//0
@@ -735,6 +694,14 @@ Wasp3G::Wasp3G(){
 	_socket=1;
 	ready=0;
 	IP_flags=0;
+	
+	memset(_apn, '\0', sizeof(_apn));
+	memset(_apn_login, '\0', sizeof(_apn_login));
+	memset(_apn_password, '\0', sizeof(_apn_password));
+	strncpy(_apn, _3G_APN, min(sizeof(_apn), strlen(_3G_APN)));
+	strncpy(_apn_login, _3G_LOGIN, min(sizeof(_apn_login), strlen(_3G_LOGIN)));
+	strncpy(_apn_password, _3G_PASSW, min(sizeof(_apn_password), strlen(_3G_PASSW)));
+	
 }
 
 
@@ -769,6 +736,7 @@ void Wasp3G::getIfReady(){
  *
  * Returns '1' when connected,
  * '0' if not registered and the module is not currently searching a new operator,
+ * '-1' if error
  * '-2' if not registered, but the module is currently searching a new operator,
  * '-3' if registration denied
  * and '-4' if the state is unknown
@@ -791,18 +759,26 @@ int8_t Wasp3G::check3Gconnection(unsigned long time){
 		{
 			answer = serialRead(_socket) - 0x30;
 		}
+		else
+		{
+			answer = -1;
+		}
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
-	}while (((answer == 2) || (answer == 4) || (answer == 0)) && ((millis() - previous) < (time * 1000)));
-	
-	#if _3G_debug_mode>0
+	}while (((answer == 2) || (answer == 4) || (answer == 0) || (answer == -1)) && ((millis() - previous) < (time * 1000)));
+	 
+	//#if _3G_debug_mode>0
 		USB.print(F("Network status: "));
 		USB.println(answer, DEC);
-	#endif
+//	#endif
 
-	if (((answer != 1) && (answer != 5)) || ((millis() - previous) > (time * 1000)))
+	if (((answer != 1) && (answer != 5) && (answer != -1)) || ((millis() - previous) > (time * 1000)))
 	{
 		return -answer;
+	}
+	else if (answer == -1)
+	{
+		return -1;
 	}
 	
 	return 1;
@@ -883,7 +859,7 @@ int8_t Wasp3G::initHTTP()
 		
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -894,43 +870,30 @@ int8_t Wasp3G::initHTTP()
 		return -1;
 	}	
 	
-	// Sets username and password	
-	#ifdef _3G_LOGIN
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
-		count = 5;
-		do{
-			answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-			count--;
-		}while ((answer != 1) && (count  > 0));
-		if (answer == 0)
-		{
-			return -1;
-		}
-		else if (answer == 2)
-		{
-			return -15;
-		}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
+	// Sets username and password
+	if (strlen(_apn_login) == 0)
+	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-		count = 5;
-		do{
-			answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-			count--;
-		}while ((answer != 1) && (count  > 0));
-		if (answer == 0)
-		{
-			return -1;
-		}
-		else if (answer == 2)
-		{
-			return -15;
-		}
-	#endif
+	}
+	else
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+	}
+	count = 5;
+	do{
+		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+		count--;
+	}while ((answer != 1) && (count  > 0));
+	if (answer == 0)
+	{
+		return -1;
+	}
+	else if (answer == 2)
+	{
+		return -15;
+	}
 	
 	return 1;
 	
@@ -961,7 +924,7 @@ int8_t Wasp3G::sendHTTPrequest(		const char* url,
 	memset(buffer_3G, '\0', BUFFER_SIZE);
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, url, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, url, port);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[1])));	//HTTP_ACT_REQ
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, HTTP_TIMEOUT, SEND_ONCE);
 	if (answer == 0)
@@ -1062,7 +1025,7 @@ int8_t Wasp3G::sendHTTPrequest(		const char* url,
 			sprintf(str_aux3, "%d%s", (length * 2) + 6, str_aux1);
 			printString(str_aux3, _socket);	
 			#if _3G_debug_mode>0
-				USB.print(str_aux1);	
+				USB.print(str_aux3);	
 			#endif
 				
 			for (uint16_t x=0 ; x < length; x++)
@@ -3852,7 +3815,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	
 	// Sets connection parameters (apn, user_name, password)
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 	count = 10;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -3863,44 +3826,30 @@ int8_t Wasp3G::configureFTP(const char* server,
 		return -2;
 	}
 	
-// Sets username and password	
-	#ifdef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
-	count = 10;
+	// Sets username and password
+	if (strlen(_apn_login) == 0)
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+	}
+	else
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+	}
+	count = 5;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 		count--;
 	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
+	if (answer == 0)
+	{
 		return -2;
 	}
-	else if (answer == 0)
+	else if (answer == 2)
 	{
 		return 0;
 	}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-	count = 10;
-	do{
-		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-		count--;
-	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
-		return -2;
-	}
-	else if (answer == 0)
-	{
-		return 0;
-	}
-	#endif
-	
 		
 	// Sets FTP server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[0])));		//FTP_SERVER
@@ -4549,7 +4498,7 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 	
 	// Sets connection parameters (apn, user_name, password)
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -4560,44 +4509,32 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 		return -2;
 	}
 	
-// Sets username and password	
-	#ifdef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	
+	// Sets username and password
+	if (strlen(_apn_login) == 0)
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+	}
+	else
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+	}
 	count = 5;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 		count--;
 	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
+	if (answer == 0)
+	{
 		return -2;
 	}
-	else if (answer == 0)
+	else if (answer == 2)
 	{
 		return 0;
 	}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-	count = 5;
-	do{
-		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-		count--;
-	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
-		return -2;
-	}
-	else if (answer == 0)
-	{
-		return 0;
-	}
-	#endif
-	
+		
 	// Releases old SSL stack if there is
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[15])));	//RELEASE_SSL_STACK
 	sendCommand2(str_aux1, OK_RESPONSE, ERROR);
@@ -5131,7 +5068,7 @@ int8_t Wasp3G::setSMTPsend(){
 	
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 	count = 3;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -5142,43 +5079,30 @@ int8_t Wasp3G::setSMTPsend(){
 		return 0;
 	}	
 	
-	// Sets username and password	
-	#ifdef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
-	count = 3;
+	// Sets username and password
+	if (strlen(_apn_login) == 0)
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+	}
+	else
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+	}
+	count = 5;
 	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 		count--;
 	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
+	if (answer == 0)
+	{
 		return -2;
 	}
-	else if (answer == 0)
+	else if (answer == 2)
 	{
 		return 0;
 	}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-	count = 3;
-	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-		count--;
-	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
-		return -2;
-	}
-	else if (answer == 0)
-	{
-		return 0;
-	}
-	#endif
 		
 	// Sends the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[7])));	//SMTP_SEND
@@ -5208,7 +5132,7 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 	count = 3;
 	do{
 		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -5219,44 +5143,31 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 		return 0;
 	}	
 	
-	// Sets username and password	
-	#ifdef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
-	count = 3;
+	// Sets username and password
+	if (strlen(_apn_login) == 0)
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+	}
+	else
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+	}
+	count = 5;
 	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 		count--;
 	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
+	if (answer == 0)
+	{
 		return -2;
 	}
-	else if (answer == 0)
+	else if (answer == 2)
 	{
 		return 0;
 	}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-	count = 3;
-	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-		count--;
-	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
-		return -2;
-	}
-	else if (answer == 0)
-	{
-		return 0;
-	}
-	#endif
-	
+		
 	// Sets the POP3 server, port, username and password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[9])));	//POP3_SERVER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",\"%s\",\"%s\",%d", str_aux1, server, username, password, port);
@@ -5582,6 +5493,7 @@ int8_t Wasp3G::deletePOP3mail(uint8_t index){
  * This function sends a request to a HTTP url and get an answer. The answer is stored in 'buffer_3G'
  *
  * Returns '1' on success,
+ * '0' if no connection,
  * '-1' if error setting APN, username and password,
  * '-2' if error opening a HTTP session,
  * '-3' if error receiving data or timeout waiting data,
@@ -5596,6 +5508,7 @@ int8_t Wasp3G::deletePOP3mail(uint8_t index){
  * '-12' if network error,
  * '-15' if error setting APN, username and password with CME_error code available
  * '-16' if error opening a HTTP session with CME_error code available
+ * '-20' if error checking the connection
 */
 int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request){
 	return readURL( url, port, HTTP_request, 0);
@@ -5606,6 +5519,7 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
  * This function sends a request to a HTTP url and get an answer. The answer is stored in 'buffer_3G'
  *
  * Returns '1' on success,
+ * '0' if no connection
  * '-1' if error setting APN, username and password,
  * '-2' if error opening a HTTP session,
  * '-3' if error receiving data or timeout waiting data,
@@ -5620,16 +5534,21 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
  * '-12' if network error,
  * '-15' if error setting APN, username and password with CME_error code available
  * '-16' if error opening a HTTP session with CME_error code available
+ * '-20' if error checking the connection
 */
 int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse){
 	
 	int16_t answer;
 	
-	// Checks the connection	
-	answer = check3Gconnection(90);	
-	if (answer != 1)
+	// Checks the connection
+	answer = check3Gconnection(90);
+	if ((answer != 1) && (answer != -1))
 	{
 		return 0;
+	}
+	else if (answer == -1)
+	{		
+		return -20;
 	}
 	
 	// Configures the operator parameters
@@ -5646,7 +5565,7 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 	memset(buffer_3G, '\0', BUFFER_SIZE);
 	delay(1000);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, url, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, url, port);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[1])));	//HTTP_ACT_REQ
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, HTTP_TIMEOUT, SEND_ONCE);
 	if (answer == 0)
@@ -5685,6 +5604,7 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
  * This function sets the time of Waspmote's RTC getting the time from an url
  *
  * Returns '1' on success,
+ * '0' if no connection
  * '-1' if error setting APN, username and password,
  * '-2' if error opening a HTTP session,
  * '-3' if error receiving data or timeout waiting data,
@@ -5699,9 +5619,8 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
  * '-12' if network error,
  * '-15' if error setting APN, username and password with CME_error code available
  * '-16' if error opening a HTTP session with CME_error code available
- * '-17' if the response from the url is not 200 HTTP code
- * '-18' if the response from the url has not data
- * '-19' if fail setting the time of the internal RTC of the 3G module
+ * '-20' if error checking the connection
+ * '-21' if fail setting the time of the internal RTC of the 3G module
 */
 int16_t Wasp3G::setTimebyURL(){
 	int16_t answer;
@@ -5712,7 +5631,7 @@ int16_t Wasp3G::setTimebyURL(){
 	uint8_t year, month, date, day_week, hour, minute, second;
 	bool RTC_ant=false;
 	
-	answer = _3G.readURL("pruebas.libelium.com", 80, "GET /rmarandom.php HTTP/1.1\r\nHost: pruebas.libelium.com\r\nContent-Length: 0\r\n\r\n");
+	answer = readURL("pruebas.libelium.com", 80, "GET /rmarandom.php HTTP/1.1\r\nHost: pruebas.libelium.com\r\nContent-Length: 0\r\n\r\n");
 	// gets URL from the solicited URL
 	if ( answer == 1)
 	{
@@ -5798,11 +5717,12 @@ int16_t Wasp3G::setTimebyURL(){
 	
 }
 
-/* sendHTTPframe(const char*, uint16_t, uint16_t , const char*) - Sends a frame to Meshlium
+/* setTimebyMeshlium - Sets the time of Waspmote's RTC getting the time from Meshlium
  *
- * This function sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
+ * This function sets the time of Waspmote's RTC getting the time from Meshlium
  *
  * Returns '1' on success,
+ * '0' if no connection
  * '-1' if error setting APN, username and password,
  * '-2' if error opening a HTTP session,
  * '-3' if error receiving data or timeout waiting data,
@@ -5820,16 +5740,161 @@ int16_t Wasp3G::setTimebyURL(){
  * '-17' if url response its not OK  (HTTP code 200)
  * '-18' if content-length field not found
  * '-19' if data field not found
+ * '-20' if error checking the connection
 */
-int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method ){
+int16_t Wasp3G::setTimebyMeshlium(const char* url, uint16_t port){
+	int16_t answer;
+	char frame_data[50];
+	char MID[17];
+	uint8_t year, month, date, day_week, hour, minute, second;
+	bool RTC_ant=false;	
+	char time_zone[6];
+	
+	memset(frame_data, '\0', sizeof(frame_data));
+	memset(MID, '\0', sizeof(MID));
+	
+	// read mote ID from EEPROM memory
+	for(int i=0 ; i<16 ; i++ )
+	{
+		MID[i]=Utils.readEEPROM(i+MOTEID_ADDR);
+	}
+	MID[16]='\0';
+	
+	// Generates a frame
+	snprintf(frame_data, sizeof(frame_data),  "<=>%c0#%lu#%s#0#", 155, _serial_id, MID);
+	
+	answer = sendHTTPframe( url, port, (uint8_t*) frame_data, strlen(frame_data), GET, 1);
+	// gets URL from the solicited URL
+	if ( answer == 1)
+	{		
+		year = ((buffer_3G[2] - 0x30) * 10) + (buffer_3G[3] - 0x30);
+		month = ((buffer_3G[4] - 0x30) * 10) + (buffer_3G[5] - 0x30);
+		date = ((buffer_3G[6] - 0x30) * 10) + (buffer_3G[7] - 0x30);
+		hour = ((buffer_3G[8] - 0x30) * 10) + (buffer_3G[9] - 0x30);
+		minute = ((buffer_3G[10] - 0x30) * 10) + (buffer_3G[11] - 0x30);
+		second = ((buffer_3G[12] - 0x30) * 10) + (buffer_3G[13] - 0x30);
+		memset(time_zone, '\0', sizeof(time_zone));
+		strncpy(time_zone, buffer_3G+14,5);
+		
+		#if _3G_debug_mode>0
+			USB.print(F("year "));  
+			USB.print(year, DEC);
+			USB.print(F("; month "));  
+			USB.print(month, DEC);
+			USB.print(F("; date "));  
+			USB.println(date, DEC);
+			USB.print(F("hour "));  
+			USB.print(hour, DEC);
+			USB.print(F("; minute "));  
+			USB.print(minute, DEC);
+			USB.print(F("; second "));  
+			USB.print(second, DEC);
+			USB.print(F("; time zone "));  
+			USB.println(time_zone);
+		#endif
+		
+		if (RTC.isON == 0) // Checks if the RTC is on
+		{
+			RTC_ant = true;
+			RTC.ON();
+		}
+			
+		// Sets the RTC time
+		RTC.setTime(year, month, date, RTC.dow(year, month, date), hour, minute, second); //Gets time from RTC
+				
+		if (RTC_ant == 1) // Powers off the RTC if before it was off
+		{
+			RTC.OFF();
+		}
+		
+		// Sets the RTC of the 3G too 
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
+		answer = sendCommand2( buffer_3G, OK_RESPONSE, ERROR);
+		
+		memset(buffer_3G, '\0', sizeof(buffer_3G));
+		strncpy(buffer_3G, time_zone, 5);
+		
+		if (answer == 2)
+		{
+			return -21;
+		}
+		
+		return 1;
+	}
+	
+	return answer;
+	
+	
+}
+
+/* sendHTTPframe(const char*, uint16_t, uint16_t , const char*) - Sends a frame to Meshlium
+ *
+ * This function sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
+ *
+ * Returns '1' on success,
+ * '0' if no connection
+ * '-1' if error setting APN, username and password,
+ * '-2' if error opening a HTTP session,
+ * '-3' if error receiving data or timeout waiting data,
+ * '-4' if error changing the baudrate (data received is OK),
+ * '-5' if unknown error for HTTP,
+ * '-6' if HTTP task is busy,
+ * '-7' if fail to resolve server address,
+ * '-8' if HTTP timeout,
+ * '-9' if fail to transfer data,
+ * '-10' if memory error,
+ * '-11' if invalid parameter,
+ * '-12' if network error,
+ * '-15' if error setting APN, username and password with CME_error code available
+ * '-16' if error opening a HTTP session with CME_error code available
+ * '-17' if url response its not OK  (HTTP code 200)
+ * '-18' if content-length field not found
+ * '-19' if data field not found
+ * '-20' if error checking the connection
+*/
+int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method){
+	return sendHTTPframe( url, port, data, length, method, 0);
+}
+	
+/* sendHTTPframe(const char*, uint16_t, uint16_t , const char*) - Sends a frame to Meshlium
+ *
+ * This function sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
+ *
+ * Returns '1' on success,
+ * '0' if no connection
+ * '-1' if error setting APN, username and password,
+ * '-2' if error opening a HTTP session,
+ * '-3' if error receiving data or timeout waiting data,
+ * '-4' if error changing the baudrate (data received is OK),
+ * '-5' if unknown error for HTTP,
+ * '-6' if HTTP task is busy,
+ * '-7' if fail to resolve server address,
+ * '-8' if HTTP timeout,
+ * '-9' if fail to transfer data,
+ * '-10' if memory error,
+ * '-11' if invalid parameter,
+ * '-12' if network error,
+ * '-15' if error setting APN, username and password with CME_error code available
+ * '-16' if error opening a HTTP session with CME_error code available
+ * '-17' if url response its not OK  (HTTP code 200)
+ * '-18' if content-length field not found
+ * '-19' if data field not found
+ * '-20' if error checking the connection
+*/
+int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method, uint8_t parse){
 	
 	int16_t answer;
 	
 	// Checks the connection
 	answer = check3Gconnection(90);
-	if (answer != 1)
+	if ((answer != 1) && (answer != -1))
 	{
 		return 0;
+	}
+	else if (answer == -1)
+	{		
+		return -20;
 	}
 		
 	// Configures the operator parameters
@@ -5854,7 +5919,7 @@ int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int
 	}
 	
 	// Reads the response from the server ('0' header and answer, '1' only answer from Meshlium)
-	return readHTTPresponse(0);	
+	return readHTTPresponse(parse);	
 }
 
 /* readURLS(const char*, uint16_t, uint16_t , const char*) - Sends a request to a HTTPS url and get an answer
@@ -5900,7 +5965,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -5911,43 +5976,30 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		return -10;
 	}	
 	
-	// Sets username and password	
-	#ifdef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	// Sets username and password
+	if (strlen(_apn_login) == 0)
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+	}
+	else
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+	}
 	count = 5;
 	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 		count--;
 	}while ((answer != 1) && (count  > 0));
 	if (answer == 0)
-	{	
+	{
 		return -10;
 	}
 	else if (answer == 2)
 	{
 		return -25;
 	}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-	count = 5;
-	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-		count--;
-	}while ((answer != 1) && (count  > 0));
-	if (answer == 0)
-	{	
-		return -10;
-	}
-	else if (answer == 2)
-	{
-		return -25;
-	}
-	#endif
 		
 	// Release other SSL stacks and close session
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[6])));	//HTTPS_CLOSE
@@ -5963,7 +6015,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	}
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[5])));	// HTTPS_OPEN
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",%d", str_aux1, url, port);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",%u", str_aux1, url, port);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR, HTTP_TIMEOUT, SEND_ONCE);
 	if (answer != 1)
 	{
@@ -6212,7 +6264,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 	{
 		// Sets APN
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 		count = 5;
 		do{
 			answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -6223,43 +6275,30 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 			return -2;
 		}	
 		
-		// Sets username and password	
-		#ifdef _3G_LOGIN
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+		// Sets username and password
+		if (strlen(_apn_login) == 0)
+		{
+			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+		}
+		else
+		{
+			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		}
 		count = 5;
 		do{
-			answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+			answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 			count--;
 		}while ((answer != 1) && (count  > 0));
 		if (answer == 0)
-		{	
+		{
 			return -2;
 		}
 		else if (answer == 2)
 		{
 			return -2;
 		}
-		#endif
-		
-		// Sets username and password	
-		#ifndef _3G_LOGIN
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-		count = 5;
-		do{
-			answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-			count--;
-		}while ((answer != 1) && (count  > 0));
-		if (answer == 0)
-		{	
-			return -2;
-		}
-		else if (answer == 2)
-		{
-			return -2;
-		}
-		#endif
 		
 		// Sets the GPS server and port:
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[4])));		//GPS_SERVER
@@ -6748,7 +6787,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 	
 	// Sets APN:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _3G_APN);
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
 	count = 5;
 	do{
 		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -6759,43 +6798,30 @@ int8_t Wasp3G::configureTCP_UDP(){
 		return -5;
 	}	
 	
-	// Sets username and password	
-	#ifdef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _3G_PASSW, _3G_LOGIN);
+	// Sets username and password
+	if (strlen(_apn_login) == 0)
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
+	}
+	else
+	{
+		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+	}
 	count = 5;
 	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
+		answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
 		count--;
 	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
+	if (answer == 0)
+	{
 		return -2;
 	}
-	else if (answer == 0)
+	else if (answer == 2)
 	{
-		return 0;
-	}
-	#endif
-	
-	// Sets username and password	
-	#ifndef _3G_LOGIN
-	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
-	count = 5;
-	do{
-		answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-		count--;
-	}while ((answer != 1) && (count  > 0));
-	if (answer == 2)
-	{	
-		return -2;
-	}
-	else if (answer == 0)
-	{
-		return 0;
-	}
-	#endif
+		return -0;
+	}	
 
 	#if _3G_debug_mode>0
 		USB.print(F("IP Flag: "));
@@ -9356,6 +9382,33 @@ int8_t Wasp3G::firmware_version(){
 
 }
 
+/* set_APN(char*) - Sets the apn from operator
+ * This function sets the apn from operator
+ * Returns nothing
+*/
+void Wasp3G::set_APN( char* apn){
+	
+	set_APN( apn, NULL, NULL);
+}
+
+/* set_APN(char*, char*, char*) - Sets the apn, login and password from operator
+ *
+ * This function sets the apn, login and password from operator
+ *
+ * Returns nothing
+*/
+void Wasp3G::set_APN( char* apn, char* login, char* password){
+	
+	memset(_apn, '\0', sizeof(_apn));
+	memset(_apn_login, '\0', sizeof(_apn_login));
+	memset(_apn_password, '\0', sizeof(_apn_password));
+	
+	strncpy(_apn, apn, min(sizeof(_apn), strlen(apn)));
+	strncpy(_apn_login, login, min(sizeof(_apn_login), strlen(login)));
+	strncpy(_apn_password, password, min(sizeof(_apn_password), strlen(password)));
+	
+}
+
 /* show_APN() - Shows the apn, login and password constants
  *
  * This function shows the apn, login and password constants
@@ -9365,13 +9418,11 @@ int8_t Wasp3G::firmware_version(){
 void Wasp3G::show_APN(){
 	// APN parameters depends on SIM
 	USB.print(F("APN: "));
-	USB.println(_3G_APN);
-	#ifdef _3G_LOGIN
-		USB.print(F("LOGIN: "));
-		USB.println(_3G_LOGIN);
-		USB.print(F("PASSWORD: "));
-		USB.println(_3G_PASSW);	
-	#endif
+	USB.println(_apn);
+	USB.print(F("LOGIN: "));
+	USB.println(_apn_login);
+	USB.print(F("PASSWORD: "));
+	USB.println(_apn_password);	
 }
 
 #if TRANSMISSION_FUSE
@@ -10551,7 +10602,7 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 						USB.print(F("File path: "));
 						USB.println(path);
 					#endif
-					//strcat(path,"/");
+					strcat(path,"/");
 					strcat(path,aux_name);
 					
 					str_pointer = strstr(buffer_3G, "VERSION:");

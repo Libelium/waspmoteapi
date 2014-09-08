@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
@@ -560,7 +560,7 @@ public:
 	\return '1' on success, '0' otherwise
 	\sa writeSD(const char* filepath, const char* str, int32_t offset, int16_t length)	
 	*/
-	uint8_t writeSD(const char* filepath, const char* str, int32_t offset, int16_t length);
+	uint8_t writeSD(const char* filepath, const char* str, int32_t offset, uint16_t length);
   
 	//! It writes integer array to a file
 	/*!

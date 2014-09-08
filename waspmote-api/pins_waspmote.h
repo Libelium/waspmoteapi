@@ -1,7 +1,7 @@
 /*
- *  Revised for Waspmote by D. Cuartielles & A. Bielsa, 2009
- *
  *  Copyright (c) 2005 David A. Mellis
+ * 	Revised for Waspmote by D. Cuartielles & A. Bielsa, 2009
+ * 	Revised for Waspmote by Libelium, 2014
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -16,9 +16,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.1
- *  Design:		David Gascón
- *  Implementation:	David A.Mellis, David Cuartielles, Alberto Bielsa
+ *  Version:		1.0
+ *  Design:			David Gascón
+ *  Implementation:	D.Mellis, D. Cuartielles, A. Bielsa, Y. Carmona
  */
 
 #ifndef Pins_Waspmote_h
@@ -114,8 +114,8 @@ extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 #define digitalPinToBitMask(P) ( pgm_read_byte( digital_pin_to_bit_mask_PGM + (P) ) )
 #define digitalPinToTimer(P) ( pgm_read_byte( digital_pin_to_timer_PGM + (P) ) )
 #define analogInPinToBit(P) (P)
-#define portOutputRegister(P) ( (volatile uint8_t *)( pgm_read_byte( port_to_output_PGM + (P))) )
-#define portInputRegister(P) ( (volatile uint8_t *)( pgm_read_byte( port_to_input_PGM + (P))) )
-#define portModeRegister(P) ( (volatile uint8_t *)( pgm_read_byte( port_to_mode_PGM + (P))) )
+#define portOutputRegister(P) ( (volatile uint8_t *)( (uint16_t)pgm_read_byte( (port_to_output_PGM + (P)))) )
+#define portInputRegister(P) ( (volatile uint8_t *)( (uint16_t)pgm_read_byte( port_to_input_PGM + (P))) )
+#define portModeRegister(P) ( (volatile uint8_t *)( (uint16_t)pgm_read_byte( port_to_mode_PGM + (P))) )
 
 #endif

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.2
+ *  Version:		1.0
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
@@ -508,14 +508,15 @@ uint32_t WaspUSB::print(const __FlashStringHelper *ifsh)
 {
 	beginSerial(USB_RATE, _uart);
 	const char * __attribute__((progmem)) p = (const char * ) ifsh;
-	uint32_t n = 0;
-	while (1) 
+	uint32_t retries = 1000;
+	while( retries > 0 ) 
 	{
+		retries--;
 		unsigned char c = pgm_read_byte(p++);
 		if (c == 0) break;		
 		print(c);
 	}
-	return n;
+	return 0;
 }
 
 /*

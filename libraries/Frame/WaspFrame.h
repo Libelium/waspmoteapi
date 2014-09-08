@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -287,6 +287,43 @@
 /*! \def SENSOR_WT
     \brief Water Temperature measurement type
  */
+
+
+/// Smart Libelium
+/*! \def SENSOR_DM_ST
+    \brief XBee Digimesh awake time for cyclic sleep mode
+ */
+/*! \def SENSOR_DM_SP
+    \brief XBee Digimesh asleep time for cyclic sleep mode
+ */
+/*! \def SENSOR_TX_PWR
+    \brief XBee transmision power
+ */
+/*! \def SENSOR_LUX
+    \brief Luxes measurement type
+ */
+
+
+/// GPS
+/*! \def SENSOR_SPEED
+    \brief GPS speed over the ground measurement type
+ */
+/*! \def SENSOR_COURSE
+    \brief GPS course over the ground measurement type
+ */
+/*! \def SENSOR_ALTITUDE
+    \brief GPS altitude over the ground measurement type
+ */
+/*! \def SENSOR_HDOP
+    \brief GPS HDOP over the ground measurement type
+ */
+/*! \def SENSOR_VDOP
+    \brief GPS VDOP over the ground measurement type
+ */
+/*! \def SENSOR_PDOP
+    \brief GPS PDOP over the ground measurement type
+ */
+
  
 // Gases
 #define SENSOR_CO	 	0
@@ -392,10 +429,27 @@
 #define SENSOR_DICL	 	78
 #define SENSOR_DIBR	 	79
 #define SENSOR_DII	 	80
-#define SENSOR_DICU2	81
+#define SENSOR_DICU2		81
 #define SENSOR_DIK	 	82
-#define SENSOR_DIMG2	83
-#define SENSOR_DINO3	84
+#define SENSOR_DIMG2		83
+#define SENSOR_DINO3		84
+
+// Smart Libelium
+#define SENSOR_DM_ST		85
+#define SENSOR_DM_SP		86
+#define SENSOR_TX_PWR		87
+#define SENSOR_LUX		88
+
+// GPS
+#define SENSOR_SPEED		89
+#define SENSOR_COURSE		90
+#define SENSOR_ALTITUDE		91
+#define SENSOR_HDOP		92
+#define SENSOR_VDOP		93
+#define SENSOR_PDOP		94
+
+
+
 
 // define MACROS in order to manage bits inside Bytes
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)
@@ -450,6 +504,7 @@
 #define ALARM_FRAME 	3
 #define SERVICE1_FRAME 	4
 #define SERVICE2_FRAME 	5
+#define SET_TIME_FRAME 	6
 
 
 /*! \def TYPE_UINT8

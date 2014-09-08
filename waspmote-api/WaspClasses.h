@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -33,17 +33,6 @@
 #include <avr/pgmspace.h>
 #include <alloca.h>
 
-#include "hash/md5.h"
-#include "hash/md5_sbox.h"
-#include "hash/sha1.h"
-#include "hash/sha224.h"
-#include "hash/sha256.h"
-#include "hash/sha384.h"
-#include "hash/sha512.h"
-#include "hash/sha2_small_common.h"
-#include "hash/sha2_large_common.h"
-#include "aes/aes.h"
-#include "rsa/bignum.h"
 // I2C libraries
 #include "Wire.h"
 #include "twi.h"
@@ -64,9 +53,7 @@
 #include "WaspPWR.h"
 #include "WaspXBeeCore.h"
 #include "MemoryFree.h"
-#include "WaspHash.h"
-#include "WaspRSA.h"
-#include "WaspAES.h"
+
 
 // SPI library
 #include "WaspSPI.h"
@@ -75,11 +62,6 @@
 // One wire library
 #include "WaspOneWire.h"
 
-
-// random prototypes
-long random(long);
-long random(long, long);
-void randomSeed(unsigned int);
 
 #endif
 

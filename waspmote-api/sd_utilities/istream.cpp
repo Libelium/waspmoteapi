@@ -1,5 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
+ * Modified in 2014 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -85,35 +86,44 @@ istream& istream::get(char *str, streamsize n, char delim) {
   return *this;
 }
 //------------------------------------------------------------------------------
-void istream::getBool(bool *b) {
-  if ((flags() & boolalpha) == 0) {
-    getNumber(b);
-    return;
-  }
-  PGM_P truePtr = PSTR("true");
-  PGM_P falsePtr = PSTR("false");
-  const uint8_t true_len = 4;
-  const uint8_t false_len = 5;
-  bool trueOk = true;
-  bool falseOk = true;
-  uint8_t i = 0;
-  int c = readSkip();
-  while (1) {
-    falseOk = falseOk && c == pgm_read_byte(falsePtr + i);
-    trueOk = trueOk && c == pgm_read_byte(truePtr + i);
-    if (trueOk == false && falseOk == false) break;
-    i++;
-    if (trueOk && i == true_len) {
-      *b = true;
-      return;
-    }
-    if (falseOk && i == false_len) {
-      *b = false;
-      return;
-    }
-    c = getch();
-  }
-  setstate(failbit);
+void istream::getBool(bool *b) 
+{
+	int retries = 512;
+	
+	if ((flags() & boolalpha) == 0) 
+	{
+		getNumber(b);
+		return;
+	}
+	PGM_P truePtr = PSTR("true");
+	PGM_P falsePtr = PSTR("false");
+	const uint8_t true_len = 4;
+	const uint8_t false_len = 5;
+	bool trueOk = true;
+	bool falseOk = true;
+	uint8_t i = 0;
+	int c = readSkip();
+	
+	while( retries > 0 ) 
+	{
+		retries--;
+		falseOk = falseOk && c == pgm_read_byte(falsePtr + i);
+		trueOk = trueOk && c == pgm_read_byte(truePtr + i);
+		if (trueOk == false && falseOk == false) break;
+		i++;
+		if (trueOk && i == true_len) 
+		{
+			*b = true;
+			return;
+		}
+		if (falseOk && i == false_len) 
+		{
+			*b = false;
+			return;
+		}
+		c = getch();
+	}
+	setstate(failbit);
 }
 //------------------------------------------------------------------------------
 void istream::getChar(char* ch) {
@@ -130,42 +140,58 @@ void istream::getChar(char* ch) {
 //
 int16_t const EXP_LIMIT = 100;
 static const uint32_t uint32_max = (uint32_t)-1;
-bool istream::getDouble(double* value) {
-  bool got_digit = false;
-  bool got_dot = false;
-  bool neg;
-  int16_t c;
-  bool expNeg = false;
-  int16_t exp = 0;
-  int16_t fracExp = 0;
-  uint32_t frac = 0;
-  FatPos_t endPos;
-  double pow10;
-  double v;
+bool istream::getDouble(double* value) 
+{
+	bool got_digit = false;
+	bool got_dot = false;
+	bool neg;
+	int16_t c;
+	bool expNeg = false;
+	int16_t exp = 0;
+	int16_t fracExp = 0;
+	uint32_t frac = 0;
+	FatPos_t endPos;
+	double pow10;
+	double v;
+	int retries = 512;
 
-  getpos(&endPos);
-  c = readSkip();
-  neg = c == '-';
-  if (c == '-' || c == '+') {
-    c = getch();
-  }
-  while (1) {
-    if (isdigit(c)) {
-      got_digit = true;
-      if (frac < uint32_max/10) {
-        frac = frac * 10 + (c  - '0');
-        if (got_dot) fracExp--;
-      } else {
-        if (!got_dot) fracExp++;
-      }
-    } else if (!got_dot && c == '.') {
-      got_dot = true;
-    } else {
-      break;
-    }
-    if (fracExp < -EXP_LIMIT || fracExp > EXP_LIMIT) goto fail;
-    c = getch(&endPos);
-  }
+	getpos(&endPos);
+	c = readSkip();
+	neg = c == '-';
+	if (c == '-' || c == '+') 
+	{
+		c = getch();
+	}
+	
+	while( retries > 0 ) 
+	{
+		retries--;
+		if (isdigit(c)) 
+		{
+			got_digit = true;
+			if (frac < uint32_max/10) 
+			{
+				frac = frac * 10 + (c  - '0');
+				if (got_dot) fracExp--;
+			} 
+			else
+			{
+				if (!got_dot) fracExp++;
+			}
+		} 
+		else if (!got_dot && c == '.') 
+		{
+			got_dot = true;
+		} 
+		else 
+		{
+			break;
+		}
+		
+		if (fracExp < -EXP_LIMIT || fracExp > EXP_LIMIT) goto fail;
+		c = getch(&endPos);
+	}
+	
   if (!got_digit) goto fail;
   if (c == 'e' || c == 'E') {
     c = getch();
@@ -226,86 +252,116 @@ bool istream::getDouble(double* value) {
  *
  * \return always returns *this. A failure is indicated by the stream state.
  */
-istream& istream::getline(char *str, streamsize n, char delim) {
-  FatPos_t pos;
-  int c;
-  m_gcount = 0;
-  if (n > 0) str[0] = '\0';
-  while (1) {
-    c = getch(&pos);
-    if (c < 0) {
-      break;
-    }
-    if (c == delim) {
-      m_gcount++;
-      break;
-    }
-    if ((m_gcount + 1)  >=  n) {
-      setpos(&pos);
-      setstate(failbit);
-      break;
-    }
-    str[m_gcount++] = c;
-    str[m_gcount] = '\0';
-  }
-  if (m_gcount == 0) setstate(failbit);
-  return *this;
+istream& istream::getline(char *str, streamsize n, char delim) 
+{
+	FatPos_t pos;
+	int c;
+	int retries = 1024;
+	
+	m_gcount = 0;
+	if (n > 0) str[0] = '\0';
+	
+	while( retries > 0 ) 
+	{
+		retries--;
+		c = getch(&pos);
+		if (c < 0) 
+		{
+			break;
+		}
+		if (c == delim) 
+		{
+			m_gcount++;
+			break;
+		}
+		if ((m_gcount + 1)  >=  n) 
+		{
+			setpos(&pos);
+			setstate(failbit);
+			break;
+		}
+		str[m_gcount++] = c;
+		str[m_gcount] = '\0';
+	}
+	if (m_gcount == 0) setstate(failbit);
+	return *this;
 }
 //------------------------------------------------------------------------------
-bool istream::getNumber(uint32_t posMax, uint32_t negMax, uint32_t* num) {
-  int16_t c;
-  int8_t any = 0;
-  int8_t have_zero = 0;
-  uint8_t neg;
-  uint32_t val = 0;
-  uint32_t cutoff;
-  uint8_t cutlim;
-  FatPos_t endPos;
-  uint8_t f = flags() & basefield;
-  uint8_t base = f == oct ? 8 : f != hex ? 10 : 16;
-  getpos(&endPos);
-  c = readSkip();
+bool istream::getNumber(uint32_t posMax, uint32_t negMax, uint32_t* num) 
+{
+	int16_t c;
+	int8_t any = 0;
+	int8_t have_zero = 0;
+	uint8_t neg;
+	uint32_t val = 0;
+	uint32_t cutoff;
+	uint8_t cutlim;
+	FatPos_t endPos;
+	uint8_t f = flags() & basefield;
+	uint8_t base = f == oct ? 8 : f != hex ? 10 : 16;
+	getpos(&endPos);
+	c = readSkip();
+	int retries = 512;
 
-  neg = c == '-' ? 1 : 0;
-  if (c == '-' || c == '+') {
-    c = getch();
-  }
+	neg = c == '-' ? 1 : 0;
+	if (c == '-' || c == '+') 
+	{
+		c = getch();
+	}
 
-  if (base == 16 && c == '0') {  // TESTSUITE
-    c = getch(&endPos);
-    if (c == 'X' || c == 'x') {
-      c = getch();
-      // remember zero in case no hex digits follow x/X
-      have_zero = 1;
-    } else {
-      any = 1;
-    }
-  }
-  // set values for overflow test
-  cutoff = neg ? negMax : posMax;
-  cutlim = cutoff % base;
-  cutoff /= base;
+	// TESTSUITE
+	if (base == 16 && c == '0')
+	{ 
+		c = getch(&endPos);
+		if (c == 'X' || c == 'x') 
+		{
+			c = getch();
+			// remember zero in case no hex digits follow x/X
+			have_zero = 1;
+		}
+		else 
+		{
+			any = 1;
+		}
+	}
+	// set values for overflow test
+	cutoff = neg ? negMax : posMax;
+	cutlim = cutoff % base;
+	cutoff /= base;
 
-  while (1) {
-    if (isdigit(c)) {
-      c -= '0';
-    } else if (isalpha(c)) {
-      c -= isupper(c) ? 'A' - 10 : 'a' - 10;
-    } else {
-      break;
-    }
-    if (c >= base) {
-      break;
-    }
-    if (val > cutoff || (val == cutoff && c > cutlim)) {
-      // indicate overflow error
-      any = -1;
-      break;
-    }
-    val = val * base + c;
-    c = getch(&endPos);
-    any = 1;
-  }
+	while( retries > 0) 
+	{
+		retries--;
+		
+		if (isdigit(c)) 
+		{
+			c -= '0';
+		} 
+		else if (isalpha(c)) 
+		{
+			c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+		} 
+		else 
+		{
+			break;
+		}
+		
+		if (c >= base) 
+		{
+			break;
+		}
+   
+		if (val > cutoff || (val == cutoff && c > cutlim)) 
+		{
+			// indicate overflow error
+			any = -1;
+			break;
+		}
+   
+		val = val * base + c;
+		c = getch(&endPos);
+		any = 1;
+	}
   setpos(&endPos);
   if (any > 0 || (have_zero && any >= 0)) {
     *num =  neg ? -val : val;

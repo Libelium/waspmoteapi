@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.5
  *  Design:			David Gascón
- *  Implementation:	Alberto Bielsa, David Cuartielles
+ *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
   
 
@@ -371,6 +371,7 @@ unsigned long WaspUtils::readSerialID()
 	int data[64];
 	int aux_48[48];
 	unsigned long id = 0;
+	unsigned long ID_ERROR = 0xFFFFFFFF;
 	unsigned long seed = 1;
 	
 	// Powering the serial ID chip
@@ -412,11 +413,15 @@ unsigned long WaspUtils::readSerialID()
 		seed = seed * 2;
 	}			
 	
-	if (id == 4294967295) id = 0;
+	if (id == ID_ERROR) 
+	{
+		id = 0;
+	}
 				
     digitalWrite(LED0,LOW);
     Utils.setLED(LED0,LED_OFF);
 	Utils.setLED(LED1,LED_OFF);
+	
 	return id;
 }
 
@@ -823,6 +828,14 @@ uint8_t WaspUtils::converter(uint8_t conv1, uint8_t conv2)
  * Function: Converts a float variable to a string
  * Returns: void
  * 
+ * Remarks: It is recommended to use the AVR std library function
+ * http://www.nongnu.org/avr-libc/user-manual/group__avr__stdlib.html
+ * 
+ * 		char* dtostrf( 	double  	__val,
+ *						signed char  	__width,
+ *						unsigned char  	__prec,
+ *						char *  	__s ) 	
+ * 
  */
 void WaspUtils::float2String (float fl, char str[], int N) 
 {
@@ -1011,39 +1024,30 @@ int8_t WaspUtils::checkNewProgram()
 
   uint8_t buffer_OTA[32];
   uint8_t current_ID[32];
-  char MID[17];
-  uint8_t it = 0, program_version;
+  uint8_t program_version;
   bool reprogrammingOK = true;
 
   // copy current ID (CID) to Last Stable ID 
-  for(it = 0; it < 32; it++)
+  for(int i = 0; i < 32; i++)
   {
-    current_ID[it] = Utils.readEEPROM(it + 34);
-    eeprom_write_byte((uint8_t *)(it + 66), current_ID[it]);
+    current_ID[i] = Utils.readEEPROM(i + 34);
+    eeprom_write_byte((uint8_t *)(i + 66), current_ID[i]);
   }
-
-  // get MID
-  for(it = 0; it < 16; it++)
-  {
-    MID[it] = Utils.readEEPROM(it + 147);
-  }
-  MID[16] = '\0';
-
 
   // check OTA flag
   if( WaspRegister & REG_OTA)
   {
     // Checking if programID and currentID are the same --> the program has been changed properly
-    for(it = 0;it<32;it++)
+    for(int i = 0;i<32;i++)
     {
       // get PID
-      buffer_OTA[it] = eeprom_read_byte((uint8_t*)(it+2));
+      buffer_OTA[i] = eeprom_read_byte((uint8_t*)(i+2));
     }
 
-    for(it = 0;it<32;it++)
+    for(int i = 0;i<32;i++)
     {
       // compare PID vs CID
-      if (buffer_OTA[it] != eeprom_read_byte( (uint8_t*)(it+34) ) )
+      if (buffer_OTA[i] != eeprom_read_byte( (uint8_t*)(i+34) ) )
       {
         reprogrammingOK = false;
       }

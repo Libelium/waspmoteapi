@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -149,13 +149,15 @@ int8_t  WaspBT_Pro::waitInquiryAnswer(	unsigned long inquiryTime,
 {
 	delay(100);
 	uint8_t flag =1;
-	char dummy[4];							// Keyword
+	char dummy[4] ="";							// Keyword
 	char block[BLOCK_SIZE+1];				// Block with MAC, CoD y RSSI
-	char number[4];
+	char number[4] ="";
 	bool totalFound=false;
-	char total[4];	
-	total[3]='\0';
-		
+	
+	#ifdef DEBUG_MODE
+	char total[4] = "";	
+	#endif
+				
 	Utils.setLED(LED1, LED_ON);  // Inquiry while led on
     	
 	unsigned long previous=millis();
@@ -197,9 +199,11 @@ int8_t  WaspBT_Pro::waitInquiryAnswer(	unsigned long inquiryTime,
 					// If here, total found.
 					totalFound=true;
 					while(serialAvailable(_uartBT)<3);
+					#ifdef DEBUG_MODE
 					total[0]=serialRead(_uartBT);
 					total[1]=serialRead(_uartBT);
 					total[2]=serialRead(_uartBT);
+					#endif
 				}
 			}
 		}
@@ -222,7 +226,7 @@ int8_t  WaspBT_Pro::waitInquiryAnswer(	unsigned long inquiryTime,
 		// Compare total of devices found and total of devices saved. 
 		
 		// convert from string to int
-		int a = atoi(total);
+		uint16_t a = atoi(total);
 		
 		if (a!=numberOfDevices)
 		{
@@ -236,7 +240,7 @@ int8_t  WaspBT_Pro::waitInquiryAnswer(	unsigned long inquiryTime,
 		#endif
 		
 		// copy "Total: " from flash memory
-		char TOTAL[20];
+		char TOTAL[20] ="";
 		strcpy_P(TOTAL, (char*)pgm_read_word(&(table_BT[34])));
 
 		if(!(SD.append(INQFILE,TOTAL)))
@@ -273,9 +277,9 @@ int8_t  WaspBT_Pro::waitInquiryAnswer(	unsigned long inquiryTime,
 bool  WaspBT_Pro::waitScanDeviceAnswer(unsigned long inquiryTime, char* mac) 
 {
 	delay(100);
-	char dummy[4];						
+	char dummy[4] ="";						
 	bool found = false;
-	char block[BLOCK_SIZE+1];
+	char block[BLOCK_SIZE+1] ="";
 
 	Utils.setLED(LED1, LED_ON);  // Inquiry while led on
     	
@@ -338,11 +342,11 @@ uint8_t WaspBT_Pro::getSetDateID()
   	RTC.getTime();  
 
 	// copy "%02u-%02u-%02u;%02u:%02u; %s; " from flash memory
-	char aux[40];
+	char aux[40] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[0])));
 
 	// Build data and time string
-	char dateTime[28];
+	char dateTime[28] ="";
 	snprintf(dateTime, sizeof(dateTime), aux,RTC.date,RTC.month,RTC.year,RTC.hour,RTC.minute, identifier);
 
 	if(!(SD.append(INQFILE,dateTime)))
@@ -370,7 +374,7 @@ uint8_t WaspBT_Pro::getSetDateID()
 uint8_t WaspBT_Pro::parseNames()
 {	
 	uint8_t namesFound =0;
-	char dummy[4];	
+	char dummy[4] ="";	
 	uint8_t dummies = 0;	
 
 	// clear variable
@@ -381,7 +385,7 @@ uint8_t WaspBT_Pro::parseNames()
 	#endif
 	
 	// copy "Friendly names: " from flash memory
-	char aux[20];
+	char aux[20] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[1])));
     
 	// appendln "Friendly names: "
@@ -559,7 +563,7 @@ MINOR DEVICE CLASS:
 uint8_t WaspBT_Pro::parseBlock(char* block)
 {
 	uint8_t flag=1;
-	char dev[60];	
+	char dev[60] ="";	
 	uint8_t x=1;
 	
 	// Saves mac
@@ -608,7 +612,7 @@ uint8_t WaspBT_Pro::parseBlock(char* block)
 	//(...)
 	
 	// copy "%s; %s; %s; %c;" from flash memory
-	char aux[20];
+	char aux[20] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[2])));    
   
 	snprintf(dev, sizeof(dev), aux, mac_address, CoD, RSSI, devClass[0]);
@@ -679,7 +683,7 @@ void WaspBT_Pro::readCommandAnswer()
 uint16_t WaspBT_Pro::lookForAnswer(uint8_t* data, const char* expectedAnswer) 
 {
 	// define buffer
-	char received[RX_BUFFER];
+	char received[RX_BUFFER] ="";
 
 	uint8_t theLength = 0;
 	uint8_t it=0;
@@ -738,7 +742,7 @@ uint16_t WaspBT_Pro::lookForAnswer(uint8_t* data, const char* expectedAnswer)
 uint16_t WaspBT_Pro::lookForAnswer(char* data, const char* expectedAnswer) 
 {
 	
-	char received[RX_BUFFER];
+	char received[RX_BUFFER] ="";
 	uint8_t theLength = 0;
 	uint8_t it=0;
 	bool theSame=false;
@@ -750,7 +754,8 @@ uint16_t WaspBT_Pro::lookForAnswer(char* data, const char* expectedAnswer)
 	
 	while( !match && data[i]!='\0' )
 	{
-		if( first ){
+		if( first )
+		{
 			for(it=0;it<theLength;it++)
 			{
 				received[it]=data[i];
@@ -841,7 +846,7 @@ void WaspBT_Pro::sendCommand(uint8_t * theCommand, uint16_t length)
 void WaspBT_Pro::changeInquiryPower(int8_t power) 
 {
 	// copy "SET BT POWER %d %d %d" from flash memory
-	char aux[40];
+	char aux[40] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[3])));   
     
 	// Sets first two values to maximum by default
@@ -981,7 +986,7 @@ uint8_t WaspBT_Pro::createSDFiles()
 		else 
 		{	
 			// copy "INQFILEHEAD" from flash memory
-			char INQFILEHEAD[20];
+			char INQFILEHEAD[20] ="";
 			strcpy_P(INQFILEHEAD, (char*)pgm_read_word(&(table_BT[35])));   
 			
 			SD.appendln(INQFILE,INQFILEHEAD);
@@ -1007,7 +1012,8 @@ WaspBT_Pro::WaspBT_Pro()
 	commandMode = 1;
 	
 	// set default name to avoid weird chars inside EEPROM
-	setNodeID("DEF_NAME");
+	char defaultName[] = "DEF_NAME";
+	setNodeID(defaultName);
 	
 	
 }
@@ -1105,7 +1111,7 @@ void WaspBT_Pro::OFF()
 void WaspBT_Pro::sleep() 
 {
 	// copy "sleep" from flash memory
-	char aux[20];
+	char aux[20] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[4])));   
     
     // send "sleep" command
@@ -1122,7 +1128,7 @@ void WaspBT_Pro::sleep()
 uint8_t WaspBT_Pro::wakeUp() 
 {
 	
-	char dummy[2];
+	char dummy[2] ="";
 	uint8_t flag=0;
 	
 	
@@ -1169,7 +1175,7 @@ int8_t WaspBT_Pro::init()
 	int8_t flag=1;
 	
 	// copy "SET CONTROL CONFIG 0000 0101" from flash memory
-	char aux[40];
+	char aux[40] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[5])));   
 	
 	// Enable RSSI for inquiry	
@@ -1244,7 +1250,7 @@ uint8_t WaspBT_Pro::reset()
 	uint8_t flag =1;	
 	
 	// copy "RESET" from flash memory
-	char aux[40];
+	char aux[40] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[9])));  
     	
 	sendCommand(aux);
@@ -1259,7 +1265,9 @@ uint8_t WaspBT_Pro::reset()
 		USB.println(F("Ready"));
 		#endif
 	}
-	else{	
+	else
+	{	
+		USB.println(F("BT_PRO module not detected"));
 		#ifdef DEBUG_MODE
 		USB.println(F("Reset failed"));
 		#endif
@@ -1323,17 +1331,14 @@ char * WaspBT_Pro::getNodeID()
 long WaspBT_Pro::getTemp()
 {
 	long a=0;
-	char dummy[3];
-	char temperature[4];
+	char dummy[3] ="";
+	char temperature[4] ="";
 	
 	// clear variable
 	memset(theCommand, 0x00, sizeof(theCommand) );
 	
-	// clear variable
-	memset(temperature, 0x00, sizeof(temperature) );
-	
 	// copy "temp" from flash memory
-	char aux[40];
+	char aux[40] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[11])));  
 	
 	sendCommand(aux);
@@ -1343,9 +1348,11 @@ long WaspBT_Pro::getTemp()
 	while(serialAvailable(_uartBT) && (millis()-previous < 2000))
 	{
 		dummy[0]=serialRead(_uartBT);	
-		if (dummy[0]=='M'){
+		if (dummy[0]=='M')
+		{
 			dummy[1]=serialRead(_uartBT);	
-			if (dummy[1]=='P'){
+			if (dummy[1]=='P')
+			{
 				dummy[0]=serialRead(_uartBT);
 				temperature[0]=serialRead(_uartBT);
 				temperature[1]=serialRead(_uartBT);
@@ -1371,11 +1378,11 @@ long WaspBT_Pro::getTemp()
 */
 char * WaspBT_Pro::getOwnMac()
 {	
-	char dummy[4];
+	char dummy[4] ="";
 	i=0;
 	
 	// copy "SET" from flash memory
-	char aux[10];
+	char aux[10] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[12])));  
 	
 	// send "SET" command
@@ -1426,7 +1433,7 @@ char * WaspBT_Pro::getOwnMac()
 */
 char * WaspBT_Pro::getOwnName()
 {	
-	char dummy[4];
+	char dummy[4] ="";
 	uint8_t end=1;
 	unsigned long previous;
 	
@@ -1434,7 +1441,7 @@ char * WaspBT_Pro::getOwnName()
 	memset(friendlyName, 0x00, sizeof(friendlyName));
 		
 	// copy "SET" from flash memory
-	char aux[10];
+	char aux[10] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[12])));  
     
 	sendCommand(aux);
@@ -1490,7 +1497,7 @@ char * WaspBT_Pro::getOwnName()
 uint8_t WaspBT_Pro::setOwnName(char * publicName)
 {
 		
-	char namePublic[40];
+	char namePublic[40] ="";
 	i=0;
 	uint8_t length = 0;
 	
@@ -1501,7 +1508,7 @@ uint8_t WaspBT_Pro::setOwnName(char * publicName)
 	if(length<20) 
 	{	
 		// copy "SET BT NAME %s_" from flash memory
-		char aux[40];
+		char aux[40] ="";
 		strcpy_P(aux, (char*)pgm_read_word(&(table_BT[13]))); 
 		 
 		// add end char for parsing public name
@@ -1557,7 +1564,7 @@ int8_t WaspBT_Pro::scanNetwork(uint8_t time, int8_t power)
 	#endif
 	
 	// copy "ScanNetwork" from flash memory
-	char aux[40];
+	char aux[40] ="";
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[14]))); 
 	
 	if(!(SD.appendln(INQFILE,aux)))
@@ -1578,7 +1585,7 @@ int8_t WaspBT_Pro::scanNetwork(uint8_t time, int8_t power)
 	waitInquiryAnswer(inquiryTime, maxDevices, name, limited);
 	
 	// copy "---" from flash memory
-	char ENDSTRING[20];
+	char ENDSTRING[20] ="";
 	strcpy_P(ENDSTRING, (char*)pgm_read_word(&(table_BT[36]))); 
 	
 	// write line
@@ -1633,7 +1640,7 @@ int8_t WaspBT_Pro::scanNetworkLimited(uint16_t MAX_DEVICES, int8_t power)
 	#endif
 	
 	// copy "ScanNetworkLimited. " from flash memory
-	char aux[40];
+	char aux[40] ="";
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[16]))); 
 	
 	if(!(SD.appendln(INQFILE,aux)))
@@ -1722,7 +1729,7 @@ int16_t WaspBT_Pro::scanDevice(char* Mac, uint8_t maxTime, int8_t power)
 	#endif
 	
 	// copy "ScanDevice: " from flash memory
-	char aux[40];
+	char aux[40] ="";
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[18])));
 	
 	// append "ScanDevice: " 
@@ -1833,7 +1840,7 @@ int8_t WaspBT_Pro::scanNetworkName(uint8_t time, int8_t power)
 	#endif
 			
 	// copy "ScanNetworkName" from flash memory
-	char aux[40];
+	char aux[40] ="";
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[20])));
 	
 	// append "ScanNetworkName"
@@ -1906,9 +1913,9 @@ uint8_t WaspBT_Pro::createConnection(char * mac)
 	uint8_t connected = 0;
 	
 	// copy "ScanNetworkName" from flash memory
-	char target[10];
-	char connectMode[10];
-	char aux[20];
+	char target[10] ="";
+	char connectMode[10] ="";
+	char aux[20] ="";
 	// copy "1101" from flash memory
 	strcpy_P(target, (char*)pgm_read_word(&(table_BT[22])));
 	// copy "RFCOMM" from flash memory
@@ -1950,11 +1957,11 @@ uint8_t WaspBT_Pro::createConnection(char * mac)
 	// if "NO CARRIER", connection unsuccessful
 	
 	// copy "CONNECT" from flash memory
-	char CONNECT[20];
+	char CONNECT[20] ="";
 	strcpy_P(CONNECT, (char*)pgm_read_word(&(table_BT[26])));	
 		
 	// copy "NO CARRIER" from flash memory
-	char NO_CARRIER[20];
+	char NO_CARRIER[20] ="";
 	strcpy_P(NO_CARRIER, (char*)pgm_read_word(&(table_BT[27])));	
 	
 	previous = millis();
@@ -2001,7 +2008,7 @@ uint8_t WaspBT_Pro::removeConnection()
 	for (i = 0; i < COMMAND_SIZE; i++) theCommand[i] = '\0';		
 
 	// copy "CLOSE 0" from flash memory
-	char aux[20];
+	char aux[20] ="";
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[28])));	
 
 	// send close command CLOSE {link_id}
@@ -2134,7 +2141,7 @@ uint8_t WaspBT_Pro::enterCommandMode()
     delay(1100);
 	
 	// copy "READY" from flash memory
-	char READY[20];
+	char READY[20] ="";
 	strcpy_P(READY, (char*)pgm_read_word(&(table_BT[30])));	
 	
 	// look for ready
@@ -2189,7 +2196,7 @@ int8_t WaspBT_Pro::checkActiveConnections()
 	uint8_t flag = 0;
 	int actives =0;
 	uint8_t found = 0;
-	char dummy[4];
+	char dummy[4] ="";
 	char active[2] ="x";
 	unsigned long previous;
 	
@@ -2201,7 +2208,7 @@ int8_t WaspBT_Pro::checkActiveConnections()
 	}
 	
 	// copy "LIST" from flash memory
-	char LIST[20];
+	char LIST[20] ="";
 	strcpy_P(LIST, (char*)pgm_read_word(&(table_BT[31])));	
 		
 	// LIST {num_of_connections}
@@ -2295,7 +2302,7 @@ uint8_t WaspBT_Pro::getRSSI(uint8_t linkID)
 	for (i = 0; i < COMMAND_SIZE; i++) theCommand[i] = '\0';		
 
 	// copy "RSSI %u" from flash memory
-	char aux[20];
+	char aux[20] ="";
 	strcpy_P(aux, (char*)pgm_read_word(&(table_BT[32])));	
 
 	// send rssi command RSSI {link_id}
@@ -2307,7 +2314,7 @@ uint8_t WaspBT_Pro::getRSSI(uint8_t linkID)
 	delay(200);	
 	
 	// copy "ERROR" from flash memory
-	char ERROR[20];
+	char ERROR[20] ="";
 	strcpy_P(ERROR, (char*)pgm_read_word(&(table_BT[33])));		
 	
 	// response: RSSI {bd_addr} {rssi}
@@ -2362,7 +2369,8 @@ void WaspBT_Pro::printBuffer2()
 */
 uint8_t WaspBT_Pro::pair(char* macAddress)
 {
-	return pair(macAddress, "123456");
+	char pinCode[] = "123456";
+	return pair(macAddress, pinCode);
 }
 
 /*
@@ -2380,8 +2388,8 @@ uint8_t WaspBT_Pro::pair(char* macAddress, char * pinCode)
 	// set code for pairing
 	// copy "SET BT AUTH * %s" from flash memory
 	uint8_t found = 0;
-	char dummy[3];
-	char aux[20];
+	char dummy[3] ="";
+	char aux[20] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[37])));   
     snprintf(theCommand, sizeof(theCommand), aux, pinCode);
 	sendCommand(theCommand);
@@ -2441,7 +2449,7 @@ uint8_t WaspBT_Pro::pair(char* macAddress, char * pinCode)
 void WaspBT_Pro::removePairedDevices()
 {
 	// copy "SET BT PAIR *" from flash memory
-	char aux[20];
+	char aux[20] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[40])));   
     sendCommand(aux);
 	
@@ -2459,10 +2467,10 @@ void WaspBT_Pro::removePairedDevices()
 uint8_t WaspBT_Pro::isPaired(char * deviceMac)
 {
 	uint8_t found = 0;
-	char dummy[4];
+	char dummy[4] ="";
 	i=0;
 	// copy "SET" from flash memory
-	char aux[20];
+	char aux[20] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[12])));   
     sendCommand(aux);
     

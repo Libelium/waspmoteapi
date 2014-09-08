@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
 
     Design:		David Gascón
 
@@ -58,6 +58,11 @@
 #define _3G_debug_mode	0
 
 #define BUFFER_SIZE 512
+
+#define	_3G_APN "apn"
+#define	_3G_LOGIN "login"		//comment this line if you don't need login
+#define	_3G_PASSW "password"	//comment this line if you don't need password
+
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
@@ -178,6 +183,42 @@
 #define	POST 1
 
 
+#define	AT_COMMAND	"AT"
+#define OK_RESPONSE "OK"
+
+#define GSM_DCS_1800 		128
+#define GSM_EGSM_900		256
+#define GSM_PGSM_900		512
+#define GSM_450				1
+#define GSM_480				2
+#define GSM_750				4
+#define GSM_850				8
+#define GSM_RGSM_900		16
+#define GSM_PCS_1900		32
+#define WCDMA_IMT_2000		64
+#define WCDMA_PCS_1900		128
+#define WCDMA_III_1700		256
+#define WCDMA_IV_1700		512
+#define WCDMA_850			1024
+#define WCDMA_800			2048
+#define WCDMA_VII_2600		1
+#define WCDMA_VIII_900		2
+#define WCDMA_IX_1700		4
+
+//Error Constants
+#define ERROR_IP 	"+IP ERROR:"
+#define ERROR_CME 	"+CME ERROR:"
+#define ERROR_CMS 	"+CMS ERROR:"
+#define ERROR		"ERROR"
+
+//Xmodem constants
+#define ACK		0x06
+#define NAK		0x15
+#define SOH		0x01
+#define EOT		0x04
+#define CAN		0x18
+
+
 
 
 /******************************************************************************
@@ -195,14 +236,17 @@ class Wasp3G
 	//! Variable : stores if the module is ready or not (0:not ready, 1:ready)
    uint8_t ready;
    
-   //! Variables: aux strings that store commands and answer extracted from flash memory   
+	//! Variables: aux strings that store commands and answer extracted from flash memory   
 	char str_aux1[20];
 	char str_aux2[20];
 	char str_aux3[60];
 	char str_aux4[20];
 	char str_aux5[20];
 	
-   
+   	//! Variables: strings that store _apn, _apn_login and _apn_password from operator
+	char _apn[20], _apn_login[20], _apn_password[20];
+	
+	
 	//! It gets if GPRS module is ready or not
     /*!
 	\return nothing. It changes the value of 'ready'
@@ -1253,33 +1297,89 @@ class Wasp3G
 
 	//! Sends a request to a HTTP url and get an answer. The answer is stored in 'buffer_3G'
 	/*!
-	\param const char* url: server to send the HTTP request. "www.https_server.com"
+	\param const char* url: server to send the HTTP request. "www.http_server.com"
 	\param uint16_t port: number of the connection port
 	\param const char* HTTP_request: request to send to the HTTP server
-	\return '1' on success,
-		'-1' if error setting APN, username and password,
-		'-2' if error opening a HTTP session,
-		'-3' if error receiving data or timeout waiting data,
-		'-4' if error changing the baudrate (data received is OK),
-		'-5' if unknown error for HTTP,
-		'-6' if HTTP task is busy,
-		'-7' if fail to resolve server address,
-		'-8' if HTTP timeout,
-		'-9' if fail to transfer data,
-		'-10' if memory error,
-		'-11' if invalid parameter,
-		'-12' if network error,
+	\return '1' on success
+		'0' if no connection
+		'-1' if error setting APN, username and password
+		'-2' if error opening a HTTP session
+		'-3' if error receiving data or timeout waiting data
+		'-4' if error changing the baudrate (data received is OK)
+		'-5' if unknown error for HTTP
+		'-6' if HTTP task is busy
+		'-7' if fail to resolve server address
+		'-8' if HTTP timeout
+		'-9' if fail to transfer data
+		'-10' if memory error
+		'-11' if invalid parameter
+		'-12' if network error
 		'-15' if error setting APN, username and password with CME_error code available
 		'-16' if error opening a HTTP session with CME_error code available	
+		'-20' if error checking the connection
 	*/
 	int16_t readURL(const char* url, uint16_t port, const char* HTTP_request);
 	
 	//! Sends a request to a HTTP url and get an answer. The answer is stored in 'buffer_3G'
 	/*!
-	\param const char* url: server to send the HTTP request. "www.https_server.com"
+	\param const char* url: server to send the HTTP request. "www.http_server.com"
 	\param uint16_t port: number of the connection port
 	\param const char* HTTP_request: request to send to the HTTP server
+	\return '1' on success
+		'0' if no connection
+		'-1' if error setting APN, username and password
+		'-2' if error opening a HTTP session
+		'-3' if error receiving data or timeout waiting data
+		'-4' if error changing the baudrate (data received is OK)
+		'-5' if unknown error for HTTP
+		'-6' if HTTP task is busy
+		'-7' if fail to resolve server address
+		'-8' if HTTP timeout
+		'-9' if fail to transfer data
+		'-10' if memory error
+		'-11' if invalid parameter
+		'-12' if network error
+		'-15' if error setting APN, username and password with CME_error code available
+		'-16' if error opening a HTTP session with CME_error code available	
+		'-17' if url response its not OK (HTTP code 200)
+		'-18' if content-length field not found
+		'-19' if data field not found
+		'-20' if error checking the connection
+	*/
+	int16_t readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse);
+	
+	//! Sets the time of Waspmote's RTC getting the time from an url
+	/*!
+	\return '1' on success
+		'0' if no connection
+		'-1' if error setting APN, username and password
+		'-2' if error opening a HTTP session
+		'-3' if error receiving data or timeout waiting data
+		'-4' if error changing the baudrate (data received is OK)
+		'-5' if unknown error for HTTP
+		'-6' if HTTP task is busy
+		'-7' if fail to resolve server address
+		'-8' if HTTP timeout
+		'-9' if fail to transfer data
+		'-10' if memory error
+		'-11' if invalid parameter
+		'-12' if network error
+		'-15' if error setting APN, username and password with CME_error code available
+		'-16' if error opening a HTTP session with CME_error code available	
+		'-17' if url response its not OK (HTTP code 200)
+		'-18' if content-length field not found
+		'-19' if data field not found
+		'-20' if error checking the connection
+		'-21' if fail setting the time of the internal RTC of the 3G module
+	*/
+	int16_t setTimebyURL();
+	
+	//! Sets the time of Waspmote's RTC getting the time from Meshlium
+	/*!	
+	\param const char* url : url or IP address of the server
+	\param uint16_t port : server port
 	\return '1' on success,
+		'0' if no connection
 		'-1' if error setting APN, username and password,
 		'-2' if error opening a HTTP session,
 		'-3' if error receiving data or timeout waiting data,
@@ -1297,31 +1397,10 @@ class Wasp3G
 		'-17' if url response its not OK (HTTP code 200)
 		'-18' if content-length field not found
 		'-19' if data field not found
+		'-20' if error checking the connection
+		
 	*/
-	int16_t readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse);
-	
-	//! Sets the time of Waspmote's RTC getting the time from an url
-	/*!
-	\return '1' on success,
-		'-1' if error setting APN, username and password,
-		'-2' if error opening a HTTP session,
-		'-3' if error receiving data or timeout waiting data,
-		'-4' if error changing the baudrate (data received is OK),
-		'-5' if unknown error for HTTP,
-		'-6' if HTTP task is busy,
-		'-7' if fail to resolve server address,
-		'-8' if HTTP timeout,
-		'-9' if fail to transfer data,
-		'-10' if memory error,
-		'-11' if invalid parameter,
-		'-12' if network error,
-		'-15' if error setting APN, username and password with CME_error code available
-		'-16' if error opening a HTTP session with CME_error code available	
-		'-17' if the response from the url is not 200 HTTP code
-		'-18' if the response from the url has not data
-		'-19' if fail setting the time of the internal RTC of the 3G module
-	*/
-	int16_t setTimebyURL();
+	int16_t setTimebyMeshlium(const char* url, uint16_t port);
 	
 	//! Sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
 	/*!
@@ -1331,6 +1410,7 @@ class Wasp3G
 	\param int length : length of the frame
 	\param uint8_t method : GET or POST
 	\return '1' on success,
+		'0' if no connection
 		'-1' if error setting APN, username and password,
 		'-2' if error opening a HTTP session,
 		'-3' if error receiving data or timeout waiting data,
@@ -1348,8 +1428,40 @@ class Wasp3G
 		'-17' if url response its not OK (HTTP code 200)
 		'-18' if content-length field not found
 		'-19' if data field not found
+		'-20' if error checking the connection
 	*/
 	int16_t sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method );
+	
+	//! Sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
+	/*!
+	\param const char* url : url or IP address of the server
+	\param uint16_t port : server port
+	\param uint8_t* data : frame data to send
+	\param int length : length of the frame
+	\param uint8_t method : GET or POST
+	\param uint8_t parse : '1' parses the answer for the Meshlium and '0' for raw data
+	\return '1' on success
+		'0' if no connection
+		'-1' if error setting APN, username and password
+		'-2' if error opening a HTTP session
+		'-3' if error receiving data or timeout waiting data
+		'-4' if error changing the baudrate (data received is OK)
+		'-5' if unknown error for HTTP
+		'-6' if HTTP task is busy
+		'-7' if fail to resolve server address
+		'-8' if HTTP timeout
+		'-9' if fail to transfer data
+		'-10' if memory error
+		'-11' if invalid parameter
+		'-12' if network error
+		'-15' if error setting APN, username and password with CME_error code available
+		'-16' if error opening a HTTP session with CME_error code available	
+		'-17' if url response its not OK (HTTP code 200)
+		'-18' if content-length field not found
+		'-19' if data field not found
+		'-20' if error checking the connection
+	*/
+	int16_t sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method, uint8_t parse );
 	
 	//! Sends a request to a HTTPS url and get an answer. The answer is stored in 'buffer_3G'
 	/*!
@@ -1876,6 +1988,22 @@ class Wasp3G
 	\return '1' on success, '0' if error
 	 */	
 	int8_t firmware_version();
+	
+	//! Sets the apn from operator
+    /*!
+	\param char* apn: apn from operator
+	\return nothing
+	 */
+	void set_APN( char* apn);
+	
+	//! Sets the apn, login and password from operator
+    /*!
+	\param char* apn: apn from operator
+	\param char* login: login from operator
+	\param char* password: password from operator
+	\return nothing
+	 */
+	void set_APN( char* apn, char* login, char* password);
 	
 	//! It shows the apn, login and password constants
     /*!

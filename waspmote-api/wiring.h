@@ -1,6 +1,7 @@
 /*
  *  Modified for Waspmote by D. Cuartielles & A. Bielsa, 2009
- *
+ *	Modified for Waspmote, 2014
+ * 
  *  Copyright (c) 2005-2006 David A. Mellis
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -99,7 +100,7 @@ void delayMicroseconds(unsigned int us);
 //void wait(unsigned long);
 void wait(uint8_t);
 void waitFor (uint8_t, uint8_t);
-unsigned long pulseIn(uint8_t pin, uint8_t state);
+float pulseIn(uint8_t pin, uint8_t state);
 
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, byte val);
 

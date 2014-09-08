@@ -1,5 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
+ * Modified in 2014 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -413,48 +414,67 @@ bool SdBaseFile::make83Name(const char* str, uint8_t* name, const char** ptr)
  * Reasons for failure include this file is already open, \a parent is not a
  * directory, \a path is invalid or already exists in \a parent.
  */
-bool SdBaseFile::mkdir(SdBaseFile* parent, const char* path, bool pFlag) {
-  uint8_t dname[11];
-  SdBaseFile dir1, dir2;
-  SdBaseFile* sub = &dir1;
-  SdBaseFile* start = parent;
+bool SdBaseFile::mkdir(SdBaseFile* parent, const char* path, bool pFlag) 
+{
+	uint8_t dname[11];
+	int retries = 3;
+	SdBaseFile dir1, dir2;
+	SdBaseFile* sub = &dir1;
+	SdBaseFile* start = parent;
 
-  if (!parent || isOpen()) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  if (*path == '/') {
-    while (*path == '/') path++;
-    if (!parent->isRoot()) {
-      if (!dir2.openRoot(parent->m_vol)) {
-        DBG_FAIL_MACRO;
-        goto fail;
-      }
-      parent = &dir2;
-    }
-  }
-  while (1) {
-    if (!make83Name(path, dname, &path)) {
-      DBG_FAIL_MACRO;
-      USB.println(F("Invalid filename"));
-      goto fail;
-    }
-    while (*path == '/') path++;
-    if (!*path) break;
-    if (!sub->open(parent, dname, O_READ)) {
-      if (!pFlag || !sub->mkdir(parent, dname)) {
-        DBG_FAIL_MACRO;
-        goto fail;
-      }
-    }
-    if (parent != start) parent->close();
-    parent = sub;
-    sub = parent != &dir1 ? &dir1 : &dir2;
-  }
-  return mkdir(parent, dname);
+	if (!parent || isOpen()) 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	
+	if (*path == '/') 
+	{
+		while (*path == '/') path++;
+		if (!parent->isRoot()) 
+		{
+			if (!dir2.openRoot(parent->m_vol)) 
+			{
+				DBG_FAIL_MACRO;
+				goto fail;
+			}
+			parent = &dir2;
+		}
+	}
+	
+	while( retries > 0 ) 
+	{
+		retries--; 
+		
+		if (!make83Name(path, dname, &path)) 
+		{
+			DBG_FAIL_MACRO;
+			USB.println(F("Invalid filename"));
+			goto fail;
+		}
+    
+		while (*path == '/') path++;
+		
+		if (!*path) break;
+		
+		if (!sub->open(parent, dname, O_READ)) 
+		{
+			if (!pFlag || !sub->mkdir(parent, dname)) 
+			{
+				DBG_FAIL_MACRO;
+				goto fail;
+			}
+		}
+		
+		if (parent != start) parent->close();
+		parent = sub;
+		sub = parent != &dir1 ? &dir1 : &dir2;
+	}
+	
+	return mkdir(parent, dname);
 
  fail:
-  return false;
+	return false;
 }
 //------------------------------------------------------------------------------
 bool SdBaseFile::mkdir(SdBaseFile* parent, const uint8_t dname[11]) {
@@ -597,6 +617,7 @@ bool SdBaseFile::open(SdBaseFile* dirFile, const char* path, uint8_t oflag)
 	SdBaseFile dir1, dir2;
 	SdBaseFile *parent = dirFile;
 	SdBaseFile *sub = &dir1;
+	int retries = 3;
 
 	if (!dirFile) 
 	{
@@ -625,8 +646,10 @@ bool SdBaseFile::open(SdBaseFile* dirFile, const char* path, uint8_t oflag)
 		}
 	}
   
-	while (1) 
+	while( retries > 0) 
 	{
+		retries--; 
+		
 		if (!make83Name(path, dname, &path)) 
 		{
 			if(!strcmp(path,".."))
@@ -930,47 +953,62 @@ bool SdBaseFile::openCachedEntry(uint8_t dirIndex, uint8_t oflag)
  * See open() by path for definition of flags.
  * \return true for success or false for failure.
  */
-bool SdBaseFile::openNext(SdBaseFile* dirFile, uint8_t oflag) {
-  dir_t* p;
-  uint8_t index;
+bool SdBaseFile::openNext(SdBaseFile* dirFile, uint8_t oflag) 
+{
+	dir_t* p;
+	uint8_t index;
+	int retries = 512;
 
-  if (!dirFile) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  // error if already open
-  if (isOpen()) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  m_vol = dirFile->m_vol;
+	if (!dirFile) 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	
+	// error if already open
+	if (isOpen()) 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	m_vol = dirFile->m_vol;
 
-  while (1) {
-    index = 0XF & (dirFile->m_curPosition >> 5);
+	while( retries > 0 ) 
+	{
+		retries--;
+		
+		index = 0XF & (dirFile->m_curPosition >> 5);
 
-    // read entry into cache
-    p = dirFile->readDirCache();
-    if (!p) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-    // done if last entry
-    if (p->name[0] == DIR_NAME_FREE) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-    // skip empty slot or '.' or '..'
-    if (p->name[0] == DIR_NAME_DELETED || p->name[0] == '.') {
-      continue;
-    }
-    // must be file or dir
-    if (DIR_IS_FILE_OR_SUBDIR(p)) {
-      return openCachedEntry(index, oflag);
-    }
-  }
+		// read entry into cache
+		p = dirFile->readDirCache();
+		if (!p) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+    
+		// done if last entry
+		if (p->name[0] == DIR_NAME_FREE) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+		
+		// skip empty slot or '.' or '..'
+		if (p->name[0] == DIR_NAME_DELETED || p->name[0] == '.') 
+		{
+			continue;
+		}
+    
+		// must be file or dir
+		if (DIR_IS_FILE_OR_SUBDIR(p)) 
+		{
+			return openCachedEntry(index, oflag);
+		}
+	}
 
  fail:
-  return false;
+	return false;
 }
 //------------------------------------------------------------------------------
 /** Open a directory's parent directory.
@@ -1248,21 +1286,28 @@ int SdBaseFile::read(void* buf, size_t nbyte) {
  * readDir() called before a directory has been opened, this is not
  * a directory file or an I/O error occurred.
  */
-int8_t SdBaseFile::readDir(dir_t* dir) {
-  int16_t n;
-  // if not a directory file or miss-positioned return an error
-  if (!isDir() || (0X1F & m_curPosition)) return -1;
+int8_t SdBaseFile::readDir(dir_t* dir) 
+{
+	int16_t n;
+	int retries = 512;
+  
+	// if not a directory file or miss-positioned return an error
+	if (!isDir() || (0X1F & m_curPosition)) return -1;
 
-  while (1) {
-    n = read(dir, sizeof(dir_t));
-    if (n != sizeof(dir_t)) return n == 0 ? 0 : -1;
-    // last entry if DIR_NAME_FREE
-    if (dir->name[0] == DIR_NAME_FREE) return 0;
-    // skip empty entries and entry for .  and ..
-    if (dir->name[0] == DIR_NAME_DELETED || dir->name[0] == '.') continue;
-    // return if normal file or subdirectory
-    if (DIR_IS_FILE_OR_SUBDIR(dir)) return n;
-  }
+	while( retries > 0 ) 
+	{
+		retries--;
+		n = read(dir, sizeof(dir_t));
+		if (n != sizeof(dir_t)) return n == 0 ? 0 : -1;
+		// last entry if DIR_NAME_FREE
+		if (dir->name[0] == DIR_NAME_FREE) return 0;
+		// skip empty entries and entry for .  and ..
+		if (dir->name[0] == DIR_NAME_DELETED || dir->name[0] == '.') continue;
+		// return if normal file or subdirectory
+		if (DIR_IS_FILE_OR_SUBDIR(dir)) return n;
+	}
+	
+	return -1;
 }
 //------------------------------------------------------------------------------
 // Read next directory entry into the cache
@@ -2158,18 +2203,24 @@ void SdBaseFile::ls(uint8_t flags, uint8_t indent)
 // return 0 - EOF, 1 - normal file, or 2 - directory
 int8_t SdBaseFile::lsPrintNext(uint8_t flags, uint8_t indent) 
 {
-  dir_t dir;
-  uint8_t w = 0;
+	dir_t dir;
+	uint8_t w = 0;
+	int retries = 512;
 
-  while (1) 
-  {
-    if (read(&dir, sizeof(dir)) != sizeof(dir)) return 0;
-    if (dir.name[0] == DIR_NAME_FREE) return 0;
+	while( retries > 0 ) 
+	{
+		retries--;
+		if (read(&dir, sizeof(dir)) != sizeof(dir)) return 0;
+		if (dir.name[0] == DIR_NAME_FREE) return 0;
 
-    // skip deleted entry and entries for . and  ..
-    if (dir.name[0] != DIR_NAME_DELETED && dir.name[0] != '.'
-      && DIR_IS_FILE_OR_SUBDIR(&dir)) break;
-  }
+		// skip deleted entry and entries for . and  ..
+		if( (dir.name[0] != DIR_NAME_DELETED) 
+			&& (dir.name[0] != '.')
+			&& (DIR_IS_FILE_OR_SUBDIR(&dir)))
+			{
+				break;
+			}
+	}
   
     // Do not list TRASH directories
     if (	dir.name[0]=='T' && 

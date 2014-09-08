@@ -1,7 +1,7 @@
 /*
- *  Revised for Waspmote by D. Cuartielles & A. Bielsa, 2009
- *
  *  Copyright (c) 2005 David A. Mellis
+ * 	Revised for Waspmote by D. Cuartielles & A. Bielsa, 2009
+ * 	Revised for Waspmote by Libelium, 2014
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -16,9 +16,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.1
- *  Design:		David Gascón
- *  Implementation:	David A.Mellis, David Cuartielles, Alberto Bielsa
+ *  Version:		1.0
+ *  Design:			David Gascón
+ *  Implementation:	D.Mellis, D. Cuartielles, A. Bielsa, Y. Carmona
  */
 
 
@@ -77,35 +77,35 @@
 // and writing)
 const uint8_t PROGMEM port_to_mode_PGM[] = {
 	NOT_A_PORT,
-	&DDRA,
-	&DDRB,
-	&DDRC,
-	&DDRD,
-	&DDRE,
-	&DDRF,
-	&DDRG,
+	(uint16_t)&DDRA,
+	(uint16_t)&DDRB,
+	(uint16_t)&DDRC,
+	(uint16_t)&DDRD,
+	(uint16_t)&DDRE,
+	(uint16_t)&DDRF,
+	(uint16_t)&DDRG,
 };
 
 const uint8_t PROGMEM port_to_output_PGM[] = {
 	NOT_A_PORT,
-	&PORTA,
-	&PORTB,
-	&PORTC,
-	&PORTD,
-	&PORTE,
-	&PORTF,
-	&PORTG,
+	(uint16_t)&PORTA,
+	(uint16_t)&PORTB,
+	(uint16_t)&PORTC,
+	(uint16_t)&PORTD,
+	(uint16_t)&PORTE,
+	(uint16_t)&PORTF,
+	(uint16_t)&PORTG,
 };
 
 const uint8_t PROGMEM port_to_input_PGM[] = {
 	NOT_A_PORT,
-	&PINA,
-	&PINB,
-	&PINC,
-	&PIND,
-	&PINE,
-	&PINF,
-	&PING,
+	(uint16_t)&PINA,
+	(uint16_t)&PINB,
+	(uint16_t)&PINC,
+	(uint16_t)&PIND,
+	(uint16_t)&PINE,
+	(uint16_t)&PINF,
+	(uint16_t)&PING,
 };
 
 const uint8_t PROGMEM digital_pin_to_port_PGM[] = {

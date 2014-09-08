@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2005-2006 David A. Mellis
+ *  Modified for Waspmote, 2014.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +24,7 @@
  * or LOW, the type of pulse to measure.  Works on pulses from 10 microseconds
  * to 3 minutes in length, but must be called at least N microseconds before
  * the start of the pulse. */
-unsigned long pulseIn(uint8_t pin, uint8_t state)
+float pulseIn(uint8_t pin, uint8_t state)
 {
 	// cache the port and bit of the pin in order to speed up the
 	// pulse width measuring loop and achieve finer resolution.  calling
@@ -45,5 +46,7 @@ unsigned long pulseIn(uint8_t pin, uint8_t state)
 	// to be 10 clock cycles long and have about 12 clocks between the edge
 	// and the start of the loop. There will be some error introduced by
 	// the interrupt handlers.
-	return clockCyclesToMicroseconds(width * 10 + 12); 
+	float clockCyclesPerMicrosecond = (float)F_CPU / (float)1000000;	
+	return (width * 10 + 12)/clockCyclesPerMicrosecond;
+	
 }

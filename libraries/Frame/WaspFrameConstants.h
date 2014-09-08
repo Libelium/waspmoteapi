@@ -127,6 +127,19 @@ const char	str_DIK[] 	PROGMEM	= "DIK";	// 82
 const char	str_DIMG2[] PROGMEM	= "DIMG2";	// 83
 const char	str_DINO3[] PROGMEM	= "DINO3";	// 84
 
+//Smart Libelium
+const char	str_DM_ST[]		PROGMEM = "DM_ST";	// 85
+const char	str_DM_SP[]		PROGMEM = "DM_SP";	// 86
+const char	str_TX_PWR[]	PROGMEM = "TX_PWR";	// 87
+const char	str_LUX[]		PROGMEM = "LUX";	// 88
+
+//GPS
+const char	str_SPEED[]		PROGMEM = "SPEED_OG";	// 89
+const char	str_COURSE[]	PROGMEM = "COURSE_OG";	// 90
+const char	str_ALTITUDE[]	PROGMEM = "ALT";		// 91
+const char	str_HDOP[]		PROGMEM = "HDOP";		// 92
+const char	str_VDOP[]		PROGMEM = "VDOP";		// 93
+const char	str_PDOP[]		PROGMEM = "PDOP";		// 94
 
 
 
@@ -227,7 +240,7 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_MWIFI,		// 67
 
 	// RFID
-	str_UID,		// 68
+	str_UID,		// 68	
 	str_RB,			// 69
 	
 	// Smart Water
@@ -246,6 +259,19 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_DIK,		// 82
 	str_DIMG2,		// 83
 	str_DINO3,		// 84
+	
+	//Smart Libelium
+	str_DM_ST,		// 85
+	str_DM_SP,		// 86
+	str_TX_PWR,		// 87
+	str_LUX,		// 88
+	
+	str_SPEED,		// 89
+	str_COURSE,		// 90
+	str_ALTITUDE,	// 91
+	str_HDOP,		// 92
+	str_VDOP,		// 93
+	str_PDOP,		// 94
 	
 };
 
@@ -356,7 +382,7 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 
 	// RFID
 	3,	//str_UID		// 68
-	3,	//str_RB		// 69
+	3,	//str_RB		// 69	
 	
 	// Smart Water	
 	2, // str_PH,		// 70
@@ -374,6 +400,21 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_DIK,		// 82
 	2, // str_DIMG2,	// 83
 	2, // str_DINO3,	// 84	
+	
+
+	//Smart Libelium
+	0,	//str_DM_ST,	// 85
+	0,	//str_DM_Sp,	// 86
+	0,	//str_TX_PWR	// 87
+	4,	//str_LUX		// 88
+	
+	//GPS
+	4,	//str_SPEED		// 89
+	4,	//str_COURSE	// 90
+	4,	//str_ALTITUDE	// 91
+	4,	//str_HDOP		// 92
+	4,	//str_VDOP		// 93
+	4,	//str_PDOP		// 94
 	
 };
 
@@ -497,6 +538,17 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1, //str_DIK,		// 82
 	1, //str_DIMG2,		// 83
 	1, //str_DINO3,		// 84
+
+	//Smart Libelium
+	3,	//str_DM_ST,	// 85
+	3,	//str_DM_SP,	// 86
+	1,	//str_TX_PWR	// 87
+	1,	//str_LUX		// 88
+	
+	//GPS
+	1,	//str_SPEED		// 89
+	1,	//str_COURSE	// 90
+	1,	//str_ALTITUDE	// 91
 	
 };
 
@@ -600,7 +652,7 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 
 	// RFID
 	0, //str_UID		// 68
-	0,  //str_RB		// 69
+	0, //str_RB			// 69
 	
 	// Smart Water
 	2, //str_PH,		// 70
@@ -618,7 +670,20 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3, //str_DIK,		// 82
 	3, //str_DIMG2,		// 83
 	3, //str_DINO3,		// 84
+
+	//Smart Libelium
+	0,	//str_DM_ST,	// 85
+	0,	//str_DM_SP,	// 86
+	0,	//str_TX_PWR	// 87
+	3,	//str_LUX		// 88
 	
+	//GPS
+	2,	//str_SPEED		// 89
+	2,	//str_COURSE	// 90
+	2,	//str_ALTITUDE	// 91
+	3,	//str_HDOP		// 92
+	3,	//str_VDOP		// 93
+	3,	//str_PDOP		// 94
 };
 
 #endif

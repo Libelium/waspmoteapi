@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.5
     Design:			David Gascón
     Implementation:	Joaquín Ruiz, Yuri Carmona
 
@@ -125,8 +125,8 @@
 
 //! OTA CONSTANTS //
 #define CHECK_VERSION	// when defined it enables the version cheking
-#define OTA_ver_file	"UPGRADE.TXT" 	// Server's file
-#define NO_OTA			"NO_FILE"		// No file in server pattern indicator
+const char OTA_ver_file[]	= "UPGRADE.TXT";	// Server's file
+const char NO_OTA[] = "NO_FILE";	// No file in server pattern indicator
 
 
 /******************************************************************************
@@ -165,10 +165,10 @@ class WaspWIFI
     long baud_rate;
     
     //! Specifies the 'WRX' variable given by 'show stats' command
-    unsigned long WRX;
+    long int WRX;
     
     //! Specifies the 'WTX' variable given by 'show stats' command
-    unsigned long WTX;
+    long int WTX;
     
     //! Specifies the 'FlwSet' variable given by 'show stats' command
     int flwSet;
@@ -255,6 +255,9 @@ class WaspWIFI
         
     //! Specifies the length of the answer received
     int length;
+    
+    //! Specifies the signal strength
+    int rssi;
 
     // BASIC METHODS //////////////////////////////////////////////////////////
 
@@ -552,11 +555,26 @@ class WaspWIFI
       \param uint8_t opt : specifies if the host is given by an IP address 
       (IP), or is given by a DNS name or webpage (DNS).
       \param char* host : specifies the IP address host or URL host.
+      \param int port : specifies the server port 
       \param char* request : specifies the string that is sent to the 
       remote host.
       \return '1' on success, '0' otherwise.
       */
-    uint8_t getURL(uint8_t opt, char* host, char* request);
+    uint8_t getURL(	uint8_t opt, char* host, char* request); 
+    uint8_t getURL(	uint8_t opt, char* host, int port, char* request);
+					
+	//! Sets the http config and opens an HTTP connection.
+    /*!
+      \param uint8_t opt : specifies if the host is given by an IP address 
+      (IP), or is given by a DNS name or webpage (DNS).
+      \param char* host : specifies the IP address host or URL host.
+      \param int port : specifies the server port 
+      \param char* url : specifies the server URL
+      \param char* body : specifies the body of the request
+      \return '1' on success, '0' otherwise.
+      */		
+    uint8_t getURL(uint8_t opt, char* host, char* url, char* body); 
+    uint8_t getURL(uint8_t opt, char* host, int port, char* url, char* body); 
     
     //! Sets the http config and opens an HTTP connection.
     /*!
@@ -574,6 +592,35 @@ class WaspWIFI
 					char* request, 
 					uint8_t* buffer, 
 					uint16_t len);
+					
+	//! Sets the http config and opens an HTTP connection.
+    /*! This function is used to send Waspmote Frames from Waspmote to Meshlium
+     * using the Sensor Parser of the Meshlium machine so as to store all Data
+     * Frames inside the DataBase of Meshlium.
+     * 
+     * These are the input parameters:
+      \param uint8_t opt : specifies if the host is given by an IP address 
+      (IP), or is given by a DNS name or webpage (DNS).
+      \param char* host : specifies the IP address host or URL host.
+      \param int port : specifies remote port
+      \param char* request : specifies the string that is sent to the 
+      remote host.
+      \param char* buffer : is the frame to be attached to the request sentence
+      \param int len : is the length of the buffer parameter
+      \return '1' on success, '0' otherwise.
+      */				
+	uint8_t sendHTTPframe(uint8_t opt, 
+							char* host, 
+							int port, 
+							uint8_t* frame, 
+							uint16_t len);
+							
+	uint8_t sendHTTPframe(uint8_t opt, 
+							char* host, 
+							int port, 
+							char* request, 
+							uint8_t* frame, 
+							uint16_t len);
     
     //! Sets the configuration and opens a TCP client connection.
     /*!

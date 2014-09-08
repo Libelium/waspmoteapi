@@ -1,8 +1,7 @@
 /*
- *  Modified for Waspmote by D. Cuartielles & A. Bielsa, 2009
- *
  *  Copyright (c) 2008 D. Cuartielles
  *  Copyright (c) 2005-2006 David A. Mellis
+ *  Modified for Waspmote by Libelium, 2014
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -16,6 +15,8 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *  Version:		1.0
+ *  Implementation:	D. Mellis, D. Cuartielles, A. Bielsa, Y. Carmona
  */
  
 
@@ -53,12 +54,10 @@ void setup_watchdog(uint8_t ii) {
 	cli();
   f_wdt = 0;
   uint8_t bb;
-  uint8_t ww;
   if (ii > 9 ) ii=9;
   bb=ii & 7;
   if (ii > 7) bb|= (1<<5);
-  bb|= (1<<WDCE);
-  ww=bb;
+  bb|= (1<<WDCE);  
 
   MCUSR &= ~(1<<WDRF);
   // start timed sequence
@@ -114,7 +113,6 @@ void off_watchdog(void)
 // Must be volatile or gcc will optimize away some uses of it.
 volatile unsigned long timer0_overflow_count;
 volatile unsigned long timer0_millis = 0;
-static unsigned char timer0_fract = 0;
 
 
 ISR(TIMER0_OVF_vect)
@@ -257,46 +255,6 @@ void delayMicroseconds(unsigned int us)
 	SREG = oldSREG;
 }
 
-/* Wait, or highest sleep level possible keeping the
- * timer1 running, since it is the one counting
- * milliseconds even if the system is asleep */
-/*void wait(unsigned long ms)
-{
-	unsigned long timer2_internal_timeout = ms;
-    //timer2_overflow_count = 0;	
-
-    while(timer2_internal_timeout > timer2_overflow_count) {
-    	/* Now is the time to set the sleep mode. In the Atmega8 datasheet
-    	 * http://www.atmel.com/dyn/resources/prod_documents/doc2486.pdf on page 35
-    	 * there is a list of sleep modes which explains which clocks and 
-    	 * wake up sources are available in which sleep modus.
-    	 *
-    	 * In the avr/sleep.h file, the call names of these sleep modus are to be found:
-    	 *
-    	 * The 5 different modes are:
-    	 *     SLEEP_MODE_IDLE         -the least power savings 
-    	 *     SLEEP_MODE_ADC
-    	 *     SLEEP_MODE_PWR_SAVE
-    	 *     SLEEP_MODE_STANDBY
-    	 *     SLEEP_MODE_PWR_DOWN     -the most power savings
-    	 *
-    	 * For now, we want as much power savings as possible, so we 
-    	 * choose the according 
-    	 * sleep modus: SLEEP_MODE_PWR_DOWN
-    	 * 
-    	 */  
-/*    	set_sleep_mode(SLEEP_MODE_PWR_SAVE);   // sleep mode is set here
-	
-    	sleep_enable();          // enables the sleep bit in the mcucr register
-    	                         // so sleep is possible. just a safety pin 
-	
-    	sleep_mode();            // here the device is actually put to sleep!!
-    	                         // THE PROGRAM CONTINUES FROM HERE AFTER WAKING UP
-
-    	sleep_disable();         // first thing after waking from sleep:
-    	                         // disable sleep...
-	}
-}*/
 
 // use the internal watchdog to put the system to sleep at maximum value
 void wait (uint8_t mode) {
@@ -411,53 +369,58 @@ void setIPF_(uint8_t peripheral)
 
     // check which flags have been activated
     // ADC, flag IPADC
-    if (peripheral & IPADC > 0) {
+    if( peripheral & (IPADC > 0) )
+    {
         // turn on the power on the ADC
         // by writing a zero to the register
         cbi(PRR0, PRADC);
 
-	// set a2d reference to AVCC (5 volts)
-	cbi(ADMUX, REFS1);
-	sbi(ADMUX, REFS0);
+		// set a2d reference to AVCC (5 volts)
+		cbi(ADMUX, REFS1);
+		sbi(ADMUX, REFS0);
 
-	// set a2d prescale factor to 128
-	// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
-	// FIXME: this will not work properly for other clock speeds, and
-	// this code should use F_CPU to determine the prescale factor.
-	sbi(ADCSRA, ADPS2);
-	sbi(ADCSRA, ADPS1);
+		// set a2d prescale factor to 128
+		// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
+		// FIXME: this will not work properly for other clock speeds, and
+		// this code should use F_CPU to determine the prescale factor.
+		sbi(ADCSRA, ADPS2);
+		sbi(ADCSRA, ADPS1);
 
         // enable a2d conversions
         sbi(ADCSRA, ADEN);
     }
     // TWI, flag IPTWI
-    if (peripheral & IPTWI > 0) {
+    if( peripheral & (IPTWI > 0) ) 
+    {
         // turn on the power on the TWI
         // by writing a zero to the register
         cbi(PRR0, PRTWI);
 
-	// initialize the TWI
+		// initialize the TWI
         //FIXME: without this reinitialization the peripheral may not work!!
-	//Wire.begin();
+		//Wire.begin();
     }
     // SPI, flag IPSPI (aka SD card)
-    if (peripheral & IPSPI > 0) {
+    if( peripheral & (IPSPI > 0) )
+    {
         // turn on the power on the SPI
         // by writing a zero to the register
         cbi(PRR0, PRSPI);
 
-	// initialize the SD
+		// initialize the SD
         // FIXME: this command is not ready yet, since the library is not finished
-	//SD.begin();
+		//SD.begin();
     }
     // USART0, flag IPUSART0
-    if (peripheral & IPUSART0 > 0) {
+    if( peripheral & (IPUSART0 > 0) )
+    {
         // turn on the power on the USART0
         // by writing a zero to the register
         cbi(PRR0, PRUSART0);
     }
     // USART1, flag IPUSART1
-    if (peripheral & IPUSART1 > 0) {
+    if( peripheral & (IPUSART1 > 0) )
+    {
         // turn on the power on the USART0
         // by writing a zero to the register
         cbi(PRR1, PRUSART1);
@@ -477,7 +440,8 @@ void resetIPF_(uint8_t peripheral)
 
     // check which flags have been de-activated
     // ADC, flag IPADC
-    if (peripheral & IPADC > 0) {
+    if( peripheral & (IPADC > 0))
+    {
         // disable a2d conversions
         cbi(ADCSRA, ADEN);
         // turn off the power on the ADC
@@ -485,25 +449,29 @@ void resetIPF_(uint8_t peripheral)
         sbi(PRR0, PRADC);
     }
     // TWI, flag IPTWI (also known as I2C)
-    if (peripheral & IPTWI > 0) {
+    if( peripheral & (IPTWI > 0) )
+    {
         // turn off the power on the TWI
         // by writing a one to the register
         sbi(PRR0, PRTWI);
     }
     // SPI, flag IPSPI (where the SD card hangs)
-    if (peripheral & IPSPI > 0) {
+    if( peripheral & (IPSPI > 0) )
+    {
         // turn off the power on the SPI
         // by writing a one to the register
         sbi(PRR0, PRSPI);
     }
     // USART0, flag IPUSART0 
-    if (peripheral & IPUSART0 > 0) {
+    if( peripheral & (IPUSART0 > 0) )
+    {
         // turn off the power on the USART0
         // by writing a one to the register
         sbi(PRR0, PRUSART0);
     }
     // USART1, flag IPUSART1 
-    if (peripheral & IPUSART1 > 0) {
+    if( peripheral & (IPUSART1 > 0) )
+    {
         // turn off the power on the USART0
         // by writing a one to the register
         sbi(PRR1, PRUSART1);

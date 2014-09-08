@@ -1,7 +1,6 @@
 /*
- *  Revised for Waspmote by A.Bielsa, 2009
- *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
+ *  Revised for Waspmote by Libelium, 2014
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -15,6 +14,9 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ *  Version:		1.1
+ *  Implementation:	N. Zambetti, A. Bielsa, Y. Carmona
  */
  
 
@@ -23,8 +25,8 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/signal.h>
 #include <compat/twi.h>
+#include <string.h>
 
 #include "WaspVariables.h"
 #ifndef __WASPCONSTANTS_H__
@@ -127,39 +129,52 @@ void twi_setAddress(uint8_t address)
  */
 uint8_t twi_readFrom(uint8_t address, uint8_t* data, uint8_t length)
 {
-  uint8_t i;
+	uint8_t i;
+	uint16_t timeout;
 
-  // ensure data will fit into buffer
-  if(TWI_BUFFER_LENGTH < length){
-    return 1;
-  }
+	// ensure data will fit into buffer
+	if(TWI_BUFFER_LENGTH < length)
+	{
+		return 1;
+	}
+	
+	// init counter
+	timeout = 0;
 
-  // wait until twi is ready, become master receiver
-  while(TWI_READY != twi_state){
-    continue;
-  }
-  twi_state = TWI_MRX;
+	// wait until twi is ready, become master receiver
+	while( (TWI_READY != twi_state) && (timeout < 10000) )
+	{
+		timeout++;
+		continue;
+	}
+	twi_state = TWI_MRX;
 
-  // initialize buffer iteration vars
-  twi_masterBufferIndex = 0;
-  twi_masterBufferLength = length;
+	// initialize buffer iteration vars
+	twi_masterBufferIndex = 0;
+	twi_masterBufferLength = length;
 
-  // build sla+w, slave device address + w bit
-  twi_slarw = TW_READ;
+	// build sla+w, slave device address + w bit
+	twi_slarw = TW_READ;
 	twi_slarw |= address << 1;
 
-  // send start condition
+	// send start condition
 	TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA) | _BV(TWINT) | _BV(TWSTA);
 
+	// init counter
+	timeout = 0;
+	
 	// wait for read operation to complete
-	while(TWI_MRX == twi_state){
-	  continue;
+	while( (TWI_MRX == twi_state) && (timeout < 10000) )
+	{
+		timeout++;
+		continue;
 	}
 
-  // copy twi buffer to data
-  for(i = 0; i < length; ++i){
-    data[i] = twi_masterBuffer[i];
-  }
+	// copy twi buffer to data
+	for(i = 0; i < length; ++i)
+	{
+		data[i] = twi_masterBuffer[i];
+	}
 	
 	return 0;
 }
@@ -176,38 +191,51 @@ uint8_t twi_readFrom(uint8_t address, uint8_t* data, uint8_t length)
  */
 uint8_t twi_writeTo(uint8_t address, uint8_t* data, uint8_t length, uint8_t wait)
 {
-  uint8_t i;
+	uint8_t i;
+	uint16_t timeout;
 
-  // ensure data will fit into buffer
-  if(TWI_BUFFER_LENGTH < length){
-    return 1;
-  }
+	// ensure data will fit into buffer
+	if(TWI_BUFFER_LENGTH < length)
+	{
+		return 1;
+	}
 
-  // wait until twi is ready, become master transmitter
-  while(TWI_READY != twi_state){
-    continue;
-  }
-  twi_state = TWI_MTX;
+	// init counter
+	timeout = 0;
 
-  // initialize buffer iteration vars
-  twi_masterBufferIndex = 0;
-  twi_masterBufferLength = length;
+	// wait until twi is ready, become master transmitter
+	while( (TWI_READY != twi_state) && (timeout < 10000) )
+	{
+		timeout++;
+		continue;
+	}
+	twi_state = TWI_MTX;
+
+	// initialize buffer iteration vars
+	twi_masterBufferIndex = 0;
+	twi_masterBufferLength = length;
   
-  // copy data to twi buffer
-  for(i = 0; i < length; ++i){
-    twi_masterBuffer[i] = data[i];
-  }
+	// copy data to twi buffer
+	for(i = 0; i < length; ++i)
+	{
+		twi_masterBuffer[i] = data[i];
+	}
   
-  // build sla+w, slave device address + w bit
-  twi_slarw = TW_WRITE;
+	// build sla+w, slave device address + w bit
+	twi_slarw = TW_WRITE;
 	twi_slarw |= address << 1;
   
-  // send start condition
+	// send start condition
 	TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA) | _BV(TWINT) | _BV(TWSTA);
 
+	// init counter
+	timeout = 0;
+	
 	// wait for write operation to complete
-	while(wait && (TWI_MTX == twi_state)){
-	  continue;
+	while( wait && (TWI_MTX == twi_state) && (timeout < 10000) )
+	{
+		timeout++;
+		continue;
 	}
 	
 	return 0;
@@ -295,11 +323,16 @@ void twi_stop(void)
   // send stop condition
   TWCR = _BV(TWEN) | _BV(TWIE) | _BV(TWEA) | _BV(TWINT) | _BV(TWSTO);
 
-  // wait for stop condition to be exectued on bus
-  // TWINT is not set after a stop condition!
-  while(TWCR & _BV(TWSTO)){
-    continue;
-  }
+	// init counter
+	uint16_t timeout = 0;
+
+	// wait for stop condition to be exectued on bus
+	// TWINT is not set after a stop condition!
+	while( (TWCR & _BV(TWSTO)) && (timeout < 10000))
+	{
+		timeout++;
+		continue;
+	}
 
   // update twi state
   twi_state = TWI_READY;

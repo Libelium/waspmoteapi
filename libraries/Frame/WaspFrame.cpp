@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -406,7 +406,7 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 		// _serial_id is read in main.cxx
 		snprintf(str, sizeof(str), "%lu",_serial_id);
 		
-		for( int i=0 ; i<strlen(str) ; i++ )
+		for( uint16_t i=0 ; i<strlen(str) ; i++ )
 		{
 			// break if end of string
 			if( str[i] == '\0') 
@@ -569,7 +569,7 @@ void WaspFrame::showFrame(void)
 	
 
 	USB.print(F("HEX:     "));
-	for( int i= 0; i < length ; i++ )
+	for( uint16_t i= 0; i < length ; i++ )
 	{
 		USB.printHex(buffer[i]);
 		USB.print(" ");
@@ -577,7 +577,7 @@ void WaspFrame::showFrame(void)
 	USB.println();
 
 	USB.print(F("String:  "));
-	for( int i= 0; i < length ; i++ )
+	for( uint16_t i= 0; i < length ; i++ )
 	{
 		USB.print(buffer[i]);
 	}
@@ -727,7 +727,7 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long value)
 		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
 		
 		// convert from integer to string
-		itoa( value, str, 10);
+		ultoa( value, str, 10);
 	
 		
 		// check if new sensor value fits in the frame or not
@@ -990,7 +990,7 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
         int len = length-2-strlen(str);
         buffer[len] = (char)type;
         buffer[len+1] = lng;
-		for (int j=len+2;j<length;j++)
+		for (uint16_t j=len+2;j<length;j++)
 		{
 			buffer[j] = str[j-2-len];
 		}
@@ -1027,7 +1027,6 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 
 	char str1[20];
 	char str2[20];
-	int numDecimal=0;
 
 	if(_mode == ASCII)
 	{
@@ -1596,7 +1595,10 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		}
 		else
 		{
-			USB.printf("ERR sensor type & value mismatch, %d vs %d \n",config, typeVal);
+			USB.print(F("ERR sensor type & value mismatch, "));
+			USB.print( config, DEC);
+			USB.print(F(" vs "));			
+			USB.println( typeVal, DEC);			
 			return -1;
 		}
 	}
@@ -1608,7 +1610,10 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		}
 		else
 		{
-			USB.printf("ERR sensor type & value mismatch, %d vs %d \n",config, typeVal);
+			USB.print(F("ERR sensor type & value mismatch, "));
+			USB.print( config, DEC);
+			USB.print(F(" vs "));			
+			USB.println( typeVal, DEC);				
 			return -1;
 		}
 	}

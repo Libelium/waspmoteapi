@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -43,6 +43,12 @@ const char ble_string_06[] PROGMEM = "Scan fail. err: %x\n"; // 6
 const char ble_string_07[] PROGMEM = "Scan params: GAP mode=%u; scan_interval=%u: scan_window=%u; scan_duplicate_filtering=%u; TXPower=%u;\r\n"; // 7
 const char ble_string_08[] PROGMEM = "Device %u; %02x%02x%02x%02x%02x%02x; RSSI:%d; Name:"; //8
 const char ble_string_09[] PROGMEM = "error writing. err: %x\n"; //9
+const char ble_string_10[] PROGMEM = "\t ec: %x\r\n"; //10
+const char ble_string_11[] PROGMEM = "ADCval(HEX):%x\r\n"; //11
+const char ble_string_12[] PROGMEM = "ADCval(DEC):%d\r\n"; //12
+const char ble_string_13[] PROGMEM = "ADCValmV(DEC):%s\r\n"; // 13
+const char ble_string_14[] PROGMEM = "Ta(DEC):%s\r\n"; //14
+const char ble_string_15[] PROGMEM = "Attribute %u Indicated!\r\n"; //15
 
 const char* const table_BLE[] PROGMEM = 	  
 {   
@@ -56,6 +62,12 @@ const char* const table_BLE[] PROGMEM =
 	ble_string_07,		// 7
 	ble_string_08,		// 8
 	ble_string_09,		// 9
+	ble_string_10,		// 10
+	ble_string_11,		// 11
+	ble_string_12,		// 12
+	ble_string_13,		// 13
+	ble_string_14,		// 14
+	ble_string_15,		// 15
 };
 
 /******************************************************************************
@@ -178,7 +190,7 @@ uint16_t WaspBLE::sendCommand(uint8_t LL, uint8_t CID, uint8_t CMD, uint8_t * PL
 	// For frames with no payload, 
 	if (LL > 0)
 	{		
-		for (i = 0; i < LL; i++)
+		for (uint8_t i = 0; i < LL; i++)
 		{
 			command[index++] = PL[i]; 
 		}
@@ -186,7 +198,7 @@ uint16_t WaspBLE::sendCommand(uint8_t LL, uint8_t CID, uint8_t CMD, uint8_t * PL
 		
 	#if BLE_DEBUG>1
 	USB.print(F("Cmd: "));
-	for(i = 0; i < index; i++)
+	for(uint8_t i = 0; i < index; i++)
 	{
 		USB.printHex(command[i]);
 	}
@@ -195,7 +207,7 @@ uint16_t WaspBLE::sendCommand(uint8_t LL, uint8_t CID, uint8_t CMD, uint8_t * PL
 			
 	// send
 	serialFlush(_uartBT);
-    for(i = 0; i < index; i++)
+    for(uint8_t i = 0; i < index; i++)
     {
       printByte(command[i], _uartBT);
     }
@@ -221,7 +233,7 @@ uint16_t WaspBLE::sendCommand(uint8_t * customCommand, uint8_t length)
 	
 	#if BLE_DEBUG>1
 	USB.print(F("Custom Cmd: "));
-	for(i = 0; i < length; i++)
+	for(uint8_t i = 0; i < length; i++)
 	{
 		USB.printHex(customCommand[i]);
 	}
@@ -230,7 +242,7 @@ uint16_t WaspBLE::sendCommand(uint8_t * customCommand, uint8_t length)
 	
 	// send
 	serialFlush(_uartBT);
-    for(i = 0; i < length; i++)
+    for(uint8_t i = 0; i < length; i++)
     {
 		printByte(customCommand[i], _uartBT);
     }
@@ -284,7 +296,7 @@ uint16_t WaspBLE::readCommandAnswer()
 uint16_t WaspBLE::readCommandAnswer(uint8_t answerLength, uint8_t ExpectedErrCode) 
 {	
 	memset(answer, 0x00, sizeof(answer) );
-	i = 0;
+	uint8_t i = 0;
 	// while pending data or data available on RX buffer. 
 	// Added a timeout to avoid stopping the code.
 	unsigned long previous = millis();
@@ -337,7 +349,9 @@ uint16_t WaspBLE::readCommandAnswer(uint8_t answerLength, uint8_t ExpectedErrCod
 	{
 		USB.printHex(answer[a]);
 	}
-	USB.printf("\t ec: %x\r\n", errorCode);
+	char message[30]= "";
+	strcpy_P(message, (char*)pgm_read_word(&(table_BLE[10])));
+	USB.printf(message,errorCode);
 	#endif
 	
 	return errorCode;
@@ -428,7 +442,7 @@ uint8_t WaspBLE::parseScanEvent(uint8_t friendlyName)
 	// | MAC | RSSI | packet type | data |  
 	#if BLE_DEBUG > 0
 	// copy "%02x%02x%02x%02x%02x%02x; %d; %u;\r\n" from flash memory
-	char message[50];
+	char message[50] = "";
 	strcpy_P(message, (char*)pgm_read_word(&(table_BLE[2])));
 	USB.printf(message,BLEDev.mac[0],BLEDev.mac[1],BLEDev.mac[2],BLEDev.mac[3],BLEDev.mac[4],BLEDev.mac[5],BLEDev.rssi, event[5]);
 	USB.print(F("BLEDev.advData:"));
@@ -470,7 +484,7 @@ uint8_t WaspBLE::parseName()
 	memset(BLEDev.friendlyName,0x00,sizeof(BLEDev.friendlyName));
 	
 	// look inside BLEDev.advData for the friendly name field.
-	i = 0; 
+	uint8_t i = 0; 
 	advLength = BLEDev.advData[i++];
 			
 	while ((!nameFound) && (i < advLength))
@@ -589,7 +603,7 @@ uint16_t WaspBLE::saveDevice(uint8_t nameFlag)
 		
 	#if BLE_DEBUG > 1
 	// copy from flash "D:%x%x....
-	char message[30];
+	char message[30]= "";
 	strcpy_P(message, (char*)pgm_read_word(&(table_BLE[3])));
 	USB.printf(message, 
 		BLEDev.mac[0],
@@ -770,7 +784,7 @@ void WaspBLE::OFF()
 */
 uint16_t WaspBLE::setTXPower(uint8_t power)
 {
-	char buffer[10];
+	char buffer[10] ="";
 	
 	// limit power to effective range.
 	if (power > 15)
@@ -787,7 +801,7 @@ uint16_t WaspBLE::setTXPower(uint8_t power)
 	Utils.hex2str(answer,buffer,4);
 	
 	// copy "0000070c" from flash memory
-	char answerOK[10];
+	char answerOK[10] ="";
 	strcpy_P(answerOK, (char*)pgm_read_word(&(table_BLE[0])));
 	
 	if (strcmp(buffer,answerOK) == 0)
@@ -923,7 +937,7 @@ uint16_t WaspBLE::scanDevice(uint8_t* Mac, uint8_t maxTime, uint8_t TXPower)
 	{
 		#if BLE_DEBUG > 0
 		// copy from flash "Scan fail. err: %x\n"
-		char message[25];
+		char message[25] ="";
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[6]))); 
 		USB.printf(message, errorCode);
 		#endif
@@ -965,7 +979,7 @@ uint16_t WaspBLE::scanDevice(uint8_t* Mac, uint8_t maxTime, uint8_t TXPower)
 	{
 		#if BLE_DEBUG > 0
 		// copy "Stop fail. err: %x\n" form flash
-		char message[25];
+		char message[25] ="";
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[5]))); 
 		USB.printf(message, errorCode);
 		#endif
@@ -1038,7 +1052,7 @@ uint16_t WaspBLE::scanNetwork(uint8_t time)
 	{
 		#if BLE_DEBUG > 0
 		// copy from flash "Scan fail. err: %x\n"
-		char message[25];
+		char message[25] ="";
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[6]))); 
 		USB.printf(message, errorCode);
 		#endif
@@ -1134,7 +1148,7 @@ uint16_t WaspBLE::scanNetworkLimited(int16_t MaxDevices)
 	{
 		#if BLE_DEBUG > 0
 		// copy from flash "Scan fail. err: %x\n"
-		char message[25];
+		char message[25] ="";
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[6]))); 
 		USB.printf(message, errorCode);
 		#endif
@@ -1237,7 +1251,7 @@ uint8_t WaspBLE::scanNetworkName(uint8_t time)
 	{
 		#if BLE_DEBUG > 0
 		// copy from flash "Scan fail. err: %x\n"
-		char message[25];
+		char message[25] ="";
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[6]))); 
 		USB.printf(message, errorCode);
 		#endif
@@ -1593,7 +1607,7 @@ uint16_t WaspBLE::setScanningParameters(uint8_t active)
 */
 void  WaspBLE::getScanningParameters()
 {	
-	char message[120];
+	char message[120] ="";
 	// Copy form flash "Scan params: GAP mode ....."
 	strcpy_P(message, (char*)pgm_read_word(&(table_BLE[7]))); 
 	USB.printf(message, GAP_discover_mode, scan_interval, scan_window, scan_duplicate_filtering, TXPower);
@@ -1677,15 +1691,26 @@ float WaspBLE::getTemp()
 		temperature = (ADCValuemV - 0.800) / 2.7259;
 		temperature = temperature * 1000;
 		#if BLE_DEBUG > 0
-		char a[20];
-		USB.printf("ADCval(HEX):%x\r\n",ADCValue);
-		USB.printf("ADCval(DEC):%d\r\n",ADCValue);
+		char a[20] ="";
+		char message[40] ="";
+		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[11])));
+		USB.printf(message,ADCValue);
+		memset(message, 0x00, sizeof(message));
+		
+		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[12])));
+		USB.printf(message,ADCValue);
+		memset(message, 0x00, sizeof(message));
+		
 		Utils.float2String(ADCValuemV,a,4);
-		USB.printf("ADCValmV(DEC):%s\r\n",a);
+		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[13])));
+		USB.printf(message,a);
+		memset(message, 0x00, sizeof(message));
+		
 		Utils.float2String(temperature,a,4);
-		USB.printf("Ta(DEC):%s\r\n",a);
-		#endif								
-										
+		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[14])));
+		USB.printf(message,a);
+		#endif
+
 		return temperature;
 	}
 	else
@@ -1727,8 +1752,9 @@ int16_t WaspBLE::ADCRead(uint8_t input, uint8_t decimation, uint8_t reference_se
 			ADCValue = ((uint16_t)event[6] << 8) | event[5];
 		
 			#if BLE_DEBUG > 0
-			//USB.printf("ADC(HEX):%x\r\n",ADCValue);
-			USB.printf("ADC(DEC):%d\r\n",ADCValue);
+			char message[40] ="";
+			strcpy(message, (char*)pgm_read_word(&(table_BLE[12])));
+			USB.printf(message,ADCValue);
 			#endif
 						
 			return ADCValue;
@@ -1800,19 +1826,19 @@ uint8_t WaspBLE::printInquiry()
 		}
 						
 		// read device from EEPROM MAC, RSSI and friendly name
-		for (i = 0; i < 6; i++)
+		for (uint8_t i = 0; i < 6; i++)
 		{
 			BLEDev.mac[i] = Utils.readEEPROM(BLEAddr++);
 		}
 		BLEDev.rssi = Utils.readEEPROM(BLEAddr++);
 		
-		for (i = 0; i < 31; i++)
+		for (uint8_t i = 0; i < 31; i++)
 		{
 			BLEDev.friendlyName[i] = Utils.readEEPROM(BLEAddr++);
 		}
 				
 		// Copy form flash " "Device %u; %02x%02x%02x%0...
-		char message[80];
+		char message[80] ="";
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[8]))); 
 		USB.printf(message, deviceCounter,
 		BLEDev.mac[0],
@@ -1884,7 +1910,7 @@ uint16_t WaspBLE::whiteListAppend(char * BLEAddress)
 	uint8_t payload[7];
 	
 	uint8_t b = 5;
-	for (i = 0 ; i < 6 ; i++)
+	for (uint8_t i = 0 ; i < 6 ; i++)
 	{
 		payload[i] = macByteArray[b];
 		b--;
@@ -1946,7 +1972,7 @@ uint16_t WaspBLE::whiteListRemove(char * BLEAddress)
 	uint8_t payload[7];
 	
 	uint8_t b = 5;
-	for (i = 0 ; i < 6 ; i++)
+	for (uint8_t i = 0 ; i < 6 ; i++)
 	{
 		payload[i] = macByteArray[b];
 		b--;
@@ -2203,6 +2229,7 @@ uint8_t WaspBLE::wakeUp()
 */
 uint8_t WaspBLE::waitEvent(unsigned long time)
 {	
+	uint8_t i = 0;	
 	memset(event, 0x00, sizeof(event) );
 		
 	// while pending data or data available on RX buffer. 
@@ -2485,11 +2512,9 @@ uint16_t WaspBLE::readLocalAttribute(uint16_t handle)
  Parameters: 
  Values: 
 */
-// read an attribute from the local database of the BLE device.
-// return 0 if OK, errorCode otherwise.
 uint16_t WaspBLE::readLocalAttribute(uint16_t handle, uint16_t offset)
 {
-	uint16_t aux = 0;
+	uint8_t aux = 0;
 	uint8_t payload[4];
 	payload[0] = (uint8_t)(handle & 0x00FF);
 	payload[1] = (uint8_t)((handle & 0xFF00) >> 8);
@@ -2517,16 +2542,17 @@ uint16_t WaspBLE::readLocalAttribute(uint16_t handle, uint16_t offset)
 		{
 			aux = 32;
 		}
+		attributeValue[0] = aux;
 		
-		for (i = 0; i < aux; i++)
+		for (uint8_t i = 1; i < aux+1; i++)
 		{
-			attributeValue[i] = answer[i+11];
+			attributeValue[i] = answer[i+10];
 		}
 	}
 	
 	#if BLE_DEBUG>1
 	USB.print(F("read local att: "));
-	for(i = 0; i < aux; i++)
+	for(uint8_t i = 0; i < aux; i++)
 	{
 		USB.printHex(attributeValue[i]);
 	}
@@ -2621,14 +2647,14 @@ uint16_t WaspBLE::writeLocalAttribute(uint16_t handle, uint8_t indicate, uint8_t
 	payload[2] = 0;
 	payload[3] = length;
 	
-	for (i = 0; i<length; i++)
+	for (uint8_t i = 0; i<length; i++)
 	{
 		payload[i+4] = data[i];
 	}
 		
 	#if BLE_DEBUG>1
 	USB.print(F("write local att: "));
-	for(i = 0; i < length; i++)
+	for(uint8_t i = 0; i < length; i++)
 	{
 		USB.printHex(payload[i+4]);
 	}
@@ -2647,7 +2673,9 @@ uint16_t WaspBLE::writeLocalAttribute(uint16_t handle, uint8_t indicate, uint8_t
 		{
 			#if BLE_DEBUG>1
 			uint16_t handler = ((uint16_t)event[6] << 8) | event[5];
-            USB.printf("Attribute %u Indicated!\r\n",handler);
+			char message[40] ="";
+			strcpy(message, (char*)pgm_read_word(&(table_BLE[15])));
+            USB.printf(message, handler);
 			#endif
 			return 1;	
 		}
@@ -2671,6 +2699,7 @@ uint16_t WaspBLE::attributeRead(uint8_t connection_handle, uint16_t att_handle)
 	memset(attributeValue, 0x00, sizeof(attributeValue));
 	
 	uint16_t aux;
+	uint8_t aux2;
 	uint8_t payload[3];
 	payload[0] = connection_handle;
 	payload[1] = (uint8_t)(att_handle & 0x00FF);
@@ -2695,7 +2724,7 @@ uint16_t WaspBLE::attributeRead(uint8_t connection_handle, uint16_t att_handle)
 	}
 	else
 	{
-		if (flag =! BLE_EVENT_ATTCLIENT_ATTRIBUTE_VALUE)
+		if (flag != BLE_EVENT_ATTCLIENT_ATTRIBUTE_VALUE)
 		{
 			return flag;
 		}
@@ -2709,22 +2738,22 @@ uint16_t WaspBLE::attributeRead(uint8_t connection_handle, uint16_t att_handle)
 		
 		// save first byte as length of the value.  22 bytes max
 		// Value is stored from possition 
-		aux = event[8];
+		aux2 = event[8];
 		
-		if (aux > 22)
+		if (aux2 > 22)
 		{
-			aux = 22;
+			aux2 = 22;
 		}
 		
 		// If datalength is 0, then write a zero ascii manually
-		if (aux == 0)
+		if (aux2 == 0)
 		{			
 			attributeValue[0] = 1;
 			attributeValue[1] = 0x30;
 		}
 		else
 		{
-			for (i = 0; i < aux+1; i++)
+			for (uint8_t i = 0; i < aux2+1; i++)
 			{
 				attributeValue[i] = event[i+8];
 			}
@@ -2781,7 +2810,7 @@ uint16_t WaspBLE::attributeWrite(uint8_t connection, uint16_t atthandle, uint8_t
 	
 	payload[3] = length;
 	
-	for(i = 0; i < length; i++)
+	for(uint8_t i = 0; i < length; i++)
 	{
 		payload[i+4] = data[i];
 	}
@@ -2793,7 +2822,7 @@ uint16_t WaspBLE::attributeWrite(uint8_t connection, uint16_t atthandle, uint8_t
 	{
 		#if BLE_DEBUG > 0
 		// copy from flash "error writing. err: %x\n"
-		char message[30];
+		char message[30] ="";
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[9]))); 
 		USB.printf(message, errorCode);
 		#endif

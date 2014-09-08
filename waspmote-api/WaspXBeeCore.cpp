@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -134,7 +134,7 @@ const char* const table_CORE[] PROGMEM=
 /// table_OTA //////////////////////////////////////////////////////////////////
 
 const char NEW_FIRMWARE_MESSAGE_OK[] 		PROGMEM	="PROGRAM RECEIVED OK$$$$$$$$$$$$$";
-const char NEW_FIRMWARE_MESSAGE_ERROR[] 		PROGMEM	="PROGRAM RECEIVED ERROR$$$$$$$$$$";
+const char NEW_FIRMWARE_MESSAGE_ERROR[] 	PROGMEM	="PROGRAM RECEIVED ERROR$$$$$$$$$$";
 const char UPLOAD_FIRWARE_MESSAGE_OK[] 		PROGMEM	="START WITH FIRMWARE OK$$$$$$$$$$$$$$$$$$$$$$$$$$";
 const char UPLOAD_FIRWARE_MESSAGE_ERROR[] 	PROGMEM ="START WITH FIRMWARE ERROR$$$$$$$$$$$$$$$$$$$$$$$";
 const char REQUEST_BOOTLIST_MESSAGE[] 		PROGMEM	="READ BOOTLIST$$$$$$$$$$$$$$$$$";
@@ -144,6 +144,7 @@ const char RESET_MESSAGE[] 					PROGMEM	="RESTARTING$$$$$$$$$$$$$$$$$$$$$$";
 const char DELETE_MESSAGE_OK[] 				PROGMEM	="FIRMWARE DELETED$$$$$$$$$$$$$$$$";
 const char DELETE_MESSAGE_ERROR[] 			PROGMEM	="FIRMWARE NOT DELETED$$$$$$$$$$$$";
 const char START_SECTOR[] 					PROGMEM	="FIRMWARE_FILE_FOR_WASPMOTE######";
+const char FILEAUX[] 						PROGMEM ="FILEAUX"; 	
 
 
 const char* const table_OTA[] PROGMEM= 	  
@@ -158,7 +159,8 @@ const char* const table_OTA[] PROGMEM=
 	RESET_MESSAGE,					// 7
 	DELETE_MESSAGE_OK,				// 8
 	DELETE_MESSAGE_ERROR,			// 9
-	START_SECTOR					// 10
+	START_SECTOR,					// 10
+	FILEAUX,						// 11	
 };
 
 
@@ -482,17 +484,19 @@ uint8_t WaspXBeeCore::setPAN(uint8_t* PANID)
     {
         if( (protocol==XBEE_802_15_4) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) ) 
         {
-            for(it=0;it<2;it++)
-            {
-                PAN_ID[it]=PANID[it];
-            }
+			PAN_ID[0] = PANID[0];
+			PAN_ID[1] = PANID[1];           
         }
         if(protocol==ZIGBEE) 
         {
-            for(it=0;it<8;it++)
-            {
-                PAN_ID[it]=PANID[it];
-            }
+			PAN_ID[0] = PANID[0];
+			PAN_ID[1] = PANID[1]; 
+			PAN_ID[2] = PANID[2];
+			PAN_ID[3] = PANID[3]; 
+			PAN_ID[4] = PANID[4];
+			PAN_ID[5] = PANID[5]; 
+			PAN_ID[6] = PANID[6];
+			PAN_ID[7] = PANID[7];        
         }
     } 
     return error;
@@ -525,17 +529,19 @@ uint8_t WaspXBeeCore::getPAN()
     {
         if( (protocol==XBEE_802_15_4) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) ) 
         {
-            for(it=0;it<2;it++)
-            {
-                PAN_ID[it]=data[it];
-            }
+			PAN_ID[0] = data[0];
+			PAN_ID[1] = data[1];          
         }
         if(protocol==ZIGBEE) 
         {
-            for(it=0;it<8;it++)
-            {
-                PAN_ID[it]=data[it];
-            }
+			PAN_ID[0] = data[0];
+			PAN_ID[1] = data[1];  
+			PAN_ID[2] = data[2];
+			PAN_ID[3] = data[3];  
+			PAN_ID[4] = data[4];
+			PAN_ID[5] = data[5];  
+			PAN_ID[6] = data[6];
+			PAN_ID[7] = data[7];           
         }
     } 
     return error;
@@ -809,25 +815,24 @@ uint8_t WaspXBeeCore::setNodeIdentifier(const char* node)
     NI[4]=0x52;
     NI[5]=0x4E;
     NI[6]=0x49;
-    int8_t error=2;
-    uint8_t ByteIN[20];
-    
-    
+    int8_t error=2;       
     uint8_t counter=0;
-    uint8_t checksum=0; 
-
-
-    it=0;
-    error_AT=2;
-    while( (node[it]!='\0') )
+    uint8_t checksum=0;
+	int index = 0;
+	
+	// init flag
+    error_AT = 2;
+    
+    while( (node[index]!='\0') )
     {
-        NI[it+7]=uint8_t(node[it]);
-        it++;
+        NI[index+7] = uint8_t(node[index]);
+        index++;
     }
-    NI[2]=4+it;
-    for(it=3;it<(7+(NI[2]-4));it++)
+    NI[2] = 4+index;
+    
+    for(int i=3; i<(7+(NI[2]-4));i++)
     {
-        checksum=checksum+NI[it];
+        checksum=checksum+NI[i];
     }
     while( (checksum>255))
     {
@@ -849,9 +854,9 @@ uint8_t WaspXBeeCore::setNodeIdentifier(const char* node)
 
     if(error==0)
     {
-        for(it=0;it<NI[2]-4;it++)
+        for(int i=0 ; i<NI[2]-4 ; i++)
         {
-            nodeID[it]=node[it];
+            nodeID[i] = node[i];
         }
     }
 
@@ -881,9 +886,9 @@ uint8_t WaspXBeeCore::getNodeIdentifier()
     
     if(!error)
     {
-        for(it=0;it<data_length;it++)
+        for( uint16_t i=0 ; i<data_length ; i++)
         {
-            nodeID[it]=char(data[it]);
+            nodeID[i] = char(data[i]);
         }
     }
     return error;
@@ -909,29 +914,26 @@ uint8_t WaspXBeeCore::scanNetwork(const char* node)
     ND[4]=0x52;
     ND[5]=0x4E;
     ND[6]=0x44;
-    int8_t error=2;
-    uint8_t ByteIN[20];
+    int8_t error = 2;    
+    uint8_t counter = 0;
+    uint16_t checksum = 0;   
+    int index = 0;
     
-    uint8_t counter=0;
-    uint16_t checksum=0;
-    uint16_t interval=20000;
+    // ini flag
+    error_AT = 2;
+    totalScannedBrothers = 0;
+   
+    while( (node[index]!='\0') )
+    {
+        ND[index+7] = uint8_t(node[index]);
+        index++;
+    }
+    ND[2]=4+index;
     
-    error_AT=2;
-    totalScannedBrothers=0;
-    if( (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) )
+    
+    for(int i=3 ; i<(7+(ND[2]-4)) ; i++)
     {
-        interval=14000;
-    }
-    it=0;
-    while( (node[it]!='\0') )
-    {
-        ND[it+7]=uint8_t(node[it]);
-        it++;
-    }
-    ND[2]=4+it;
-    for(it=3;it<(7+(ND[2]-4));it++)
-    {
-        checksum=checksum+ND[it];
+        checksum=checksum+ND[i];
     }
     while( (checksum>255))
     {
@@ -1154,28 +1156,28 @@ uint8_t WaspXBeeCore::nodeSearch(const char* node, uint8_t* address)
     DN[4]=0x52;
     DN[5]=0x44;
     DN[6]=0x4E;
-    int8_t error=2;
-    
+    int8_t error=2;    
     uint8_t counter=0;
     uint8_t checksum=0; 
-
+    int index=0;
+    
+	// init flag
     error_AT=2;
   
-	// set string with node name to AT command
-    it=0;
-    while( (node[it]!='\0') )
+	// set string with node name to AT command   
+    while( (node[index]!='\0') )
     {
-        DN[it+7]=uint8_t(node[it]);
-        it++;
+        DN[index+7]=uint8_t(node[index]);
+        index++;
     }
     
     // set length field in AT command
-    DN[2]=4+it;
+    DN[2]=4+index;
     
     // set checksum to AT command
-    for(it=3;it<(7+(DN[2]-4));it++)
+    for(int i=3 ; i<(7+(DN[2]-4)) ; i++)
     {
-        checksum=checksum+DN[it];
+        checksum=checksum+DN[i];
     }
     while( (checksum>255))
     {
@@ -1313,10 +1315,8 @@ uint8_t WaspXBeeCore::getScanningChannels()
     }
     if(error==0)
     {
-        for(it=0;it<2;it++)
-        {
-            scanChannels[it]=data[it];
-        }
+		scanChannels[0]=data[0];
+		scanChannels[1]=data[1];     
     }
     return error;
 }
@@ -1937,9 +1937,9 @@ uint8_t WaspXBeeCore::setDurationEnergyChannels(uint8_t duration)
     {
         if(protocol==XBEE_802_15_4)
         {
-            for(it=0;it<data_length;it++)
+            for( uint16_t i=0 ; i<data_length ; i++)
             {
-                energyChannel[it]=data[it];
+                energyChannel[i] = data[i];
             }
         }
         if(protocol==ZIGBEE)
@@ -2023,59 +2023,59 @@ uint8_t WaspXBeeCore::sendCommandAT(const char* atcommand)
     AT[3]=0x08;
     AT[4]=0x52;
     int8_t error=2;
-    uint8_t it2=0;
-    
-    uint8_t ByteIN[120];
+    int index = 0;
+    uint8_t it2=0;    
     uint8_t counter=0;
     uint8_t checksum=0; 
     uint16_t length=0;
     
-    it=0;
+    // init flag
     error_AT=2;
+    
     while( atcommand[it2]!='#' )
     {
-        if( it>=2 )
+        if( index>=2 )
         {
             if( atcommand[it2+1]!='#' )
             {
-                AT[it+5]=Utils.converter(atcommand[2*(it-1)],atcommand[2*(it-1)+1]);
+                AT[index+5]=Utils.converter(atcommand[2*(index-1)],atcommand[2*(index-1)+1]);
                 it2+=2;
             }
             else
             {
                 switch( atcommand[it2] )
                 {
-                    case '0':	AT[it+5]=0;
+                    case '0':	AT[index+5]=0;
                     break;
-                    case '1':	AT[it+5]=1;
+                    case '1':	AT[index+5]=1;
                     break;
-                    case '2':	AT[it+5]=2;
+                    case '2':	AT[index+5]=2;
                     break;
-                    case '3':	AT[it+5]=3;
+                    case '3':	AT[index+5]=3;
                     break;
-                    case '4':	AT[it+5]=4;
+                    case '4':	AT[index+5]=4;
                     break;
-                    case '5':	AT[it+5]=5;
+                    case '5':	AT[index+5]=5;
                     break;
-                    case '6':	AT[it+5]=6;
+                    case '6':	AT[index+5]=6;
                     break;
-                    case '7':	AT[it+5]=7;
+                    case '7':	AT[index+5]=7;
                     break;
-                    case '8':	AT[it+5]=8;
+                    case '8':	AT[index+5]=8;
                     break;
-                    case '9':	AT[it+5]=9;
+                    case '9':	AT[index+5]=9;
                     break;
-                    case 'A':	AT[it+5]='A';
+                    case 'A':	AT[index+5]='A';
                     break;
-                    case 'B':	AT[it+5]='B';
+                    case 'B':	AT[index+5]='B';
                     break;
-                    case 'C':	AT[it+5]='C';
+                    case 'C':	AT[index+5]='C';
                     break;
-                    case 'D':	AT[it+5]='D';
+                    case 'D':	AT[index+5]='D';
                     break;
-                    case 'E':	AT[it+5]='E';
+                    case 'E':	AT[index+5]='E';
                     break;
-                    case 'F':	AT[it+5]='F';
+                    case 'F':	AT[index+5]='F';
                     break;
                 }
                 it2++;
@@ -2083,17 +2083,17 @@ uint8_t WaspXBeeCore::sendCommandAT(const char* atcommand)
         }
         else
         {
-            AT[it+5]=atcommand[it];
+            AT[index+5]=atcommand[index];
             it2++;
         }
-        it++;
+        index++;
     } 
-    length=it;
+    length = index;
     
     AT[2]=2+length;
-    for(it=3;it<(5+length);it++)
+    for(uint16_t i=3 ; i<(5+length) ; i++)
     {
-        checksum=checksum+AT[it];
+        checksum=checksum+AT[i];
     }
     while( (checksum>255))
     {
@@ -2117,9 +2117,9 @@ uint8_t WaspXBeeCore::sendCommandAT(const char* atcommand)
     {
         if(data_length>0)
         {
-            for(it=0;it<data_length;it++)
+            for(uint16_t i=0 ; i<data_length ; i++)
             {
-                commandAT[it]=data[it];
+                commandAT[i]=data[i];
             }
         }
         else
@@ -2344,13 +2344,9 @@ uint8_t WaspXBeeCore::wake()
  */
 uint8_t WaspXBeeCore::sendXBee(struct packetXBee* packet)
 {
-    Utils.setMuxSocket0();    
-    uint8_t estadoSend=0;
+    Utils.setMuxSocket0();  
     uint8_t maxPayload=0;
-    uint16_t aux3=0;
     int8_t error=2;
-    uint8_t type=0;
-    uint8_t header=0;
 
 	// set general counter to zero
     it=0;
@@ -2694,7 +2690,9 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
     uint8_t i=0;
     uint8_t j=0;
     char aux[2];
-	
+    
+    // make sure the MAC address is defined with upper case letters
+    strupr((char*)address);	
 
     if( type==MAC_TYPE )
     {
@@ -2848,7 +2846,9 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
     uint8_t i=0;
     uint8_t j=0;
     char aux[2];
-	
+    
+    // make sure the MAC address is defined with upper case letters
+    strupr((char*)address);
 
 	if( type==MAC_TYPE )
 	{
@@ -3125,26 +3125,14 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
 */
 int8_t WaspXBeeCore::readXBee(uint8_t* data)
 {
-    uint16_t aux=0;
-    uint16_t aux2=0;
-    int8_t error=2;
-    uint16_t cont3=0;
-    uint8_t header=0;
-    uint16_t temp=0;
-    uint8_t index1=0;
-    uint8_t index2=0;
-    long time=0;
+	uint8_t header=0;      
     uint8_t finishIndex=0; 
        
-	#if DEBUG
-    USB.println(F("new packet"));
+	#if DEBUG_XBEE > 1
+    USB.println(F("[debug] new packet"));
 	#endif
-    	    
-	// initialize variables to zero
-    temp=0;   
-    aux=0;
-    
-    // increment "pos" packet counter
+	
+	// increment "pos" packet counter
     pos++;
     
     // get next index to complete the following packet_finished 
@@ -3231,7 +3219,7 @@ int8_t WaspXBeeCore::readXBee(uint8_t* data)
 
 		
 			// copy DATA field to packet fragment structure
-			for( int j=0 ; j<packet_finished[finishIndex]->data_length ; j++ )
+			for( uint16_t j=0 ; j<packet_finished[finishIndex]->data_length ; j++ )
 			{     
 				packet_finished[finishIndex]->data[j] = char(data[j+header]);
 			}
@@ -3287,7 +3275,7 @@ int8_t WaspXBeeCore::readXBee(uint8_t* data)
 			packet_finished[finishIndex]->data_length = data_length - header;
 				
 			// copy DATA field to packet fragment structure
-			for( int j=0 ; j<packet_finished[finishIndex]->data_length ; j++ )
+			for( uint16_t j=0 ; j<packet_finished[finishIndex]->data_length ; j++ )
 			{     
 				packet_finished[finishIndex]->data[j] = char(data[j+header]);
 			}		
@@ -3344,7 +3332,7 @@ int8_t WaspXBeeCore::readXBee(uint8_t* data)
 			packet_finished[finishIndex]->data_length=data_length-header;
 			
 			// copy DATA field to packet fragment structure
-			for( int j=0 ; j < packet_finished[finishIndex]->data_length ; j++ )
+			for( uint16_t j=0 ; j < packet_finished[finishIndex]->data_length ; j++ )
 			{     
 				packet_finished[finishIndex]->data[j] = char(data[j+header]);
 			}	
@@ -3414,7 +3402,7 @@ int8_t WaspXBeeCore::readXBee(uint8_t* data)
 			packet_finished[finishIndex]->data_length = data_length-header;
 		
 			// copy DATA field to packet fragment structure
-			for( int j=0 ; j < packet_finished[finishIndex]->data_length ; j++ )
+			for( uint16_t j=0 ; j < packet_finished[finishIndex]->data_length ; j++ )
 			{     
 				packet_finished[finishIndex]->data[j] = char(data[j+header]);
 			}
@@ -3558,30 +3546,30 @@ void WaspXBeeCore::gen_data(const char* data, uint8_t* param)
 	
     if(inc==24) 
     {
-        for(it=0;it<16;it++)
+        for( int i=0 ; i<16 ; i++)
         {
-            command[inc-17+it]=param[it];
+            command[inc-17+i]=param[i];
         }
     }
     else if(inc==16) 
     {
-        for(it=0;it<8;it++)
+        for( int i=0 ; i<8 ; i++)
         {
-            command[inc-9+it]=param[it];
+            command[inc-9+i]=param[i];
         }
     }
     else if(inc==11)
     {
-        for(it=0;it<3;it++)
+        for(int i=0 ; i<3 ; i++)
         {
-            command[inc-4+it]=param[it];
+            command[inc-4+i]=param[i];
         }
     }
     else if(inc==10)
     {
-        for(it=0;it<2;it++)
+        for(int i=0 ; i<2 ; i++)
         {
-            command[inc-3+it]=param[it];
+            command[inc-3+i]=param[i];
         }
     }
     else command[inc-2]=param[0];
@@ -3655,7 +3643,16 @@ uint8_t WaspXBeeCore::gen_send(const char* data)
 		
 	// generate frame with possible escaped characters
 	gen_escaped_frame(TX, command, &length);
-	   	
+
+	#if DEBUG_XBEE > 1
+	USB.print(F("[debug] TX:"));
+	for(int i = 0; i < length; i++)
+	{
+		USB.printHex(TX[i]);
+	}
+	USB.println();
+	#endif
+
    	// switch MUX in case SOCKET1 is used
 	if( uart==SOCKET1 )
 	{
@@ -3691,7 +3688,7 @@ void WaspXBeeCore::genDataPayload(	struct packetXBee* _packet,
 {
 	
 	// set data field
-	for(int j=0 ; j<_packet->data_length ; j++) 
+	for( uint16_t j=0 ; j<_packet->data_length ; j++) 
 	{
 		TX_array[start_pos+j]=uint8_t(_packet->data[j]);
 	}
@@ -3868,8 +3865,8 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
     uint16_t length_mes=0;
     uint16_t length_prev=0;
     int8_t error=2;
-    long interval=50;
-    long intervalMAX=40000;
+    unsigned long interval=50;
+    unsigned long intervalMAX=40000;
     uint8_t good_frame=0;
     uint8_t maxFrame=30;
 	
@@ -3980,6 +3977,15 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
 	// Store number of received bytes in "num_data"	
     num_data=i;
     i=1;  
+    
+	#if DEBUG_XBEE > 1
+	USB.print(F("[debug] RX:"));
+    for(uint16_t i = 0; i < num_data ; i++)
+	{
+		USB.printHex(memory[i]);
+	}
+	USB.println();
+	#endif
 	
 	// If some corrupted frame has appeared we jump it
     if( memory[0]!=0x7E )
@@ -4260,7 +4266,7 @@ uint8_t WaspXBeeCore::txStatusResponse()
     uint8_t status=0;
     uint16_t num_TX=0;
     uint8_t num_esc=0;
-    int16_t interval=2000;
+    uint16_t interval=2000;
     uint8_t num_mes=0;
     uint16_t i=1;
     uint16_t length_mes=0;
@@ -4318,7 +4324,8 @@ uint8_t WaspXBeeCore::txStatusResponse()
 			
 			// Discard any non-TX status frame which are determined by a frame 
 			// type which may be 0x89(TX Status) or 0x8A(Modem Status)
-            if( (counter3 == 4 + status*6 + undesired) && undesired != 1  ) 
+            if( (counter3 == (4 + (uint16_t)status*6 + undesired)) 
+				&& (undesired != 1)  ) 
             {
                 if( (ByteIN[counter3-1]!= 0x89) && (ByteIN[counter3-1]!=0x8A) )
 				{
@@ -4350,7 +4357,7 @@ uint8_t WaspXBeeCore::txStatusResponse()
              * |______|_____|_____|____________|_________|__________|
              *    0      1     2        3           4         5
              */        	
-        	if( (ByteIN[counter3-1] == 0x8A) && (counter3 == (4+status*6)) )
+        	if( (ByteIN[counter3-1] == 0x8A) && (counter3 == (4+(uint16_t)status*6)) )
         	{
 				// increment in 6Bytes 'numberBytes'
         	    numberBytes+=6;
@@ -4389,6 +4396,15 @@ uint8_t WaspXBeeCore::txStatusResponse()
     // Store number of read bytes
     num_TX=counter3;
     counter3=0;
+    
+	#if DEBUG_XBEE > 0
+	USB.print(F("[debug] RX:"));
+    for(uint16_t i = 0; i < num_TX ; i++)
+	{
+		USB.printHex(ByteIN[i]);
+	}
+	USB.println();
+	#endif
 	
     // If some corrupted frame has appeared we jump it
     if( ByteIN[0]!=0x7E )
@@ -4498,7 +4514,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
     uint8_t status=0;
     uint16_t num_TX=0;
     uint8_t num_esc=0;
-    int16_t interval=3000;
+    uint16_t interval=3000;
     uint8_t num_mes=0;
     uint16_t i=1;
     uint16_t length_mes=0;
@@ -4507,6 +4523,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
 	
     error_TX=2;
     
+    memset(ByteIN, 0x00, sizeof(ByteIN));
 	
 	// If a frame was truncated before, we set the first byte as 0x7E	
 	// and we add a new packet to 'num_mes' counter
@@ -4527,10 +4544,10 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
     while( end==0 && !frameNext )
     {
 		// check available data
-		if(serialAvailable(uart)>0)
+		if( serialAvailable(uart)>0 )
        	{
 			// read byte from correspondent uart
-       		ByteIN[counter3]=serialRead(uart);
+       		ByteIN[counter3] = serialRead(uart);
             counter3++;
             previous=millis();
             
@@ -4562,7 +4579,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
 			
 			// Discard any non-TX status frame which are determined by a frame 
 			// type which may be 0x8B(TX Status) or 0x8A(Modem Status)		
-           	if( (counter3==4+status*6+undesired) && (undesired!=1) ) 
+           	if( (counter3==4+(uint16_t)status*6+undesired) && (undesired!=1) ) 
             {
             	if( (ByteIN[counter3-1]!= 0x8B) && (ByteIN[counter3-1]!=0x8A) )
 				{
@@ -4594,7 +4611,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
              * |______|_____|_____|____________|_________|__________|
              *    0      1     2        3          4          5
              */  
-            if( (ByteIN[counter3-1]==0x8A) && (counter3==(4+status*6)) )
+            if( (ByteIN[counter3-1]==0x8A) && (counter3==(4+(uint16_t)status*6)) )
             {
 				// increment in 6Bytes 'numberBytes'
             	numberBytes+=6;
@@ -4633,6 +4650,15 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
     // Store number of read bytes
     num_TX=counter3;
     counter3=0;
+    
+    #if DEBUG_XBEE > 0
+	USB.print(F("[debug] RX:"));
+    for(uint16_t i = 0; i < num_TX ; i++)
+	{
+		USB.printHex(ByteIN[i]);
+	}
+	USB.println();
+	#endif
 	
     // If some corrupted frame has appeared we jump it
     if( ByteIN[0]!=0x7E )     
@@ -4768,7 +4794,7 @@ int8_t WaspXBeeCore::rxData(uint8_t* data_in, uint16_t end, uint16_t start)
 	// Copy 'cmdData' to byteIN and calculate 
 	// 'cmdData' length storing it in 'data_length' attribute
 	data_length=0;
-    for( int j = 4+start ; j < end-1 ; j++ )
+    for( uint16_t j = 4+start ; j < end-1 ; j++ )
     {
         byteIN[j-4-start] = data_in[j];
         data_length++;       
@@ -5030,8 +5056,7 @@ uint8_t WaspXBeeCore::getIndexLIFO()
  * 	error=0 --> The function has been executed with no errors
  */
 uint8_t WaspXBeeCore::new_firmware_received()
-{
-	char aux_array[15];
+{	
 	bool startSequence = true;	
 	uint8_t channel_to_set = 0;
 	bool error_sd = false;
@@ -5230,19 +5255,19 @@ uint8_t WaspXBeeCore::new_firmware_received()
 				if(buffer==NULL) return 1;
 								
 				// Write START_SECTOR string into firmware file
-				if(firm_file.write(buffer,strlen(buffer))!=strlen(buffer))
+				if( (uint16_t)firm_file.write(buffer,strlen(buffer)) != strlen(buffer) )
 				{					
 					error_sd=true;				
 				}
 				
 				// Write program ID into firmware file				
-				if(firm_file.write(firm_info.ID,strlen(firm_info.ID))!=strlen(firm_info.ID))				
+				if( (uint16_t)firm_file.write(firm_info.ID,strlen(firm_info.ID)) != strlen(firm_info.ID))				
 				{					
 					error_sd=true;
 				}				
 				
 				// Write asterisks into firmware file				
-				if(firm_file.write(asteriscos,strlen(asteriscos))!=strlen(asteriscos))				
+				if( (uint16_t)firm_file.write(asteriscos,strlen(asteriscos)) != strlen(asteriscos))				
 				{					
 					error_sd=true;
 				}
@@ -5320,9 +5345,9 @@ void WaspXBeeCore::new_firmware_packets()
 			// -> It is the first packet received
 			// -> This is the packet that follows the last one
 			// -> The packet counter (1Byte) overflows and restarts from zero
-			if(	(firm_info.data_count_packet == 0 && firm_info.packets_received==0)  ||
-               	(firm_info.data_count_packet - firm_info.data_count_packet_ant) == 1 ||
-               	(firm_info.data_count_packet == 0)&&(firm_info.data_count_packet_ant == 255) )
+			if(	((firm_info.data_count_packet == 0) && (firm_info.packets_received==0))  
+				||	((firm_info.data_count_packet - firm_info.data_count_packet_ant) == 1 )
+				||	((firm_info.data_count_packet == 0)&&(firm_info.data_count_packet_ant == 255) ) )
             {
                	// Copy binary data and calculate length of this field		
 				for( sd_index=0 ; sd_index<(packet_finished[pos-1]->data_length)-sizeof(header_t)-1 ; sd_index++ )
@@ -5331,11 +5356,11 @@ void WaspXBeeCore::new_firmware_packets()
                	}
 				
 				// Write binary data string into firmware file
-				if(firm_file.write(data_bin,sd_index)!=sd_index)				
+				if( (uint16_t)firm_file.write(data_bin,sd_index) != sd_index )
 				{
-					error_sd=true;
+					error_sd = true;
 				}				
-						
+
 				// set init flag to zero	
 				firm_info.already_init = 0;
 
@@ -5407,9 +5432,7 @@ void WaspXBeeCore::new_firmware_packets()
  */
 void WaspXBeeCore::new_firmware_end()
 {
-	if(freeMemory()<400) return (void)-1;
-	uint8_t data_bin[92];
-	uint16_t sd_index=0;
+	if(freeMemory()<400) return (void)-1;		
 	bool true_mac = true;
 	char num_packets_char[5];
 	uint16_t num_packets=0;
@@ -5418,27 +5441,23 @@ void WaspXBeeCore::new_firmware_end()
 	bool send_ok = true;
 	bool error_sd = false;
 	char buffer[33];
-	new_firm_end_t* packet;
 	char data[100];
-	
-	// cast the data field to a new_firm_received_t
-	packet = (new_firm_end_t*)packet_finished[pos-1]->data;
-	
+		
 	// process the packet only when the programming mode is ON		
 	if( programming_ON )
 	{
 		// check the MAC address
-		for(it=0;it<4;it++)
+		for(int i=0 ; i<4 ; i++)
 		{
-			if( packet_finished[pos-1]->macSH[it] != firm_info.mac_programming[it] )
+			if( packet_finished[pos-1]->macSH[i] != firm_info.mac_programming[i] )
 			{
 				true_mac=false;
 				break;
 			}
 		}
-		for(it=0;it<4;it++)
+		for(int i=0 ; i<4 ; i++)
 		{
-			if( packet_finished[pos-1]->macSL[it] != firm_info.mac_programming[it+4] )
+			if( packet_finished[pos-1]->macSL[i] != firm_info.mac_programming[i+4] )
 			{
 				true_mac=false;
 				break;
@@ -5513,19 +5532,19 @@ void WaspXBeeCore::new_firmware_end()
 		}
 					
 		// write program ID into file
-		if(boot_file.write(firm_info.ID, strlen(firm_info.ID)) != strlen(firm_info.ID))
+		if( (uint16_t)boot_file.write(firm_info.ID, strlen(firm_info.ID)) != strlen(firm_info.ID))
 		{
 			error_sd=true;
 		}		
 		
 		// write program date into file
-		if(boot_file.write(firm_info.DATE, strlen(firm_info.DATE)) != strlen(firm_info.DATE))
+		if( (uint16_t)boot_file.write(firm_info.DATE, strlen(firm_info.DATE)) != strlen(firm_info.DATE))
 		{
 			error_sd=true;
 		}	
 				
 		// write "\r\n" into file
-		if(boot_file.write("\r\n",strlen("\r\n"))!=strlen("\r\n"))
+		if( (uint16_t)boot_file.write("\r\n",strlen("\r\n")) != strlen("\r\n") )
 		{
 			error_sd=true;
 		}		
@@ -5649,9 +5668,7 @@ void WaspXBeeCore::upload_firmware()
 {
 	if(freeMemory()<400) return (void)-1;
 
-	uint16_t num_lines = 0;
 	bool id_exist = true;
-	uint16_t offset = 0;
 	packetXBee* paq_sent;
 	uint8_t destination[8];
 	unsigned long previous=0;
@@ -5661,7 +5678,6 @@ void WaspXBeeCore::upload_firmware()
 	bool reset = false;
 	bool startSequence = true;
 	bool error_sd = false;
-	uint8_t reintentos=0;
 	char buffer[49];
 	char data[70];
 	upload_firm_t* packet;
@@ -5670,9 +5686,9 @@ void WaspXBeeCore::upload_firmware()
 	packet = (upload_firm_t*)packet_finished[pos-1]->data;
 	
 	// Check 'KEY_ACCESS'
-	for (it = 0; it < 8;it++)
+	for( int i = 0; i < 8; i++)
 	{
-		if(packet->authkey[it] != Utils.readEEPROM(it+107))
+		if(packet->authkey[i] != Utils.readEEPROM(i+107))
 		{
 			startSequence = false;  
 			break;
@@ -5775,10 +5791,10 @@ void WaspXBeeCore::upload_firmware()
 		if( id_exist)
 		{
 			// update the name of the firmware in EEPROM memory
-			for(it=0;it<32;it++)
+			for( int i=0 ; i<32 ; i++)
 			{
 				// write EEPROM
-				eeprom_write_byte((unsigned char *) it+2, firm_info.ID[it]);
+				eeprom_write_byte((unsigned char *) i+2, firm_info.ID[i]);
 			}
 		
 			paq_sent=(packetXBee*) calloc(1,sizeof(packetXBee)); 
@@ -5833,10 +5849,10 @@ void WaspXBeeCore::upload_firmware()
 			packet_finished[pos-1]=NULL;
 			
 			// Save the transmitter MAC to answer later
-			for(it=0;it<8;it++)
+			for( int i=0 ; i<8 ; i++)
 			{
 				// write EEPROM
-				eeprom_write_byte((unsigned char *) 99+it, destination[it]);				
+				eeprom_write_byte((unsigned char *) 99+i, destination[i]);				
 			}
 		
 			previous=millis();
@@ -5936,9 +5952,9 @@ void WaspXBeeCore::request_ID()
 			
 	
 	// Check 'KEY_ACCESS'
-	for (it = 0; it < 8;it++)
+	for( int i = 0; i < 8; i++)
 	{
-		if(packet->authkey[it] != Utils.readEEPROM(it+107))
+		if(packet->authkey[i] != Utils.readEEPROM(i+107))
 		{
 			startSequence = false;  
 			break;
@@ -5948,16 +5964,16 @@ void WaspXBeeCore::request_ID()
 	if( startSequence )
 	{
 		// get PID from EEPROM memory
-		for(it=0;it<32;it++)
+		for( int i=0 ; i<32 ; i++)
 		{
-			PID_aux[it] = Utils.readEEPROM(it+34);
+			PID_aux[i] = Utils.readEEPROM(i+34);
 		}
 		PID_aux[32]='\0';
 		
 		// get Mote ID from EEPROM memory
-		for(it=0;it<16;it++)
+		for( int i=0 ; i<16; i++)
 		{
-			ID_aux[it] = Utils.readEEPROM(it+147);
+			ID_aux[i] = Utils.readEEPROM(i+147);
 		}
 		ID_aux[16]='\0';
 	
@@ -6011,18 +6027,14 @@ void WaspXBeeCore::request_ID()
  * This function seeks the program IDs written in BOOT.TXT
 */
 void WaspXBeeCore::request_bootlist()
-{
-	uint16_t num_lines = 0;
-	bool id_exist = true;
-	uint16_t offset = 0;
+{	
 	packetXBee* paq_sent;
 	uint8_t destination[8];
 	unsigned long previous=0;
 	uint8_t buf_sd[46];
 	char buf_sd_aux[47];
 	bool end_file=false;
-	uint8_t num_bytes = 0;
-	bool reset = false;
+	uint8_t num_bytes = 0;	
 	bool startSequence = true;
 	uint8_t errors_tx = 0;
 	char buffer[31];
@@ -6244,7 +6256,6 @@ void WaspXBeeCore::checkNewProgram()
 	if(freeMemory()<400) return (void)-1;
 	uint8_t current_ID[32];
 	char MID[17];
-	uint8_t m = 0;
 	bool reprogrammingOK = true;
 	uint8_t byte_aux[32];
 	packetXBee* paq_sent;
@@ -6427,19 +6438,22 @@ void WaspXBeeCore::delete_firmware()
 	bool startSequence = true;
 	char file_to_delete[8];
 	bool error=false;
-	char* file_aux = "FILEAUX";
 	bool match_id = true;
 	char buffer[33];
 	char data[70];
 	delete_firm_t* packet;
 	
+	// file_aux <-- "FILEAUX"
+	char file_aux[10];
+	strcpy_P(file_aux, (char*)pgm_read_word(&(table_OTA[11]))); 
+	
 	// cast to the pointer where the frame starts
 	packet = (delete_firm_t*)packet_finished[pos-1]->data;
 	
 	// Check 'KEY_ACCESS'
-	for (it = 0; it < 8;it++)
+	for( int i = 0; i < 8; i++)
 	{
-		if( packet->authkey[it] != Utils.readEEPROM(it+107))
+		if( packet->authkey[i] != Utils.readEEPROM(i+107))
 		{
 			startSequence = false;  
 			break;
@@ -6459,9 +6473,9 @@ void WaspXBeeCore::delete_firmware()
 		if( sd_on )
 		{
 			// Store the file to delete
-			for(it=0;it<7;it++)
+			for(int i=0; i<7; i++)
 			{				
-				file_to_delete[it]=packet->pid[it];
+				file_to_delete[i]=packet->pid[i];
 			}
 			file_to_delete[7]='\0';
 			
@@ -6502,9 +6516,9 @@ void WaspXBeeCore::delete_firmware()
 						
 						// check filename to be deleted and
 						// mark lack of coincidence in that case
-						for(it=0;it<7;it++)
+						for(int i=0; i<7; i++)
 						{
-							if(buf_sd_aux[it]!=file_to_delete[it])
+							if(buf_sd_aux[i]!=file_to_delete[i])
 							{
 								match_id=false;
 								break;
@@ -6513,7 +6527,7 @@ void WaspXBeeCore::delete_firmware()
 						if(!match_id)
 						{							
 							// Write string to Auxiliar file: FILEAUX
-							if(firm_file.write(buf_sd_aux,strlen(buf_sd_aux))!=strlen(buf_sd_aux))
+							if( (uint16_t)firm_file.write(buf_sd_aux,strlen(buf_sd_aux))!=strlen(buf_sd_aux))
 							{
 								error=true;
 							}
@@ -6556,7 +6570,7 @@ void WaspXBeeCore::delete_firmware()
 							buf_sd_aux[it]='\0';						
 							
 							// Write string to file
-							if(boot_file.write(buf_sd_aux,strlen(buf_sd_aux))!=strlen(buf_sd_aux))
+							if( (uint16_t)boot_file.write(buf_sd_aux,strlen(buf_sd_aux))!=strlen(buf_sd_aux))
 							{
 								error=true;
 							}
@@ -6691,9 +6705,9 @@ void WaspXBeeCore::setMulticastConf()
 					break;
 			
 		case 1	: 	// Set previous 'Auth key'
-					for (it = 0; it < 8;it++) 
+					for ( int i = 0; i < 8; i++) 
 					{
-						eeprom_write_byte((unsigned char *) it+107, firm_info.authkey[it]);
+						eeprom_write_byte((unsigned char *) i+107, firm_info.authkey[i]);
 
 					}
 					break;

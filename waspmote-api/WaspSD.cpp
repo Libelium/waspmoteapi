@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -25,8 +25,25 @@
   #include "WaspClasses.h"
 #endif
 
+
+
+/// table_SD ///////////////////////////////////////////////////////////////////
+
+const char sd_string_00[] 	PROGMEM	= "\nmanuf:  0x%x\noem:    %c%c\nprod:   %x\nrev:    %x.%x\nserial: 0x%lx\ndate:   %u/%u\n";
+const char sd_string_01[] 	PROGMEM	= "no SD";
+
+
+const char* const table_SD[] PROGMEM = 	  
+{
+	sd_string_00, 		// 0
+	sd_string_01, 		// 1
+};
+
+
+
+
 /*******************************************************************************
- * 
+ * Functions
 *******************************************************************************/
 
 /*
@@ -571,36 +588,42 @@ uint32_t WaspSD::getDiskSize()
  */
 char* WaspSD::print_disk_info()
 {   
+	char aux[100];
+	
 	// Local variable  
 	cid_t cid;
 	
 	// check if the card is there or not
     if (!isSD())
     {
-        flag = CARD_NOT_PRESENT;
-        return "";
+        flag = CARD_NOT_PRESENT;        
+		// aux <-- "no SD"
+		strcpy_P(aux,  (char*)pgm_read_word(&(table_SD[1])));	
+        sprintf(buffer, aux);
+		return buffer;
     } 
     
     // Read  CID register
     card.readCID(&cid);
  
+ 	// aux <--
+	strcpy_P(aux,  (char*)pgm_read_word(&(table_SD[0])));	
+ 
 	//Compose buffer to return
-    snprintf(buffer, sizeof(buffer), "" \
-		"manuf:  0x%x\n" \   
-		"oem:    %c%c\n" \     
-		"prod:   %x\n" \     
-		"rev:    %x.%x\n" \     
-		"serial: 0x%lx\n" \   
-		"date:   %u/%u\n",   
-		cid.mid,         
-		cid.oid[0],     
-		cid.oid[1],
-		cid.pnm,
-		cid.prv_n,  
-		cid.prv_m,   
-		cid.psn, 
-		(int)cid.mdt_month,         
-		(int)cid.mdt_year_low);           
+    snprintf(buffer
+		, sizeof(buffer)
+		, aux
+		, cid.mid
+		, cid.oid[0]
+		, cid.oid[1]
+		, cid.pnm
+		, cid.prv_n
+		, cid.prv_m
+		, cid.psn
+		, (int)cid.mdt_month
+		, (int)cid.mdt_year_low);    
+		
+	USB.println(buffer);
     
     return buffer;
 }
@@ -618,11 +641,7 @@ char* WaspSD::print_disk_info()
  * Remarks only short 8.3 names are valid!
  */
 boolean WaspSD::mkdir(char *filepath) 
-{
-	// Get the 5V and 3V3 power supply actual state
-	bool set5V = WaspRegister & REG_5V;
-	bool set3V3 = WaspRegister & REG_3V3;	
-	
+{	
 	// set date for directory creation
 	setFileDate();
 	
@@ -1470,7 +1489,7 @@ int32_t WaspSD::indexOf (const char* filepath, const char* pattern, uint32_t off
 {
 	// Local variables	
 	SdFile file;
-	uint8_t exit = 0, contPattern = 0;
+	uint8_t exit = 0;
 	uint32_t cont = 0;
 	uint8_t readRet;
 	 
@@ -1789,7 +1808,7 @@ uint8_t WaspSD::writeSD(const char* filepath, const char* str, int32_t offset)
 uint8_t WaspSD::writeSD(	const char* filepath, 
 							const char* str, 
 							int32_t offset, 
-							int16_t length	)
+							uint16_t length	)
 {
 	// Local variables
 	SdFile file;	
@@ -1830,7 +1849,7 @@ uint8_t WaspSD::writeSD(	const char* filepath,
 	}
 
 	// write text to file
-    if(file.write((uint8_t*) str, length) != length)
+    if((uint16_t)file.write((uint8_t*) str, length) != length)
     {
         snprintf(buffer, sizeof(buffer), "error writing to: %s\n", filepath);
         file.close();    
@@ -1913,7 +1932,7 @@ uint8_t WaspSD::writeSD(const char* filepath, uint8_t* str, int32_t offset, uint
 	}
 
 	// write text to file
-    if(file.write((uint8_t*) str, length) != length)
+    if( (uint16_t)file.write((uint8_t*) str, length) != length)
     {
         snprintf(buffer, sizeof(buffer), "error writing to: %s\n", filepath);
         file.close();    
@@ -2138,8 +2157,7 @@ int32_t WaspSD::numln(const char* filepath)
  */
 uint8_t WaspSD::cd(const char* dirpath)
 {	
-	// local variables
-	boolean result=false;
+	// local variables	
 	int pathidx;		
 	
 	// do the iterative search to look for the path's directory
@@ -2212,9 +2230,7 @@ int8_t WaspSD::numFiles()
 	}
 
 	uint8_t cont = -2;
-	const char* command=".";
 	dir_t 	dir_entry;
-	//if(!(cd(command))) cont=0;
 	cont=0;
 	while(currentDir.readDir(&dir_entry))
 	{
@@ -2313,12 +2329,10 @@ bool WaspSD::format()
 
 	// constants for file system structure
 	uint16_t const BU16 = 128;
-	uint16_t const BU32 = 8192;
 
 	//  strings needed in file system structures
 	char noName[] = "NO NAME    ";
 	char fat16str[] = "FAT16   ";
-	char fat32str[] = "FAT32   ";
 	//---------------------------------------------------------------	
 
 	//! initialization process  

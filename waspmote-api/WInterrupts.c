@@ -2,11 +2,8 @@
  *  Part of the Wiring project - http://wiring.uniandes.edu.co
  *
  *  Copyright (c) 2004-05 Hernando Barragan
- * 
  *  Modified 24 November 2006 by David A. Mellis
- * 
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
- *  http://www.libelium.com
+ * 	Revised for Waspmote by Libelium, 2014
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -21,7 +18,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, David A. Mellis, Hernando Barragan, Manuel Calahorra
  */
@@ -30,7 +27,6 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/signal.h>
 #include <avr/pgmspace.h>
 #include <stdio.h>
 

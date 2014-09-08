@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -33,34 +33,30 @@
 
 /// table_DM /////////////////////////////////////////////////////////////////
 
-const char	get_RF_errors_DM[]		PROGMEM	 = 	"7E0004085245520E";
-const char 	get_good_pack_DM[]		PROGMEM  = 	"7E0004085247441A";
-const char 	get_channel_RSSI_DM[]	PROGMEM  = 	"7E0005085252430000";
-const char 	get_trans_errors_DM[]	PROGMEM  = 	"7E000408525452FF";
-const char 	set_network_hops_DM[]	PROGMEM  = 	"7E000508524E480000";
-const char 	get_network_hops_DM[]	PROGMEM  = 	"7E000408524E480F";
-const char 	set_network_delay_DM[]	PROGMEM  = 	"7E000508524E4E0000";
-const char 	get_network_delay_DM[]	PROGMEM  = 	"7E000408524E4E09";
-const char 	set_network_route_DM[]	PROGMEM  = 	"7E000508524E510000"; // AT+NQ
-const char 	get_network_route_DM[]	PROGMEM  = 	"7E000408524E5106";
-const char 	set_network_retries_DM[] PROGMEM = 	"7E000508524D520000";
-const char 	get_network_retries_DM[] PROGMEM = 	"7E000408524D5206";
+const char 	get_good_pack_DM[]		PROGMEM  = 	"7E0004085247441A";		// AT+GD
+const char 	get_trans_errors_DM[]	PROGMEM  = 	"7E000408525452FF";		// AT+TR
+const char 	set_network_hops_DM[]	PROGMEM  = 	"7E000508524E480000";	// AT+NH
+const char 	get_network_hops_DM[]	PROGMEM  = 	"7E000408524E480F";		// AT+NH
+const char 	set_network_delay_DM[]	PROGMEM  = 	"7E000508524E4E0000";	// AT+NN
+const char 	get_network_delay_DM[]	PROGMEM  = 	"7E000408524E4E09";		// AT+NN
+const char 	set_network_retries_DM[] PROGMEM = 	"7E000508524D520000";	// AT+MR
+const char 	get_network_retries_DM[] PROGMEM = 	"7E000408524D5206";		// AT+MR
+const char 	set_retries_DM[] 		PROGMEM  = 	"7E0005085252520000"; 	// AT+RR  
+const char 	get_retries_DM[] 		PROGMEM  = 	"7E00040852525201";		// AT+RR
 
 
 const char* const table_DM[] PROGMEM = 	  
-{   
-	get_RF_errors_DM,		// 0
-  	get_good_pack_DM,		// 1
-  	get_channel_RSSI_DM,	// 2
-  	get_trans_errors_DM,	// 3
-  	set_network_hops_DM,	// 4
-	get_network_hops_DM,	// 5
-	set_network_delay_DM,	// 6
-	get_network_delay_DM,	// 7
-	set_network_route_DM,	// 8
-	get_network_route_DM,	// 9
-	set_network_retries_DM,	// 10
-	get_network_retries_DM	// 11
+{   	
+  	get_good_pack_DM,		// 0
+  	get_trans_errors_DM,	// 1
+  	set_network_hops_DM,	// 2
+	get_network_hops_DM,	// 3
+	set_network_delay_DM,	// 4
+	get_network_delay_DM,	// 5
+	set_network_retries_DM,	// 6
+	get_network_retries_DM,	// 7
+	set_retries_DM,			// 8
+	get_retries_DM,			// 9
   	
 };
 
@@ -114,7 +110,6 @@ void WaspXBeeDM::init(	uint8_t uart_used	)
 			
 	networkHops=7;
 	netDelaySlots=3;
-	netRouteRequest=3;
 	meshNetRetries=1;
 	
 	nextIndex1=0;
@@ -128,92 +123,43 @@ void WaspXBeeDM::init(	uint8_t uart_used	)
 	clearCommand();
 }
 
-/*
- Function: Read the number of times the RF receiver detected a CRC or length error
- Returns: Integer that determines if there has been any error 
-   error=2 --> The command has not been executed
-   error=1 --> There has been an error while executing the command
-   error=0 --> The command has been executed with no errors
- Values: Stores in global "errorsRF" variable number of times CRC or length error
-*/
-uint8_t WaspXBeeDM::getRFerrors()
-{
-	int8_t error=2;     
-    error_AT=2;    
-    char buffer[20];
-    
-    //get_RF_errors_DM
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[0])));
-    
-    gen_data(buffer);
-    error=gen_send(buffer);
-    
-    if(!error)
-    {
-        errorsRF[0]=data[0];
-        errorsRF[1]=data[1];
-    } 
-    return error;
-}
+
 
 /*
- Function: Read the number of good frames with valid MAC headers that are 
- received on the RF interface
- Returns: Integer that determines if there has been any error 
-   error=2 --> The command has not been executed
-   error=1 --> There has been an error while executing the command
-   error=0 --> The command has been executed with no errors
- Values: Stores in global "goodPackets" variable the number of good frames received
+ * getGoodPackets
+ * 
+ * Read the number of good frames with valid MAC headers that are received on 
+ * the RF interface
+ * 
+ * Returns: Integer that determines if there has been any error 
+ * 	error=2 --> The command has not been executed
+ * 	error=1 --> There has been an error while executing the command
+ * 	error=0 --> The command has been executed with no errors
+ * 
+ * Values: Stores in global "goodPackets" variable the number of good frames 
+ * received
 */
 uint8_t WaspXBeeDM::getGoodPackets()
 {
-    int8_t error=2;     
-    error_AT=2;    
+    int8_t error = 2;     
+    error_AT = 2;    
     char buffer[20];
     
     // get_good_pack_DM
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[1])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[0])));
     
     gen_data(buffer);
-    error=gen_send(buffer);
+    error = gen_send(buffer);
     
     if(!error)
     {
-        goodPackets[0]=data[0];
-        goodPackets[1]=data[1];
+        goodPackets[0] = data[0];
+        goodPackets[1] = data[1];  
     } 
     return error;
 }
 
-/*
- Function: Reads the DBM level of the designated channel
- Returns: Integer that determines if there has been any error 
-   error=2 --> The command has not been executed
-   error=1 --> There has been an error while executing the command
-   error=0 --> The command has been executed with no errors
- Values: Stores in global "channelRSSI" variable the DBM level of the designated channel
- Parameters:
-   channel --> The channel to get the DBM value
-*/
-uint8_t WaspXBeeDM::getChannelRSSI(uint8_t channel)
-{
-    int8_t error=2;     
-    error_AT=2;    
-    char buffer[20];
-    
-    // get_channel_RSSI_DM
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[2])));
-    
-    gen_data(buffer,channel);
-    gen_checksum(buffer);
-    error=gen_send(buffer);
-    
-    if(!error)
-    {
-        channelRSSI=data[1];
-    } 
-    return error;
-}
+
 
 /*
  Function:  Read the number of MAC frames that exhaust MAC retries without ever 
@@ -232,7 +178,7 @@ uint8_t WaspXBeeDM::getTransmisionErrors()
     char buffer[20];
     
     // get_trans_errors_DM
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[3])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[1])));
     
     gen_data(buffer);
     error=gen_send(buffer);
@@ -262,7 +208,7 @@ uint8_t WaspXBeeDM::setNetworkHops(uint8_t nhops)
 	char buffer[20];
 	  
 	// set_network_hops_DM
-    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[4])));
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[2])));
     
 	gen_data(buffer,nhops);
 	gen_checksum(buffer);
@@ -270,7 +216,7 @@ uint8_t WaspXBeeDM::setNetworkHops(uint8_t nhops)
 
     if(!error)
     {
-        networkHops=nhops;
+        networkHops = nhops;
     }
     return error;
 }
@@ -290,13 +236,13 @@ uint8_t WaspXBeeDM::getNetworkHops()
 	char buffer[20];	    
 	
 	// get_network_hops_DM
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[5])));
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[3])));
 	gen_data(buffer);
 	error=gen_send(buffer);
     
     if(error==0)
     {
-        networkHops=data[0];
+        networkHops = data[0];
     } 
     return error;
 }
@@ -319,14 +265,14 @@ uint8_t WaspXBeeDM::setNetworkDelaySlots(uint8_t dslots)
 	char buffer[20];	    
 	
 	// set_network_delay_DM
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[6])));
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[4])));
 	gen_data(buffer,dslots);
 	gen_checksum(buffer);
 	error=gen_send(buffer);
     
     if(error==0)
     {
-        netDelaySlots=dslots;
+        netDelaySlots = dslots;
     }
     return error;
 }
@@ -348,74 +294,18 @@ uint8_t WaspXBeeDM::getNetworkDelaySlots()
 	char buffer[20];	    
 	
 	// get_network_delay_DM
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[7])));
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[5])));
 	gen_data(buffer);
 	error=gen_send(buffer);
     
     if(error==0)
     {
-        netDelaySlots=data[0];
+        netDelaySlots = data[0];
     } 
     return error;
 }
 
-/*
- Function:  Set the maximum number of route discovery retries allowed to find a 
-	path to the destination node. Only valid for XBee900 protocol.
- Returns: Integer that determines if there has been any error 
-   error=2 --> The command has not been executed
-   error=1 --> There has been an error while executing the command
-   error=0 --> The command has been executed with no errors
- Values: Change the NQ command
- Parameters:
-   route: maximum number of route discovery retries (0-0x0A)
-*/
-uint8_t WaspXBeeDM::setNetworkRouteRequests(uint8_t route)
-{
-    int8_t error=2;
-    error_AT=2;
-    char buffer[20];
-		
-	// set_network_route_DM	    
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[8])));
-	gen_data(buffer,route);
-	gen_checksum(buffer);
-	error=gen_send(buffer);
-    
-    if(error==0)
-    {
-        netRouteRequest=route;
-    }
-    return error;
-}
 
-/*
- Function: Read the maximum number of route discovery retries allowed to find a 
- path to the destination node
- Returns: Integer that determines if there has been any error 
-   error=2 --> The command has not been executed
-   error=1 --> There has been an error while executing the command
-   error=0 --> The command has been executed with no errors
- Values: Stores in global "netRouteRequest" variable max number of route 
- discovery retries
-*/
-uint8_t WaspXBeeDM::getNetworkRouteRequests()
-{
-    int8_t error=2;
-	error_AT=2;
-	char buffer[20];	    
-	
-	// get_network_route_DM
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[9])));
-	gen_data(buffer);
-	error=gen_send(buffer);
-    
-    if(error==0)
-    {
-        netRouteRequest=data[0];
-    } 
-    return error;
-}
 
 /*
  Function: Set the maximum number of network packet delivery attempts
@@ -434,14 +324,14 @@ uint8_t WaspXBeeDM::setMeshNetworkRetries(uint8_t mesh)
 	char buffer[20];	    
 	
 	// set_network_retries_DM
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[10])));
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[6])));
 	gen_data(buffer,mesh);
 	gen_checksum(buffer);
 	error=gen_send(buffer);
     
     if(error==0)
     {
-        meshNetRetries=mesh;
+        meshNetRetries = mesh;
     }
     return error;
 }
@@ -462,16 +352,83 @@ uint8_t WaspXBeeDM::getMeshNetworkRetries()
 	char buffer[20];	    
 	
 	// get_network_retries_DM
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[11])));
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[7])));
 	gen_data(buffer);
 	error=gen_send(buffer);
     
     if(error==0)
     {
-        meshNetRetries=data[0];
+        meshNetRetries = data[0];
     } 
     return error;
 }
+
+
+/*	
+ * setRetries
+ * 
+ * Set the maximum number of MAC level packet delivery attempts for unicasts. 
+ * If RR is non-zero packets sent from the radio will request an acknowledgement, 
+ * and can be resent up to RR times if no acknowledgements are received.
+ * 
+ * Returns: Integer that determines if there has been any error 
+ * 	error=2 --> The command has not been executed
+ * 	error=1 --> There has been an error while executing the command
+ * 	error=0 --> The command has been executed with no errors
+ * 
+ * Values: Change the RR command
+ * Parameters:
+ * 	retry: number of retries (0x00-0x0F). Default=0x0A
+*/
+uint8_t WaspXBeeDM::setRetries(uint8_t retry)
+{
+    int8_t error = 2;
+    error_AT = 2; 
+ 
+	// set_retries_DM
+    char buffer[20];
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[8])));
+   
+    gen_data(buffer,retry);
+    gen_checksum(buffer);
+    error = gen_send(buffer);
+
+    if(!error)
+    {
+        retries = retry;
+    }
+    return error;
+}
+
+/*
+ Function: Get the retries that specifies the RR command
+ Returns: Integer that determines if there has been any error 
+   error=2 --> The command has not been executed
+   error=1 --> There has been an error while executing the command
+   error=0 --> The command has been executed with no errors
+ Values: Stores in global "retries" variable the number of retries
+*/
+uint8_t WaspXBeeDM::getRetries()
+{
+    int8_t error = 2;
+    char buffer[20];
+    error_AT = 2;
+    
+    //get_retries_DM
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_DM[9])));
+    if( buffer == NULL ) return 1;
+
+    gen_data(buffer);
+    error = gen_send(buffer);
+    
+
+    if(!error)
+    {
+        retries = data[0];
+    }
+    return error;
+}
+
 
 
 
@@ -499,8 +456,7 @@ uint8_t WaspXBeeDM::sendXBeePriv(struct packetXBee* packet)
 {
 	// Local variables
 	uint8_t TX[120];
-    uint8_t counter=0;
-    uint16_t aux=0;
+    uint8_t counter=0;    
     uint8_t protegido=0;
     uint8_t tipo=0;
     int8_t error=2;
@@ -528,8 +484,8 @@ uint8_t WaspXBeeDM::sendXBeePriv(struct packetXBee* packet)
 		// set fragment length for 'Transmit Request' frames (0x10)
         TX[2]=14+packet->data_length; 
         
-        aux=0;
-        TX[3]=0x10; // frame ID
+        // frame ID       
+        TX[3]=0x10; 
         tipo=18;	 
         
         // set 64-Destination Address   
@@ -640,8 +596,6 @@ uint8_t WaspXBeeDM::sendXBeePriv(struct packetXBee* packet)
     
     return error;
 }
-
-
 
 
 

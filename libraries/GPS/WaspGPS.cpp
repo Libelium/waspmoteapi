@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -212,7 +212,7 @@ uint8_t WaspGPS::init(const char* _coordinateLat,
 					const char* _channel, 
 					const char* _resetCfg	)
 {
-	char dummyBuffer[4];
+	char dummyBuffer[4] ="";
 	unsigned long previous = millis();
 	uint8_t valid = 0;	
 	
@@ -261,7 +261,7 @@ uint8_t WaspGPS::init(const char* _coordinateLat,
 	//add here coordinates setting.
 	
 	// copy "$PSRF104,%s,%s,%s,%s,%s,%s,%s,%s*00" from flash memory
-	char aux[40];
+	char aux[40] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[1])));
 	// create LLANavigationInitialization command	
 	snprintf(_dataBuffer, sizeof(_dataBuffer), aux, _coordinateLat, _coordinateLon,
@@ -384,7 +384,7 @@ char* WaspGPS::setChecksum(char * command)
 	uint8_t length = 0;
 	uint8_t aux_1 = 0;
     uint8_t aux_2 = 0;
-	char checksumStr[3];
+	char checksumStr[3] ="";
 	
 	_checksum = getChecksum(command);
 	
@@ -428,7 +428,7 @@ int8_t WaspGPS::parseRMC()
 	#endif
 		
 	char* argument;	
-	char dummyBuffer[7];
+	char dummyBuffer[7] ="";
 	uint8_t i = 0;
 	bool valid = 0;	
 	bool end = 0;
@@ -452,7 +452,7 @@ int8_t WaspGPS::parseRMC()
 				
 				// check if RMC sentence
 				// copy "$GPRMC" from flash memory
-				char aux[10];
+				char aux[10] ="";
 				strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[2])));
 				
 				//strcmp returns '0' if both equal
@@ -650,7 +650,7 @@ int8_t WaspGPS::parseGGA()
 	#endif
 		
 	char* argument;	
-	char dummyBuffer[7];
+	char dummyBuffer[7] ="";
 	uint8_t i = 0;
 	bool valid = 0;	
 	bool end = 0;
@@ -674,7 +674,7 @@ int8_t WaspGPS::parseGGA()
 				
 				// check if GGA sentence
 				// copy "$GPGGA" from flash memory
-				char aux[10];
+				char aux[10] ="";
 				strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[3])));
 				//strcmp returns '0' if both equal
 				if(!strcmp(dummyBuffer, aux) ) 
@@ -863,7 +863,7 @@ int8_t WaspGPS::parseGSA()
 	#endif
 		
 	char* argument;	
-	char dummyBuffer[7];
+	char dummyBuffer[7] ="";
 	uint8_t i = 0;
 	bool valid = 0;	
 	bool end = 0;
@@ -887,7 +887,7 @@ int8_t WaspGPS::parseGSA()
 				
 				// check if GSA sentence
 				// copy "$GPGSA" from flash memory
-				char aux[10];
+				char aux[10] ="";
 				strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[4])));
 				//strcmp returns '0' if both equal
 				if(!strcmp(dummyBuffer, aux) ) 
@@ -1034,7 +1034,7 @@ int8_t WaspGPS::parseGSV()
 	#endif
 		
 	char* argument;	
-	char dummyBuffer[7];
+	char dummyBuffer[7] ="";
 	uint8_t i = 0;
 	bool valid = 0;	
 	bool end = 0;
@@ -1058,7 +1058,7 @@ int8_t WaspGPS::parseGSV()
 				
 				//check if GSV sentence
 				// copy "$GPGSV" from flash memory
-				char aux[10];
+				char aux[10] ="";
 				strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[5])));
 				//strcmp returns '0' if both equal
 				if(!strcmp(dummyBuffer, aux)) 
@@ -1166,7 +1166,7 @@ int8_t WaspGPS::parseGLL()
 	#endif
 		
 	char* argument;	
-	char dummyBuffer[7];
+	char dummyBuffer[7] ="";
 	uint8_t i = 0;
 	bool valid = 0;	
 	bool end = 0;
@@ -1190,7 +1190,7 @@ int8_t WaspGPS::parseGLL()
 				
 				//check if GLL sentence
 				// copy "$GPGLL" from flash memory
-				char aux[10];
+				char aux[10] ="";
 				strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[6])));
 				//strcmp returns '0' if both equal
 				if(!strcmp(dummyBuffer, aux)) 
@@ -1332,7 +1332,7 @@ int8_t WaspGPS::parseVTG()
 	#endif
 		
 	char* argument;	
-	char dummyBuffer[7];
+	char dummyBuffer[7] ="";
 	uint8_t i = 0;
 	bool valid = 0;	
 	bool end = 0;
@@ -1356,7 +1356,7 @@ int8_t WaspGPS::parseVTG()
 				
 				//check if VTG sentence
 				// copy "$GPVTG" from flash memory
-				char aux[10];
+				char aux[10] ="";
 				strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[7])));
 				//strcmp returns '0' if both equal
 				if(!strcmp(dummyBuffer, aux)) 
@@ -1694,7 +1694,7 @@ void WaspGPS::sendCommand(char * NMEAcommand)
 	memset(_dataBuffer, 0x00, sizeof(_dataBuffer) );
 	
 	// copy "%s\r\n" from flash memory
-	char aux[10];
+	char aux[10] ="";
     strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[8])));
 	//Set checksum on command and ads CR+LF
 	snprintf(_dataBuffer, sizeof(_dataBuffer), aux, setChecksum(NMEAcommand));
@@ -2082,7 +2082,7 @@ float WaspGPS::convert2Degrees(char* input, char indicator)
 	float minutes;
 	
 	//auxiliar variable
-	char aux[10];
+	char aux[10] ="";
 	
 	// check if 'indicator' is a valid input
 	if ( indicator != 'N' && indicator != 'S' && indicator != 'E' && indicator != 'W' )
@@ -2749,15 +2749,15 @@ char * WaspGPS::getFirmwareVersion()
 {
 	bool responseFound = 0;
 	uint16_t i = 0;
-	char dummyBuffer[10];
-	memset(dummyBuffer, 0x00, sizeof(dummyBuffer) );
+	char dummyBuffer[10] ="";
+	
 	memset(_dataBuffer, 0x00, sizeof(_dataBuffer) );
 	
 	//go to NMEA mode
 	setCommMode(NMEA_MODE);
 	
 	// copy $PSRF125*00 from flash memory
-	char aux[20];
+	char aux[20] ="";
 	strcpy_P(aux, (char*)pgm_read_word(&(table_GPS[9])));
 	
 	// Look for firmware version
@@ -2788,7 +2788,7 @@ char * WaspGPS::getFirmwareVersion()
 					}
 					
 					// copy "$PSRF195" from flash memory
-					char aux2[20];
+					char aux2[20] ="";
 					strcpy_P(aux2, (char*)pgm_read_word(&(table_GPS[10])));
 					
 					// search PSRF195
