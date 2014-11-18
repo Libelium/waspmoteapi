@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.7
+ *  Version:		1.8
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -304,9 +304,13 @@ void WaspPWR::sleep(uint8_t option)
     // switch on and off the RTC so as to unset RTC interruption signal
 	RTC.ON();
     RTC.OFF();
-        
+    
     // switches off depending on the option selected
 	switchesOFF(option);
+	
+	// mandatory delay to wait for MUX_RX stabilization 
+	// after switching off the sensor boards 
+	delay(100);	
 	
 	// make sure interruption pin is LOW before entering a low power state
 	// if not the interruption will never come
@@ -321,10 +325,6 @@ void WaspPWR::sleep(uint8_t option)
 			return (void)0;
 		}
 	}
-	
-	// mandatory delay to wait for MUX_RX stabilization 
-	// after switching off the sensor boards 
-	delay(100);	
 	
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 	sleep_enable();
@@ -460,6 +460,10 @@ void WaspPWR::deepSleep(	const char* time2wake,
     	
 	// switches off depending on the option selected  
 	switchesOFF(option);
+		
+	// mandatory delay to wait for MUX_RX stabilization 
+	// after switching off the sensor boards 
+	delay(100);	
 	
 	// make sure interruption pin is LOW before entering a low power state
 	// if not the interruption will never come
@@ -474,10 +478,6 @@ void WaspPWR::deepSleep(	const char* time2wake,
 			return (void)0;
 		}
 	}
-	
-	// mandatory delay to wait for MUX_RX stabilization 
-	// after switching off the sensor boards 
-	delay(100);	
 	
 	// set sleep mode
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);

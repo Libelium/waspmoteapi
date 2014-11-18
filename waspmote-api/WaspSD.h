@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
@@ -240,8 +240,7 @@ public:
 	//! It powers the SD card, initialize it and prepare it to work with
 	/*!
 	\param void
-	\return '1' when ok; '0' when error. 
-	\sa close()
+	\return '1' when ok; '0' when error. 	
 	*/ 
 	uint8_t ON();
   
@@ -249,7 +248,6 @@ public:
 	/*!
 	\param void
 	\return void
-	\sa close()
 	*/ 
 	void OFF();
   
@@ -261,16 +259,6 @@ public:
 	\return '1' when ok; '0' when error. 
 	*/
 	uint8_t init();
-  
-	//! It closes the directory, filesystem and partition pointers
-	/*!
-	This function closes all the pointers in use in the library, so that 
-	they can be reused again after a call to init(). It becomes very useful 
-	if e.g. the card is removed and inserted again 
-	\param void
-	\return void
-	*/
-	void close();
 
 	//! It sets power mode
 	/*!

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.0
+ *  Version:		2.1
  *  Design:			Ahmad Saad
  */
  
@@ -597,9 +597,70 @@ DIClass::DIClass(uint8_t channel)
 //!*************************************************************************************
 float DIClass::readDI()
 {
-	return SensorSW.getMeasure(DI_CHANNEL, ANA3);
+	return SensorSW.getMeasure(DIChannel, DISwitch);
 }
 
+
+//!*************************************************************************************
+//!	Name:	readDI()
+//!	Description: read the value of the DI sensor
+//!	Param: void
+//!	Returns: 	float: DI  value of the sensor
+//!*************************************************************************************
+void DIClass::setCalibrationPoints(float calibrationValues[])
+{
+// The calibration process use a Non-Lineal Calibration process
+  // The process uses 3-points to calibrate the sensor
+  // The complete process is decribed in the next link: 
+  // http://es.wikipedia.org/wiki/Regresi%C3%B3n_no_lineal
+  
+  // The sensor has a logarithmic response: 
+  // y = a * log10(x) + b; y(volts), x(ppm) 
+  // x(ppm) = 10 exp ((y-b)/a)
+  // a = slope of the logarithmic function
+  // b = intersection of the logarithmic function
+  
+  // The next variables are neccesary to calculate the slope and the intersection
+  
+  // Summation of the voltages (y values) 
+  float SUMy = calibrationValues[3] + calibrationValues[4] + calibrationValues[5];
+  
+  // y values average
+  float SUMy_avg = SUMy / 3; 
+
+  // Summation of the logarithm of the x values
+  float SUMLogx = log10(calibrationValues[0]) + log10(calibrationValues[1]) + log10(calibrationValues[2]);
+  
+  // Summation of the logarithm of the x values
+  float SUMLogx_2 = log10(calibrationValues[0])*log10(calibrationValues[0]) + 
+                    log10(calibrationValues[1])*log10(calibrationValues[1]) + 
+                    log10(calibrationValues[2])*log10(calibrationValues[2]); 
+                    
+  float SUMLogx_y = log10(calibrationValues[0])* calibrationValues[3]+ 
+                    log10(calibrationValues[1])* calibrationValues[4]+ 
+                    log10(calibrationValues[2])* calibrationValues[5]; 
+   
+  // Sum of the square of the logarithm of the x values
+  float SUMLogx_avg = SUMLogx / 3;
+
+  // Slope of the logarithmic function 
+  slope = (SUMLogx_y - SUMy_avg * SUMLogx) / (SUMLogx_2 - SUMLogx_avg * SUMLogx);  
+  // Intersection of the logarithmic function
+  intersection = SUMy_avg - (slope * SUMLogx_avg);
+
+	#if DEBUG_MODE == 1
+		USB.print("Slope: "); 
+		USB.println(slope);
+
+		USB.print("Intersection: "); 
+		USB.println(intersection);
+	#endif  
+}
+
+float DIClass::calculateConcentration(float input)
+{
+	return  pow(10, ((input - intersection) / slope));   
+}
 
 //!*************************************************************************************
 //! Smart Water Object

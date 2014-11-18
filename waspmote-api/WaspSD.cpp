@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -153,71 +153,79 @@ boolean walkPath(	char *filepath,
 					void *object=NULL) 
 {
 
-  SdFile subfile1;
-  SdFile subfile2;
+	SdFile subfile1;
+	SdFile subfile2;
 
-  char buffer[PATH_COMPONENT_BUFFER_LEN]; 
+	char buffer[PATH_COMPONENT_BUFFER_LEN]; 
 
-  unsigned int offset = 0;
+	unsigned int offset = 0;
 
-  SdFile *p_parent;
-  SdFile *p_child;
+	SdFile *p_parent;
+	SdFile *p_child;
 
-  SdFile *p_tmp_sdfile;  
+	SdFile *p_tmp_sdfile;  
   
-  p_child = &subfile1;
+	p_child = &subfile1;
   
-  p_parent = &parentDir;
+	p_parent = &parentDir;
 
-  while (true) {
+	while (true) 
+	{
+		boolean moreComponents = getNextPathComponent(filepath, &offset, buffer);
+		boolean shouldContinue = callback((*p_parent), buffer, !moreComponents, object);	
 
-    boolean moreComponents = getNextPathComponent(filepath, &offset, buffer);
-	
-    boolean shouldContinue = callback((*p_parent), buffer, !moreComponents, object);	
-
-    if (!shouldContinue) {
-      // TODO: Don't repeat this code?
-      // If it's one we've created then we
-      // don't need the parent handle anymore.
-      if (p_parent != &parentDir) {
-        (*p_parent).close();
-      }
-      return false;
-    }
+		if (!shouldContinue) 
+		{
+			// TODO: Don't repeat this code?
+			// If it's one we've created then we
+			// don't need the parent handle anymore.
+			if (p_parent != &parentDir) 
+			{
+				(*p_parent).close();
+			}      
+			return false;
+		}
     
-    if (!moreComponents) {
-      break;
-    }
+		if (!moreComponents) 
+		{
+			break;
+		}
     
-    boolean exists = (*p_child).open(p_parent, buffer, O_RDONLY);
+		boolean exists = (*p_child).open(p_parent, buffer, O_RDONLY);
 
-    // If it's one we've created then we
-    // don't need the parent handle anymore.
-    if (p_parent != &parentDir) {
-      (*p_parent).close();
-    }
+		// If it's one we've created then we
+		// don't need the parent handle anymore.
+		if (p_parent != &parentDir) 
+		{
+			(*p_parent).close();
+		}
     
-    // Handle case when it doesn't exist and we can't continue...
-    if (exists) {
-      // We alternate between two file handles as we go down
-      // the path.
-      if (p_parent == &parentDir) {
-        p_parent = &subfile2;
-      }
+		// Handle case when it doesn't exist and we can't continue...
+		if (exists) 
+		{
+			// We alternate between two file handles as we go down
+			// the path.
+			if (p_parent == &parentDir) 
+			{
+				p_parent = &subfile2;
+			}
 
-      p_tmp_sdfile = p_parent;
-      p_parent = p_child;
-      p_child = p_tmp_sdfile;
-    } else {
-      return false;
-    }
-  }
+			p_tmp_sdfile = p_parent;
+			p_parent = p_child;
+			p_child = p_tmp_sdfile;
+		} 
+		else 
+		{
+			return false;
+		}
+	}
   
-  if (p_parent != &parentDir) {
-    (*p_parent).close(); // TODO: Return/ handle different?
-  }
+	if (p_parent != &parentDir) 
+	{
+		(*p_parent).close(); // TODO: Return/ handle different?
+	}
 
-  return true;
+	return true;
 }
 
 
@@ -387,6 +395,9 @@ uint8_t WaspSD::ON(void)
 	pinMode(MEM_PW, OUTPUT);
 	pinMode(SD_PRESENT, INPUT);
 	
+	// enable SD SPI flag
+	SPI.isSD = true;	
+	
 	// set power supply to the SD card
 	setMode(SD_ON);
 	
@@ -404,9 +415,29 @@ void WaspSD::OFF(void)
 {
 	// delay for waiting pending operations
 	delay(100);
-	// closes the root directory, the SPI bus and the power supply
-	close();
-	setMode(SD_OFF);
+	
+	// disable SD SPI flag
+	SPI.isSD = false;	
+	
+	// close current working directory if it is not the root directory
+	if(!currentDir.isRoot()) 
+	{
+		currentDir.close();
+	}
+	
+	// close root directory 
+	root.close();	
+  
+	// SD_SS (SD chip select) is disabled 
+  	pinMode(SD_SS, OUTPUT);
+	digitalWrite(SD_SS, HIGH);	
+        
+	// close SPI bus if it is posible
+	SPI.close();
+    
+  	// switch SD off
+	setMode(SD_OFF);	
+	delay(100);	
 	
 	// update Waspmote Control Register
 	WaspRegister &= ~(REG_SD);
@@ -422,11 +453,11 @@ void WaspSD::setMode(uint8_t mode)
 {		
 	switch(mode)
 	{
-		case SD_ON: digitalWrite(MEM_PW, HIGH);
+		case SD_ON: digitalWrite(MEM_PW, HIGH);					
 					delay(10);
 					break;
 					
-		case SD_OFF:digitalWrite(MEM_PW,LOW);
+		case SD_OFF:digitalWrite(MEM_PW,LOW);					
 					break;
 	}
 }
@@ -487,40 +518,6 @@ uint8_t WaspSD::init()
 }
 
 
-/*
- * close (void) - closes the root directory and the SPI bus
- *
- * This function closes all the pointers in use in the library, so that 
- * they can be reused again after a call to init(). It becomes very 
- * useful if e.g. the card is removed and inserted again
- */
-void WaspSD::close()
-{
-	// close current working directory if it is not the root directory
-	if(!currentDir.isRoot()) 
-	{
-		currentDir.close();
-	}
-	
-	// close root directory 
-	root.close();	
-  
-	// SD_SS (SD chip select) is disabled 
-  	pinMode(SD_SS, OUTPUT);
-	digitalWrite(SD_SS, HIGH);	
-    
-  	// switch SD off
-	pinMode(MEM_PW, OUTPUT);
-	digitalWrite(MEM_PW, LOW);		
-	delay(100);
- 
-    // set SPI pins as input
-	pinMode(SD_SS,INPUT);
-	pinMode(SD_SCK,INPUT);
-	pinMode(SD_MISO,INPUT);
-	pinMode(SD_MOSI,INPUT);
-}
-
 
 /*
  * isSD (void) - Is the SD inside the slot?
@@ -536,9 +533,6 @@ uint8_t WaspSD::isSD()
 {
 	if(digitalRead(SD_PRESENT)) return 1;
     
-	// if the SD is not there, the best is to close all the pointers
-	// just to avoid problems later one with calls to functions  
-	close();
 	return 0;
 }
 

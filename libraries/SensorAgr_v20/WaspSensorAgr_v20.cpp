@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
  */
@@ -33,10 +33,7 @@
  * 
  */
 WaspSensorAgr_v20::WaspSensorAgr_v20()
-{
-	pinMode(LOW_BAT_MON, INPUT);
-	digitalWrite(LOW_BAT_MON, HIGH);
-	
+{	
 	pinMode(DIGITAL8,OUTPUT);
 	pinMode(DIGITAL7,OUTPUT);
 	pinMode(DIGITAL6,OUTPUT);
@@ -492,7 +489,6 @@ void	WaspSensorAgr_v20::sleepAgr(const char* time2wake,
  */
 float WaspSensorAgr_v20::readDendrometer(void)
 {
-	const byte address_ADC = B0010110;
 	const byte dendro_channel = B10100001;
 	byte data_dendro[3] = {0,0,0};
 	float value_dendro = 0;
@@ -593,8 +589,7 @@ float WaspSensorAgr_v20::readAnemometer(void)
  * 
  */
 float WaspSensorAgr_v20::readPT1000(void)
-{
-	const byte address_ADC = B0010110;
+{	
 	const byte pt1000_channel = B10100000;
 	byte data_pt1000[3] = {0,0,0};
 	float value_pt1000 = 0;
@@ -634,7 +629,6 @@ float WaspSensorAgr_v20::readPT1000(void)
  */
 float WaspSensorAgr_v20::readRadiation(void)
 {
-	const byte address = B0010100;
 	byte data_apogee[2] = {0,0};
 	long val = 0;
 	float val_def = 0;
@@ -728,9 +722,7 @@ float WaspSensorAgr_v20::readSensirion(uint8_t parameter)
 {
 	int ack = 0;
 	int val_read = 0;
-	int ack2, ack3, i = 0;
-	long a = 0;
-	long b = 0;
+	unsigned long a = 0;	
 	
 	const byte HUMIDITY = B00000101;
 	const byte TEMPERATURE = B00000011;
@@ -830,8 +822,7 @@ float WaspSensorAgr_v20::readSensirion(uint8_t parameter)
 		val_read = val_read * 2 + digitalRead(SENS_DATA);
 		digitalWrite(SENS_CLK, LOW);
 	}
-	b = millis()-a;
-
+	
   
   //**************************************
   //CRC not taken into account
@@ -846,6 +837,8 @@ float WaspSensorAgr_v20::readSensirion(uint8_t parameter)
   
 	if( parameter==TEMPERATURE ) return temperatureConversion(val_read,SENS_PREC_HIGH);
 	else if( parameter==HUMIDITY ) return humidityConversion(val_read,SENS_PREC_HIGH);
+	
+	return 0;
 } 
 
 /*	temperatureConversion: converts the value read from the Sensirion into a
@@ -860,9 +853,7 @@ float WaspSensorAgr_v20::temperatureConversion(int readValue, int precision)
 	float temperature = 0;
 	float d1 = -39.7;
 	float d2 = 0;
-	
-	float aux=0;
-  
+	  
 	switch(precision)
 	{
 		case SENS_PREC_HIGH:    d2 = 0.01;
@@ -1012,6 +1003,8 @@ float WaspSensorAgr_v20::conversion(byte data_input[3], uint8_t type)
 		return(tempPt);
 	}
 	else if( type==0) return ( (val_def * 11000)/1000.0 );
+	
+	return 0;
 }
 
 
@@ -1225,7 +1218,7 @@ float WaspSensorAgr_v20::readTempDS1820()
 	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
     delay(750);
     
-	byte present = OneWireTemp.reset();
+	OneWireTemp.reset();
 	OneWireTemp.select(addr);    
 	OneWireTemp.write(0xBE); // Read Scratchpad
 

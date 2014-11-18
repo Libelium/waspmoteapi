@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.0
+ *  Version:		2.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -5759,8 +5759,8 @@ int8_t WaspGPRS_Pro_core::createSocket( uint8_t working_mode, uint8_t n_connecti
 					answer = sendCommand2(buffer_GPRS, OK_RESPONSE, ERROR_CME);
 					break;
 				case TCP_SERVER:
-					strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[10])));	//AT_IP_CLIENT
-					snprintf(buffer_GPRS, sizeof(buffer_GPRS), "%s1,\"%s\"", AT_IP_SERVER, port);
+					strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[15])));	//AT_IP_SERVER
+					snprintf(buffer_GPRS, sizeof(buffer_GPRS), "%s1,\"%s\"", str_aux1, port);
 					answer = sendCommand1(buffer_GPRS, OK_RESPONSE);
 					break;
 				case UDP_EXTENDED:

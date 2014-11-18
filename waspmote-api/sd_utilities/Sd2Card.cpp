@@ -19,12 +19,12 @@
  * <http://www.gnu.org/licenses/>.
  */
 #include "Sd2Card.h"
-#include "SdSpi.h"
+#include "../WaspSPI.h"
 // debug trace macro
 #define SD_TRACE(m, b)
 // #define SD_TRACE(m, b) Serial.print(m);Serial.println(b);
 //------------------------------------------------------------------------------
-SdSpi Sd2Card::m_spi;
+
 //==============================================================================
 #if USE_SD_CRC
 // CRC functions
@@ -132,23 +132,23 @@ uint8_t Sd2Card::cardCommand(uint8_t cmd, uint32_t arg) {
   d[5] = CRC7(d, 5);
 
   // send message
-  for (uint8_t k = 0; k < 6; k++) m_spi.send(d[k]);
+  for (uint8_t k = 0; k < 6; k++) SPI.transfer(d[k]);
 #else  // USE_SD_CRC
   // send command
-  m_spi.send(cmd | 0x40);
+  SPI.transfer(cmd | 0x40);
 
   // send argument
-  for (int8_t i = 3; i >= 0; i--) m_spi.send(pa[i]);
+  for (int8_t i = 3; i >= 0; i--) SPI.transfer(pa[i]);
 
   // send CRC - correct for CMD0 with arg zero or CMD8 with arg 0X1AA
-  m_spi.send(cmd == CMD0 ? 0X95 : 0X87);
+  SPI.transfer(cmd == CMD0 ? 0X95 : 0X87);
 #endif  // USE_SD_CRC
 
   // skip stuff byte for stop read
-  if (cmd == CMD12) m_spi.receive();
+  if (cmd == CMD12) SPI.receive();
 
   // wait for response
-  for (uint8_t i = 0; ((m_status = m_spi.receive()) & 0X80) && i != 0XFF; i++);
+  for (uint8_t i = 0; ((m_status = SPI.receive()) & 0X80) && i != 0XFF; i++);
   return m_status;
 }
 //------------------------------------------------------------------------------
@@ -181,11 +181,12 @@ uint32_t Sd2Card::cardSize() {
 void Sd2Card::chipSelectHigh() {
   digitalWrite(m_chipSelectPin, HIGH);
   // insure MISO goes high impedance
-  m_spi.send(0XFF);
+  SPI.transfer(0xFF);
 }
 //------------------------------------------------------------------------------
 void Sd2Card::chipSelectLow() {
-  m_spi.init(m_sckDivisor);
+  SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV2);
   digitalWrite(m_chipSelectPin, LOW);
 }
 //------------------------------------------------------------------------------
@@ -269,14 +270,13 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 
 	pinMode(m_chipSelectPin, OUTPUT);
 	digitalWrite(m_chipSelectPin, HIGH);
-	m_spi.begin();
 
-	// set SCK rate for initialization commands
-	m_sckDivisor = SPI_SCK_INIT_DIVISOR;
-	m_spi.init(m_sckDivisor);
+	// set SCK rate for initialization commands	
+	SPI.begin();
+	SPI.setClockDivider(SPI_CLOCK_DIV2);
 
 	// must supply min of 74 clock cycles with CS high.
-	for (uint8_t i = 0; i < 10; i++) m_spi.send(0XFF);
+	for (uint8_t i = 0; i < 10; i++) SPI.transfer(0XFF);
 
 	// command to go idle in SPI mode
 	while (cardCommand(CMD0, 0) != R1_IDLE_STATE) 
@@ -308,7 +308,7 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 			type(SD_CARD_TYPE_SD1);
 			break;
 		}
-		for (uint8_t i = 0; i < 4; i++) m_status = m_spi.receive();
+		for (uint8_t i = 0; i < 4; i++) m_status = SPI.receive();
 		if (m_status == 0XAA) 
 		{
 			type(SD_CARD_TYPE_SD2);
@@ -342,9 +342,9 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
       error(SD_CARD_ERROR_CMD58);
       goto fail;
     }
-    if ((m_spi.receive() & 0XC0) == 0XC0) type(SD_CARD_TYPE_SDHC);
+    if ((SPI.receive() & 0XC0) == 0XC0) type(SD_CARD_TYPE_SDHC);
     // Discard rest of ocr - contains allowed voltage range.
-    for (uint8_t i = 0; i < 3; i++) m_spi.receive();
+    for (uint8_t i = 0; i < 3; i++) SPI.receive();
   }
   chipSelectHigh();
   m_sckDivisor = sckDivisor;
@@ -364,19 +364,21 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
  * \return The value one, true, is returned for success and
  * the value zero, false, is returned for failure.
  */
-bool Sd2Card::readBlock(uint32_t blockNumber, uint8_t* dst) {
-  SD_TRACE("RB", blockNumber);
-  // use address if not SDHC card
-  if (type()!= SD_CARD_TYPE_SDHC) blockNumber <<= 9;
-  if (cardCommand(CMD17, blockNumber)) {
-    error(SD_CARD_ERROR_CMD17);
-    goto fail;
-  }
-  return readData(dst, 512);
+bool Sd2Card::readBlock(uint32_t blockNumber, uint8_t* dst) 
+{
+	SD_TRACE("RB", blockNumber);
+	// use address if not SDHC card
+	if (type()!= SD_CARD_TYPE_SDHC) blockNumber <<= 9;
+	if (cardCommand(CMD17, blockNumber)) 
+	{
+		error(SD_CARD_ERROR_CMD17);
+		goto fail;
+	}
+	return readData(dst, 512);
 
  fail:
-  chipSelectHigh();
-  return false;
+	chipSelectHigh();
+	return false;
 }
 //------------------------------------------------------------------------------
 /** Read one data block in a multiple block read sequence
@@ -398,7 +400,7 @@ bool Sd2Card::readData(uint8_t* dst, size_t count) {
   
 	// wait for start block token
 	uint16_t t0 = millis();
-	while ((m_status = m_spi.receive()) == 0XFF) 
+	while ((m_status = SPI.receive()) == 0XFF) 
 	{
 		if (((uint16_t)millis() - t0) > SD_READ_TIMEOUT) 
 		{
@@ -412,22 +414,22 @@ bool Sd2Card::readData(uint8_t* dst, size_t count) {
     goto fail;
   }
   // transfer data
-  if ((m_status = m_spi.receive(dst, count))) {
+  if ((m_status = SPI.receive(dst, count))) {
     error(SD_CARD_ERROR_SPI_DMA);
     goto fail;
   }
 
 #if USE_SD_CRC
   // get crc
-  crc = (m_spi.receive() << 8) | m_spi.receive();
+  crc = (SPI.receive() << 8) | SPI.receive();
   if (crc != CRC_CCITT(dst, count)) {
     error(SD_CARD_ERROR_READ_CRC);
     goto fail;
   }
 #else
   // discard crc
-  m_spi.receive();
-  m_spi.receive();
+  SPI.receive();
+  SPI.receive();
 #endif  // USE_SD_CRC
 
   chipSelectHigh();
@@ -499,7 +501,7 @@ bool Sd2Card::readStop() {
 bool Sd2Card::waitNotBusy(uint16_t timeoutMillis) 
 {
 	uint16_t t0 = millis();
-	while (m_spi.receive() != 0XFF) 
+	while (SPI.receive() != 0XFF) 
 	{
 		if (((uint16_t)millis() - t0) >= timeoutMillis) goto fail;
 		if(t0>millis()) t0 = (uint16_t)millis();
@@ -518,36 +520,41 @@ bool Sd2Card::waitNotBusy(uint16_t timeoutMillis)
  * \return The value one, true, is returned for success and
  * the value zero, false, is returned for failure.
  */
-bool Sd2Card::writeBlock(uint32_t blockNumber, const uint8_t* src) {
-  SD_TRACE("WB", blockNumber);
-  // use address if not SDHC card
-  if (type() != SD_CARD_TYPE_SDHC) blockNumber <<= 9;
-  if (cardCommand(CMD24, blockNumber)) {
-    error(SD_CARD_ERROR_CMD24);
-    goto fail;
-  }
-  if (!writeData(DATA_START_BLOCK, src)) goto fail;
+bool Sd2Card::writeBlock(uint32_t blockNumber, const uint8_t* src) 
+{
+	SD_TRACE("WB", blockNumber);
+	// use address if not SDHC card
+	if (type() != SD_CARD_TYPE_SDHC) blockNumber <<= 9;
+	if (cardCommand(CMD24, blockNumber)) 
+	{
+		error(SD_CARD_ERROR_CMD24);
+		goto fail;
+	}
+	if (!writeData(DATA_START_BLOCK, src)) goto fail;
 
 #define CHECK_PROGRAMMING 0
 #if CHECK_PROGRAMMING
-  // wait for flash programming to complete
-  if (!waitNotBusy(SD_WRITE_TIMEOUT)) {
-    error(SD_CARD_ERROR_WRITE_TIMEOUT);
-    goto fail;
-  }
-  // response is r2 so get and check two bytes for nonzero
-  if (cardCommand(CMD13, 0) || m_spi.receive()) {
-    error(SD_CARD_ERROR_WRITE_PROGRAMMING);
-    goto fail;
-  }
+	// wait for flash programming to complete
+	if (!waitNotBusy(SD_WRITE_TIMEOUT)) 
+	{
+		error(SD_CARD_ERROR_WRITE_TIMEOUT);
+		goto fail;
+	}
+	
+	// response is r2 so get and check two bytes for nonzero  
+	if (cardCommand(CMD13, 0) || SPI.receive()) 
+	{
+		error(SD_CARD_ERROR_WRITE_PROGRAMMING);
+		goto fail;
+	}
 #endif  // CHECK_PROGRAMMING
 
-  chipSelectHigh();
-  return true;
+	chipSelectHigh();
+	return true;
 
  fail:
-  chipSelectHigh();
-  return false;
+	chipSelectHigh();
+	return false;
 }
 //------------------------------------------------------------------------------
 /** Write one data block in a multiple block write sequence
@@ -577,12 +584,12 @@ bool Sd2Card::writeData(uint8_t token, const uint8_t* src) {
   uint16_t crc = 0XFFFF;
 #endif  // USE_SD_CRC
 
-  m_spi.send(token);
-  m_spi.send(src, 512);
-  m_spi.send(crc >> 8);
-  m_spi.send(crc & 0XFF);
+  SPI.transfer(token);
+  SPI.transfer(src, 512);
+  SPI.transfer(crc >> 8);
+  SPI.transfer(crc & 0XFF);
 
-  m_status = m_spi.receive();
+  m_status = SPI.receive();
   if ((m_status & DATA_RES_MASK) != DATA_RES_ACCEPTED) {
     error(SD_CARD_ERROR_WRITE);
     goto fail;
@@ -634,7 +641,7 @@ bool Sd2Card::writeStart(uint32_t blockNumber, uint32_t eraseCount) {
 bool Sd2Card::writeStop() {
   chipSelectLow();
   if (!waitNotBusy(SD_WRITE_TIMEOUT)) goto fail;
-  m_spi.send(STOP_TRAN_TOKEN);
+  SPI.transfer(STOP_TRAN_TOKEN);
   if (!waitNotBusy(SD_WRITE_TIMEOUT)) goto fail;
   chipSelectHigh();
   return true;

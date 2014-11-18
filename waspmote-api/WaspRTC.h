@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza
 
@@ -517,7 +517,7 @@ class WaspRTC
     /*!
 	\param void
 	\return void
-	\sa close(), begin()
+	\sa close(), 
     */ 
 	void ON();
 	
@@ -525,16 +525,9 @@ class WaspRTC
     /*!
 	\param void
 	\return void
-	\sa close(), begin()
+	\sa close(), 
     */ 
 	void OFF();
-	
-	//! It inits the I2C bus and the variables reading them from the RTC
-    /*!
-	\param void
-	\return void
-	 */
-	void begin();
 	
 	//! It closes I2C bus
     /*!

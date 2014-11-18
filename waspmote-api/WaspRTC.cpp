@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -88,37 +88,14 @@ WaspRTC::WaspRTC()
 /*
  * ON (void) - It opens I2C bus and powers the RTC
  *
- *  It opens I2C bus and powers the RTC
+ *  
+ *  It enables internal pull-up resistor for the RTC interrupt pin, so as this
+ *  pin is set to HIGH when init
+ *  It inits I2C bus for communicating with RTC
+ *  It reads from RTC time,date and alarms, setting the corresponding variables
  */
 void WaspRTC::ON(void)
 {
-	begin();
-}
-
-
-/*
- * OFF (void) - It closes I2C bus and powers off the RTC
- *
- *  It closes I2C bus and powers off the RTC
- */
-void WaspRTC::OFF(void)
-{
-	close();
-	setMode(RTC_OFF, RTC_NORMAL_MODE);
-}
-
-
-/* begin() - inits I2C bus and used pins
- *
- * It enables internal pull-up resistor for the RTC interrupt pin, so as this
- * pin is set to HIGH when init
- * It inits I2C bus for communicating with RTC
- * It reads from RTC time,date and alarms, setting the corresponding variables
- *
- * Returns nothing
- */ 
-void WaspRTC::begin()
-{	
 	// Powers RTC UP
 	setMode(RTC_ON, RTC_NORMAL_MODE);
 	
@@ -132,6 +109,18 @@ void WaspRTC::begin()
   
 	// read all registers related to the Time and Date and Alarms 
 	readRTC(RTC_ALARM2_ADDRESS);
+}
+
+
+/*
+ * OFF (void) - It closes I2C bus and powers off the RTC
+ *
+ *  It closes I2C bus and powers off the RTC
+ */
+void WaspRTC::OFF(void)
+{
+	close();
+	setMode(RTC_OFF, RTC_NORMAL_MODE);
 }
 
 

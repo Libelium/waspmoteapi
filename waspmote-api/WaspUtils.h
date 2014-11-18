@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -387,19 +387,6 @@ class WaspUtils
   \return void
    */
   void float2String(float fl, char str[], int N);
-  
-  //! It selects the slave on SPI bus to use
-  /*!
-  	Possibilities:
-   	SD_SELECT
-  	SRAM_SELECT
-  	SOCKET0_SELECT
-  	SOCKET1_SELECT
-  	ALL_DESELECTED
-  \param uint8_t SELECTION : the selection
-  \return void
-  */
-  void setSPISlave(uint8_t SELECTION);
   
   //! It writes into the EEPROM the name of the OTA file
   /*!

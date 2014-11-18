@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -26,12 +26,13 @@
 #endif
 
 
-/*
- * Constructor
- */
 
-
-void WaspSPI::begin() {
+/******************************************************************************* 
+ * begin
+ *
+ ******************************************************************************/
+void WaspSPI::begin() 
+{
   // Set direction register for SCK and MOSI pin.
   // MISO pin automatically overrides to INPUT.
   // When the SS pin is set as OUTPUT, it can be used as
@@ -53,28 +54,267 @@ void WaspSPI::begin() {
   SPCR |= _BV(SPE);
 }
 
-void WaspSPI::end() {
+
+
+/******************************************************************************* 
+ * close
+ *
+ ******************************************************************************/
+void WaspSPI::close() 
+{  
+	// Close SPI COM only when all modules are off
+	// if one of them is still on, then do not proceed with
+	// the closing process
+	if( (SPI.isSD == false) && (SPI.isSX == false) )
+	{
+		// define SPI pins as INPUTs (high impedance)	
+		pinMode(SD_SCK, INPUT);
+		pinMode(SD_MOSI, INPUT);
+		pinMode(SD_MISO, INPUT);
+		pinMode(SD_SS, INPUT);
+		
+		// end SPI com
+		SPI.end();
+	}
+}
+
+
+
+/******************************************************************************* 
+ * end
+ *
+ ******************************************************************************/
+void WaspSPI::end() 
+{
   SPCR &= ~_BV(SPE);
 }
 
+
+
+/******************************************************************************* 
+ * setBitOrder
+ *
+ ******************************************************************************/
 void WaspSPI::setBitOrder(uint8_t bitOrder)
 {
-  if(bitOrder == LSBFIRST) {
+  if(bitOrder == LSBFIRST) 
+  {
     SPCR |= _BV(DORD);
   } else {
     SPCR &= ~(_BV(DORD));
   }
 }
 
+
+/******************************************************************************* 
+ * setDataMode
+ *
+ ******************************************************************************/
 void WaspSPI::setDataMode(uint8_t mode)
 {
   SPCR = (SPCR & ~SPI_MODE_MASK) | mode;
 }
 
+
+/******************************************************************************* 
+ * setClockDivider
+ *
+ ******************************************************************************/
 void WaspSPI::setClockDivider(uint8_t rate)
 {
   SPCR = (SPCR & ~SPI_CLOCK_MASK) | (rate & SPI_CLOCK_MASK);
   SPSR = (SPSR & ~SPI_2XCLOCK_MASK) | (rate & SPI_2XCLOCK_MASK);
 }
+
+
+/******************************************************************************* 
+ * receive
+ *
+ ******************************************************************************/
+uint8_t WaspSPI::receive() 
+{
+	// perform secure SPI power management
+	SPI.secureBegin();
+	
+	SPDR = 0XFF;
+	while (!(SPSR & (1 << SPIF)));
+	
+	// perform secure SPI power management
+	SPI.secureEnd();
+	
+	
+	return SPDR;
+}
+
+
+/******************************************************************************* 
+ * receive
+ *
+ ******************************************************************************/
+uint8_t WaspSPI::receive(uint8_t* buf, size_t n) 
+{	
+	if (n-- == 0) 
+	{
+		return 0;
+	}
+	
+	// perform secure SPI power management
+	SPI.secureBegin();
+	
+	SPDR = 0XFF;
+	for (size_t i = 0; i < n; i++) 
+	{
+		while (!(SPSR & (1 << SPIF)));
+		uint8_t b = SPDR;
+		SPDR = 0XFF;
+		buf[i] = b;
+	}
+	while (!(SPSR & (1 << SPIF)));
+	buf[n] = SPDR;
+	
+	// perform secure SPI power management
+	SPI.secureEnd();
+		
+	return 0;
+}
+
+
+
+/******************************************************************************* 
+ * transfer
+ *
+ ******************************************************************************/
+byte WaspSPI::transfer(uint8_t _data) 
+{	
+	// perform secure SPI power management
+	SPI.secureBegin();
+	
+	SPDR = _data;
+	while (!(SPSR & _BV(SPIF)))
+    ;
+    
+	// perform secure SPI power management
+	SPI.secureEnd();
+    
+	return SPDR;
+}
+
+
+
+/******************************************************************************* 
+ * transfer
+ *
+ ******************************************************************************/
+void WaspSPI::transfer(const uint8_t* buf , size_t n) 
+{
+  for (size_t i = 0; i < n; i++) {
+    transfer(buf[i]);
+  }
+}
+
+
+
+
+
+/******************************************************************************* 
+ * setSPISlave() - It selects the slave on SPI bus to use
+ *
+ * It selects the slave on SPI bus to use
+ *
+ ******************************************************************************/
+void WaspSPI::setSPISlave(uint8_t SELECTION)
+{
+	pinMode(SD_SS,OUTPUT);	
+	pinMode(SOCKET0_SS,OUTPUT);
+	pinMode(MUX_TX,OUTPUT);
+	digitalWrite(SD_SS,HIGH);
+	digitalWrite(SOCKET0_SS,HIGH);
+	digitalWrite(GPRS_PW,HIGH);
+	
+	switch(SELECTION)
+	{
+		case SD_SELECT:		 digitalWrite(SD_SS,LOW);
+							 break;
+		case SOCKET0_SELECT: digitalWrite(SOCKET0_SS,LOW);
+							 break;
+		case SOCKET1_SELECT: Utils.setMuxSocket1();
+							 digitalWrite(MUX_TX,LOW);
+							 break;
+		case ALL_DESELECTED: digitalWrite(SD_SS,HIGH);							 
+							 digitalWrite(SOCKET0_SS,HIGH);
+							 Utils.setMuxSocket1();
+							 digitalWrite(MUX_TX,HIGH);
+							 break;
+		
+	}
+}
+
+
+
+
+/******************************************************************************* 
+ * secureBegin() - It makes sure all SPI slaves are swichted on when they
+ * have been plugged to Waspmote. Thus, when they are powered on, the MISO,
+ * MOSI, SCK lines are set to High Impedance
+ *
+ ******************************************************************************/
+void WaspSPI::secureBegin()
+{
+	// this codeblock belongs to the performance of the SD card
+	// check if Semtech module was not powered on before using the SD card
+	if( WaspRegister & REG_SX )
+	{
+		if( SPI.isSX == false )
+		{
+			pinMode(XBEE_PW,OUTPUT);
+			digitalWrite(XBEE_PW,HIGH);			
+		}
+	}	
+	
+	// SD card
+	if( SPI.isSD == false )
+	{			
+		pinMode(MEM_PW,OUTPUT);
+		digitalWrite(MEM_PW, HIGH);				
+	}
+	
+}
+
+
+
+/******************************************************************************* 
+ * secureEnd() - It makes sure all SPI slaves are swichted off when they
+ * have been plugged to Waspmote and they were switched off prior to the SPI 
+ * operation. 
+ *
+ ******************************************************************************/
+void WaspSPI::secureEnd()
+{	
+	// this codeblock belongs to the performance of the SD card
+	// switch off the SX module if it was not powered on 
+	if( WaspRegister & REG_SX )
+	{
+		if( SPI.isSX == false )
+		{			
+			pinMode(XBEE_PW,OUTPUT);
+			digitalWrite(XBEE_PW,LOW);			
+		}
+	}
+	
+	// SD card
+	if( SPI.isSD == false )
+	{			
+		pinMode(MEM_PW,OUTPUT);
+		digitalWrite(MEM_PW, LOW);				
+	}
+	
+	
+	
+}
+
+
+
+
+/// Preinstantiate object
 
 WaspSPI SPI = WaspSPI();

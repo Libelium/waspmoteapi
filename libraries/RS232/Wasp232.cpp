@@ -17,9 +17,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.1
-    Design:				David Gascón
-    Implementation:		Ahmad Saad
+    Version:		1.1
+    Design:			David Gascón
+    Implementation:	Ahmad Saad
 
  */
 
@@ -281,7 +281,7 @@ void Wasp232::stopBitConfig(uint8_t numStopBits)
 		}
 	} else if (_uart == 1) {
 		if (numStopBits == 1) {
-			UCSR1C =  0x36;
+			UCSR1C = (2<<USBS1)|(3<<UCSZ10);
 		} else {
 			UCSR1C = (1<<USBS1)|(3<<UCSZ10);
 		}

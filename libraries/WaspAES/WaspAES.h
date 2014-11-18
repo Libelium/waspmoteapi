@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón    
     Implementation:	Alvaro Gonzalez, Yuri Carmona
 
@@ -33,6 +33,21 @@
  * Definitions & Declarations
  ******************************************************************************/
 #define ENCRYPTION_DEBUG
+
+
+/*! \def AES_128   
+ * Encryption option: 128-bit key size
+ */
+/*! \def AES_192   
+ * Encryption option: 128-bit key size
+ */
+/*! \def AES_256   
+ * Encryption option: 128-bit key size
+ */
+const uint16_t AES_128 = 128;
+const uint16_t AES_192 = 192;
+const uint16_t AES_256 = 256;
+
 
 /*! \def ECB 
  * Encryption Mode: The simplest of the encryption modes is the electronic 

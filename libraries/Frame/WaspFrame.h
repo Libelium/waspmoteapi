@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <WConstants.h>
+#include "../WaspAES/WaspAES.h"
 
 
 /******************************************************************************
@@ -506,6 +507,20 @@
 #define SERVICE2_FRAME 	5
 #define SET_TIME_FRAME 	6
 
+/*! \def AES128_ECB_FRAME
+    \brief Encrypted frame using AES-128 key size and ECB mode
+ */
+/*! \def AES192_ECB_FRAME
+    \brief Encrypted frame using AES-192 key size and ECB mode
+ */
+/*! \def AES256_ECB_FRAME
+    \brief Encrypted frame using AES-256 key size and ECB mode
+ */
+#define AES128_ECB_FRAME	97
+#define AES192_ECB_FRAME	98
+#define AES256_ECB_FRAME	99
+
+
 
 /*! \def TYPE_UINT8
     \brief TYPE_UINT8 defines the constant for uint8_t variables types (1 Byte)
@@ -536,8 +551,9 @@
 /*! \def BINARY
     \brief BINARY frame mode
  */
-#define ASCII 		1
 #define BINARY		0
+#define ASCII 		1
+#define ENCRYPTED_FRAME	2
 
 
 //! Variable :  Waspmote serial id
@@ -598,6 +614,11 @@ private:
      */ 
     uint16_t _maxSize;
     
+    //! Variable : buffer for Waspmote ID. 16B maximum
+    /*!
+     */ 
+    char _waspmoteID[17];	
+    
 public:
 
     //! class constructor
@@ -652,14 +673,39 @@ public:
     /*! This function creates a new ASCII frame getting the mote ID from the 
      * EEPROM memory.
      */ 
-    void createFrame(void);   
+    void createFrame(uint8_t mode);   
   
     //! Function : creates a new frame
     /*! This function creates a new frame.
 	\param uint8_t mode specifies the frame mode: BINARY or ASCII
-	\return const char* moteID defines the mote Identifier
+	\return char* moteID defines the mote Identifier
      */
-    void createFrame(uint8_t mode, const char* moteID);
+    void createFrame(uint8_t mode, char* moteID);
+    
+    //! Function : creates a encrypted frame
+    /*! This function creates a new frame, encrypting the actual contents of the
+     * Waspmote Frame with the AES-key specified as input. The encrypted message 
+     * becomes the payload of the new encapsultad frame
+	\param uint16_t AESmode: specifies the AES key mode: 128, 192 or 256
+	\param char* password: specifies the AES key as a string
+	\return '1' if OK; '0' otherwise
+	 */
+    uint8_t encryptFrame( uint16_t AESmode, char* password );
+    
+    //! Function : decrypts a frame
+    /*! This function decrypts an encrypted frame. It extracts the encrypted 
+     * message within the paylaod, performs the decryption process and stores 
+     * the result in 'frame.buffer' and 'frame.length'
+	\param uint16_t AESmode: specifies the AES key mode: 128, 192 or 256
+	\param char* password: specifies the AES key as a string
+	\param uint8_t *input: pointer to the encrypted frame buffer
+	\param uint16_t length: specifies the length of the encrypted frame
+	\return '1' if OK; '0' otherwise
+	 */
+    uint8_t decryptFrame(	uint16_t keySize, 
+							char* password, 
+							uint8_t *input,
+							uint16_t length);
     
 	//! Function : set the frame type
     /*! This function sets the frame type (fourth byte of the frame header)

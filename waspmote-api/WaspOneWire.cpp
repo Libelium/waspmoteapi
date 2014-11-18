@@ -18,7 +18,77 @@
  *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Jim Studt, Alberto Bielsa, Yuri Carmona
- */
+ *
+ *
+ * Copyright (c) 2007, Jim Studt  (original old version - many contributors since)
+ *
+ * The latest version of this library may be found at:
+ * http://www.pjrc.com/teensy/td_libs_OneWire.html
+ *
+ * OneWire has been maintained by Paul Stoffregen (paul@pjrc.com) since
+ * January 2010.  At the time, it was in need of many bug fixes, but had
+ * been abandoned the original author (Jim Studt).  None of the known
+ * contributors were interested in maintaining OneWire.  Paul typically
+ * works on OneWire every 6 to 12 months.  Patches usually wait that
+ * long.  If anyone is interested in more actively maintaining OneWire,
+ * please contact Paul.
+ * 
+ * Jim Studt's original library was modified by Josh Larios.
+ * 
+ * Tom Pollard, pollard@alum.mit.edu, contributed around May 20, 2008
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Much of the code was inspired by Derek Yerger's code, though I don't
+ * think much of that remains.  In any event that was..
+ *     (copyleft) 2006 by Derek Yerger - Free to distribute freely.
+
+ * The CRC code was excerpted and inspired by the Dallas Semiconductor
+ * sample code bearing this copyright.
+ * 
+//---------------------------------------------------------------------------
+// Copyright (C) 2000 Dallas Semiconductor Corporation, All Rights Reserved.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY,  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL DALLAS SEMICONDUCTOR BE LIABLE FOR ANY CLAIM, DAMAGES
+// OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+// OTHER DEALINGS IN THE SOFTWARE.
+//
+// Except as contained in this notice, the name of Dallas Semiconductor
+// shall not be used except as stated in the Dallas Semiconductor
+// Branding Policy.
+//--------------------------------------------------------------------------
+*/
  
 
 #ifndef __WPROGRAM_H__

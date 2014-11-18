@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -48,7 +48,10 @@ WaspFrame::WaspFrame()
     
     // set default maximum frame size. It might be changed using 'setFrameSize' 
     // function when using an XBee module
-    _maxSize=MAX_FRAME;      
+    _maxSize=MAX_FRAME;    
+    
+    // init waspmote ID attribute
+    frame.getID(_waspmoteID);  
 }
 
 
@@ -69,12 +72,12 @@ void WaspFrame::setFrameSize( uint8_t size )
 	if( size < MAX_FRAME)
 	{		
 		// set new maximum size
-		_maxSize=size;
+		_maxSize = size;
 	}
 	else
 	{
 		// input parameter exceeds the predefined constant
-		_maxSize=MAX_FRAME;
+		_maxSize = MAX_FRAME;
 	}
 	
 	
@@ -148,172 +151,204 @@ void WaspFrame::setFrameSize(	uint8_t protocol,
 								uint8_t linkEncryption, 
 								uint8_t AESEncryption)
 {
-	switch (AESEncryption)
-	{
-		case DISABLED: /// AES disabled //////////////////////////////////////////////
-		
-			switch (protocol)
-			{				
-				/// XBEE_802_15_4 ////////////////	
-				case XBEE_802_15_4:
-				
-					if( linkEncryption == DISABLED)
-					{						
-						_maxSize = 100;		
-					}
-					else if( linkEncryption == ENABLED)
-					{
-						if( addressing == UNICAST_16B )
-						{
-							_maxSize = 98;	
-						}
-						else if( addressing == UNICAST_64B )
-						{
-							_maxSize = 94;	
-						}
-						else if( addressing == BROADCAST_MODE )
-						{							
-							_maxSize = 95;	
-						}					
-					} 		
-					break;
-				
-				/// ZIGBEE /////////////////////
-				case ZIGBEE:
-				
-					if( linkEncryption == DISABLED)
-					{
-						if( addressing == UNICAST_64B )
-						{
-							_maxSize = 74;	
-						}
-						else if( addressing == BROADCAST_MODE )
-						{							
-							_maxSize = 92;	
-						}							
-					}
-					else if( linkEncryption == ENABLED)
-					{
-						if( addressing == UNICAST_64B )
-						{
-							_maxSize = 66;	
-						}
-						else if( addressing == BROADCAST_MODE )
-						{							
-							_maxSize = 84;	
-						}					
-					} 		
-					break;
-				
-				/// DIGIMESH /////////////////////					
-				case DIGIMESH:
-					
-					_maxSize = 73;	
-					break;
-				
-				/// XBEE_900 /////////////////////					
-				case XBEE_900:
-				
-					if( linkEncryption == DISABLED)
-					{							
-						_maxSize = 100;								
-					}
-					else if( linkEncryption == ENABLED)
-					{
-						_maxSize = 80;						
-					} 
-						
-					break;
-				
-				/// XBEE_868 /////////////////////					
-				case XBEE_868:
-					
-					_maxSize = 100;								
-					break;
-					
-				default :
-					// No limit
-					_maxSize=MAX_FRAME;
-					break;
-			}
-			break;
+	
+	/// AES disabled 
+	if( AESEncryption == DISABLED )
+	{		
+		switch (protocol)
+		{				
+			/// XBEE_802_15_4 ////////////////	
+			case XBEE_802_15_4:
 			
-		case ENABLED: /// AES enabled //////////////////////////////////////////////
-		
-			switch (protocol)
-			{				
-				/// XBEE_802_15_4 ////////////////	
-				case XBEE_802_15_4:
-				
-					if( linkEncryption == DISABLED)
-					{						
-						_maxSize = 93;		
+				if( linkEncryption == DISABLED)
+				{									
+					// XBEE_802 & Link Disabled & AES Disabled 
+					_maxSize = 100;		
+				}
+				else if( linkEncryption == ENABLED)
+				{
+					if( addressing == UNICAST_16B )
+					{
+						// XBEE_802 & Unicast 16B  & Link Enabled & AES Disabled 
+						_maxSize = 98;	
 					}
-					else if( linkEncryption == ENABLED)
+					else if( addressing == UNICAST_64B )
 					{
-						if( addressing == UNICAST_16B )
-						{
-							_maxSize = 93;	
-						}
-						else if( (addressing == UNICAST_64B) ||
-								 (addressing == BROADCAST_MODE ) 	)
-						{
-							_maxSize = 77;	
-						}				
-					} 		
-					break;
-				
-				/// ZIGBEE /////////////////////
-				case ZIGBEE:
-					
-					if( addressing == UNICAST_64B )
-					{
-						_maxSize = 61;	
+						// XBEE_802 & Unicast 64B & Link Enabled & AES Disabled 
+						_maxSize = 94;	
 					}
 					else if( addressing == BROADCAST_MODE )
-					{							
-						_maxSize = 77;	
-					}							
-						
-					break;
-				
-				/// DIGIMESH /////////////////////					
-				case DIGIMESH:
-					
-					_maxSize = 61;	
-					break;
-				
-				/// XBEE_900 /////////////////////					
-				case XBEE_900:
-				
-					if( linkEncryption == DISABLED)
-					{							
-						_maxSize = 93;								
-					}
-					else if( linkEncryption == ENABLED)
+					{	
+						// XBEE_802 & Broadcast & Link Enabled & AES Disabled 						
+						_maxSize = 95;	
+					}					
+				} 		
+				break;
+			
+			/// ZIGBEE /////////////////////
+			case ZIGBEE:
+			
+				if( linkEncryption == DISABLED)
+				{
+					if( addressing == UNICAST_64B )
 					{
-						_maxSize = 77;						
-					} 
-						
-					break;
+						// ZIGBEE & Unicast & Link Disabled & AES Disabled 
+						_maxSize = 74;	
+					}
+					else if( addressing == BROADCAST_MODE )
+					{	
+						// ZIGBEE & Broadcast & Link Disabled & AES Disabled 						
+						_maxSize = 92;	
+					}							
+				}
+				else if( linkEncryption == ENABLED)
+				{
+					if( addressing == UNICAST_64B )
+					{
+						// ZIGBEE & Unicast 64B & Link Enabled & AES Disabled 
+						_maxSize = 66;	
+					}
+					else if( addressing == BROADCAST_MODE )
+					{	
+						// ZIGBEE & Broadcast & Link Enabled & AES Disabled 						
+						_maxSize = 84;	
+					}					
+				} 		
+				break;
+			
+			/// DIGIMESH /////////////////////					
+			case DIGIMESH:
 				
-				/// XBEE_868 /////////////////////					
-				case XBEE_868:
+				_maxSize = 73;	
+				break;
+			
+			/// XBEE_900 /////////////////////					
+			case XBEE_900:
+			
+				if( linkEncryption == DISABLED)
+				{							
+					_maxSize = 100;								
+				}
+				else if( linkEncryption == ENABLED)
+				{
+					_maxSize = 80;						
+				} 
 					
-					_maxSize = 93;								
-					break;
+				break;
+			
+			/// XBEE_868 /////////////////////					
+			case XBEE_868:
+				
+				_maxSize = 100;								
+				break;
+				
+			default :
+				// No limit
+				_maxSize = MAX_FRAME;
+				break;
+		}			
+	}		
+	/// AES enabled 
+	else if( AESEncryption == ENABLED ) 
+	{		
+		switch (protocol)
+		{				
+			/// XBEE_802_15_4 ////////////////	
+			case XBEE_802_15_4:
+			
+				if( linkEncryption == DISABLED)
+				{									
+					// XBEE_802 & Link Disabled & AES Enabled 
+					_maxSize = ((100-10-strlen(_waspmoteID))/16)*16;	
+				}
+				else if( linkEncryption == ENABLED)
+				{
+					if( addressing == UNICAST_16B )
+					{
+						// XBEE_802 & Unicast 16B  & Link Enabled & AES Enabled 
+						_maxSize = ((98-10-strlen(_waspmoteID))/16)*16;	
+					}
+					else if( addressing == UNICAST_64B )
+					{
+						// XBEE_802 & Unicast 64B & Link Enabled & AES Enabled 
+						_maxSize = ((94-10-strlen(_waspmoteID))/16)*16;
+					}
+					else if( addressing == BROADCAST_MODE )
+					{	
+						// XBEE_802 & Broadcast & Link Enabled & AES Enabled 						
+						_maxSize = ((95-10-strlen(_waspmoteID))/16)*16;	
+					}					
+				} 		
+				break;
+			
+			/// ZIGBEE /////////////////////
+			case ZIGBEE:
+			
+				if( linkEncryption == DISABLED)
+				{
+					if( addressing == UNICAST_64B )
+					{
+						// ZIGBEE & Unicast & Link Disabled & AES Enabled 
+						_maxSize = ((74-10-strlen(_waspmoteID))/16)*16;	
+					}
+					else if( addressing == BROADCAST_MODE )
+					{	
+						// ZIGBEE & Broadcast & Link Disabled & AES Enabled 						
+						_maxSize = ((92-10-strlen(_waspmoteID))/16)*16;	
+					}							
+				}
+				else if( linkEncryption == ENABLED)
+				{
+					if( addressing == UNICAST_64B )
+					{
+						// ZIGBEE & Unicast 64B & Link Enabled & AES Enabled 
+						_maxSize = ((66-10-strlen(_waspmoteID))/16)*16;	
+					}
+					else if( addressing == BROADCAST_MODE )
+					{	
+						// ZIGBEE & Broadcast & Link Enabled & AES Enabled 						
+						_maxSize = ((84-10-strlen(_waspmoteID))/16)*16;	
+					}					
+				} 		
+				break;
+			
+			/// DIGIMESH /////////////////////					
+			case DIGIMESH:
+				
+				_maxSize = ((73-10-strlen(_waspmoteID))/16)*16;	
+				break;
+			
+			/// XBEE_900 /////////////////////					
+			case XBEE_900:
+			
+				if( linkEncryption == DISABLED)
+				{							
+					_maxSize = ((100-10-strlen(_waspmoteID))/16)*16;								
+				}
+				else if( linkEncryption == ENABLED)
+				{
+					_maxSize = ((80-10-strlen(_waspmoteID))/16)*16;						
+				} 
 					
-				default :
-					// No limit
-					_maxSize=MAX_FRAME;
-					break;
-			}	
+				break;
+			
+			/// XBEE_868 /////////////////////					
+			case XBEE_868:
+				
+				_maxSize = ((100-10-strlen(_waspmoteID))/16)*16;							
+				break;
+				
+			default :
+				// No limit
+				_maxSize = MAX_FRAME;
+				break;
+		}	
 		
-			break;
-			
-		default: // No limit
-			_maxSize=MAX_FRAME;
-			
+	}
+	/// No limit	
+	else
+	{ 
+		_maxSize = MAX_FRAME;
 	}
 	
 }
@@ -333,23 +368,19 @@ uint8_t WaspFrame::getFrameSize( void )
 
 
 
-/*
- * createFrame (void) - Initialize frame buffer
+/* 
+ * createFrame () - Initialize frame buffer
  * 
- * Also, frame header bytes are initiliazed with deafult values
+ * Also, frame header bytes are initiliazed with default values
  * 
  */
-void WaspFrame::createFrame(void)
-{	
-	// variable
-	char MID[17];
+void WaspFrame::createFrame(uint8_t mode, char* moteID)
+{
+	// set waspmote ID 
+	frame.setID( moteID );
 	
-	// get mote Identifier from EEPROM
-	getID(MID);	
-	
-	// create default frame: ASCII mode, 
-	createFrame(ASCII, MID);
-	
+	// create new frame
+	frame.createFrame( mode );	
 }
 
 
@@ -360,13 +391,14 @@ void WaspFrame::createFrame(void)
  * Also, frame header bytes are initiliazed with default values
  * 
  */
-void WaspFrame::createFrame(uint8_t mode, const char* moteID)
+void WaspFrame::createFrame(uint8_t mode)
 {	
 	// local variables
-	uint8_t sequence;
+	uint8_t sequence;	
+	char str[16];	
 	
 	// store mode: ASCII or BINARY
-	_mode=mode;	
+	_mode = mode;	
 	
 	// init buffer
 	for( int i=0; i < MAX_DATA ; i++ )
@@ -389,22 +421,19 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 	{
 		/** ASCII FRAME **/
 		type=B10000000;
-		buffer[3]= type;
-
-		//! Queda tipo trama especial !//
+		buffer[3]= type;		
 	
-		// set a "don't care" character in number of fields byte
-		buffer[4]='?';
+		// initialize 'number of fields' byte
+		buffer[4] = 0x00;
 		
 		// set the '#' separator
 		buffer[5]='#';
 		
 		// set serial ID
-		length=6;
-		char str[16];		
+		length = 6;	
 		
-		// _serial_id is read in main.cxx
-		snprintf(str, sizeof(str), "%lu",_serial_id);
+		// _serial_id is read in main.cpp
+		snprintf(str, sizeof(str), "%lu", _serial_id);
 		
 		for( uint16_t i=0 ; i<strlen(str) ; i++ )
 		{
@@ -415,42 +444,55 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 			}
 			else
 			{
-				buffer[length]=str[i];
+				buffer[length] = str[i];
 				length++;
 			}
 		}
 
 		// set separator '#'
-		buffer[length]='#';	
+		buffer[length] = '#';	
 		length++;
 
 		// set identifier
 		for( int i=0 ; i<16 ; i++ )
 		{
 			// break if end of string
-			if( moteID[i] == '\0') 
+			if( _waspmoteID[i] == '\0') 
 			{
 				break;
 			}
 			else
 			{
-				buffer[length]=moteID[i];
+				// if '#' character appears -> change it for '_'
+				if( _waspmoteID[i] == '#' )
+				{
+					buffer[length] = '_';
+				}
+				else
+				{
+					buffer[length] = _waspmoteID[i];
+				}
 				length++;
 			}
 		}
 
 		// set separator '#'
-		buffer[length]='#';	
+		buffer[length] = '#';	
 		length++;
 
-		// read and set the sequence number to the frame   
-		sequence=readSequence();
+		// read sequence number from EEPROM
+		sequence = readSequence();
 
+		// convert from integer to string
 		char seqStr[4];
-		itoa(sequence, seqStr, 10);		
-		strncat((char*)buffer, seqStr, strlen(seqStr));
+		itoa(sequence, seqStr, 10);
+		
+		// add sequence number	
+		memcpy( &buffer[length], seqStr, strlen(seqStr));
 		length += strlen(seqStr);
-		buffer[length]='#';		
+		
+		// add separator '#'
+		buffer[length] = '#';		
 		length++;
 
 		// increment and store the frame sequence number
@@ -465,14 +507,11 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 		{
 			/** BINARY FRAME **/
 			type=B00000000;
-			buffer[3]= type;
+			buffer[3] = type;
 		}
-		
-		// set a "don't care" character in number of fields byte
-		buffer[4]='?';	
-		
+				
 		// set serial ID
-		// _serial_id is read in main.cxx				
+		// _serial_id is read in main.cpp			
 		char val[4]; 
 		memcpy(val, (const void*)&_serial_id, 4);
 		
@@ -492,37 +531,242 @@ void WaspFrame::createFrame(uint8_t mode, const char* moteID)
 		buffer[6] = val[1];
         buffer[7] = val[2];
 		buffer[8] = val[3];
-		length=9;		
+		length = 9;		
 
 		// set identifier
 		for( int i=0 ; i<16 ; i++ )
 		{
 			// break if end of string
-			if( moteID[i] == '\0') 
+			if( _waspmoteID[i] == '\0') 
 			{
 				break;
 			}
 			else
 			{
-				buffer[length]=moteID[i];
+				// if '#' character appears -> change it for '_'
+				if( _waspmoteID[i] == '#' )
+				{
+					buffer[length] = '_';
+				}
+				else
+				{
+					buffer[length]=_waspmoteID[i];
+				}
 				length++;
 			}
 		}
 
 		// set separator '#'
-		buffer[length]='#';	
+		buffer[length] = '#';	
 		length++;
 
 		// read and set the sequence number to the frame   
 		sequence=readSequence();
 		buffer[length]=sequence;
 		length++;
+		
+		// initialize 'number of bytes' field
+		buffer[4] = length - 5;	
 
 		sequence++;
 		storeSequence(sequence);
 
 	}
 }
+
+
+
+
+
+
+/* 
+ * createEncryptedFrame () - Create encrypted frame from previous created frame
+ * The inner 'frame.buffer' is used for encapsulating the new Waspmote frame. 
+ * The structure of the encrypted frames is: 
+ *  ___________________________________________________________________________
+ * |     |            |           |           |          |   |                 | 
+ * | <=> | Frame Type | Num Bytes | ID secret |  Wasp ID | # | Encrypted Frame |
+ * |_____|____________|___________|___________|__________|___|_________________| 
+ * 
+ * Where 'Encrypted Frame' is the original 'frame.buffer' which is encrypted 
+ * using the specifications of this function: AES key size qand pasword. ECB 
+ * mode and ZEROS padding are always used. The resulting encrypted frame is 
+ * stored in the same 'frame.buffer'
+ */
+uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
+{	
+	// Variable for encrypted message's length	
+	uint16_t encrypted_length;
+  
+	// calculate encrypted length
+	encrypted_length = AES.sizeOfBlocks(frame.length); 
+	
+	if( encrypted_length > frame._maxSize )
+	{
+		return 0;
+	}
+	
+	// Buffer for the encrypted message with enough memory space
+	uint8_t encrypted_message[encrypted_length]; 
+	
+	// create Encrypted message
+	AES.encrypt(  keySize
+				, password
+				, frame.buffer
+				, frame.length
+				, encrypted_message
+				, ECB
+				, ZEROS); 
+	
+	/// Create new frame with the correct structure
+	/***
+	 __________________________________________________________________________
+	|     |            |           |          |          |   |                 | 
+	| <=> | Frame Type | Num Bytes | secretID |  Wasp ID | # | Encrypted Frame |
+	|_____|____________|___________|__________|__________|___|_________________| 
+	*/
+	
+	// define the frame type depending on the 
+	// key size. ECB mode is always used for Meshlium. 
+	uint8_t	frame_type;
+	
+	if( keySize == AES_128 )
+	{
+		frame_type = AES128_ECB_FRAME;
+	}
+	else if( keySize == AES_192 )
+	{
+		frame_type = AES192_ECB_FRAME;		
+	}
+	else if( keySize == AES_256 )
+	{
+		frame_type = AES256_ECB_FRAME;		
+	}
+	else
+	{
+		return 0;
+	}
+		
+	// set serial ID
+	char val[4]; 
+	memcpy(val, (const void*)&_serial_id, 4);
+	
+	// set frame delimiter
+	frame.buffer[0] = '<';
+	frame.buffer[1] = '=';
+	frame.buffer[2] = '>';
+	frame.buffer[3] = frame_type;
+	frame.buffer[4] = encrypted_length + 5 + strlen(frame._waspmoteID); // length
+	frame.buffer[5] = val[0]; // serial ID
+	frame.buffer[6] = val[1]; // serial ID
+	frame.buffer[7] = val[2]; // serial ID
+	frame.buffer[8] = val[3]; // serial ID
+	
+	// temporal length of frame
+	uint16_t temp_length = 9;
+	
+	// waspmote ID
+	for(uint16_t i = 0; i < strlen(frame._waspmoteID) ; i++)
+	{
+		frame.buffer[temp_length+i] = frame._waspmoteID[i];
+	}	
+	temp_length += strlen(frame._waspmoteID);
+	
+	// separator
+	frame.buffer[temp_length] = '#';
+	temp_length++;
+	
+	// copy payload: encrypted message
+	for( uint16_t j = 0 ; j < encrypted_length; j++)
+	{
+		frame.buffer[temp_length+j] = encrypted_message[j];		
+	}
+	temp_length += encrypted_length;
+	
+	// set frame.length attribute
+	frame.length = temp_length;
+	
+	// update attribute with the special frame type
+	_mode = ENCRYPTED_FRAME;
+	
+	return 1;
+}
+
+
+
+
+/* 
+ * decryptFrame () - Decrypt an encrypted frame to extract a previous created 
+ * frame.
+ * The inner 'frame.buffer' is used for encapsulating the new Waspmote frame. 
+ * The structure of the encrypted frames is: 
+ *  ___________________________________________________________________________
+ * |     |            |           |           |          |   |                 | 
+ * | <=> | Frame Type | Num Bytes | ID secret |  Wasp ID | # | Encrypted Frame |
+ * |_____|____________|___________|___________|__________|___|_________________| 
+ * 
+ * Where 'Encrypted Frame' is the original frame.buffer which is encrypted using
+ * the specifications of this function: AES key size, AES Block Cipher Mode and 
+ * Padding Mode
+ * 
+ */
+uint8_t WaspFrame::decryptFrame(uint16_t keySize, 
+									char* password, 
+									uint8_t *input,
+									uint16_t length)
+{	
+	// define pointer to the encrypted message
+	uint8_t *encrypted_message; 
+	// define variable for encrypted length
+	uint16_t encrypted_length;
+	
+	// update encrypted message pointer to the actual position 
+    // inside the data structure inside library
+    encrypted_message = (uint8_t*)memchr( input, '#', length) ; 
+    encrypted_message++;
+    
+    if( encrypted_message == NULL )
+    {
+		return 0;
+	}
+    
+    // get encrypted length, substracting the header of the encrypted frame
+    encrypted_length = length - (uint16_t)( encrypted_message - input);
+
+	/*
+	USB.print(F("encrypted frame:"));
+	for (int i = 0; i < encrypted_length; i++)
+	{
+		USB.printHex(encrypted_message[i]);
+	}
+	USB.println();
+	*/
+	
+	// decrypt frame
+	AES.decrypt( keySize
+				, password
+				, encrypted_message
+				, encrypted_length
+    			, frame.buffer
+				, &frame.length
+				, ECB
+				, ZEROS); 
+	
+	// check original frame type: ascii or binary
+	if( (bitRead( frame.buffer[3], 7)) == 1 )
+	{
+		_mode = ASCII;
+	}
+	else
+	{
+		_mode = BINARY;
+	}
+	
+	return 1;
+}
+
+
+
 
 
 /* 
@@ -551,40 +795,71 @@ void WaspFrame::setFrameType(uint8_t type)
  */
 void WaspFrame::showFrame(void)
 {
-	USB.println(F("==============================="));
-	if (_mode == ASCII)
-	{
-		USB.println(F("Current ASCII Frame: ")); 
-	}
-	else
-	{
-		USB.println(F("Current BINARY Frame: ")); 
-	}
-		
-	USB.print(F("Length:  "));
-	USB.println(length,DEC);	
+	beginSerial( USB_RATE, 0);
+	digitalWrite( MUX_PW, HIGH);
+	digitalWrite( MUX_USB_XBEE, LOW);
 	
-	USB.print(F("Frame Type (decimal): "));	
-	USB.println(buffer[3],DEC);
+	for(int i = 0; i <31 ; i++)
+	{
+		printByte( '=',  0);
+	}
+	printByte( '\r',  0);
+	printByte( '\n',  0);
 	
+	
+	if( _mode == ASCII )
+	{
+		printString( "Current ASCII",  0);		
+	}
+	else if( _mode == BINARY )
+	{
+		printString( "Current BINARY",  0);	
+	}
+	else if( _mode == ENCRYPTED_FRAME )
+	{
+		printString( "Current ENCRYPTED",  0);	
+	}
+	else return (void)0;
+	
+	printString( " Frame:\r\n",  0);
+	
+	printString( "Length: ",  0);
+	printIntegerInBase(length, 10,  0);	
+	printByte( '\r',  0);
+	printByte( '\n',  0);
+	
+	printString( "Frame Type:  ",  0);	
+	printIntegerInBase(buffer[3], 10,  0);	
+	printByte( '\r',  0);
+	printByte( '\n',  0);
 
-	USB.print(F("HEX:     "));
+	printString( "frame (HEX): ",  0);	
+	for( uint16_t i= 0; i < length ; i++ )
+	{		
+		puthex((char)buffer[i],0);
+	}
+	
+	printByte( '\r',  0);
+	printByte( '\n',  0);
+
+	printString( "frame (STR): ",  0);	
 	for( uint16_t i= 0; i < length ; i++ )
 	{
-		USB.printHex(buffer[i]);
-		USB.print(" ");
+		printByte( buffer[i],  0);
 	}
-	USB.println();
-
-	USB.print(F("String:  "));
-	for( uint16_t i= 0; i < length ; i++ )
+	
+	printByte( '\r',  0);
+	printByte( '\n',  0);
+	
+	for(int i = 0; i <31 ; i++)
 	{
-		USB.print(buffer[i]);
+		printByte( '=',  0);
 	}
-	USB.println();	
-	USB.println(F("==============================="));
 
-
+	printByte( '\r',  0);
+	printByte( '\n',  0);
+	delay(3);
+	digitalWrite(MUX_USB_XBEE,HIGH);	
 }
 
 
@@ -607,14 +882,12 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 	
 	if(_mode == ASCII)
 	{
-
 		// get name of sensor from table
 		char name[10];
 		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
 		
 		// convert from integer to string
-		itoa( value, str, 10);
-	
+		itoa( value, str, 10);	
 		
 		// check if new sensor value fits in the frame or not
 		// in the case the maximum length is reached, exit with error
@@ -623,23 +896,37 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 						 strlen(str)  +
 						 strlen(":")  +
 						 strlen("#") 	))
-		{
-			return -1;
-		}
-				
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");		
+			{
+				return -1;
+			}
+			
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value
+		// 'index_4' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(str)-strlen(":")-strlen("#");
+		int index_2 = length-strlen(str)-strlen(":")-strlen("#");
+		int index_3 = length-strlen(str)-strlen("#");
+		int index_4 = length-strlen("#");
 		
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str, strlen(str));			
-		strcat((char*)buffer, "#\0");
-					
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
+	
+		// add input string defined in 'str'
+		memcpy ( &buffer[index_3], str, strlen(str) );	
+	
+		// add separator '#'
+		memcpy ( &buffer[index_4], "#", strlen("#") );	
+		
 		// increment sensor fields counter 
 		numFields++;
 		
 		// set sensor fields counter
-		buffer[4]=numFields;
+		buffer[4] = numFields;
 	}
 	else
 	{
@@ -663,7 +950,7 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
     	//Check again (1 byte or 2 bytes)
     	uint8_t config;
 		config =(uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type])); 
-				 
+
 		if (config == TYPE_INT)
 		{
 			// check if new sensor value fits
@@ -694,8 +981,8 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 
 	}
 
@@ -741,19 +1028,33 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long value)
 			return -1;
 		}
 				
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");		
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value
+		// 'index_4' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(str)-strlen(":")-strlen("#");
+		int index_2 = length-strlen(str)-strlen(":")-strlen("#");
+		int index_3 = length-strlen(str)-strlen("#");
+		int index_4 = length-strlen("#");
 		
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str, strlen(str));			
-		strcat((char*)buffer, "#\0");
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
+	
+		// add input string defined in 'str'
+		memcpy ( &buffer[index_3], str, strlen(str) );	
+	
+		// add separator '#'
+		memcpy ( &buffer[index_4], "#", strlen("#") );	
 					
 		// increment sensor fields counter 
 		numFields++;
 		
 		// set sensor fields counter
-		buffer[4]=numFields;
+		buffer[4] = numFields;
 	}
 	else
 	{
@@ -793,8 +1094,8 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long value)
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 		
 	}
 
@@ -864,13 +1165,27 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
 			return -1;
 		}
 	
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");	
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value
+		// 'index_4' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(str)-strlen(":")-strlen("#");
+		int index_2 = length-strlen(str)-strlen(":")-strlen("#");
+		int index_3 = length-strlen(str)-strlen("#");
+		int index_4 = length-strlen("#");
+		
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
 	
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str, strlen(str));			
-		strcat((char*)buffer, "#\0");	
+		// add input string defined in 'str'
+		memcpy ( &buffer[index_3], str, strlen(str) );	
+	
+		// add separator '#'
+		memcpy ( &buffer[index_4], "#", strlen("#") );	
 		
 		// increment sensor fields counter 
 		numFields++;
@@ -916,8 +1231,8 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 
 	}		
 
@@ -940,6 +1255,36 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
  */
 int8_t WaspFrame::addSensor(uint8_t type, char* str)
 {	
+	// calculate the buffer length to be created 
+	// depending on the input string to be copied to it
+	uint16_t string_length = strlen(str)+1;
+	const  uint16_t MAX_SIZE = 400;
+	
+	// limit the max string length to MAX_SIZE Bytes 
+	// to avoid running out of memory
+	if ( string_length >= MAX_SIZE)
+	{
+		string_length = MAX_SIZE;
+	}	
+	
+	// create aux buffer
+	char aux_str[string_length];
+	
+	// clear aux buffer	
+	memset( aux_str, 0x00, sizeof(aux_str) );
+	
+	// copy string to aux buffer
+	strncpy( aux_str, str, sizeof(aux_str)-1 );
+	
+	// avoid '#' characters inside the string
+	for( uint16_t i = 0; i < strlen(aux_str) ; i++)
+	{
+		if( aux_str[i] == '#' )
+		{			
+			aux_str[i] = '_';
+		}
+	}	
+	
 	if(_mode == ASCII)
 	{	
 		// get name of sensor from table
@@ -950,26 +1295,41 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 		// in the case the maximum length is reached, exit with error
 		// if not, then add the new sensor length to the total length
 		if(!checkLength( strlen(name) +
-						 strlen(str)  +
+						 strlen(aux_str)  +
 						 strlen(":")  +
 						 strlen("#") 	))
 		{
 			return -1;
 		}
 		
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");	
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value
+		// 'index_4' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(":")-strlen(aux_str)-strlen("#");
+		int index_2 = length-strlen(":")-strlen(aux_str)-strlen("#");
+		int index_3 = length-strlen(aux_str)-strlen("#");
+		int index_4 = length-strlen("#");
+		
+		
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
 	
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str, strlen(str));			
-		strcat((char*)buffer, "#\0");	
+		// add input string defined in 'aux_str'
+		memcpy ( &buffer[index_3], aux_str, strlen(aux_str) );	
+	
+		// add separator '#'
+		memcpy ( &buffer[index_4], "#", strlen("#") );	
 		
 		// increment sensor fields counter 
 		numFields++;
 		
 		// set sensor fields counter
-		buffer[4]=numFields;
+		buffer[4] = numFields;
 	}
 	else
 	{
@@ -977,29 +1337,29 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 		if(checkFields(type, TYPE_CHAR, 1) == -1 ) return -1;
 
 		// set data bytes (in this case, string, one byte per char) & length (1 byte)
-		int8_t lng = strlen(str);
+		int8_t lng = strlen(aux_str);
 		
 		// check if new sensor value fits (id + nbytes + str)
-		if(!checkLength(2+strlen(str)))
+		if(!checkLength(2+strlen(aux_str)))
 		{
 			return -1;
 		}
 
 		// concatenate sensor name to frame string
 
-        int len = length-2-strlen(str);
+        int len = length-2-strlen(aux_str);
         buffer[len] = (char)type;
         buffer[len+1] = lng;
 		for (uint16_t j=len+2;j<length;j++)
 		{
-			buffer[j] = str[j-2-len];
+			buffer[j] = aux_str[j-2-len];
 		}
 		buffer[length] = '\0';
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 		
 	}		
 
@@ -1054,22 +1414,45 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 		{
 			return -1;
 		}
+		
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value in str1
+		// 'index_4' is needed for adding ';'
+		// 'index_5' is needed for adding sensor value in str2
+		// 'index_6' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen("#");
+		int index_2 = length-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen("#");
+		int index_3 = length-strlen(str1)-strlen(";")-strlen(str2)-strlen("#");
+		int index_4 = length-strlen(";")-strlen(str2)-strlen("#");
+		int index_5 = length-strlen(str2)-strlen("#");
+		int index_6 = length-strlen("#");
+
+		
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
 	
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");	
+		// add input string defined in 'str1'
+		memcpy ( &buffer[index_3], str1, strlen(str1) );
+		
+		// add ';'
+		memcpy ( &buffer[index_4], ";", strlen(";") );
 	
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str1, strlen(str1));	
-		strcat((char *)buffer, ";");
-		strncat((char*)buffer, str2, strlen(str2));	
-		strcat((char*)buffer, "#\0");	
+		// add input string defined in 'str2'
+		memcpy ( &buffer[index_5], str2, strlen(str2) );		
+	
+		// add separator '#'
+		memcpy ( &buffer[index_6], "#", strlen("#") );		
 		
 		// increment sensor fields counter 
 		numFields++;
 		
 		// set sensor fields counter
-		buffer[4]=numFields;
+		buffer[4] = numFields;
 	}
 	else
 	{
@@ -1115,8 +1498,8 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 
 	}		
 
@@ -1177,24 +1560,55 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 		{
 			return -1;
 		}
+			
+			
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value in str1
+		// 'index_4' is needed for adding '-'
+		// 'index_5' is needed for adding sensor value in str2
+		// 'index_6' is needed for adding '-'
+		// 'index_7' is needed for adding sensor value in str3
+		// 'index_8' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(":")-strlen(str1)-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("#");
+		int index_2 = length-strlen(":")-strlen(str1)-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("#");
+		int index_3 = length-strlen(str1)-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("#");
+		int index_4 = length-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("#");
+		int index_5 = length-strlen(str2)-strlen("-")-strlen(str3)-strlen("#");
+		int index_6 = length-strlen("-")-strlen(str3)-strlen("#");
+		int index_7 = length-strlen(str3)-strlen("#");
+		int index_8 = length-strlen("#");
 				
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");		
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
+	
+		// add input string defined in 'str1'
+		memcpy ( &buffer[index_3], str1, strlen(str1) );
 		
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str1, strlen(str1));
-		strcat((char*)buffer, "-");				
-		strncat((char*)buffer, str2, strlen(str2));
-		strcat((char*)buffer, "-");		
-		strncat((char*)buffer, str3, strlen(str3));
-		strcat((char*)buffer, "#\0");
-					
+		// add '-'
+		memcpy ( &buffer[index_4], "-", strlen("-") );
+	
+		// add input string defined in 'str2'
+		memcpy ( &buffer[index_5], str2, strlen(str2) );
+		
+		// add '-'
+		memcpy ( &buffer[index_6], "-", strlen("-") );
+	
+		// add input string defined in 'str3'
+		memcpy ( &buffer[index_7], str3, strlen(str3) );		
+	
+		// add separator '#'
+		memcpy ( &buffer[index_8], "#", strlen("#") );	
+		
 		// increment sensor fields counter 
 		numFields++;
 		
 		// set sensor fields counter
-		buffer[4]=numFields;
+		buffer[4] = numFields;
 	}
 	else
 	{
@@ -1219,8 +1633,8 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 
 	}
 
@@ -1285,30 +1699,75 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 		{
 			return -1;
 		}
-				
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");		
 		
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str1, strlen(str1));
-		strcat((char*)buffer, "-");				
-		strncat((char*)buffer, str2, strlen(str2));
-		strcat((char*)buffer, "-");		
-		strncat((char*)buffer, str3, strlen(str3));
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value in str1
+		// 'index_4' is needed for adding '-'
+		// 'index_5' is needed for adding sensor value in str2
+		// 'index_6' is needed for adding '-'
+		// 'index_7' is needed for adding sensor value in str3
+		// 'index_8' is needed for adding '+'
+		// 'index_9' is needed for adding sensor value in str4
+		// 'index_10' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(":")-strlen(str1)-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("+")-strlen(str4)-strlen("#");
+		int index_2 = length-strlen(":")-strlen(str1)-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("+")-strlen(str4)-strlen("#");
+		int index_3 = length-strlen(str1)-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("+")-strlen(str4)-strlen("#");
+		int index_4 = length-strlen("-")-strlen(str2)-strlen("-")-strlen(str3)-strlen("+")-strlen(str4)-strlen("#");
+		int index_5 = length-strlen(str2)-strlen("-")-strlen(str3)-strlen("+")-strlen(str4)-strlen("#");
+		int index_6 = length-strlen("-")-strlen(str3)-strlen("+")-strlen(str4)-strlen("#");
+		int index_7 = length-strlen(str3)-strlen("+")-strlen(str4)-strlen("#");
+		int index_8 = length-strlen("+")-strlen(str4)-strlen("#");
+		int index_9 = length-strlen(str4)-strlen("#");
+		int index_10 = length-strlen("#");
+	
+				
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
+	
+		// add input string defined in 'str1'
+		memcpy ( &buffer[index_3], str1, strlen(str1) );
+		
+		// add '-'
+		memcpy ( &buffer[index_4], "-", strlen("-") );
+	
+		// add input string defined in 'str2'
+		memcpy ( &buffer[index_5], str2, strlen(str2) );
+		
+		// add '-'
+		memcpy ( &buffer[index_6], "-", strlen("-") );
+	
+		// add input string defined in 'str3'
+		memcpy ( &buffer[index_7], str3, strlen(str3) );	
+		
 		if( val4>= 0 )
 		{
-			// if GMT is positive it is necessary to append a '+' character
-			strcat((char*)buffer, "+");
+			// add '+'
+			memcpy ( &buffer[index_8], "+", strlen("+") );
 		}
-		strncat((char*)buffer, str4, strlen(str4));
-		strcat((char*)buffer, "#\0");
-					
+		else
+		{		
+			// if negative then index_8 is useless because character '-' is
+			// implicit within the number, so it is necessary to delete 1 Byte
+			index_9 -= 1;
+			index_10 -= 1;
+		}
+		
+		// add input string defined in 'str4'
+		memcpy ( &buffer[index_9], str4, strlen(str4) );		
+	
+		// add separator '#'
+		memcpy ( &buffer[index_10], "#", strlen("#") );	
+		
 		// increment sensor fields counter 
 		numFields++;
 		
 		// set sensor fields counter
-		buffer[4]=numFields;
+		buffer[4] = numFields;
 	}
 	else
 	{
@@ -1335,8 +1794,8 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 
 	}
 
@@ -1392,19 +1851,50 @@ int8_t WaspFrame::addSensor(uint8_t type, int val1,int val2,int val3)
 		{
 			return -1;
 		}
-				
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");		
 		
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str1, strlen(str1));
-		strcat((char*)buffer, ";");				
-		strncat((char*)buffer, str2, strlen(str2));
-		strcat((char*)buffer, ";");		
-		strncat((char*)buffer, str3, strlen(str3));
-		strcat((char*)buffer, "#\0");
-					
+		
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value in str1
+		// 'index_4' is needed for adding ';'
+		// 'index_5' is needed for adding sensor value in str2
+		// 'index_6' is needed for adding ';'
+		// 'index_7' is needed for adding sensor value in str3
+		// 'index_8' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_2 = length-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_3 = length-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_4 = length-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_5 = length-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_6 = length-strlen(";")-strlen(str3)-strlen("#");
+		int index_7 = length-strlen(str3)-strlen("#");
+		int index_8 = length-strlen("#");
+				
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
+	
+		// add input string defined in 'str1'
+		memcpy ( &buffer[index_3], str1, strlen(str1) );
+		
+		// add ';'
+		memcpy ( &buffer[index_4], ";", strlen(";") );
+	
+		// add input string defined in 'str2'
+		memcpy ( &buffer[index_5], str2, strlen(str2) );
+		
+		// add ';'
+		memcpy ( &buffer[index_6], ";", strlen(";") );
+	
+		// add input string defined in 'str3'
+		memcpy ( &buffer[index_7], str3, strlen(str3) );		
+	
+		// add separator '#'
+		memcpy ( &buffer[index_8], "#", strlen("#") );	
+		
 		// increment sensor fields counter 
 		numFields++;
 		
@@ -1443,8 +1933,8 @@ int8_t WaspFrame::addSensor(uint8_t type, int val1,int val2,int val3)
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 
 	}
 
@@ -1490,18 +1980,48 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 		{
 			return -1;
 		}
+
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value in str1
+		// 'index_4' is needed for adding ';'
+		// 'index_5' is needed for adding sensor value in str2
+		// 'index_6' is needed for adding ';'
+		// 'index_7' is needed for adding sensor value in str3
+		// 'index_8' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_2 = length-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_3 = length-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_4 = length-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_5 = length-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		int index_6 = length-strlen(";")-strlen(str3)-strlen("#");
+		int index_7 = length-strlen(str3)-strlen("#");
+		int index_8 = length-strlen("#");
+				
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
 	
-		// concatenate sensor name to frame string		
-		strncat((char*)buffer, name, strlen(name));		
-		strcat((char*)buffer, ":");	
+		// add input string defined in 'str1'
+		memcpy ( &buffer[index_3], str1, strlen(str1) );
+		
+		// add ';'
+		memcpy ( &buffer[index_4], ";", strlen(";") );
 	
-		// concatenate sensor value to frame string		
-		strncat((char*)buffer, str1, strlen(str1));	
-		strcat((char *)buffer, ";");
-		strncat((char*)buffer, str2, strlen(str2));	
-		strcat((char *)buffer, ";");
-		strncat((char*)buffer, str3, strlen(str3));
-		strcat((char*)buffer, "#\0");	
+		// add input string defined in 'str2'
+		memcpy ( &buffer[index_5], str2, strlen(str2) );
+		
+		// add ';'
+		memcpy ( &buffer[index_6], ";", strlen(";") );
+	
+		// add input string defined in 'str3'
+		memcpy ( &buffer[index_7], str3, strlen(str3) );		
+	
+		// add separator '#'
+		memcpy ( &buffer[index_8], "#", strlen("#") );	
 		
 		// increment sensor fields counter 
 		numFields++;
@@ -1556,8 +2076,8 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 
 		// increment sensor fields counter 
 		numFields++;
-		// set sensor fields counter
-		buffer[4]=numFields;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
 
 	}		
 
@@ -1680,13 +2200,26 @@ void WaspFrame::setID(char* moteID)
 		eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, 0x00);
 	}
 	
+	// clear the waspmote ID attribute
+	memset( _waspmoteID, 0x00, sizeof(_waspmoteID) );
+	
 	// set the mote ID from EEPROM memory
 	for( int i=0 ; i<16 ; i++ )
 	{		
-		eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, moteID[i]);
-		// break if end of string
-		if( moteID[i] == '\0') 
+		if( moteID[i] != '#' )
 		{
+			eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, moteID[i]);
+			_waspmoteID[i] = moteID[i];
+		}
+		else
+		{
+			eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, '_');
+			_waspmoteID[i] = '_';
+		}
+		
+		// break if end of string
+		if( moteID[i] == '\0')
+		{			
 			break;
 		}
 	}
@@ -1701,14 +2234,17 @@ void WaspFrame::setID(char* moteID)
  */
 void WaspFrame::getID(char* moteID)
 {
+	// clear the waspmote ID attribute
+	memset( _waspmoteID, 0x00, sizeof(_waspmoteID) );
 	
 	// read mote ID from EEPROM memory
 	for(int i=0 ; i<16 ; i++ )
 	{
-		moteID[i]=Utils.readEEPROM(i+MOTEID_ADDR);
-	}
+		_waspmoteID[i] = Utils.readEEPROM(i+MOTEID_ADDR);
+		moteID[i] = _waspmoteID[i];
+	}	
 	moteID[16]='\0';
-	
+		
 }
 
 

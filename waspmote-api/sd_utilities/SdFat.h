@@ -1,5 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
+ * Modified in 2014 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -35,6 +36,7 @@
 //------------------------------------------------------------------------------
 #include "SdFile.h"
 #include "SdStream.h"
+#include "pins_waspmote.h"
 //------------------------------------------------------------------------------
 /**
  * \class SdFat
@@ -53,7 +55,7 @@ class SdFat {
   void errorPrint();
   void errorPrint(char const *msg);
   bool exists(const char* name);
-  bool begin(uint8_t chipSelectPin = SD_CHIP_SELECT_PIN,
+  bool begin(uint8_t chipSelectPin = SD_SS,
     uint8_t sckDivisor = SPI_FULL_SPEED);
   void initErrorHalt();
   void initErrorHalt(char const *msg);

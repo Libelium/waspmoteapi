@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		2.0
+    Version:		2.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -52,9 +52,11 @@
 #define BUFFER_UART 250		
 
 
-#define	AT_GPRS_APN		"apn"
-#define	AT_GPRS_LOGIN	"login"
-#define	AT_GPRS_PASSW	"pass"
+#define	AT_GPRS_APN		"APN"
+#define	AT_GPRS_LOGIN	"user"
+#define	AT_GPRS_PASSW	"password"
+
+
 
 #define	AT_COMMAND	"AT"
 #define OK_RESPONSE "OK"

@@ -17,10 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
-
-    Design:		David Gascón
-
+    Version:		1.3
+    Design:			David Gascón
     Implementation:	Alejandro Gállego
 
 */
@@ -38,14 +36,11 @@
  
 #include <inttypes.h>
 
-//#include <WaspXBee802.h>
-//#include <WaspXBeeDM.h>
-//#include <WaspXBeeZB.h>
 //#include <WaspWIFI.h>
 
 //!Module fuses
 #define GSM_FUSE	1		//Call and SMS related funtions and constants
-#define CAMERA_FUSE	1		//Camera related funtions and constants
+#define CAMERA_FUSE	0		//Camera related funtions and constants
 #define FTP_FUSE	1		//FTP related funtions and constants
 #define MAIL_FUSE	1		//SMTP and POP3 related functions and constants
 #define HTTP_FUSE	1		//HTTP and HTTPS related funtions and constants
@@ -519,11 +514,7 @@ class Wasp3G
 		char course[6];
 	
 	#endif
-	
-	#ifdef TRANSMISSION_FUSE	
-		uint8_t session_ID;
-	#endif
-	
+		
 	 //! class constructor
     /*!
 	It initializes some variables
@@ -2012,28 +2003,6 @@ class Wasp3G
 	void show_APN();
 	
 	#if TRANSMISSION_FUSE
-	
-	//! Sends a picture or a video to Meshlium
-    /*!
-	\param char* origin_path: the name of the file in the 3G/GPRS module
-	\param char* destiny_name: the name of the file to store
-	\param char* MAC_destiny: MAC address of Meshlium
-	\return '1' if success, '-2' if error getting the size of the file in the 3G/GPRS module, '-3' if time out sending the INITIAL frame, 
-		'-4' if error sending the INITIAL frame to Meshlium, '-5' if NACK received from Meshlium in the INITIAL frame, 
-		'-6' if error getting the file from the 3G/GPRS module,'-7' if error sending the file to Meshlium and also error sending the END frame, 
-		'-8' if error sending the file to Meshlium, '-9' if error sending the END frame
-	*/
-	int8_t sendFiletoMeshlium(char* origin_path, char* destiny_name, char* MAC_address);
-	
-	//! Sends a packet to Meshlium
-    /*!
-	\param uint8_t* frame: packet to send
-	\param uint16_t frame_length: length of the packet
-	\param char* MAC_destiny: MAC address of Meshlium
-	\param uint8_t wait_for_answer: indicates if the function must wait an answer from Meshlium
-	\return '1' if ACK received, '2' if NACK received, '0' if timeout and '-2' if error sending the packet
-	*/
-	int8_t sendPacket(uint8_t* frame, uint16_t frame_length, char* MAC_destiny, uint8_t wait_for_answer);
 	
 	//! Uploads a file to a FTP using the WiFi connection
     /*!

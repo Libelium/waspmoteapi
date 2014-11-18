@@ -16,7 +16,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 
@@ -109,13 +109,6 @@ private:
 	 */
     void printNumber(unsigned long n, uint8_t base);
 	
-	//! It prints a 'float' number
-  	/*!
-	\param double number : the number to print
-	\param uint8_t digits : the number of non-integer part digits
-	\return void
-	 */
-    void printFloat(double number, uint8_t digits);
     
     
 public:
@@ -339,6 +332,13 @@ public:
 	 */
 	void  printf(char *fmt, ... );
 	
+	//! It prints a 'float' number
+  	/*!
+	\param double number : the number to print
+	\param uint8_t digits : the number of non-integer part digits
+	\return void
+	 */
+    void printFloat(double number, uint8_t digits);
 };
 
 extern WaspUSB USB;

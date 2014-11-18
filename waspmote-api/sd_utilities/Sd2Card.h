@@ -1,5 +1,6 @@
 /* Arduino Sd2Card Library
  * Copyright (C) 2012 by William Greiman
+ * Modified in 2014 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino Sd2Card Library
  *
@@ -27,7 +28,8 @@
 #include <wiring.h>
 #include "SdFatConfig.h"
 #include "SdInfo.h"
-#include "SdSpi.h"
+#include "../WaspUSB.h"
+#include "pins_waspmote.h"
 //------------------------------------------------------------------------------
 /** Set SCK to max rate of F_CPU/2. */
 uint8_t const SPI_FULL_SPEED = 2;
@@ -127,7 +129,7 @@ class Sd2Card {
  public:
   /** Construct an instance of Sd2Card. */
   Sd2Card() : m_errorCode(SD_CARD_ERROR_INIT_NOT_CALLED), m_type(0) {}
-  bool begin(uint8_t chipSelectPin = SD_CHIP_SELECT_PIN,
+  bool begin(uint8_t chipSelectPin = SD_SS,
             uint8_t sckDivisor = SPI_FULL_SPEED);
   uint32_t cardSize();
   bool erase(uint32_t firstBlock, uint32_t lastBlock);
@@ -154,7 +156,7 @@ class Sd2Card {
  * can be determined by calling errorCode() and errorData().
  */
   bool init(uint8_t sckDivisor = SPI_FULL_SPEED,
-            uint8_t chipSelectPin = SD_CHIP_SELECT_PIN) {
+            uint8_t chipSelectPin = SD_SS) {
     return begin(chipSelectPin, sckDivisor);
   }
   bool readBlock(uint32_t block, uint8_t* dst);
@@ -213,8 +215,8 @@ class Sd2Card {
   void type(uint8_t value) {m_type = value;}
   bool waitNotBusy(uint16_t timeoutMillis);
   bool writeData(uint8_t token, const uint8_t* src);
-  // private data
-  static SdSpi m_spi;
+ 
+  // private data  
   uint8_t m_chipSelectPin;
   uint8_t m_errorCode;
   uint8_t m_sckDivisor;

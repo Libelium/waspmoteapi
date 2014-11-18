@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
-    Implementation:	David Cuartielles, Alberto Bielsa
+    Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
  
   
@@ -337,6 +337,9 @@
 /*! \def REG_SD
     \brief Bit dedicated to the marking of the SD module 
  */
+/*! \def REG_SX
+    \brief Bit dedicated to the marking of the Semtech module 
+ */
 #define	REG_5V				1		// bit 0
 #define	REG_3V3				2 		// bit 1
 #define	REG_SOCKET0			4 		// bit 2
@@ -354,6 +357,7 @@
 #define	REG_WATER			16384	// bit 14
 #define	REG_OTA				32768	// bit 15
 #define	REG_SD				65536	// bit 16
+#define	REG_SX				131072	// bit 17
 
 
 /*******************************************************************************

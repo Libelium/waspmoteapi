@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.5
+ *  Version:		1.6
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -889,37 +889,6 @@ void WaspUtils::float2String (float fl, char str[], int N)
 	str[indice]='\0';
 }
 
-/* 
- * setSPISlave() - It selects the slave on SPI bus to use
- *
- * It selects the slave on SPI bus to use
- */
-void WaspUtils::setSPISlave(uint8_t SELECTION)
-{
-	pinMode(SD_SS,OUTPUT);	
-	pinMode(SOCKET0_SS,OUTPUT);
-	pinMode(MUX_TX,OUTPUT);
-	digitalWrite(SD_SS,HIGH);
-	digitalWrite(SOCKET0_SS,HIGH);
-	digitalWrite(GPRS_PW,HIGH);
-	
-	switch(SELECTION)
-	{
-		case SD_SELECT:		 digitalWrite(SD_SS,LOW);
-							 break;
-		case SOCKET0_SELECT: digitalWrite(SOCKET0_SS,LOW);
-							 break;
-		case SOCKET1_SELECT: setMuxSocket1();
-							 digitalWrite(MUX_TX,LOW);
-							 break;
-		case ALL_DESELECTED: digitalWrite(SD_SS,HIGH);							 
-							 digitalWrite(SOCKET0_SS,HIGH);
-							 setMuxSocket1();
-							 digitalWrite(MUX_TX,HIGH);
-							 break;
-		
-	}
-}
 
 
 /*

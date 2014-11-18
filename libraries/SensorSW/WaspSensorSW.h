@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.0
+ *  Version:		2.1
  *  Design:			Ahmad Saad
  */
 
@@ -252,11 +252,16 @@ class DIClass
 		DIClass();
 		DIClass(uint8_t);
 		float readDI();
+		void setCalibrationPoints(float calibrationValues[]);
+		float calculateConcentration(float input);
 
 	private:
 
 		uint8_t DIChannel;
 		uint8_t DISwitch;
+
+		float slope;
+		float intersection;
 		
 };
 

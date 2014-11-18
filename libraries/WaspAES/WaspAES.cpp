@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alvaro Gonzalez, Yuri Carmona
  *
@@ -793,8 +793,8 @@ uint8_t WaspAES::encrypt(	uint16_t keySize,
 			ECBEncrypt( original_data, size, keySize);
 		}
 				
-		// convert to char
-		for (uint16_t i=0; i < size+1;i++)
+		// copy result
+		for (uint16_t i=0; i < size;i++)
 		{
 			encrypted_message[i] = original_data[i];
 		}
@@ -898,8 +898,8 @@ uint8_t WaspAES::encrypt(	uint16_t keySize,
 			CBCEncrypt(original_data,size,initialVector,keySize);
 		}
 
-		// Convert original_data to char format
-		for (uint16_t i=0; i < size+1;i++)
+		// Copy result
+		for (uint16_t i=0; i < size;i++)
 		{
 			encrypted_message[i] = original_data[i];
 		}

@@ -1514,7 +1514,7 @@ uint8_t WaspXBeeCore::getPowerLevel()
         error_AT=2;
         
         // get_power_level
-		strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[31])));
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[32])));
 		if(buffer==NULL) return 1;
 
 		gen_data(buffer);

@@ -17,8 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.1
-    Design:		David Gascón
+    Version:		1.0
+    Design:			David Gascón
     Implementation:	Ahmad Saad
 
  */
