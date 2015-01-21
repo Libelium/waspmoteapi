@@ -1,7 +1,7 @@
 /*! \file WaspSX1272.h
     \brief Library for managing Semtech modules
 
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
 
     This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
-    Implementation:	Covadonga Albiñana
+    Implementation:	Covadonga Albiñana, Yuri Carmona
 
  */
 
@@ -46,7 +46,7 @@
 
 #define SX1272_debug_mode 0
 
-//#define WASPMOTE_GATEWAY_FOR_MESHLIUM
+#define WASPMOTE_GATEWAY_FOR_MESHLIUM
 
 //! MACROS //
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)  // read a bit
@@ -241,7 +241,7 @@ const uint8_t OFFSET_PAYLOADLENGTH = 5;
 const uint8_t OFFSET_RSSI = 137;
 const uint8_t NOISE_FIGURE = 6.0;
 const uint8_t NOISE_ABSOLUTE_ZERO = 174.0;
-const uint16_t MAX_TIMEOUT = 8000;		//8000 msec = 8.0 sec
+const uint16_t MAX_TIMEOUT = 10000;		//10000 msec = 10.0 sec
 const uint16_t MAX_WAIT = 12000;		//12000 msec = 12.0 sec
 const uint32_t MESH_TIMEOUT = 3600000;  //3600000 msec = 3600 sec = 1 hour
 const uint8_t MAX_RETRIES = 5;
@@ -893,7 +893,16 @@ public:
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
-	\return '0' on success, '1' otherwise
+	\return '9'  --> The ACK lost (no data available)
+			'8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t sendPacketMAXTimeoutACK(uint8_t dest, 
 									char *payload);
@@ -904,7 +913,16 @@ public:
 	\param uint8_t dest : packet destination.
 	\param uint8_t payload: packet payload.
 	\param uint16_t length : payload buffer length.
-	\return '0' on success, '1' otherwise
+	\return '9'  --> The ACK lost (no data available)
+			'8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t sendPacketMAXTimeoutACK(uint8_t dest, 
 									uint8_t *payload, 
@@ -915,7 +933,16 @@ public:
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
-	\return '0' on success, '1' otherwise
+	\return '9'  --> The ACK lost (no data available)
+			'8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t sendPacketTimeoutACK(	uint8_t dest, 
 									char *payload);
@@ -926,7 +953,16 @@ public:
 	\param uint8_t dest : packet destination.
 	\param uint8_t payload: packet payload.
 	\param uint16_t length : payload buffer length.
-	\return '0' on success, '1' otherwise
+	\return '9'  --> The ACK lost (no data available)
+			'8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t sendPacketTimeoutACK(	uint8_t dest, 
 									uint8_t *payload, 
@@ -938,7 +974,16 @@ public:
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
 	\param uint16_t wait : time to wait to send the packet.
-	\return '0' on success, '1' otherwise
+	\return '9'  --> The ACK lost (no data available)
+			'8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t sendPacketTimeoutACK(	uint8_t dest, 
 									char *payload,
@@ -951,7 +996,16 @@ public:
 	\param uint8_t payload: packet payload.
 	\param uint16_t length : payload buffer length.
 	\param uint16_t wait : time to wait to send the packet.
-	\return '0' on success, '1' otherwise
+	\return '9'  --> The ACK lost (no data available)
+			'8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t sendPacketTimeoutACK(uint8_t dest, 
 									uint8_t *payload, 
@@ -971,6 +1025,14 @@ public:
 	\return '0' on success, '1' otherwise
 	 */
 	uint8_t setTimeout();
+	
+	//! It gets the theoretical value of the time-on-air of the packet
+  	/*! \remarks http://www.semtech.com/images/datasheet/sx1272.pdf
+   	It stores in global '_sendTime' variable the time for each mode.
+	\return float: time on air depending on module settings and packet length
+	 */
+	float timeOnAir();
+	float timeOnAir( uint16_t payloadlength );
 
 	//! It sets the payload of the packet that is going to be sent.
   	/*!
@@ -989,7 +1051,15 @@ public:
 	//! If an ACK is received, it gets it and checks its content.
 	/*!
 	 *
-	\return '0' on success, '1' otherwise
+	\return '8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t getACK();
 
@@ -998,7 +1068,15 @@ public:
 	/*!
 	 *
 	\param uint16_t wait : time to wait while there is no an ACK received.
-	\return '0' on success, '1' otherwise
+	\return '8'  --> The ACK lost
+			'7'  --> The ACK destination incorrectly received
+			'6'  --> The ACK source incorrectly received
+			'5'  --> The ACK number incorrectly received
+			'4'  --> The ACK length incorrectly received
+			'3'  --> N-ACK received
+			'2'  --> The ACK has not been received
+			'1'  --> not used (reserved)
+			'0'  --> The ACK has been received with no errors
 	*/
 	uint8_t getACK(uint16_t wait);
 

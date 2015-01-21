@@ -1,7 +1,7 @@
 /*! \file WaspFrame.h
     \brief Library for creating formated frames
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.4
+    Version:		1.5
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -325,6 +325,109 @@
     \brief GPS PDOP over the ground measurement type
  */
 
+
+/// State Machine
+/*! \def SENSOR_FSM
+    \brief Finite State Machine (FSM) value
+ */
+
+
+/// New pluviometer values
+/*! \def SENSOR_PLV1
+    \brief pluviomter value for current hour
+ */
+ /*! \def SENSOR_PLV2
+    \brief pluviomter value for previous hour
+ */
+ /*! \def SENSOR_PLV3
+    \brief pluviomter value for last 24h
+ */
+
+/// P&S watermarks
+/*! \def SENSOR_SOIL_C
+    \brief watermark value for P&S connector C
+ */
+ /*! \def SENSOR_SOIL_D
+    \brief watermark value for P&S connector D
+ */
+ /*! \def SENSOR_SOIL_E
+    \brief watermark value for P&S connector E
+ */
+ /*! \def SENSOR_SOIL_F
+    \brief watermark value for P&S connector F
+ */
+
+/// Waspmote OEM watermarks
+/*! \def SENSOR_SOIL1
+    \brief Agriculture Board watermark1
+ */
+ /*! \def SENSOR_SOIL2
+    \brief Agriculture Board watermark2
+ */
+ /*! \def SENSOR_SOIL3
+    \brief Agriculture Board watermark3
+ */
+ 
+ /// DS18B20
+ /*! \def SENSOR_TCC
+    \brief DS18B20 temperature sensor
+ */
+ 
+ /// P&S Ultrasound depending on socket voltage ref
+ /*! \def SENSOR_US_3V3
+    \brief WRA1 Ultrasound sensor powered at 3V3
+ */ 
+/*! \def SENSOR_US_5V
+    \brief WRA1 Ultrasound sensor powered at 5V
+ */
+
+
+/// P&S Security sensors depending on socket (Security - Events board)
+ /*! \def SENSOR_LUM_D
+    \brief LDR sensor in socket D
+ */  
+/*! \def SENSOR_LUM_E
+    \brief LDR sensor in socket E
+ */ 
+ /*! \def SENSOR_LUM_F
+    \brief LDR sensor in socket F
+ */ 
+ /*! \def SENSOR_LP_D
+    \brief Liquid Presence sensor in socket D
+ */ 
+ /*! \def SENSOR_LP_E
+    \brief Liquid Presence sensor in socket E
+ */ 
+ /*! \def SENSOR_LP_F
+    \brief Liquid Presence sensor in socket F
+ */  
+ /*! \def SENSOR_LL_D
+    \brief Liquid Level sensor in socketD
+ */ 
+ /*! \def SENSOR_LL_E
+    \brief Liquid Level sensor in socketE
+ */ 
+ /*! \def SENSOR_LL_F
+    \brief Liquid Level sensor in socketF
+ */  
+ /*! \def SENSOR_HALL_D
+    \brief Hall Effect sensor in socket D
+ */ 
+ /*! \def SENSOR_HALL_E
+    \brief Hall Effect sensor in socket E
+ */ 
+ /*! \def SENSOR_HALL_F
+    \brief Hall Effect sensor in socket F
+ */ 
+ 
+/// P&S liquid flow sensor depending on socket (Smart Metering)
+/*! \def SENSOR_WF_C
+    \brief Liquid Flow sensor in socket C
+ */   
+/*! \def SENSOR_WF_E
+    \brief Liquid Flow sensor in socket E
+ */ 
+
  
 // Gases
 #define SENSOR_CO	 	0
@@ -430,25 +533,68 @@
 #define SENSOR_DICL	 	78
 #define SENSOR_DIBR	 	79
 #define SENSOR_DII	 	80
-#define SENSOR_DICU2		81
+#define SENSOR_DICU2	81
 #define SENSOR_DIK	 	82
-#define SENSOR_DIMG2		83
-#define SENSOR_DINO3		84
+#define SENSOR_DIMG2	83
+#define SENSOR_DINO3	84
 
 // Smart Libelium
-#define SENSOR_DM_ST		85
-#define SENSOR_DM_SP		86
-#define SENSOR_TX_PWR		87
+#define SENSOR_DM_ST	85
+#define SENSOR_DM_SP	86
+#define SENSOR_TX_PWR	87
 #define SENSOR_LUX		88
 
 // GPS
-#define SENSOR_SPEED		89
-#define SENSOR_COURSE		90
-#define SENSOR_ALTITUDE		91
+#define SENSOR_SPEED	89
+#define SENSOR_COURSE	90
+#define SENSOR_ALTITUDE	91
 #define SENSOR_HDOP		92
 #define SENSOR_VDOP		93
 #define SENSOR_PDOP		94
 
+// Finite State Machine status
+#define SENSOR_FSM		95
+
+// New pluviometer values
+#define SENSOR_PLV1  	96
+#define SENSOR_PLV2  	97
+#define SENSOR_PLV3  	98
+
+// P&S watermark sensors (Smart Agriculture)
+#define SENSOR_SOIL_C  	99
+#define SENSOR_SOIL_D  	100
+#define SENSOR_SOIL_E  	101
+#define SENSOR_SOIL_F  	102
+
+// Waspmote OEM watermark sensors
+#define SENSOR_SOIL1  	103
+#define SENSOR_SOIL2  	104
+#define SENSOR_SOIL3  	105
+
+// DS18B20
+#define SENSOR_TCC  	106
+
+// P&S Ultrasound depending on socket voltage ref (Smart Cities & Smart Metering)
+#define SENSOR_US_3V3  	107
+#define SENSOR_US_5V  	108
+
+// P&S Security sensors depending on socket (Smart Security)
+#define SENSOR_LUM_D	109
+#define SENSOR_LUM_E	110
+#define SENSOR_LUM_F	111
+#define SENSOR_LP_D		112
+#define SENSOR_LP_E		113
+#define SENSOR_LP_F		114
+#define SENSOR_LL_D		115
+#define SENSOR_LL_E		116
+#define SENSOR_LL_F		117
+#define SENSOR_HALL_D	118
+#define SENSOR_HALL_E	119
+#define SENSOR_HALL_F	120
+
+// P&S liquid flow sensor depending on socket (Smart Metering)
+#define SENSOR_WF_C		121
+#define SENSOR_WF_E		122
 
 
 
@@ -692,20 +838,6 @@ public:
 	 */
     uint8_t encryptFrame( uint16_t AESmode, char* password );
     
-    //! Function : decrypts a frame
-    /*! This function decrypts an encrypted frame. It extracts the encrypted 
-     * message within the paylaod, performs the decryption process and stores 
-     * the result in 'frame.buffer' and 'frame.length'
-	\param uint16_t AESmode: specifies the AES key mode: 128, 192 or 256
-	\param char* password: specifies the AES key as a string
-	\param uint8_t *input: pointer to the encrypted frame buffer
-	\param uint16_t length: specifies the length of the encrypted frame
-	\return '1' if OK; '0' otherwise
-	 */
-    uint8_t decryptFrame(	uint16_t keySize, 
-							char* password, 
-							uint8_t *input,
-							uint16_t length);
     
 	//! Function : set the frame type
     /*! This function sets the frame type (fourth byte of the frame header)
@@ -741,6 +873,8 @@ public:
 
     void setID(char* moteID);
     void getID(char* moteID);
+    
+    void decrementSequence(void);
         
     //! Variable : buffer where the frame is created in
     /*!

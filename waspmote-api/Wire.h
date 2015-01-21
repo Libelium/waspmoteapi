@@ -1,5 +1,5 @@
 /*
- *  Modified for Waspmote by A. Bielsa, 2009
+ *  Modified for Waspmote by Libelium, 2009-2015
  *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
@@ -28,6 +28,9 @@
 class TwoWire
 {
   private:
+  	bool _5V_ON;
+	bool _3V3_ON;
+	
     static uint8_t rxBuffer[BUFFER_LENGTH];
     static uint8_t rxBufferIndex;
     static uint8_t rxBufferLength;
@@ -42,6 +45,8 @@ class TwoWire
     static void (*user_onReceive)(int);
     static void onRequestService(void);
     static void onReceiveService(uint8_t*, int);
+  
+  
   public:
     TwoWire();
     
@@ -52,9 +57,9 @@ class TwoWire
     void begin(int);
     void beginTransmission(uint8_t);
     void beginTransmission(int);
-    void endTransmission(void);
-    void requestFrom(uint8_t, uint8_t);
-    void requestFrom(int, int);
+    uint8_t endTransmission(void);    
+    uint8_t requestFrom(uint8_t, uint8_t);
+    uint8_t requestFrom(int, int);
     void send(uint8_t);
     void send(uint8_t*, uint8_t);
     void send(int);
@@ -64,6 +69,14 @@ class TwoWire
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
     void close();
+    
+    //! Variable : indicates when Sensor Board is being powered on
+  	/*! true: ON; false: OFF
+   	*/
+	bool isBoard;
+	
+    void secureBegin();
+    void secureEnd();
 };
 
 extern TwoWire Wire;

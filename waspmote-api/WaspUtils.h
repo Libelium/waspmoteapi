@@ -1,7 +1,7 @@
 /*! \file WaspUtils.h
     \brief Library containing useful general functions
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -68,25 +68,17 @@
  */
 #define EEPROM_START 1024
 
-/*! \def SD_SELECT
-    \brief select SD on SPI bus
+/*! \def EEPROM_PROG_VERSION
+    \brief EEPROM address for program version
  */
-#define	SD_SELECT	0
+#define EEPROM_PROG_VERSION 		225
+#define EEPROM_PROG_VERSION_BACKUP 	226
 
-/*! \def SOCKET0_SELECT
-    \brief select SOCKET 0 on SPI bus
+/*! \def EEPROM_SERIALID_START
+    \brief Starting address for the backup of Serial ID of Waspmote (4B)
  */
-#define	SOCKET0_SELECT	1
+#define EEPROM_SERIALID_START 227
 
-/*! \def SOCKET1_SELECT
-    \brief select SOCKET 1 on SPI bus
- */
-#define	SOCKET1_SELECT	2
-
-/*! \def ALL_DESELECTED
-    \brief deselect all devides on SPI bus
- */
-#define	ALL_DESELECTED	3
 
 
 /******************************************************************************
@@ -271,16 +263,35 @@ class WaspUtils
   //! It reads the Waspmote unique serial identifier
   /*!
   \return unsigned long: Waspmote unique serial identifier
-  \sa 
    */
-  unsigned long readSerialID();
+  unsigned long readSerialID();  
+  
+  //! It sets the Waspmote unique serial identifier to eeprom
+  /*!
+  \return bool: 'true' if OK; 'false' otherwise
+   */
+  bool setSerialEEPROM( unsigned long serial );
+  
+  //! It gets the Waspmote unique serial identifier from eeprom
+  /*!
+  \return unsigned long: the serial read from eeprom memory
+   */
+  unsigned long getSerialEEPROM();
   
   //! It reads the DS1820 temperature sensor
   /*!
-  \return long: Temperature of DS1820 sensor
-  \sa 
+  \param  uint8_t pin: digital MCU pin used for one wire comm
+  \return float: Temperature of DS1820 sensor
    */
-  float readTempDS1820(uint8_t pin);
+  float readTempDS1820( uint8_t pin );  
+  
+  //! It reads the DS1820 temperature sensor
+  /*!
+  \param  uint8_t pin: digital MCU pin used for one wire comm
+  \param  bool is3v3: indicates if 3v3 power supply is needed for powering sensor
+  \return float: Temperature of DS1820 sensor
+   */
+  float readTempDS1820( uint8_t pin, bool is3v3 );
   
   //! It reads the temperature sensor
   /*!

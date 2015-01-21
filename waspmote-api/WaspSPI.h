@@ -1,7 +1,7 @@
 /*! \file WaspUtils.h
     \brief Library containing useful general functions
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -81,6 +81,27 @@
 #define SPI_CLOCK_MASK 		0x03  // SPR1 = bit 1, SPR0 = bit 0 on SPCR
 #define SPI_2XCLOCK_MASK 	0x01  // SPI2X = bit 0 on SPSR
 
+
+
+/*! \def SD_SELECT
+    \brief select SD on SPI bus
+ */
+/*! \def SOCKET0_SELECT
+    \brief select SOCKET 0 on SPI bus
+ */
+/*! \def SOCKET1_SELECT
+    \brief select SOCKET 1 on SPI bus
+ */
+/*! \def ALL_DESELECTED
+    \brief deselect all devides on SPI bus
+ */
+enum spi_selection {
+	SD_SELECT,
+	SOCKET0_SELECT,
+	SOCKET1_SELECT,
+	ALL_DESELECTED,
+};
+
 /******************************************************************************
  * Class
  ******************************************************************************/
@@ -138,6 +159,8 @@ public:
   	/*! true: ON; false: OFF
    	*/
 	boolean 	isSD;
+	
+	boolean		isDustSensor;
 };
 
 extern WaspSPI SPI;

@@ -1,8 +1,12 @@
 /*! \file WaspRTC.h
     \brief Library for managing the RTC
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
+    
+ 	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
+ 	constants related to them are based on the library 'time' developed by 
+ 	Michael Margolis 2009-2014: https://www.pjrc.com/teensy/td_libs_Time.html
  
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -17,9 +21,9 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
-    Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza
+    Implementation:	A. Bielsa, D. Cuartielles, M. Yarza, Y. Carmona
 
 */
 
@@ -269,6 +273,34 @@
 #define	RTC_I2C_MODE	1
 #define	RTC_NORMAL_MODE	0
 
+/* Useful Constants */
+#define SECS_PER_MIN  (60UL)
+#define SECS_PER_HOUR (3600UL)
+#define SECS_PER_DAY  (SECS_PER_HOUR * 24UL)
+#define DAYS_PER_WEEK (7UL)
+#define SECS_PER_WEEK (SECS_PER_DAY * DAYS_PER_WEEK)
+#define SECS_PER_YEAR (SECS_PER_WEEK * 52UL)
+#define SECS_YR_2000  (946684800UL) // the time at the start of y2k
+
+// leap year calulator expects year argument as years offset from 2000
+#define LEAP_YEAR(Y)     ( ((2000+Y)>0) && !((2000+Y)%4) && ( ((2000+Y)%100) || !((2000+Y)%400) ) )
+
+
+// API starts months from 1, this array starts from 0
+static  const uint8_t monthDays[]={31,28,31,30,31,30,31,31,30,31,30,31}; 
+ 
+// Struct for storing time structures: YYMMDDHHMMS
+typedef struct  
+{ 
+  uint8_t second; 
+  uint8_t minute; 
+  uint8_t hour; 
+  uint8_t day;   // day of week, sunday is day 1
+  uint8_t date;
+  uint8_t month; 
+  uint8_t year; 
+} 	timestamp_t;
+ 
 /******************************************************************************
  * Class
  ******************************************************************************/
@@ -420,6 +452,11 @@ class WaspRTC
 	 */
 	char timeStamp[100];
 	
+	//! Variable : It stores the epoch time when getUnixTime() is called
+    /*!    
+	 */
+	unsigned long epoch;
+	
 
 	// RTC Internal Functions
 	//! It resets the variables used through the library
@@ -513,11 +550,10 @@ class WaspRTC
 	
 	// RTC User Functions
 	
-	//! It opens I2C bus and powers the RTC
+	//! It powers the RTC and initializes variables
     /*!
 	\param void
-	\return void
-	\sa close(), 
+	\return void 
     */ 
 	void ON();
 	
@@ -711,6 +747,53 @@ class WaspRTC
 	\return temperature
 	 */
 	float getTemperature();
+	
+	//! It gets the timestamp (in seconds) from 1st January 1970
+    /*! This function calls getTime() function to get actual values and then 
+     * calculate the epoch time from RTC time and date
+	\param void
+	\return timestamp
+	 */
+	unsigned long getEpochTime();
+	
+	//! It gets the timestamp (in seconds) from 1st January 1970
+    /*! This function uses the input date and time to calculate the epoch time.
+     * It is necessary to indicate year, month, day, hour, minute and second
+	\param 	uint8_t Year: It is specified as two ciphers. i.e. 2014 is 14
+			uint8_t Month: month to be used.
+			uint8_t Date: day of month to be used. 
+			uint8_t Hour: hour to be used. 
+			uint8_t Minute: minute to be used.
+			uint8_t Second: second to be used. 
+	\return timestamp
+	 */
+	unsigned long getEpochTime(	uint8_t Year,
+								uint8_t Month,
+								uint8_t Date,
+								uint8_t Hour,
+								uint8_t Minute,
+								uint8_t Second);
+	
+	//! It gets the year, month, day, hour, minute and second values from input 
+	//! epoch time
+    /*! This function calculates the structure as an ABSOLUTE time. For example, 
+	* if timeInput equals to 1416933867, this function stores the following 
+	* data within the structure: Tue, 25 Nov 2014 16:44:27 GMT
+	\param 	unsigned long timeInput: input epoch time
+	\param 	timestamp_t *tm: pointer to a structure where time and date is stored
+	\return void
+	 */						
+	void breakTimeAbsolute(unsigned long timeInput, timestamp_t *tm);	
+	
+	//! It gets the offset time from input seconds time
+    /*! This function calculates the structure as a relative OFFSET time. For 
+	* example, if timeInput equals to 411361, this function stores the following 
+	* data within the structure: 4 days, 18 hours, 16 minutes and 1 seconds.
+	\param 	unsigned long timeInput: input seconds time
+	\param 	timestamp_t *tm: pointer to a structure where time and date is stored
+	\return void
+	 */	
+	void breakTimeOffset(unsigned long timeInput, timestamp_t *tm);
 };
 
 extern WaspRTC RTC;

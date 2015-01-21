@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation: Manuel Calahorra
  */
@@ -49,8 +49,6 @@ WaspSensorCities::WaspSensorCities()
 	pinMode(18,INPUT);
 	pinMode(19,INPUT);
 	pinMode(20,INPUT);
-	pinMode(SENS_PW_3V3,OUTPUT);
-	pinMode(SENS_PW_5V,OUTPUT);
 
 	digitalWrite(DIGITAL1,LOW);
 	digitalWrite(DIGITAL2,LOW);
@@ -59,9 +57,11 @@ WaspSensorCities::WaspSensorCities()
 	digitalWrite(DIGITAL6,LOW);
 	digitalWrite(DIGITAL7,LOW);
 	digitalWrite(DIGITAL8,LOW);
-	digitalWrite(15,LOW);
-	digitalWrite(SENS_PW_3V3,LOW);
-	digitalWrite(SENS_PW_5V,LOW);
+	digitalWrite(15,LOW);	
+	
+	// init power supply to OFF state
+	PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	
 	// update Waspmote Control Register
 	WaspRegister |= REG_CITIES_V15;
@@ -101,13 +101,17 @@ int8_t	WaspSensorCities::setBoardMode(uint8_t mode)
 {
 	switch( mode )
 	{
-		case	SENS_ON :	// switch on the power supplies
+		case	SENS_ON :	// update I2C flag
+							Wire.isBoard = true;
+							// switch on the power supplies
 							PWR.setSensorPower(SENS_3V3, SENS_ON);
 							PWR.setSensorPower(SENS_5V, SENS_ON);
 							// Sets RTC on to enable I2C
 							if(!RTC.isON) RTC.setMode(RTC_ON, RTC_I2C_MODE);
 							break;
-		case	SENS_OFF:	// switch off the power supplies
+		case	SENS_OFF:	// update I2C flag
+							Wire.isBoard = false;
+							// switch off the power supplies
 							PWR.setSensorPower(SENS_3V3, SENS_OFF);
 							PWR.setSensorPower(SENS_5V, SENS_OFF);
 							break;
@@ -506,65 +510,11 @@ uint8_t	WaspSensorCities::loadInt()
  */
 float WaspSensorCities::readTempDS1820()
 {
-	//PWR.setSensorPower(SENS_3V3,SENS_ON);
-	//delay(1000);
-	
-	// analog 4
-	WaspOneWire OneWireTemp(17);
-	
-	byte data[12];
-	byte addr[8];
-
-	if ( !OneWireTemp.search(addr))
-	{
-		//no more sensors on chain, reset search
-		USB.ON();
-		USB.println(F("no more sensors"));
-		OneWireTemp.reset_search();
-		return -1000;
-	}
-	
-	if ( WaspOneWire::crc8( addr, 7) != addr[7]) 
-	{
-		USB.ON();
-		USB.println(F("CRC is not valid!"));
-		return -1000;
-	}
-
-	if ( addr[0] != 0x10 && addr[0] != 0x28)
-	{
-		USB.ON();
-		USB.println(F("Device is not recognized"));
-		return -1000;
-	}
-
-	OneWireTemp.reset();
-	OneWireTemp.select(addr);
-	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
-    delay(750);
-
-	OneWireTemp.reset();
-	
-	OneWireTemp.select(addr);
-	
-	OneWireTemp.write(0xBE); // Read Scratchpad
-
-  	for (int i = 0; i < 9; i++)  // we need 9 bytes
-	{
-		data[i] = OneWireTemp.read();
-	}
-
-	OneWireTemp.reset_search();
-  
-	byte MSB = data[1];
-	byte LSB = data[0];
-
-	float tempRead = ((MSB << 8) | LSB); //using two's compliment
-	float TemperatureSum = tempRead / 16;
-    
-    //PWR.setSensorPower(SENS_3V3,SENS_OFF);
-    
-	return TemperatureSum;
+	// Select analog 4 as pin to be used
+	// 'false' input means that no 3v3 power supply is managed
+	// So, the Sensor Board and the sensor switch must be 
+	// powered on prior using this function
+	return 	Utils.readTempDS1820( 17, false );
 }
 
 

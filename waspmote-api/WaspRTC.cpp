@@ -1,7 +1,11 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
- *
+ * 
+ * 	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
+ * 	constants related to them are based on the library 'time' developed by 
+ * 	Michael Margolis 2009-2014: https://www.pjrc.com/teensy/td_libs_Time.html
+ * 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
@@ -15,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.5
+ *  Version:		1.6
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -87,23 +91,20 @@ WaspRTC::WaspRTC()
 
 /*
  * ON (void) - It opens I2C bus and powers the RTC
- *
  *  
  *  It enables internal pull-up resistor for the RTC interrupt pin, so as this
  *  pin is set to HIGH when init
- *  It inits I2C bus for communicating with RTC
+ * 
  *  It reads from RTC time,date and alarms, setting the corresponding variables
  */
 void WaspRTC::ON(void)
 {
 	// Powers RTC UP
 	setMode(RTC_ON, RTC_NORMAL_MODE);
-	
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
  
 	// clear the alarm flags
 	clearAlarmFlag();
+	
 	// initialize the variables used to store the data from the RTC
 	resetVars();
   
@@ -261,6 +262,9 @@ void WaspRTC::readRTC(uint8_t endAddress)
 	uint16_t timecount = 0;
 	uint16_t timeout = 0;	
 	
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+	
 	// ADDRESSING FROM MEMORY POSITION ZERO
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
@@ -332,7 +336,11 @@ void WaspRTC::readRTC(uint8_t endAddress)
  */
 void WaspRTC::writeRTC() 
 {
-	int timecount = 0;
+	int timecount = 0;		
+	
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+	
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
@@ -363,7 +371,11 @@ void WaspRTC::writeRTC()
  */
 void WaspRTC::writeRTCalarm1() 
 {
-	byte timecount = 0;
+	byte timecount = 0;	
+	
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+	
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
@@ -391,7 +403,11 @@ void WaspRTC::writeRTCalarm1()
  */
 void WaspRTC::writeRTCalarm2() 
 {
-	byte timecount = 0;
+	byte timecount = 0;	
+	
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+	
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
@@ -677,7 +693,10 @@ void WaspRTC::configureAlarmMode (uint8_t alarmNum, uint8_t alarmMode)
  * - FIXME: modify it to write to EEPROM
  */
 void WaspRTC::writeRTCregister(uint8_t theAddress) 
-{
+{	
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
@@ -700,6 +719,9 @@ void WaspRTC::writeRTCregister(uint8_t theAddress)
 void WaspRTC::readRTCregister(uint8_t theAddress) 
 {
 	uint16_t timeout = 0;
+		
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
 	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
 	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
@@ -978,64 +1000,103 @@ float WaspRTC::getTemperature()
  */
 void WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
 {
+	// Define variables
 	uint8_t aux=0, aux2=0;
+	
+	// Check alarm-time string format: "dd:hh:mm:ss"
+	if( strlen(time) != 11)
+	{
+		USB.println(F("Wrong time format. Must be \"dd:hh:mm:ss\""));
+	}
+	
+	// Parse string contents:
+	// day field
 	aux=(uint8_t) time[0] - 48;
 	aux2=(uint8_t) time[1] - 48;
 	day_alarm1 = BCD2byte(aux, aux2);
+	// hour field
 	aux=(uint8_t) time[3] - 48;
 	aux2=(uint8_t) time[4] - 48;
 	hour_alarm1 = BCD2byte(aux, aux2);
+	// minutes field
 	aux=(uint8_t) time[6] - 48;
-	aux2=(uint8_t) time[7] - 48;
+	aux2=(uint8_t) time[7] - 48;		
 	minute_alarm1 = BCD2byte(aux, aux2);
+	// seconds field
 	aux=(uint8_t) time[9] - 48;
 	aux2=(uint8_t) time[10] - 48;
 	second_alarm1 = BCD2byte(aux, aux2);
 	
-	if(offset==RTC_OFFSET) // add the date to the actual date
+	// if OFFSET mode then add the date to the actual date
+	if( offset == RTC_OFFSET ) 
 	{
+		// get actual date
 		readRTC(RTC_DATE_ADDRESS_2);
-		second_alarm1+=second;
+		
+		// add 'seconds' offset 
+		second_alarm1 += second;
 		if(second_alarm1>=60)
 		{
+			// check zero-crossing
 			second_alarm1-=60;
 			minute_alarm1++;
 		}
+		
+		// add 'minutes' offset 		
 		minute_alarm1+=minute;
 		if(minute_alarm1>=60)
 		{
+			// check zero-crossing
 			minute_alarm1-=60;
 			hour_alarm1++;
 		}
+		
+		// add 'hour' offset 	
 		hour_alarm1+=hour;
 		if(hour_alarm1>=24)
 		{
+			// check zero-crossing
 			hour_alarm1-=24;
 			day_alarm1++;
 		}
-		if(mode==RTC_ALM1_MODE1)
+		
+		// add 'day' offset
+		// RTC_ALM1_MODE1 indicates "dd" field as Day-Of-Week 
+		// Any other indicates "dd" field as Day of Month 
+		if( mode == RTC_ALM1_MODE1 )
 		{
-			day_alarm1+=day;
+			day_alarm1 += day;
 			if( day_alarm1>7 ) day_alarm1-=7;
 		}
 		else
-		{	
+		{				
 			day_alarm1+=date;
-			if(month==1||month==3||month==5||month==7||month==8||month==12 )
+			
+			if( month==1||month==3||month==5||month==7||month==8||month==10||month==12 )
 			{
+				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
 				if( day_alarm1>31 ) day_alarm1-=31;
 			}
-			if(month==4||month==6||month==9||month==10||month==11 )
+			else if(month==4||month==6||month==9||month==11 )
 			{
+				// 30-Day months: Apr, June, Sep and Nov
 				if( day_alarm1>30 ) day_alarm1-=30;
 			}
-			if( month==2 )
-			{
-				if( day_alarm1>28 ) day_alarm1-=28;
+			else if( month==2 )
+			{	
+				// Leap year condition for february
+				if( LEAP_YEAR(RTC.year) )
+				{					
+					if( day_alarm1>29 ) day_alarm1-=29;
+				}
+				else
+				{					
+					if( day_alarm1>28 ) day_alarm1-=28;
+				}
 			}			
 		}
 	}
-	alarm1Mode=mode;
+	alarm1Mode = mode;
 	RTC.writeRTCalarm1();
 	RTC.configureAlarmMode(1,mode);
 }
@@ -1057,6 +1118,7 @@ void WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
 void WaspRTC::setAlarm1(uint8_t day_date, uint8_t _hour, uint8_t _minute,
 						uint8_t _second, uint8_t offset, uint8_t mode)
 {
+	
 	uint8_t aux=0, aux2=0;
 
 	if(day_date<10)
@@ -1137,18 +1199,29 @@ void WaspRTC::setAlarm1(uint8_t day_date, uint8_t _hour, uint8_t _minute,
 		else
 		{	
 			day_alarm1+=date;
-			if(month==1||month==3||month==5||month==7||month==8||month==12)
+			
+			if( month==1||month==3||month==5||month==7||month==8||month==10||month==12 )
 			{
+				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
 				if( day_alarm1>31 ) day_alarm1-=31;
 			}
-			if(month==4||month==6||month==9||month==10||month==11)
+			else if(month==4||month==6||month==9||month==11 )
 			{
+				// 30-Day months: Apr, June, Sep and Nov
 				if( day_alarm1>30 ) day_alarm1-=30;
 			}
-			if( month==2 )
+			else if( month==2 )
 			{
-				if( day_alarm1>28 ) day_alarm1-=28;
-			}			
+				// Leap year condition for february
+				if( LEAP_YEAR(RTC.year) )
+				{
+					if( day_alarm1>29 ) day_alarm1-=29;
+				}
+				else
+				{
+					if( day_alarm1>28 ) day_alarm1-=28;
+				}
+			}				
 		}
 	}
 	alarm1Mode=mode;
@@ -1296,52 +1369,85 @@ char* WaspRTC::getAlarm1()
  */
 void WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
 {
+	// Define variables
 	uint8_t aux=0, aux2=0;
 	
+	// Check alarm-time string format: "dd:hh:mm"
+	if( strlen(time) != 8)
+	{
+		USB.println(F("Wrong time format. Must be \"dd:hh:mm\""));
+	}
+	
+	// Parse string contents:
+	// day field
 	aux=(uint8_t) time[0] - 48;
 	aux2=(uint8_t) time[1] - 48;
 	day_alarm2 = BCD2byte(aux, aux2);
+	// hour field
 	aux=(uint8_t) time[3] - 48;
 	aux2=(uint8_t) time[4] - 48;
 	hour_alarm2 = BCD2byte(aux, aux2);
+	// minute field
 	aux=(uint8_t) time[6] - 48;
 	aux2=(uint8_t) time[7] - 48;
 	minute_alarm2 = BCD2byte(aux, aux2);
 	
-	if(offset==RTC_OFFSET) // add the date to the actual date
+	// if OFFSET mode then add the date to the actual date
+	if( offset == RTC_OFFSET )
 	{
+		// get actual date
 		readRTC(RTC_DATE_ADDRESS_2);
+		
+		// add 'minutes' offset 
 		minute_alarm2+=minute;
 		if(minute_alarm2>=60)
 		{
+			// check zero-crossing
 			minute_alarm2-=60;
 			hour_alarm2++;
 		}
+		
+		// add 'hours' offset 
 		hour_alarm2+=hour;
 		if(hour_alarm2>=24)
 		{
+			// check zero-crossing
 			hour_alarm2-=24;
 			day_alarm2++;
 		}
-		if(mode==RTC_ALM2_MODE1)
+		
+		// add 'day' offset
+		// RTC_ALM2_MODE1 indicates "dd" field as Day-Of-Week 
+		// Any other indicates "dd" field as Day of Month 
+		if( mode == RTC_ALM2_MODE1 )
 		{
-			day_alarm2+=day;
-			if( day_alarm2>7 ) day_alarm2-=7;
+			day_alarm2 += day;
+			if( day_alarm2 > 7 ) day_alarm2 -= 7;
 		}
 		else
 		{	
 			day_alarm2+=date;
-			if(month==1||month==3||month==5||month==7||month==8||month==12)
+			if(month==1||month==3||month==5||month==7||month==8||month==10||month==12)
 			{
+				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
 				if( day_alarm2>31 ) day_alarm2-=31;
 			}
-			if(month==4||month==6||month==9||month==10||month==11)
+			else if(month==4||month==6||month==9||month==11)
 			{
+				// 30-Day months: Apr, Jun, Sep and Nov
 				if( day_alarm2>30 ) day_alarm2-=30;
 			}
-			if( month==2 )
+			else if( month==2 )
 			{
-				if( day_alarm2>28 ) day_alarm2-=28;
+				// Leap year condition for february
+				if( LEAP_YEAR(RTC.year) )
+				{
+					if( day_alarm2>29 ) day_alarm2-=29;
+				}
+				else
+				{
+					if( day_alarm2>28 ) day_alarm2-=28;
+				}
 			}			
 		}
 	}
@@ -1429,17 +1535,27 @@ void WaspRTC::setAlarm2(uint8_t day_date, uint8_t _hour, uint8_t _minute,
 		else
 		{	
 			day_alarm2+=date;
-			if(month==1||month==3||month==5||month==7||month==8||month==12)
+			if(month==1||month==3||month==5||month==7||month==8||month==10||month==12)
 			{
+				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
 				if( day_alarm2>31 ) day_alarm2-=31;
 			}
-			if(month==4||month==6||month==9||month==10||month==11)
+			else if(month==4||month==6||month==9||month==11)
 			{
+				// 30-Day months: Apr, Jun, Sep and Nov
 				if( day_alarm2>30 ) day_alarm2-=30;
 			}
-			if( month==2 )
+			else if( month==2 )
 			{
-				if( day_alarm2>28 ) day_alarm2-=28;
+				// Leap year condition for february
+				if( LEAP_YEAR(RTC.year) )
+				{
+					if( day_alarm2>29 ) day_alarm2-=29;
+				}
+				else
+				{
+					if( day_alarm2>28 ) day_alarm2-=28;
+				}
 			}			
 		}
 	}
@@ -1591,6 +1707,223 @@ void WaspRTC::disableAlarm2()
 	writeRTCregister(RTC_CONTROL_ADDRESS);	
 }
 
+
+/* getEpochTime() - Get the epoch time based on RTC settings
+ *
+ * This function is based on library developed by Michael Margolis:
+ * 	https://www.pjrc.com/teensy/td_libs_Time.html
+ */
+unsigned long WaspRTC::getEpochTime()
+{
+	// get actual time and date
+	RTC.getTime();
+	
+	return getEpochTime(RTC.year,
+						RTC.month,
+						RTC.date,
+						RTC.hour,
+						RTC.minute,
+						RTC.second);
+}
+
+
+/* getEpochTime() - Get the epoch time based on RTC settings
+ *
+ * This function is based on library developed by Michael Margolis:
+ * 	https://www.pjrc.com/teensy/td_libs_Time.html
+ */
+unsigned long WaspRTC::getEpochTime(uint8_t Year,
+									uint8_t Month,
+									uint8_t Date,
+									uint8_t Hour,
+									uint8_t Minute,
+									uint8_t Second)
+{
+	
+	// initialize variable
+	epoch = SECS_YR_2000;
+	
+	// seconds from 1970 till 1 jan 00:00:00 of the given year
+	epoch += Year * (SECS_PER_DAY * 365);
+	
+	// add extra days for leap years
+	for( int i = 0; i < Year; i++) 
+	{
+		if( LEAP_YEAR(i) ) 
+		{
+			epoch += SECS_PER_DAY;   
+		}
+	}
+  
+	// add days for this year, months start from 1
+	for( int i = 1; i < Month ; i++) 
+	{
+		// check february if leap year
+		if ( (i == 2) && LEAP_YEAR(Year)) 
+		{ 
+			epoch += SECS_PER_DAY * 29;
+		} 
+		else 
+		{
+			epoch += SECS_PER_DAY * monthDays[i-1];  //monthDay array starts from 0
+		}
+	}
+	
+	epoch += (Date-1) * SECS_PER_DAY;
+	epoch += Hour * SECS_PER_HOUR;
+	epoch += Minute * SECS_PER_MIN;
+	epoch += Second;
+  	
+	return epoch;	
+}
+
+
+/* 
+ * breakTimeAbsolute()
+ * 
+ * break the given time by 'timeInput' into time components: year, month, date, 
+ * day (week day), hour, minute and seconds. And store this info in the 'tmElements_t' 
+ * struct given as input parameter.
+ * 
+ * This function calculates the structure as an ABSOLUTE time. For example, 
+ * if timeInput equals to 1416933867, this function stores the following 
+ * data within the structure: Tue, 25 Nov 2014 16:44:27 GMT
+ * 
+ * 	tm->second = 27;
+ * 	tm->minute = 44;
+ * 	tm->hour = 16;
+ * 	tm->date = 25;
+ * 	tm->month = 11;	
+ * 	tm->year = 14;
+ * 	tm->day = 14;
+ *  
+ * This function is based on library developed by Michael Margolis:
+ * 	https://www.pjrc.com/teensy/td_libs_Time.html
+ * 
+ * Remarks: http://www.epochconverter.com/
+ */
+
+void WaspRTC::breakTimeAbsolute(unsigned long timeInput, timestamp_t *tm)
+{
+	uint8_t Year;
+	uint8_t Month, monthLength;
+	uint32_t time;
+	unsigned long days;
+  
+	time = (uint32_t)timeInput;
+	tm->second = time % 60;
+	time /= 60; // now it is minutes
+	tm->minute = time % 60;
+	time /= 60; // now it is hours
+	tm->hour = time % 24;
+	time /= 24; // now it is days
+	tm->day = ((time + 4) % 7) + 1;  // Sunday is day 1 
+  
+	Year = 0;  
+	days = 0;
+	// count number of 'days' from 1970 until now and number of 'year'
+	while((unsigned)(days += (LEAP_YEAR(Year-30) ? 366 : 365)) <= time) 
+	{
+		Year++;
+	}
+	tm->year = Year-30; // year is offset from 2000 
+  
+	days -= LEAP_YEAR(Year-30) ? 366 : 365;	
+	time  -= days; // now it is days in this year, starting at 0
+	  
+	days=0;
+	Month=0;
+	monthLength=0;
+	for (Month=0; Month<12; Month++) 
+	{
+		if (Month==1) 
+		{ 
+			// february
+			if (LEAP_YEAR(Year-30)) 
+			{
+				monthLength=29;
+			} 
+			else 
+			{
+				monthLength=28;
+			}
+		} 
+		else 
+		{
+			monthLength = monthDays[Month];
+		}
+    
+		if (time >= monthLength) 
+		{
+			time -= monthLength;
+		} 
+		else 
+		{
+			break;
+		}
+	}
+	tm->month = Month + 1;  // jan is month 1  
+	tm->date = time + 1;     // day of month
+}
+
+
+
+/* 
+ * breakTimeOffset()
+ * 
+ * break the given time by 'timeInput' into time components: year, month, date, 
+ * day (week day), hour, minute and seconds. And store this info in the 'tmElements_t' 
+ * struct given as input parameter.
+ * 
+ * This function calculates the structure as a relative OFFSET time. For 
+ * example, if timeInput equals to 411361, this function stores the following 
+ * data within the structure: 4 days, 18 hours, 16 minutes and 1 seconds.
+ * 
+ * 	tm->second = 1;
+ * 	tm->minute = 16;
+ * 	tm->hour = 18;
+ * 	tm->date = 4;
+ * 	tm->month = 0;	
+ * 	tm->year = 0;
+ *  
+ * This function is based on library developed by Michael Margolis:
+ * 	https://www.pjrc.com/teensy/td_libs_Time.html
+ * 
+ * Remarks: http://www.epochconverter.com/
+ */
+void WaspRTC::breakTimeOffset(unsigned long timeInput, timestamp_t *tm)
+{
+	uint32_t time;	
+	
+	const unsigned long MAXIMUM_OFFSET = 2764799; // 31days 23h 59m 59s
+	
+	// trunc input time to maximum possible value
+	if( timeInput > MAXIMUM_OFFSET )
+	{
+		timeInput = MAXIMUM_OFFSET;
+	}
+	
+	// copy
+	time = (uint32_t)timeInput;
+	
+	tm->second = time % 60;
+	time /= 60; // now it is minutes
+	tm->minute = time % 60;
+	time /= 60; // now it is hours
+	tm->hour = time % 24;
+	time /= 24; // now it is days	
+  
+	tm->date = time;	// days of month
+	tm->month = 0;		// month
+	tm->year = 0;		// year
+	tm->day = 0; 		// week day
+}
+
+
+
+/*******************************************************************************
+ * utilities functions
+ *******************************************************************************/
 
 
 /* BCD2byte ( number ) - converts a BCD number to an integer

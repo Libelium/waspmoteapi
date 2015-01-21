@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -34,18 +34,18 @@
 
 /// table_802 /////////////////////////////////////////////////////////////////
 
-const char set_retries_802[] 	PROGMEM  	= "7E0005085252520000";   
-const char get_retries_802[] 	PROGMEM 	= "7E00040852525201";
-const char set_delay_slots_802[] PROGMEM 	= "7E00050852524E0000";
-const char get_delay_slots_802[] PROGMEM 	= "7E00040852524E05";
-const char set_mac_mode_802[] 	PROGMEM 	= "7E000508524D4D0000";
-const char get_mac_mode_802[] 	PROGMEM 	= "7E000408524D4D0B";
-const char set_energy_thres_802[] PROGMEM 	= "7E0005085243410000";
-const char get_energy_thres_802[] PROGMEM 	= "7E00040852434121";
-const char get_CCA_802[] 		PROGMEM 	= "7E0004085245431D";
-const char reset_CCA_802[] 		PROGMEM 	= "7E000508524543001D";
-const char get_ACK_802[] 		PROGMEM 	= "7E0004085245411F";
-const char reset_ACK_802[]		PROGMEM 	= "7E000508524541001F";
+const char set_retries_802[] 	PROGMEM  	= "7E0005085252520000";	// AT+RR
+const char get_retries_802[] 	PROGMEM 	= "7E00040852525201";   // AT+RR
+const char set_delay_slots_802[] PROGMEM 	= "7E00050852524E0000";	// AT+RN
+const char get_delay_slots_802[] PROGMEM 	= "7E00040852524E05";   // AT+RN
+const char set_mac_mode_802[] 	PROGMEM 	= "7E000508524D4D0000";	// AT+MM
+const char get_mac_mode_802[] 	PROGMEM 	= "7E000408524D4D0B";   // AT+MM
+const char set_energy_thres_802[] PROGMEM 	= "7E0005085243410000";	// AT+CA
+const char get_energy_thres_802[] PROGMEM 	= "7E00040852434121";   // AT+CA
+const char get_CCA_802[] 		PROGMEM 	= "7E0004085245431D";   // AT+EC
+const char reset_CCA_802[] 		PROGMEM 	= "7E000508524543001D";	// AT+EC
+const char get_ACK_802[] 		PROGMEM 	= "7E0004085245411F";	// AT+EA
+const char reset_ACK_802[]		PROGMEM 	= "7E000508524541001F";	// AT+EA
 
 
 const char* const table_802[] PROGMEM = 	  

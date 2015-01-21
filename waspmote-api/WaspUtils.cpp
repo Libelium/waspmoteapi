@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.6
+ *  Version:		1.7
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -425,14 +425,57 @@ unsigned long WaspUtils::readSerialID()
 	return id;
 }
 
+
+/* setSerialEEPROM() - sets the Waspmote unique serial identifier to EEPROM
+ *
+ * The serial id to be stored is specified as input
+ */
+bool WaspUtils::setSerialEEPROM( unsigned long serial )
+{		
+	// Store to EEPROM
+	eeprom_write_dword( (uint32_t*)EEPROM_SERIALID_START, serial );
+	
+	// check EEPROM
+	if( serial == getSerialEEPROM() )
+	{		
+		return true;
+	}
+	
+	return false;
+}
+
+
+/* getSerialEEPROM() - gets the Waspmote unique serial identifier from EEPROM
+ *
+ */
+unsigned long WaspUtils::getSerialEEPROM()
+{		
+	return eeprom_read_dword( (uint32_t*)EEPROM_SERIALID_START );	
+}
+
+
 /* readTempDS1820() - reads the DS1820 temperature sensor
  *
  * It reads the DS1820 temperature sensor
  */
 float WaspUtils::readTempDS1820(uint8_t pin)
+{    
+	return readTempDS1820( pin, true);
+}
+
+/* readTempDS1820() - reads the DS1820 temperature sensor
+ *
+ * It reads the DS1820 temperature sensor
+ */
+float WaspUtils::readTempDS1820(uint8_t pin, bool is3v3 )
 {
-	PWR.setSensorPower(SENS_3V3,SENS_ON);
-	delay(10);
+	// check if it is necessary to turn on 
+	// the generic 3v3 power supply
+	if( is3v3 == true )
+	{
+		PWR.setSensorPower(SENS_3V3,SENS_ON);
+		delay(10);
+	}
 	
 	WaspOneWire OneWireTemp(pin);
 	
@@ -477,11 +520,19 @@ float WaspUtils::readTempDS1820(uint8_t pin)
 
 	float tempRead = ((MSB << 8) | LSB); //using two's compliment
 	float TemperatureSum = tempRead / 16;
-    
-    PWR.setSensorPower(SENS_3V3,SENS_OFF);
+        
+    // check if it is necessary to turn off 
+	// the generic 3v3 power supply
+	if( is3v3 == true )
+	{
+		PWR.setSensorPower(SENS_3V3,SENS_OFF);
+	}
     
 	return TemperatureSum;
 }
+
+
+
 
 /*
  * It converts a hexadecimal number stored in an array to a string (8 Byte 
@@ -1028,16 +1079,16 @@ int8_t WaspUtils::checkNewProgram()
     // If both IDs are equal a confirmation message is sent to the trasmitter
     if(reprogrammingOK)
     {
-		program_version = eeprom_read_byte((unsigned char *) 0xE1);
-		eeprom_write_byte((unsigned char *) 0xE2, program_version);
+		program_version = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION );
+		eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP, program_version);
 		
 		return 1;
     }
     // If the IDs are different an error message is sent to the transmitter
     else
     {     		
-		program_version = eeprom_read_byte((unsigned char *) 0xE2);
-		eeprom_write_byte((unsigned char *) 0xE1, program_version);
+		program_version = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP);
+		eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION, program_version);
 		return 0; 
     }
   }   
@@ -1090,7 +1141,7 @@ void WaspUtils::getID(char* moteID)
  */
 void WaspUtils::setProgramVersion(uint8_t version)
 {
-	eeprom_write_byte((unsigned char *) 0xE1, version);
+	eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION, version);
 }
 
 /*
@@ -1100,7 +1151,7 @@ void WaspUtils::setProgramVersion(uint8_t version)
  */
 uint8_t WaspUtils::getProgramVersion()
 {
-	return (eeprom_read_byte((unsigned char *) 0xE1));
+	return (eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION));
 }
 
 

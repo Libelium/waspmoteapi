@@ -1,5 +1,5 @@
 /*
- *  Revised for Waspmote by A.Bielsa, 2009
+ *  Revised for Waspmote by Libelium, 2009-2015
  *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
@@ -48,7 +48,8 @@
   void twi_reply(uint8_t);
   void twi_stop(void);
   void twi_releaseBus(void);
-  void twi_close(void);
+  void twi_close(void);  
+  uint8_t twi_tout(uint8_t);
 
 #endif
 

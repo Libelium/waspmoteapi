@@ -1,7 +1,7 @@
 /*! \file WaspSensorAgr_v20.h
     \brief Library for managing the Agriculture Sensor Board v2.0
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
 
@@ -252,6 +252,20 @@
 #define SENS_AGR_VANE_ESE	15
 
 
+/*! \def pluviometer_st
+ * \brief structure to store info about number of pluviometer pulses in each 
+ * hour slot. There are 24h per day, so there will be 24 different slot. This 
+ * structure will be used as a circular buffer so as to keep the data related to 
+ * different days continuously
+ */
+struct pluviometer_st
+{
+	uint8_t	month;
+	uint8_t	day;
+	uint16_t	pulses;
+};
+
+
 /******************************************************************************
  * Class
  ******************************************************************************/
@@ -265,6 +279,9 @@ class WaspSensorAgr_v20
 {
 
 private:
+
+	//! Array of number of pulses per hour for a whole day
+	pluviometer_st plv_array[24];
 	
 	//! It reads from the dendrometer
   	/*!
@@ -495,6 +512,49 @@ public:
 	\return void
 	 */
 	void getVaneFiltered();
+		
+	//! It increase the number of pulses in 'plv_array'
+	/*! This function increments the number of pulses inside the pluviometer 
+	 * array in the corresponding index of 'plv_array' 
+	\param void
+	\return void
+	 */
+	void storePulse();
+	
+	
+	//! It calculates the rain fall during the previous hour before now
+	/*! For example: It is 13.30 pm. Then this function calculates the rain fall 
+	 * for the whole previous slot. It is said to be the rainfall from 12pm to 
+	 * 13pm
+	\param void
+	\return float value : precipitations (mm) 
+	 */
+	float readPluviometerHour();
+		
+	//! It calculates the rain fall during the last hour
+	/*!	For example: It is 13.30 pm. Then this function calculates the rain fall 
+	 * for this hour slot. It is said to be the rainfall from 13pm to 13.30pm
+	\param void
+	\return float value : precipitations (mm) 
+	 */
+	float readPluviometerCurrent();
+ 
+	//! It calculates the rain fall during the last day
+	/*!
+	\param void
+	\return float value : precipitations (mm) 
+	 */
+	float readPluviometerDay();
+ 
+	//! It reads the number of pluviometer pulses during the indicated 
+	//! time and turns the value into mm of rain per indicated time
+	/*!
+	\param 'numHours' indicates the amount of time (in hours) to calculate 
+	the rain fall. For example, one day would be 24 hours.
+	\param 'offset' indicates the number of hours to substract from actual slot
+	\return float value : precipitations (mm) 
+	 */
+	float readPluviometer( uint8_t numHours, int offset );
 	
 	
 };

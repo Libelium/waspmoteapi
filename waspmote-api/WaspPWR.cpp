@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.8
+ *  Version:		1.9
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -198,11 +198,10 @@ void WaspPWR::switchesOFF(uint8_t option)
 	digitalWrite(MEM_PW,LOW);
 		
 	if( option & SENS_OFF )
-	{
-		pinMode(SENS_PW_3V3,OUTPUT);
-		digitalWrite(SENS_PW_3V3,LOW);	
-		pinMode(SENS_PW_5V,OUTPUT);
-		digitalWrite(SENS_PW_5V,LOW);
+	{	
+		// switch OFF sensor boards
+		PWR.setSensorPower(SENS_3V3, SENS_OFF);
+		PWR.setSensorPower(SENS_5V, SENS_OFF);
 	}
 	
 	// close UART0
@@ -254,6 +253,19 @@ void WaspPWR::switchesOFF(uint8_t option)
 	if( WaspRegister & REG_GASES )
 	{
 		digitalWrite(DIGITAL4,LOW);
+	}
+	
+	// check if an Agriculture Sensor Board is used. In this case, 
+	// switch off the digital pins so as not to waste energy
+	if( WaspRegister & REG_AGRICULTURE )
+	{
+		// switch off sensors power supply
+		digitalWrite(DIGITAL7, LOW);
+		digitalWrite(DIGITAL1, LOW);
+		digitalWrite(DIGITAL5, LOW);
+		digitalWrite(DIGITAL3, LOW);
+		digitalWrite(DIGITAL6, LOW);
+		digitalWrite(ANA0, LOW);
 	}
 	
 }
@@ -771,7 +783,17 @@ void	WaspPWR::ifHibernate()
 // reboots waspmote
 void    WaspPWR::reboot()
 {
-    __asm__("jmp 0x1E000");
+	if( Utils.getBootVersion() < 'C')
+	{	
+		__asm__("jmp 0x1E000");
+	}
+	else
+	{
+		// enable watchdog to reset MCU
+		wdt_enable(WDTO_15MS);   
+		for(;;)
+		{}
+	}
 }
 
 

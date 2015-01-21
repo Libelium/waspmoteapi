@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
- *  Implementation:	Jim Studt, Alberto Bielsa, Yuri Carmona
+ *  Implementation:	Jim Studt, Alberto Bielsa, Yuri Carmona ,David Marruedo
  *
  *
  * Copyright (c) 2007, Jim Studt  (original old version - many contributors since)
@@ -89,7 +89,6 @@
 // Branding Policy.
 //--------------------------------------------------------------------------
 */
- 
 
 #ifndef __WPROGRAM_H__
 //#include <WProgram.h>
@@ -99,62 +98,55 @@
 #include "WaspOneWire.h"
 
 
-WaspOneWire::WaspOneWire( uint8_t pinArg)
+WaspOneWire::WaspOneWire(uint8_t pinArg)
 {
-    pin = pinArg;
-    port = digitalPinToPort(pin);
-    bitmask =  digitalPinToBitMask(pin);
-    outputReg = portOutputRegister(port);
-    inputReg = portInputRegister(port);
-    modeReg = portModeRegister(port);
+	pin=pinArg;
+	pinMode(pin, INPUT);
+	bitmask = PIN_TO_BITMASK(pin);
+	baseReg = PIN_TO_BASEREG(pin);
 #if ONEWIRE_SEARCH
-    reset_search();
+	reset_search();
 #endif
 }
 
-//
+
+
 // Perform the onewire reset function.  We will wait up to 250uS for
 // the bus to come high, if it doesn't then it is broken or shorted
 // and we return a 0;
 //
 // Returns 1 if a device asserted a presence pulse, 0 otherwise.
 //
-uint8_t WaspOneWire::reset() {
-    uint8_t r;
-    uint8_t retries = 125;
-    unsigned long a = 0;
+uint8_t WaspOneWire::reset(void)
+{
+	IO_REG_TYPE mask = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+	uint8_t r;
+	uint8_t retries = 125;
 
-    // wait until the wire is high... just in case
-    pinMode(pin,INPUT);
-    a = millis();
-    do {
-		if ( retries-- == 0) return 0;
-		delayMicroseconds(2); 
-		if ( a > millis() )
-		{
-			a = millis();
-		}
-    } while( !digitalRead( pin) && ( (millis() - a) < 500 ) );
-    
-    pinMode(pin,OUTPUT);
-    digitalWrite(pin,0);   // pull low for 500uS
-    delayMicroseconds(500);
-    pinMode(pin,INPUT);
-    delayMicroseconds(65);
-    r = !digitalRead(pin);
-    delayMicroseconds(490);
-    a = millis();
-    while((r!=1) && ( (millis() - a) < 500 ) )
-    {
-		 r = !digitalRead(pin);
-		 delayMicroseconds(10);
-		if ( a > millis() )
-		{
-			a = millis();
-		}
-    }
-    return r;
+	noInterrupts();
+	DIRECT_MODE_INPUT(reg, mask);
+	interrupts();
+	// wait until the wire is high... just in case
+	do {
+		if (--retries == 0) return 0;
+		delayMicroseconds(2);
+	} while ( !DIRECT_READ(reg, mask));
+
+	noInterrupts();
+	DIRECT_WRITE_LOW(reg, mask);
+	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+	interrupts();
+	delayMicroseconds(410);
+	noInterrupts();
+	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
+	delayMicroseconds(60);
+	r = !DIRECT_READ(reg, mask);
+	interrupts();
+	delayMicroseconds(349);
+	return r;
 }
+
 
 //
 // Perform the onewire reset function.  We will wait up to 250uS for
@@ -182,13 +174,13 @@ uint8_t WaspOneWire::resetSerialID() {
     
     pinMode(pin,OUTPUT);
     digitalWrite(pin,0);   // pull low for 500uS
-    delayMicroseconds(400);
+    delayMicroseconds(340);
     a = millis();
     r = !digitalRead(pin);
     while( (r!=1) && ( (millis() - a) < 500 ) )
     {
 		 r = !digitalRead(pin);
-		 delayMicroseconds(10);
+		 delayMicroseconds(9);
 		if ( a > millis() )
 		{
 			a = millis();
@@ -201,38 +193,50 @@ uint8_t WaspOneWire::resetSerialID() {
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-void WaspOneWire::write_bit(uint8_t v) {
-    static uint8_t lowTime[] = { 55, 5 };
-    static uint8_t highTime[] = { 5, 55};
-    
-    v = (v&1);
-    *modeReg |= bitmask;  // make pin an output, do first since we
-                          // expect to be at 1
-    *outputReg &= ~bitmask; // zero
-    delayMicroseconds(lowTime[v]);
-    *outputReg |= bitmask; // one, push pin up - important for
-                           // parasites, they might start in here
-    delayMicroseconds(highTime[v]);
+void WaspOneWire::write_bit(uint8_t v)
+{
+	IO_REG_TYPE mask=bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+
+	if (v & 1) {
+		noInterrupts();
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(9);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		interrupts();
+		delayMicroseconds(47);
+	} else {
+		noInterrupts();
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(55);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
+		interrupts();
+		delayMicroseconds(5);
+	}
 }
 
 //
 // Read a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-uint8_t WaspOneWire::read_bit() {
-    uint8_t r;
-    
-    *modeReg |= bitmask;    // make pin an output, do first since we expect to be at 1
-    *outputReg &= ~bitmask; // zero
-    delayMicroseconds(1);
-    *modeReg &= ~bitmask;     // let pin float, pull up will raise
-    pinMode(pin,INPUT);
-    digitalWrite(pin,1);
-    delayMicroseconds(5-2);          // A "read slot" is when 1mcs > t > 2mcs
-    r = ( *inputReg & bitmask) ? 1 : 0; // check the bit
-    delayMicroseconds(50);        // whole bit slot is 60-120uS, need to give some time
-    
-    return r;
+uint8_t WaspOneWire::read_bit(void)
+{
+	IO_REG_TYPE mask=bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+	uint8_t r;
+
+	noInterrupts();
+	DIRECT_MODE_OUTPUT(reg, mask);
+	DIRECT_WRITE_LOW(reg, mask);
+	delayMicroseconds(2);
+	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
+	delayMicroseconds(7);
+	r = DIRECT_READ(reg, mask);
+	interrupts();
+	delayMicroseconds(45);
+	return r;
 }
 
 //
@@ -242,16 +246,29 @@ uint8_t WaspOneWire::read_bit() {
 // go tri-state at the end of the write to avoid heating in a short or
 // other mishap.
 //
-void WaspOneWire::write(uint8_t v, uint8_t power) {
+void WaspOneWire::write(uint8_t v, uint8_t power /* = 0 */) {
     uint8_t bitMask;
-    
+
     for (bitMask = 0x01; bitMask; bitMask <<= 1) {
 	WaspOneWire::write_bit( (bitMask & v)?1:0);
     }
     if ( !power) {
-	pinMode(pin,INPUT);
-	digitalWrite(pin,0);
+	noInterrupts();
+	DIRECT_MODE_INPUT(baseReg, bitmask);
+	DIRECT_WRITE_LOW(baseReg, bitmask);
+	interrupts();
     }
+}
+
+void WaspOneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
+  for (uint16_t i = 0 ; i < count ; i++)
+    write(buf[i]);
+  if (!power) {
+    noInterrupts();
+    DIRECT_MODE_INPUT(baseReg, bitmask);
+    DIRECT_WRITE_LOW(baseReg, bitmask);
+    interrupts();
+  }
 }
 
 //
@@ -260,23 +277,28 @@ void WaspOneWire::write(uint8_t v, uint8_t power) {
 uint8_t WaspOneWire::read() {
     uint8_t bitMask;
     uint8_t r = 0;
-    
+
     for (bitMask = 0x01; bitMask; bitMask <<= 1) {
 	if ( WaspOneWire::read_bit()) r |= bitMask;
     }
     return r;
 }
 
+void WaspOneWire::read_bytes(uint8_t *buf, uint16_t count) {
+  for (uint16_t i = 0 ; i < count ; i++)
+    buf[i] = read();
+}
+
 //
 // Do a ROM select
 //
-void WaspOneWire::select( uint8_t rom[8])
+void WaspOneWire::select(const uint8_t rom[8])
 {
-    int i;
+    uint8_t i;
 
-    write(0x55,0);         // Choose ROM
+    write(0x55);           // Choose ROM
 
-    for( i = 0; i < 8; i++) write(rom[i],0);
+    for (i = 0; i < 8; i++) write(rom[i]);
 }
 
 //
@@ -284,12 +306,14 @@ void WaspOneWire::select( uint8_t rom[8])
 //
 void WaspOneWire::skip()
 {
-    write(0xCC,0);         // Skip ROM
+    write(0xCC);           // Skip ROM
 }
 
 void WaspOneWire::depower()
 {
-    pinMode(pin,INPUT);
+	noInterrupts();
+	DIRECT_MODE_INPUT(baseReg, bitmask);
+	interrupts();
 }
 
 #if ONEWIRE_SEARCH
@@ -300,14 +324,28 @@ void WaspOneWire::depower()
 //
 void WaspOneWire::reset_search()
 {
-    uint8_t i;
-    
-    searchJunction = -1;
-    searchExhausted = 0;
-    for( i = 7; ; i--) {
-	address[i] = 0;
-	if ( i == 0) break;
-    }
+  // reset the search state
+  LastDiscrepancy = 0;
+  LastDeviceFlag = FALSE;
+  LastFamilyDiscrepancy = 0;
+  for(int i = 7; ; i--) {
+    ROM_NO[i] = 0;
+    if ( i == 0) break;
+  }
+}
+
+// Setup the search to find the device type 'family_code' on the next call
+// to search(*newAddr) if it is present.
+//
+void WaspOneWire::target_search(uint8_t family_code)
+{
+   // set the search state to find SearchFamily type devices
+   ROM_NO[0] = family_code;
+   for (uint8_t i = 1; i < 8; i++)
+      ROM_NO[i] = 0;
+   LastDiscrepancy = 64;
+   LastFamilyDiscrepancy = 0;
+   LastDeviceFlag = FALSE;
 }
 
 //
@@ -318,53 +356,142 @@ void WaspOneWire::reset_search()
 // enumeration then a 0 is returned.  If a new device is found then
 // its address is copied to newAddr.  Use OneWire::reset_search() to
 // start over.
-// 
+//
+// --- Replaced by the one from the Dallas Semiconductor web site ---
+//--------------------------------------------------------------------------
+// Perform the 1-Wire Search Algorithm on the 1-Wire bus using the existing
+// search state.
+// Return TRUE  : device found, ROM number in ROM_NO buffer
+//        FALSE : device not found, end of search
+//
 uint8_t WaspOneWire::search(uint8_t *newAddr)
 {
-    uint8_t i;
-    char lastJunction = -1;
-    uint8_t done = 1;
-    
-    if ( searchExhausted) return 0;
-    
-    if ( !reset()) return 0;
-    write( 0xf0, 0);
-    
-    for( i = 0; i < 64; i++) {
-	uint8_t a = read_bit( );
-	uint8_t nota = read_bit( );
-	uint8_t ibyte = i/8;
-	uint8_t ibit = 1<<(i&7);
-	
-	if ( a && nota) return 0;  // I don't think this should happen, this means nothing responded, but maybe if
-	// something vanishes during the search it will come up.
-	if ( !a && !nota) {
-	    if ( i == searchJunction) {   // this is our time to decide differently, we went zero last time, go one.
-		a = 1;
-		searchJunction = lastJunction;
-	    } else if ( i < searchJunction) {   // take whatever we took last time, look in address
-		if ( address[ ibyte]&ibit) a = 1;
-		else {                            // Only 0s count as pending junctions, we've already exhasuted the 0 side of 1s
-		    a = 0;
-		    done = 0;
-		    lastJunction = i;
+   uint8_t id_bit_number;
+   uint8_t last_zero, rom_byte_number, search_result;
+   uint8_t id_bit, cmp_id_bit;
+
+   unsigned char rom_byte_mask, search_direction;
+
+   // initialize for search
+   id_bit_number = 1;
+   last_zero = 0;
+   rom_byte_number = 0;
+   rom_byte_mask = 1;
+   search_result = 0;
+
+   // if the last call was not the last one
+   if (!LastDeviceFlag)
+   {
+      // 1-Wire reset
+      if (!reset())
+      {
+         // reset the search
+         LastDiscrepancy = 0;
+         LastDeviceFlag = FALSE;
+         LastFamilyDiscrepancy = 0;
+         return FALSE;
+      }
+
+      // issue the search command
+      write(0xF0);
+
+      // loop to do the search
+      do
+      {
+         // read a bit and its complement
+         id_bit = read_bit();
+         cmp_id_bit = read_bit();
+			
+         // check for no devices on 1-wire
+         if ((id_bit == 1) && (cmp_id_bit == 1))
+         {
+            break;
 		}
-	    } else {                            // we are blazing new tree, take the 0
-		a = 0;
-		searchJunction = i;
-		done = 0;
-	    }
-	    lastJunction = i;
-	}
-	if ( a) address[ ibyte] |= ibit;
-	else address[ ibyte] &= ~ibit;
+         else
+         {
+            // all devices coupled have 0 or 1
+            if (id_bit != cmp_id_bit)
+            {
+               search_direction = id_bit;  // bit write value for search
+		   }
+            else
+            {
+               // if this discrepancy if before the Last Discrepancy
+               // on a previous next then pick the same as last time
+               if (id_bit_number < LastDiscrepancy)
+               {
+                  search_direction = ((ROM_NO[rom_byte_number] & rom_byte_mask) > 0);
+			  }
+               else
+                  // if equal to last pick 1, if not then pick 0
+                  search_direction = (id_bit_number == LastDiscrepancy);
+
+               // if 0 was picked then record its position in LastZero
+               if (search_direction == 0)
+               {
+                  last_zero = id_bit_number;
+
+                  // check for Last discrepancy in family
+                  if (last_zero < 9)
+                  {
+                     LastFamilyDiscrepancy = last_zero;
+				 }
+               }
+            }
+
+            // set or clear the bit in the ROM byte rom_byte_number
+            // with mask rom_byte_mask
+            if (search_direction == 1)
+            {
+              ROM_NO[rom_byte_number] |= rom_byte_mask;
+		  }
+            else
+              ROM_NO[rom_byte_number] &= ~rom_byte_mask;
+
+            // serial number search direction write bit
+            write_bit(search_direction);
+
+            // increment the byte counter id_bit_number
+            // and shift the mask rom_byte_mask
+            id_bit_number++;
+            rom_byte_mask <<= 1;
+
+            // if the mask is 0 then go to new SerialNum byte rom_byte_number and reset mask
+            if (rom_byte_mask == 0)
+            {
+                rom_byte_number++;
+                rom_byte_mask = 1;
+            }
+         }
+      }
+      while(rom_byte_number < 8);  // loop until through all ROM bytes 0-7
+
+      // if the search was successful then
+      if (!(id_bit_number < 65))
+      {
+         // search successful so set LastDiscrepancy,LastDeviceFlag,search_result
+         LastDiscrepancy = last_zero;
 	
-	write_bit( a);
-    }
-    if ( done) searchExhausted = 1;
-    for ( i = 0; i < 8; i++) newAddr[i] = address[i];
-    return 1;  
-}
+         // check for last device
+         if (LastDiscrepancy == 0)
+            LastDeviceFlag = TRUE;
+
+         search_result = TRUE;
+      }
+   }
+
+   // if no device found then reset counters so next 'search' will be like a first
+   if (!search_result || !ROM_NO[0])
+   {
+      LastDiscrepancy = 0;
+      LastDeviceFlag = FALSE;
+      LastFamilyDiscrepancy = 0;
+      search_result = FALSE;
+   }
+   for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
+   return search_result;
+  }
+
 #endif
 
 #if ONEWIRE_CRC
@@ -373,9 +500,9 @@ uint8_t WaspOneWire::search(uint8_t *newAddr)
 //
 
 #if ONEWIRE_CRC8_TABLE
-// This table comes from Dallas sample code where it is freely reusable, 
+// This table comes from Dallas sample code where it is freely reusable,
 // though Copyright (C) 2000 Dallas Semiconductor Corporation
-static uint8_t dscrc_table[] = {
+static const uint8_t PROGMEM dscrc_table[] = {
       0, 94,188,226, 97, 63,221,131,194,156,126, 32,163,253, 31, 65,
     157,195, 33,127,252,162, 64, 30, 95,  1,227,189, 62, 96,130,220,
      35,125,159,193, 66, 28,254,160,225,191, 93,  3,128,222, 60, 98,
@@ -398,69 +525,69 @@ static uint8_t dscrc_table[] = {
 // and the registers.  (note: this might better be done without to
 // table, it would probably be smaller and certainly fast enough
 // compared to all those delayMicrosecond() calls.  But I got
-// confused, so I use this table from the examples.)  
+// confused, so I use this table from the examples.)
 //
-uint8_t WaspOneWire::crc8( uint8_t *addr, uint8_t len)
+uint8_t WaspOneWire::crc8(const uint8_t *addr, uint8_t len)
 {
-    uint8_t i;
-    uint8_t crc = 0;
-    
-    for ( i = 0; i < len; i++) {
-	crc  = dscrc_table[ crc ^ addr[i] ];
-    }
-    return crc;
+	uint8_t crc = 0;
+
+	while (len--) {
+		crc = pgm_read_byte(dscrc_table + (crc ^ *addr++));
+	}
+	return crc;
 }
 #else
 //
-// Compute a Dallas Semiconductor 8 bit CRC directly. 
+// Compute a Dallas Semiconductor 8 bit CRC directly.
+// this is much slower, but much smaller, than the lookup table.
 //
-uint8_t WaspOneWire::crc8( uint8_t *addr, uint8_t len)
+uint8_t WaspOneWire::crc8(const uint8_t *addr, uint8_t len)
 {
-    uint8_t i, j;
-    uint8_t crc = 0;
-    
-    for (i = 0; i < len; i++) {
-        uint8_t inbyte = addr[i];
-        for (j = 0; j < 8; j++) {
-            uint8_t mix = (crc ^ inbyte) & 0x01;
-            crc >>= 1;
-            if (mix) crc ^= 0x8C;
-            inbyte >>= 1;
-        }
-    }
-    return crc;
+	uint8_t crc = 0;
+	
+	while (len--) {
+		uint8_t inbyte = *addr++;
+		for (uint8_t i = 8; i; i--) {
+			uint8_t mix = (crc ^ inbyte) & 0x01;
+			crc >>= 1;
+			if (mix) crc ^= 0x8C;
+			inbyte >>= 1;
+		}
+	}
+	return crc;
 }
 #endif
 
 #if ONEWIRE_CRC16
-static short oddparity[16] = { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
-
-//
-// Compute a Dallas Semiconductor 16 bit CRC. I have never seen one of
-// these, but here it is.
-//
-unsigned short WaspOneWire::crc16(unsigned short *data, unsigned short len)
+bool WaspOneWire::check_crc16(const uint8_t* input, uint16_t len, const uint8_t* inverted_crc, uint16_t crc)
 {
-    unsigned short i;
-    unsigned short crc = 0;
-    
-    for ( i = 0; i < len; i++) {
-	unsigned short cdata = data[len];
-	
-	cdata = (cdata ^ (crc & 0xff)) & 0xff;
-	crc >>= 8;
-	
-	if (oddparity[cdata & 0xf] ^ oddparity[cdata >> 4]) crc ^= 0xc001;
-	
-	cdata <<= 6;
-	crc ^= cdata;
-	cdata <<= 1;
-	crc ^= cdata;
+    crc = ~crc16(input, len, crc);
+    return (crc & 0xFF) == inverted_crc[0] && (crc >> 8) == inverted_crc[1];
+}
+
+uint16_t WaspOneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
+{
+    static const uint8_t oddparity[16] =
+        { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
+
+    for (uint16_t i = 0 ; i < len ; i++) {
+      // Even though we're just copying a byte from the input,
+      // we'll be doing 16-bit computation with it.
+      uint16_t cdata = input[i];
+      cdata = (cdata ^ crc) & 0xff;
+      crc >>= 8;
+
+      if (oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4])
+          crc ^= 0xC001;
+
+      cdata <<= 6;
+      crc ^= cdata;
+      cdata <<= 1;
+      crc ^= cdata;
     }
     return crc;
 }
 #endif
 
 #endif
-
-WaspOneWire Onewire = WaspOneWire(LED1);
+//WaspOneWire Onewire = WaspOneWire(LED1);

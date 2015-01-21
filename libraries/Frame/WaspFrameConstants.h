@@ -1,7 +1,7 @@
 /*! \file WaspFrameConstants.h
     \brief Header file for Waspmote Frame Constants
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
@@ -165,6 +165,50 @@ const char	str_HDOP[]		PROGMEM = "HDOP";		// 92
 const char	str_VDOP[]		PROGMEM = "VDOP";		// 93
 const char	str_PDOP[]		PROGMEM = "PDOP";		// 94
 
+// Finite State Machine status
+const char	str_FSM[]	PROGMEM = "FSM";		// 95
+
+// New Pluviometer values
+const char	str_PLV1[]	PROGMEM = "PLV1";		// 96
+const char	str_PLV2[]	PROGMEM = "PLV2";		// 97
+const char	str_PLV3[]	PROGMEM = "PLV3";		// 98
+
+// P&S Watermarks depending on P&S connector
+const char	str_SOIL_C[]	PROGMEM = "SOIL_C";		// 99
+const char	str_SOIL_D[]	PROGMEM = "SOIL_D";		// 100
+const char	str_SOIL_E[]	PROGMEM = "SOIL_E";		// 101
+const char	str_SOIL_F[]	PROGMEM = "SOIL_F";		// 102
+
+// Waspmote OEM watermark sensors (same as library)
+const char	str_SOIL1[]	PROGMEM = "SOIL1";		// 103
+const char	str_SOIL2[]	PROGMEM = "SOIL2";		// 104
+const char	str_SOIL3[]	PROGMEM = "SOIL3";		// 105
+
+// DS18B20 (temperature: air, water, soil)
+const char	str_TCC[]	PROGMEM = "TCC";		// 106
+
+// P&S Ultrasound depending on socket voltage ref
+const char	str_US_3V3[]	PROGMEM = "US_3V3";	// 107
+const char	str_US_5V[]		PROGMEM = "US_5V";	// 108
+
+// P&S Security sensors depending on socket (Events board)
+const char	str_LUM_D[]		PROGMEM = "LUM_D";	// 109
+const char	str_LUM_E[]		PROGMEM = "LUM_E";	// 110
+const char	str_LUM_F[]		PROGMEM = "LUM_F";	// 111
+const char	str_LP_D[]		PROGMEM = "LP_D";	// 112
+const char	str_LP_E[]		PROGMEM = "LP_E";	// 113
+const char	str_LP_F[]		PROGMEM = "LP_F";	// 114
+const char	str_LL_D[]		PROGMEM = "LL_D";	// 115
+const char	str_LL_E[]		PROGMEM = "LL_E";	// 116
+const char	str_LL_F[]		PROGMEM = "LL_F";	// 117
+const char	str_HALL_D[]	PROGMEM = "HALL_D";	// 118
+const char	str_HALL_E[]	PROGMEM = "HALL_E";	// 119
+const char	str_HALL_F[]	PROGMEM = "HALL_F";	// 120
+
+// P&S liquid flow sensor depending on socket (Smart Metering)
+const char	str_WF_C[]		PROGMEM = "WF_C";	// 121
+const char	str_WF_E[]		PROGMEM = "WF_E";	// 122
+
 
 
 /******************************************************************************* 
@@ -297,6 +341,49 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_VDOP,		// 93
 	str_PDOP,		// 94
 	
+	// Finite State Machine
+	str_FSM,		// 95
+	
+	// New Pluviometer values
+	str_PLV1,		// 96
+	str_PLV2,		// 97
+	str_PLV3,		// 98
+	
+	// P&S watermarks
+	str_SOIL_C,		// 99
+	str_SOIL_D,		// 100
+	str_SOIL_E,		// 101
+	str_SOIL_F,		// 102
+	
+	// Waspmote OEM watermarks
+	str_SOIL1,		// 103
+	str_SOIL2,		// 104
+	str_SOIL3,		// 105
+	
+	// DS18B20
+	str_TCC, 		// 106
+	
+	// P&S ultrasound sensors depending on voltage ref
+	str_US_3V3,		// 107
+	str_US_5V,		// 108
+
+	// P&S Security sensors depending on socket (Events board)
+	str_LUM_D,	// 109
+	str_LUM_E,	// 110
+	str_LUM_F,	// 111
+	str_LP_D,	// 112
+	str_LP_E,	// 113
+	str_LP_F,	// 114
+	str_LL_D,	// 115
+	str_LL_E,	// 116
+	str_LL_F,	// 117
+	str_HALL_D,	// 118
+	str_HALL_E,	// 119
+	str_HALL_F,	// 120	
+	
+	// P&S liquid flow sensor depending on socket (Smart Metering)
+	str_WF_C,	// 121
+	str_WF_E,	// 122
 };
 
 
@@ -440,6 +527,50 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	4,	//str_VDOP		// 93
 	4,	//str_PDOP		// 94
 	
+	// States Machine
+	0,	//str_FSM		// 95
+	
+	// New Pluviometer values
+	2, //str_PLV1		// 96
+	2, //str_PLV2		// 97
+	2, //str_PLV3		// 98
+	
+	// P&S watermarks
+	2, // str_SOIL_C,	// 99
+	2, // str_SOIL_D,	// 100
+	2, // str_SOIL_E,	// 101
+	2, // str_SOIL_F,	// 102
+	
+	// Waspmote OEM watermarks
+	2, // str_SOIL1,	// 103
+	2, // str_SOIL2,	// 104
+	2, // str_SOIL3,	// 105
+	
+	// DS18B20
+	2, // str_TCC,		// 106
+	
+	// P&S ultrasound sensor depending on voltage ref
+	2, // str_US_3V3,	// 107
+	2, // str_US_5V,	// 108
+
+	// P&S Security sensors depending on socket (Events board)
+	2, // str_LUM_D,	// 109
+	2, // str_LUM_E,	// 110
+	2, // str_LUM_F,	// 111
+	0, // str_LP_D,		// 112	
+	0, // str_LP_E,		// 113	
+	0, // str_LP_F,		// 114
+	0, // str_LL_D,		// 115	
+	0, // str_LL_E,		// 116
+	0, // str_LL_F,		// 117	
+	0, // str_HALL_D,	// 118
+	0, // str_HALL_E,	// 119
+	0, // str_HALL_F,	// 120
+	
+	// P&S liquid flow sensor depending on socket (Smart Metering)	
+	2, // str_WF_C,		// 121
+	2, // str_WF_E,		// 121
+	
 };
 
 
@@ -577,6 +708,49 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1,	//str_VDOP		// 93
 	1,	//str_PDOP		// 94
 	
+	// States Machine
+	1,	//str_FSM		// 95
+	
+	// New Pluviometer values
+	1, //str_PLV1		// 96
+	1, //str_PLV2		// 97
+	1, //str_PLV3		// 98
+	
+	// P&S watermarks
+	1, // str_SOIL_C,	// 99
+	1, // str_SOIL_D,	// 100
+	1, // str_SOIL_E,	// 101
+	1, // str_SOIL_F,	// 102
+	
+	// Waspmote OEM watermarks
+	1, // str_SOIL1,	// 103
+	1, // str_SOIL2,	// 104
+	1, // str_SOIL3,	// 105
+	
+	// DS18B20
+	1, // str_TCC,		// 106
+	
+	// P&S ultrasound sensor depending on voltage ref
+	1, // str_US_3V3,	// 107
+	1, // str_US_5V,	// 108
+
+	// P&S Security sensors depending on socket (Events board)
+	1, // str_LUM_D,	// 109
+	1, // str_LUM_E,	// 110
+	1, // str_LUM_F,	// 111
+	1, // str_LP_D,		// 112
+	1, // str_LP_E,		// 113
+	1, // str_LP_F,		// 114
+	1, // str_LL_D,		// 115
+	1, // str_LL_E,		// 116
+	1, // str_LL_F,		// 117
+	1, // str_HALL_D,	// 118
+	1, // str_HALL_E,	// 119
+	1, // str_HALL_F,	// 120
+	
+	// P&S liquid flow sensor depending on socket (Smart Metering)
+	1, // str_WF_C,		// 121
+	1, // str_WF_E,		// 122
 };
 
 
@@ -710,7 +884,51 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	2,	//str_ALTITUDE	// 91
 	3,	//str_HDOP		// 92
 	3,	//str_VDOP		// 93
-	3,	//str_PDOP		// 94
+	3,	//str_PDOP		// 94	
+	
+	// States Machine
+	0,	//str_FSM		// 95
+	
+	// New Pluviometer values
+	2, //str_PLV1		// 96
+	2, //str_PLV2		// 97
+	2, //str_PLV3		// 98	
+	
+	// P&S watermarks
+	2, // str_SOIL_C,	// 99
+	2, // str_SOIL_D,	// 100
+	2, // str_SOIL_E,	// 101
+	2, // str_SOIL_F,	// 102
+	
+	// Waspmote OEM watermarks
+	2, // str_SOIL1,	// 103
+	2, // str_SOIL2,	// 104
+	2, // str_SOIL3,	// 105
+	
+	// DS18B20 
+	2, // str_TCC,		// 106
+	
+	// P&S ultrasound sensor depending on voltage ref
+	2, // str_US_3V3,	// 107
+	2, // str_US_5V,	// 108
+
+	// P&S Security sensors depending on socket (Events board)
+	3, // str_LUM_D,	// 109
+	3, // str_LUM_E,	// 110
+	3, // str_LUM_F,	// 111
+	0, // str_LP_D,		// 112
+	0, // str_LP_E,		// 113
+	0, // str_LP_F,		// 114
+	0, // str_LL_D,		// 115
+	0, // str_LL_E,		// 116
+	0, // str_LL_F,		// 117
+	0, // str_HALL_D,	// 118
+	0, // str_HALL_E,	// 119
+	0, // str_HALL_F,	// 120
+	
+	// P&S liquid flow sensor depending on socket (Smart Metering)
+	3, // str_WF_C,		// 121
+	3, // str_WF_E,		// 122
 };
 
 #endif

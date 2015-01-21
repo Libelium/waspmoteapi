@@ -1,7 +1,7 @@
 /*! \file TurbiditySensor.cpp
 	\brief Library for managing the Smart Water Turbidity Sensor Board
 
-	Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-	Version:			1.0
+	Version:			1.1
 	Design:				David Gascón
 	Implementation:		Ahmad Saad
 */
@@ -44,14 +44,12 @@ turbiditySensorClass::turbiditySensorClass()
 /***********************************************************************
  * Methods of the Class
  ***********************************************************************/
-
-
  
 //!*************************************************************
 //!	Name:	ON()														
 //!	Description: Powers and configures the turbidity sensor		
 //!	Param : void														
-//!	Returns: "0" if no error, "-1" if error							
+//!	Returns: "0" if no error, "-1" if error						
 //!*************************************************************
 char turbiditySensorClass::ON()
 {
@@ -60,7 +58,7 @@ char turbiditySensorClass::ON()
 	
 	// Switch ON the power supply
 	PWR.setSensorPower(SENS_5V, SENS_ON);
-	// El sensor se comunica a 9600 bps
+	// The sensor uses 9600 bps speed communication
 	sensor.begin(9600);
 	resetSensor();
 	 // Configure the sensor address
@@ -76,6 +74,8 @@ char turbiditySensorClass::ON()
 		USB.println(F("Sensor address configured correctly"));
 	}
 #endif
+
+	delay(10);
 
 	// Clear the Modbus buffers
 	clearBuffer();
@@ -119,7 +119,6 @@ void turbiditySensorClass::OFF()
 //!*************************************************************
 uint8_t turbiditySensorClass::readTurbidity()
 {
-	
 	////////////////////////////////////////////////////////////////////
 	// This declaration is used to generate a float from two integers 
 	// integer(16 bits) + integer (16 bits) => float (32bits)
@@ -134,8 +133,7 @@ uint8_t turbiditySensorClass::readTurbidity()
 	//readTemperature();
 	delay(10);
 	
-	//writeCalibrationValue(0x005D, getTemperature());
-	
+	//writeCalibrationValue(0x005D, getTemperature());	
 	clearBuffer();	
 	startMeasurment(TURB_NEW_MEAS);
 
@@ -169,7 +167,7 @@ uint8_t turbiditySensorClass::readTurbidity()
 		delay(10);    
 	}
 
-	delay(100);	
+	delay(200);
 	
 	clearBuffer();
 
@@ -177,6 +175,8 @@ uint8_t turbiditySensorClass::readTurbidity()
 		#if DEBUG_MODE == 1
 			USB.println(F("Communication error while reading turbidity measurement status..."));
 		#endif
+
+		return -1;
 	} 
 	else {
 		result = sensor.readHoldingRegisters(TURB_VALUE_REG, 2);
@@ -186,15 +186,17 @@ uint8_t turbiditySensorClass::readTurbidity()
 				// If no response from the slave, print an error message
 				USB.println(F("Communication error while reading Turbidity..."));
 			#endif
-			delay(100);
+			delay(150);
+			
 			return -1;
 		}
 		else {
-			// If all ok
+			// If all OK
 			foo.ints[0] = sensor.getResponseBuffer(1);
 			foo.ints[1] = sensor.getResponseBuffer(0);
 			
 			turbidity = foo.toFloat;
+			
 			return 0;
 		}
 	}
@@ -208,9 +210,10 @@ uint8_t turbiditySensorClass::readTurbidity()
 //!	Returns: The turbidity value						
 //!*************************************************************
 float turbiditySensorClass::getTurbidity()
-{	
-	rawData1 = turbidity* 1000;
-	smoothData1 = digitalSmooth(rawData1, sensSmoothArray1);  // every sensor you use with digitalSmooth needs its own array
+{
+	// Every sensor you use with digitalSmooth needs its own array
+	rawData1 = turbidity * 1000;
+	smoothData1 = digitalSmooth(rawData1, sensSmoothArray1);  
 
 	float turbidity = smoothData1/1000.0;
 	float correction = 0.0;  
@@ -220,6 +223,8 @@ float turbiditySensorClass::getTurbidity()
 	
 	if (value < 0.0) 
 		value = 0.0;    
+
+	delay(10);
 	
 	return value;
 }
@@ -239,7 +244,6 @@ float turbiditySensorClass::getTemperature()
 {
 	return temperature;
 }
-
 
 //**********************************************************************
 // Frame 15 in the documentation
@@ -269,7 +273,7 @@ void turbiditySensorClass::typeMeasurementConfiguration(uint16_t address, uint16
 	#endif
 
 	clearBuffer();
-	delay(100);
+	delay(150);
 }
 
 /*
@@ -360,7 +364,9 @@ void turbiditySensorClass::startMeasurment(uint8_t parameter)
 		else { 
 			USB.println(F("Starting a new measure process..."));
 		}
-	#endif 
+	#endif
+
+	delay(10);
 }
 
 
@@ -415,7 +421,8 @@ uint8_t turbiditySensorClass::readTemperature()
 			USB.print(result, BIN);
 			USB.print(F("\n"));
 		#endif
-		delay(10);    
+		
+		delay(100);    
 	}
 
 	delay(100);
@@ -424,6 +431,8 @@ uint8_t turbiditySensorClass::readTemperature()
 		#if DEBUG_MODE == 1
 			USB.println(F("Communication error while reading temperature measurement status..."));
 		#endif
+
+		return -1;
 	} 
 	else {
 		result = sensor.readHoldingRegisters(TEMP_VALUE_REG, 2);
@@ -560,7 +569,7 @@ void turbiditySensorClass::readCompensationTemperature(uint16_t _register)
 	} 
 	foo;
   // Result of the communication
-  int result = -1;
+  //int result = -1;
 
  /* foo.toFloat = temperature;
   node.setTransmitBuffer(0 , foo.ints[1]);

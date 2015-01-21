@@ -1,7 +1,7 @@
 /*! \file WaspWIFI.cpp
  *  \brief Library for managing WIFI modules
  *
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.7
+ *  Version:		1.8
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -3355,7 +3355,7 @@ uint8_t WaspWIFI::setTCPclient(	ipAddr ip_remote,
 {
 	char question[128];
 	char buffer[20];
-	uint8_t u1,u2,u3;  
+	uint8_t u1,u2,u3,u4;  
 	
 	// Configures TCP connection:
 	
@@ -3377,8 +3377,14 @@ uint8_t WaspWIFI::setTCPclient(	ipAddr ip_remote,
 	snprintf(question, sizeof(question), "%s%u\r", buffer, port_local);
 	u3=sendCommand(question);
 	
+	// set com remote
+	// Copy "set c r "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));
+	snprintf(question, sizeof(question),"%s0\r", buffer);
+	u4 = sendCommand(question);
+	
 	// Checks if everything is Ok, even if It's correctly connected.
-	if ((u1==1)&&(u2==1)&&(u3==1)&&(isConnected()))
+	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(isConnected()))
 	{ 
 		// Opens the Connection, and lets it open until calling close().
 		return open();
@@ -3392,6 +3398,8 @@ uint8_t WaspWIFI::setTCPclient(	ipAddr ip_remote,
 	USB.println(u2,DEC);  
 	USB.print(F("u3:"));  
 	USB.println(u3,DEC);  
+	USB.print(F("u4:"));  
+	USB.println(u4,DEC);  
 	#endif
 	
 	return 0;
@@ -3426,7 +3434,7 @@ uint8_t WaspWIFI::setUDPclient(	ipAddr ip_remote,
 {
 	char question[128];
 	char buffer[20];
-	uint8_t u1,u2,u3;
+	uint8_t u1,u2,u3,u4;
   
 	// Configures UDP host and ports.
 	
@@ -3443,10 +3451,16 @@ uint8_t WaspWIFI::setUDPclient(	ipAddr ip_remote,
 	// Copy "set i l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
 	snprintf(question, sizeof(question), "%s%u\r", buffer, port_local);
-	u3=sendCommand(question);
+	u3=sendCommand(question);	
+		
+	// set com remote
+	// Copy "set c r "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));
+	snprintf(question, sizeof(question),"%s0\r", buffer);
+	u4 = sendCommand(question);
 	
 	// Checks if everything is Ok, even if It's correctly connected.
-	if ((u1==1)&&(u2==1)&&(u3==1)&&(isConnected()))
+	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(isConnected()))
 	{ 
 		// Exits from command mode, and then the UDP messages 
 		// can be sent and received.

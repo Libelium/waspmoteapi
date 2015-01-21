@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.5
+ *  Version:		1.6
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -692,78 +692,6 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	return 1;
 }
 
-
-
-
-/* 
- * decryptFrame () - Decrypt an encrypted frame to extract a previous created 
- * frame.
- * The inner 'frame.buffer' is used for encapsulating the new Waspmote frame. 
- * The structure of the encrypted frames is: 
- *  ___________________________________________________________________________
- * |     |            |           |           |          |   |                 | 
- * | <=> | Frame Type | Num Bytes | ID secret |  Wasp ID | # | Encrypted Frame |
- * |_____|____________|___________|___________|__________|___|_________________| 
- * 
- * Where 'Encrypted Frame' is the original frame.buffer which is encrypted using
- * the specifications of this function: AES key size, AES Block Cipher Mode and 
- * Padding Mode
- * 
- */
-uint8_t WaspFrame::decryptFrame(uint16_t keySize, 
-									char* password, 
-									uint8_t *input,
-									uint16_t length)
-{	
-	// define pointer to the encrypted message
-	uint8_t *encrypted_message; 
-	// define variable for encrypted length
-	uint16_t encrypted_length;
-	
-	// update encrypted message pointer to the actual position 
-    // inside the data structure inside library
-    encrypted_message = (uint8_t*)memchr( input, '#', length) ; 
-    encrypted_message++;
-    
-    if( encrypted_message == NULL )
-    {
-		return 0;
-	}
-    
-    // get encrypted length, substracting the header of the encrypted frame
-    encrypted_length = length - (uint16_t)( encrypted_message - input);
-
-	/*
-	USB.print(F("encrypted frame:"));
-	for (int i = 0; i < encrypted_length; i++)
-	{
-		USB.printHex(encrypted_message[i]);
-	}
-	USB.println();
-	*/
-	
-	// decrypt frame
-	AES.decrypt( keySize
-				, password
-				, encrypted_message
-				, encrypted_length
-    			, frame.buffer
-				, &frame.length
-				, ECB
-				, ZEROS); 
-	
-	// check original frame type: ascii or binary
-	if( (bitRead( frame.buffer[3], 7)) == 1 )
-	{
-		_mode = ASCII;
-	}
-	else
-	{
-		_mode = BINARY;
-	}
-	
-	return 1;
-}
 
 
 
@@ -2273,6 +2201,24 @@ uint8_t WaspFrame::readSequence(void)
 
 }
 
+
+
+
+/*
+ * decrementSequence (void) - decrement the sequence number
+ * 
+ * This function is useful for external function which only need to send a 
+ * Frame with no sensor but some kind of feature. i.e. time sync frame
+ */
+void WaspFrame::decrementSequence(void)
+{	
+	uint8_t aux_sequence = readSequence();
+	
+	aux_sequence--;
+	
+	// store the new sequence number
+	storeSequence(aux_sequence);
+}
 
 
 

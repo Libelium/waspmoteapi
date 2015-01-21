@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.5
+ *  Version:		1.6
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -368,7 +368,8 @@ boolean callback_rmRfdir(	SdFile& parentDir,
 
 WaspSD::WaspSD()
 {
-    // nothing to do
+    // init SD flag
+    flag = 0;
 }
 
 /// Public Methods /////////////////////////////////////////////////////
@@ -2116,7 +2117,7 @@ int32_t WaspSD::numln(const char* filepath)
     if(!openFile(filepath, &file, O_READ))
     {
         snprintf(buffer, sizeof(buffer), "error opening: %s\n", filepath);        
-        flag |= FILE_WRITING_ERROR;
+        flag |= FILE_OPEN_ERROR;
         return 0;
     }
   

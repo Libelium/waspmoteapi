@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.0
+ *  Version:		2.1
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -45,31 +45,46 @@ int main(void)
 		// clear eeprom flag
 		eeprom_write_byte((unsigned char *) 0x01, 0x00);
 	}
-
+	
+	delay(3);	
 	if( WaspRegister & REG_SX )
-	{		
+	{	
+		delay(3);	
 		// Powering the module
 		pinMode(XBEE_PW,OUTPUT);
+		delay(3);
 		digitalWrite(XBEE_PW,HIGH);
+		delay(3);
 		//Configure the MISO, MOSI, CS, SPCR.
 		SPI.begin();
+		delay(3);
 		//Set Most significant bit first
 		SPI.setBitOrder(MSBFIRST);
+		delay(3);
 		//Divide the clock frequency
 		SPI.setClockDivider(SPI_CLOCK_DIV2);
+		delay(3);
 		//Set data mode
 		SPI.setDataMode(SPI_MODE0);		
+		delay(3);
 		//finish
 		SPI.end();		
+		delay(3);
 		// disable all SPI slaves 
-		SPI.setSPISlave(ALL_DESELECTED);		
+		SPI.setSPISlave(ALL_DESELECTED);	
+		delay(3);
 		// Powering the module
 		pinMode(XBEE_PW,OUTPUT);
 		digitalWrite(XBEE_PW,LOW);	
+		delay(3);
 	}	
 	
+	delay(3);	
 	// get serial id
 	_serial_id = Utils.readSerialID();
+	
+	// set random seed
+	srand(_serial_id);
 	
 	setup();
     

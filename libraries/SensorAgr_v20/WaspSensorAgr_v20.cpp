@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
  */
@@ -43,8 +43,6 @@ WaspSensorAgr_v20::WaspSensorAgr_v20()
 	pinMode(DIGITAL2,INPUT);	
 	pinMode(DIGITAL1,OUTPUT);	
 	pinMode(ANA0,OUTPUT);
-	pinMode(SENS_PW_3V3,OUTPUT);
-	pinMode(SENS_PW_5V,OUTPUT);
 	pinMode(15, INPUT);
 	pinMode(17, INPUT);
 	pinMode(19, INPUT);
@@ -56,8 +54,13 @@ WaspSensorAgr_v20::WaspSensorAgr_v20()
 	digitalWrite(DIGITAL3,LOW);
 	digitalWrite(DIGITAL1,LOW);
 	digitalWrite(ANA0,LOW);
-	digitalWrite(SENS_PW_3V3,LOW);
-	digitalWrite(SENS_PW_5V,LOW);	
+		
+	// init power supply to OFF state
+	PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	PWR.setSensorPower(SENS_5V, SENS_OFF);
+	
+	// clear array
+	memset( plv_array, 0x00, sizeof(plv_array) );	
 	
 	// update Waspmote Control Register
 	WaspRegister |= REG_AGRICULTURE;
@@ -98,14 +101,19 @@ int8_t	WaspSensorAgr_v20::setBoardMode(uint8_t mode)
 	
 	switch( mode )
 	{
-		case	SENS_ON :	// switch on the power supplies
+		case	SENS_ON :	// update I2C flag
+							Wire.isBoard = true;
+							// switch on the power supplies
 							PWR.setSensorPower(SENS_3V3, SENS_ON);
 							PWR.setSensorPower(SENS_5V, SENS_ON);
 							// Sets RTC on to enable I2C
 							if(!RTC.isON) RTC.setMode(RTC_ON, RTC_I2C_MODE);
 							digitalWrite(DIGITAL5,HIGH);
 							break;
-		case	SENS_OFF:	// switch off the power supplies
+							
+		case	SENS_OFF:	// update I2C flag
+							Wire.isBoard = false;
+							// switch off the power supplies
 							PWR.setSensorPower(SENS_3V3, SENS_OFF);
 							PWR.setSensorPower(SENS_5V, SENS_OFF);
 							digitalWrite(DIGITAL5,LOW);
@@ -459,13 +467,18 @@ void	WaspSensorAgr_v20::sleepAgr(const char* time2wake,
 	// in the case SENS_OFF was an option is mandatory to turn on the
 	// sensor boards before setting up the I2C bus
 	PWR.switchesON(option);
-	
+
 	// Switch on the RTC and clear the alarm signals	
 	// Disable RTC interruption after waking up 
-	RTC.ON();	
-	RTC.disableAlarm1();
-	RTC.clearAlarmFlag();
-	RTC.OFF();
+	// Except if the pluviometer interruption has woken-up the device. Then it
+	// is supposed to enter sleep mode in a few seconds
+	if( !(intFlag & PLV_INT) )
+	{
+		RTC.ON();		
+		RTC.disableAlarm1();
+		RTC.clearAlarmFlag();
+		RTC.OFF();
+	}
 	
 	// Keep sensor supply powered down if selected
 	if( option & SENS_OFF )
@@ -494,10 +507,7 @@ float WaspSensorAgr_v20::readDendrometer(void)
 	float value_dendro = 0;
 	
 	if( !Wire.I2C_ON ) Wire.begin();
-	delay(100);
-	delay(100);
-	
-	delay(100);
+	delay(300);
   
 	Wire.beginTransmission(B0010110);
 	Wire.send(dendro_channel);
@@ -908,6 +918,119 @@ float WaspSensorAgr_v20::humidityConversion(int readValue, int precision)
 }
 
 
+
+/*	readPluviometerHour 
+ * 
+ * It calculates the rain fall during the previous hour before actual slot.
+ * 
+ * For example: It is 13.30 pm. Then this function calculates the rain fall for 
+ * the whole previous slot. It is said to be the rainfall from 12pm to 13pm
+ * 
+ */
+float WaspSensorAgr_v20::readPluviometerHour()
+{
+	// Introduce one hour time as '1' hour and '1' hour-offset
+	return 	readPluviometer(1, 1);
+}
+
+
+/*	readPluviometerCurrent 
+ * 
+ * It calculates the rain fall during the current hour slot.
+ * 
+ * For example: It is 13.30 pm. Then this function calculates the rain fall for 
+ * this hour slot. It is said to be the rainfall from 13pm to 13.30pm
+ * 
+ */
+float WaspSensorAgr_v20::readPluviometerCurrent()
+{
+	// Introduce one hour time as '1' hour and '0' hour-offset
+	return 	readPluviometer(1, 0);
+}
+
+/*	readPluviometerDay 
+ * 
+ * It calculates the rain fall during the last day
+ * 
+ */
+float WaspSensorAgr_v20::readPluviometerDay()
+{
+	// Introduce one day time as '24' hour
+	return 	readPluviometer(24, 1);
+}
+
+
+/*	readPluviometer: reads the number of pluviometer pulses during the indicated 
+ * 					time and turns the value into mm of rain per indicated time
+ *	Parameters: 'time' indicates the amount of time (in seconds) to calculate 
+ *  the rain fall. For example, one hour would be 3600 seconds.
+ *  Return:	float value : precipitations (mm)
+ * 
+ */
+float WaspSensorAgr_v20::readPluviometer( uint8_t numHours, int offset)
+{	
+	// Variable to store the precipitations value
+	float precipitations = 0.0;	// mm
+	float pluviometerCounter = 0.0;	// number of pulses
+	int counter = (int)numHours;
+	
+	// switch on RTC and get Date
+	RTC.ON();
+	RTC.getTime();
+	
+	// calculate rain fall:
+	
+	// firstly, from RTC.hour down to 24h
+	for(int i = (int)RTC.hour-offset; i>=0 ; i--)
+	{
+		// decrease counter variable
+		counter--;
+		
+		// check hours counter
+		if( counter < 0 ) break;		
+		
+		// check correct Date
+		if( (plv_array[i].day   == RTC.date) &&
+			(plv_array[i].month == RTC.month) )
+		{			
+			// add number of pulses for each valid slot
+			pluviometerCounter += plv_array[i].pulses;
+		}		
+	}
+	
+	// secondly, from 24h down to RTC.hour	
+	for(int i = 23; i>=RTC.hour ; i--)
+	{
+		// decrease counter variable
+		counter--;
+		
+		// check hours counter
+		if( counter < 0 ) break;	
+		
+		// get epoch reference to actual Date
+		unsigned long epoch = RTC.getEpochTime(RTC.year,RTC.month,RTC.date,0,0,0);
+		// substract one day
+		epoch -= SECS_PER_DAY;
+		timestamp_t 	tm;
+		RTC.breakTimeAbsolute( epoch, &tm);		
+		
+		// check correct Date
+		if( (plv_array[i].day   == tm.date) &&
+			(plv_array[i].month == tm.month) )
+		{				
+			// add number of pulses for each valid slot
+			pluviometerCounter += plv_array[i].pulses;
+		}
+		
+	}
+	
+	// calculate precipitation (mm) for indicated time period
+	precipitations = pluviometerCounter * 0.2794; 
+	
+	return precipitations;	
+}
+
+
 /*	readPluviometer: reads the number of anemometer pulses during three seconds
  * 					 and turns the value into mm of rain
  *	Parameters: void
@@ -939,6 +1062,46 @@ uint16_t WaspSensorAgr_v20::readPluviometer()
   
 	return value_pluviometer;
 }
+
+
+/*	storePulse: 
+ * 
+ * This function increments the number of pulses inside the pluviometer array 
+ * in the corresponding index of 'plv_array' 
+ * 
+ */
+void WaspSensorAgr_v20::storePulse()
+{
+	// switch on RTC and get actual time
+	RTC.ON();
+	RTC.getTime();
+	uint16_t MAX_NUMBER_PULSES = 65535;
+	
+	// check if array slot must be initialized or not
+	if( (plv_array[RTC.hour].day   == RTC.date) &&
+		(plv_array[RTC.hour].month == RTC.month) )
+	{
+		// increment number of pulses
+		if( plv_array[RTC.hour].pulses < MAX_NUMBER_PULSES )
+		{
+			plv_array[RTC.hour].pulses++;
+		}
+	}
+	else
+	{
+		// store new date for this slot
+		plv_array[RTC.hour].day = RTC.date;
+		plv_array[RTC.hour].month = RTC.month;
+		plv_array[RTC.hour].pulses = 0;
+		// increment number of pulses
+		if( plv_array[RTC.hour].pulses < MAX_NUMBER_PULSES )
+		{
+			plv_array[RTC.hour].pulses++;
+		}
+	}	
+}
+
+
 
 /*	conversion: converts the value read from the PT1000 and dendrometer ADC into
  * 				the units of the sensor
@@ -1181,63 +1344,11 @@ float WaspSensorAgr_v20::mcpConversion(int readValue)
  */
 float WaspSensorAgr_v20::readTempDS1820()
 {
-	//PWR.setSensorPower(SENS_3V3,SENS_ON);
-	//delay(1000);
-	
-	// analog 4
-	WaspOneWire OneWireTemp(17);
-	
-	byte data[12];
-	byte addr[8];
-
-	if ( !OneWireTemp.search(addr))
-	{
-		//no more sensors on chain, reset search
-		//USB.ON();
-		//USB.println(F("no more sensors"));
-		OneWireTemp.reset_search();
-		return -1000;
-	}
-	
-	if ( WaspOneWire::crc8( addr, 7) != addr[7]) 
-	{
-		//USB.ON();
-		//USB.println(F("CRC is not valid!"));
-		return -1000;
-	}
-
-	if ( addr[0] != 0x10 && addr[0] != 0x28)
-	{
-		//USB.ON();
-		//USB.println(F("Device is not recognized"));
-		return -1000;
-	}
-	
-	OneWireTemp.reset();
-	OneWireTemp.select(addr);
-	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
-    delay(750);
-    
-	OneWireTemp.reset();
-	OneWireTemp.select(addr);    
-	OneWireTemp.write(0xBE); // Read Scratchpad
-
-  	for (int i = 0; i < 9; i++)  // we need 9 bytes
-	{
-		data[i] = OneWireTemp.read();
-	}
-  
-	OneWireTemp.reset_search();
-  
-	byte MSB = data[1];
-	byte LSB = data[0];
-
-	float tempRead = ((MSB << 8) | LSB); //using two's compliment
-	float TemperatureSum = tempRead / 16;
-    
-    //PWR.setSensorPower(SENS_3V3,SENS_OFF);
-    
-	return TemperatureSum;
+	// Select analog 4 as pin to be used
+	// 'false' input means that no 3v3 power supply is managed
+	// So, the Sensor Board and the sensor switch must be 
+	// powered on prior using this function
+	return 	Utils.readTempDS1820( 17, false );
 }
 
 

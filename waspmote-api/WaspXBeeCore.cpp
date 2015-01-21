@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.6
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -2454,6 +2454,9 @@ int8_t WaspXBeeCore::treatData()
 	uint8_t pos_max=0;
 	uint8_t first_stop=1;
 	uint8_t frameType;
+	
+	// initialize RX flag
+	error_RX = 2;
 
 	command[0]=0xEE;
 	error=parse_message(command);
@@ -4001,6 +4004,9 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
 		// reset index to starting byte
 		i=0;
 	}
+	
+	// initialize the starting pointer of a valid frame (0x7E)
+	length_prev = i;
 	
 	// increment index to the byte that follows up the start delimiter
 	i++;

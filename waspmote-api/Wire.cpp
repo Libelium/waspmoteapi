@@ -1,5 +1,5 @@
 /*
- *  Modified for Waspmote by A. Bielsa, 2009
+ *  Modified for Waspmote by Libelium, 2009-2015
  *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
@@ -49,34 +49,40 @@ void (*TwoWire::user_onReceive)(int);
 
 TwoWire::TwoWire()
 {
+	// init flags
+	isBoard = false;
+	_5V_ON  = false;
+	_3V3_ON = false;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
 
 void TwoWire::begin(void)
 {
-	int i=0;
-  // init buffer for reads
-  for(i=0;i<BUFFER_LENGTH;i++) rxBuffer[i]=0;
-  rxBufferIndex = 0;
-  rxBufferLength = 0;
+	// init buffer for reads
+	memset( rxBuffer, 0x00, BUFFER_LENGTH);
+	rxBufferIndex = 0;
+	rxBufferLength = 0;
 
-  // init buffer for writes
-  for(i=0;i<BUFFER_LENGTH;i++) txBuffer[i]=0;
-  txBufferIndex = 0;
-  txBufferLength = 0;
+	// init buffer for writes
+	memset( txBuffer, 0x00, BUFFER_LENGTH); 
+	txBufferIndex = 0;
+	txBufferLength = 0;
 
-  twi_init();
+	twi_init();
   
-  I2C_ON = 1;
+	// update flag
+	I2C_ON = 1;
+	
+	delayMicroseconds(4);	
 }
 
 void TwoWire::begin(uint8_t address)
 {
-  twi_setAddress(address);
-  twi_attachSlaveTxEvent(onRequestService);
-  twi_attachSlaveRxEvent(onReceiveService);
-  begin();
+	twi_setAddress(address);
+	twi_attachSlaveTxEvent(onRequestService);
+	twi_attachSlaveRxEvent(onReceiveService);
+	begin();
 }
 
 void TwoWire::begin(int address)
@@ -84,23 +90,47 @@ void TwoWire::begin(int address)
   begin((uint8_t)address);
 }
 
-void TwoWire::requestFrom(uint8_t address, uint8_t quantity)
+
+/* 
+ * name: requestFrom
+ * It attempts to become twi bus master and read a series of bytes from a device 
+ * on the bus
+ * @param address: 7bit i2c device address
+ * @param quantity: number of bytes to read into array
+ * @return '0' ok, '1' length too long for buffer
+ * 
+ */
+uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity)
 {
-  // clamp to buffer length
-  if(quantity > BUFFER_LENGTH){
-    quantity = BUFFER_LENGTH;
-  }
-  // perform blocking read into buffer
-  twi_readFrom(address, rxBuffer, quantity);
-  // set rx buffer iterator vars
-  rxBufferIndex = 0;
-  rxBufferLength = quantity;
+	// Secure I2C power management
+	Wire.secureBegin();
+	
+	// clamp to buffer length
+	if(quantity > BUFFER_LENGTH)
+	{
+		quantity = BUFFER_LENGTH;
+	}
+	
+	// perform blocking read into buffer
+	uint8_t ret = twi_readFrom(address, rxBuffer, quantity);
+	
+	// set rx buffer iterator vars
+	rxBufferIndex = 0;
+	rxBufferLength = quantity;
+	
+	// Secure I2C power management
+	Wire.secureEnd();
+	
+	return ret;
 }
 
-void TwoWire::requestFrom(int address, int quantity)
+// Same as above but with types conversion
+uint8_t TwoWire::requestFrom(int address, int quantity)
 {
-  requestFrom((uint8_t)address, (uint8_t)quantity);
+	return requestFrom((uint8_t)address, (uint8_t)quantity);
 }
+
+
 
 void TwoWire::beginTransmission(uint8_t address)
 {
@@ -118,15 +148,23 @@ void TwoWire::beginTransmission(int address)
   beginTransmission((uint8_t)address);
 }
 
-void TwoWire::endTransmission(void)
+uint8_t TwoWire::endTransmission(void)
 {
-  // transmit buffer (blocking)
-  twi_writeTo(txAddress, txBuffer, txBufferLength, 1);
-  // reset tx buffer iterator vars
-  txBufferIndex = 0;
-  txBufferLength = 0;
-  // indicate that we are done transmitting
-  transmitting = 0;
+	// Secure I2C power management
+	Wire.secureBegin();
+	
+	// transmit buffer (blocking)
+	uint8_t ret = twi_writeTo(txAddress, txBuffer, txBufferLength, 1);
+	// reset tx buffer iterator vars
+	txBufferIndex = 0;
+	txBufferLength = 0;
+	// indicate that we are done transmitting
+	transmitting = 0;
+	
+	// Secure I2C power management
+	Wire.secureEnd();
+	
+	return ret;
 }
 
 // must be called in:
@@ -134,22 +172,32 @@ void TwoWire::endTransmission(void)
 // or after beginTransmission(address)
 void TwoWire::send(uint8_t data)
 {
-  if(transmitting){
-  // in master transmitter mode
-    // don't bother if buffer is full
-    if(txBufferLength >= BUFFER_LENGTH){
-      return;
-    }
-    // put byte in tx buffer
-    txBuffer[txBufferIndex] = data;
-    ++txBufferIndex;
-    // update amount in buffer   
-    txBufferLength = txBufferIndex;
-  }else{
-  // in slave send mode
-    // reply to master
-    twi_transmit(&data, 1);
-  }
+	if(transmitting)
+	{
+		// in master transmitter mode
+		// don't bother if buffer is full
+		if(txBufferLength >= BUFFER_LENGTH)
+		{
+			return;
+		}
+		// put byte in tx buffer
+		txBuffer[txBufferIndex] = data;
+		++txBufferIndex;
+		// update amount in buffer   
+		txBufferLength = txBufferIndex;
+	}
+	else
+	{	
+		// Secure I2C power management
+		Wire.secureBegin();
+		
+		// in slave send mode
+		// reply to master
+		twi_transmit(&data, 1);
+		
+		// Secure I2C power management
+		Wire.secureEnd();
+	}
 }
 
 // must be called in:
@@ -157,16 +205,26 @@ void TwoWire::send(uint8_t data)
 // or after beginTransmission(address)
 void TwoWire::send(uint8_t* data, uint8_t quantity)
 {
-  if(transmitting){
-  // in master transmitter mode
-    for(uint8_t i = 0; i < quantity; ++i){
-      send(data[i]);
-    }
-  }else{
-  // in slave send mode
-    // reply to master
-    twi_transmit(data, quantity);
-  }
+	if(transmitting)
+	{
+		// in master transmitter mode
+		for(uint8_t i = 0; i < quantity; ++i)
+		{
+			send(data[i]);
+		}
+	}
+	else
+	{
+		// Secure I2C power management
+		Wire.secureBegin();
+	
+		// in slave send mode
+		// reply to master
+		twi_transmit(data, quantity);
+			
+		// Secure I2C power management
+		Wire.secureEnd();
+	}
 }
 
 // must be called in:
@@ -268,6 +326,90 @@ void TwoWire::close()
 	twi_close();
 	I2C_ON = 0;
 }
+
+
+
+
+/******************************************************************************* 
+ * secureBegin() - It makes sure all I2C slaves are switched on when they
+ * have been plugged to Waspmote. 
+ *
+ ******************************************************************************/
+void TwoWire::secureBegin()
+{		
+	// Get the 5V and 3V3 power supply state to be set again if necessary
+	_5V_ON  = WaspRegister & REG_5V;
+	_3V3_ON = WaspRegister & REG_3V3;	
+	
+	// this codeblock belongs to the performance of the I2C bus
+	// check if any Sensor Board (with I2C components) is ON before using I2C
+	if( (WaspRegister & REG_METERING) 		||
+		(WaspRegister & REG_AGRICULTURE)	||
+		(WaspRegister & REG_GASES) 			||
+		(WaspRegister & REG_EVENTS) 		||
+		(WaspRegister & REG_CITIES_V14) 	||
+		(WaspRegister & REG_CITIES_V15) 	||
+		(WaspRegister & REG_PROTOTYPING) )
+	{
+		if( Wire.isBoard == false )
+		{			
+			// It is necessary to switch on the power supply if the Sensor Board is 
+			// connected to Waspmote so as not to cause intereferences in the I2C bus
+			PWR.setSensorPower(SENS_3V3, SENS_ON);
+			PWR.setSensorPower(SENS_5V, SENS_ON);
+		}
+	}		
+}
+
+
+
+/******************************************************************************* 
+ * secureEnd() - It makes sure all I2C slaves are swichted off when they
+ * have been plugged to Waspmote and they were off prior to the I2C 
+ * operation. 
+ *
+ ******************************************************************************/
+void TwoWire::secureEnd()
+{		
+	// this codeblock belongs to the performance of the I2C bus
+	// check if any Sensor Board (with I2C components) is ON before using I2C
+	if( (WaspRegister & REG_METERING) 		||
+		(WaspRegister & REG_AGRICULTURE)	||
+		(WaspRegister & REG_GASES) 			||
+		(WaspRegister & REG_EVENTS) 		||
+		(WaspRegister & REG_CITIES_V14) 	||
+		(WaspRegister & REG_CITIES_V15) 	||
+		(WaspRegister & REG_PROTOTYPING) )
+	{
+		// this codeblock belongs to the performance of the SD card
+		// switch off the SX module if it was not powered on 
+		if( (Wire.isBoard == false) )
+		{
+			// switch OFF sensor boards to previous state before 'secureBegin'
+			PWR.setSensorPower(SENS_3V3, SENS_OFF);
+			PWR.setSensorPower(SENS_5V, SENS_OFF);
+		}
+		else
+		{
+			// if sensor board were switched off without doing OFF from their 
+			// class function, then it is necessary to do it manually:
+			// set power supply lines to previous state before 'secureBegin'
+			if( _3V3_ON == false )
+			{
+				PWR.setSensorPower(SENS_3V3, SENS_OFF);
+			}
+			
+			if( _5V_ON == false )
+			{
+				PWR.setSensorPower(SENS_5V, SENS_OFF);
+			}
+		}
+		
+		
+	}	
+}
+
+
 
 
 // Preinstantiate Objects //////////////////////////////////////////////////////

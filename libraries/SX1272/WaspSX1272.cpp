@@ -1,7 +1,7 @@
 /*! \file WaspSX1272.cpp
  *  \brief Library for managing Semtech modules
  *
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,9 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
- *  Implementation:	Covadonga Albiñana
+ *  Implementation:	Covadonga Albiñana, Yuri Carmona
  */
 
 
@@ -49,7 +49,7 @@ WaspSX1272::WaspSX1272()
 	_maxRetries = 3;
 	packet_sent.retry = _retries;
 	
-	WaspRegister |= REG_SX;
+	WaspRegister |= REG_SX;	
 };
 
 
@@ -1966,14 +1966,15 @@ int8_t WaspSX1272::setPower(char p)
 }
 
 /*
- Function: Sets the signal power indicated in the module.
+ Function: Sets the signal power indicated as input to the module.
  Returns: Integer that determines if there has been any error
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
    state = -1 --> Forbidden command for this protocol
  Parameters:
-   p: power option to set in configuration.
+   pow: power option to set in configuration. The input value range is from 
+   0 to 14 dBm.
 */
 int8_t WaspSX1272::setPowerNum(uint8_t pow)
 {
@@ -2876,6 +2877,7 @@ uint8_t WaspSX1272::setACK()
 	if( state == 0 )
 	{
 		// Setting ACK
+		memset( &ACK, 0x00, sizeof(ACK) );
 		ACK.dst = packet_received.src; // ACK destination is packet source
 		ACK.src = packet_received.dst; // ACK source is packet destination
 		ACK.packnum = packet_received.packnum; // packet number that has been correctly received
@@ -2883,7 +2885,8 @@ uint8_t WaspSX1272::setACK()
 		ACK.data[0] = _reception;	// CRC of the received packet
 
 		// Setting address pointer in FIFO data buffer
-		writeRegister(REG_FIFO_ADDR_PTR, 0x80);
+		writeRegister(REG_FIFO_ADDR_PTR, 0x00);
+		writeRegister(REG_FIFO_TX_BASE_ADDR, 0x00);  
 
 		state = 1;
 
@@ -3236,9 +3239,10 @@ boolean	WaspSX1272::availableData(uint16_t wait)
 	byte value;
 	byte header = 0;
 	boolean forme = false;
-	boolean	_hreceived = false;
-	unsigned long previous;
-
+	unsigned long previous;	
+	
+	// update attribute
+	_hreceived = false;
 
 	#if (SX1272_debug_mode > 0)
 		USB.println();
@@ -3696,6 +3700,7 @@ int8_t WaspSX1272::setDestination(uint8_t dest)
 
 /*
  Function: It sets the timeout according to the configured mode.
+ Link: http://www.semtech.com/images/datasheet/sx1272.pdf
  Returns: Integer that determines if there has been any error
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
@@ -3714,310 +3719,97 @@ uint8_t WaspSX1272::setTimeout()
 	state = 1;
 	if( _modem == LORA )
 	{
-		switch(_spreadingFactor)
-		{	// Choosing Spreading Factor
-			case SF_6:	switch(_bandwidth)
-						{	// Choosing bandwidth
-							case BW_125:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 335;
-														break;
-												case CR_6: _sendTime = 352;
-														break;
-												case CR_7: _sendTime = 368;
-														break;
-												case CR_8: _sendTime = 386;
-														break;
-											}
-											break;
-							case BW_250:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 287;
-														break;
-												case CR_6: _sendTime = 296;
-														break;
-												case CR_7: _sendTime = 305;
-														break;
-												case CR_8: _sendTime = 312;
-														break;
-											}
-											break;
-							case BW_500:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 242;
-														break;
-												case CR_6: _sendTime = 267;
-														break;
-												case CR_7: _sendTime = 272;
-														break;
-												case CR_8: _sendTime = 276;
-														break;
-											}
-											break;
-						}
-						break;
-
-			case SF_7:	switch(_bandwidth)
-						{	// Choosing bandwidth
-							case BW_125:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 408;
-														break;
-												case CR_6: _sendTime = 438;
-														break;
-												case CR_7: _sendTime = 468;
-														break;
-												case CR_8: _sendTime = 497;
-														break;
-											}
-											break;
-							case BW_250:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 325;
-														break;
-												case CR_6: _sendTime = 339;
-														break;
-												case CR_7: _sendTime = 355;
-														break;
-												case CR_8: _sendTime = 368;
-														break;
-											}
-											break;
-							case BW_500:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 282;
-														break;
-												case CR_6: _sendTime = 290;
-														break;
-												case CR_7: _sendTime = 296;
-														break;
-												case CR_8: _sendTime = 305;
-														break;
-											}
-											break;
-						}
-						break;
-
-			case SF_8:	switch(_bandwidth)
-						{	// Choosing bandwidth
-							case BW_125:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 537;
-														break;
-												case CR_6: _sendTime = 588;
-														break;
-												case CR_7: _sendTime = 640;
-														break;
-												case CR_8: _sendTime = 691;
-														break;
-											}
-											break;
-							case BW_250:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 388;
-														break;
-												case CR_6: _sendTime = 415;
-														break;
-												case CR_7: _sendTime = 440;
-														break;
-												case CR_8: _sendTime = 466;
-														break;
-											}
-											break;
-							case BW_500:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 315;
-														break;
-												case CR_6: _sendTime = 326;
-														break;
-												case CR_7: _sendTime = 340;
-														break;
-												case CR_8: _sendTime = 352;
-														break;
-											}
-											break;
-						}
-						break;
-
-			case SF_9:	switch(_bandwidth)
-						{	// Choosing bandwidth
-							case BW_125:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 774;
-														break;
-												case CR_6: _sendTime = 864;
-														break;
-												case CR_7: _sendTime = 954;
-														break;
-												case CR_8: _sendTime = 1044;
-														break;
-											}
-											break;
-							case BW_250:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 506;
-														break;
-												case CR_6: _sendTime = 552;
-														break;
-												case CR_7: _sendTime = 596;
-														break;
-												case CR_8: _sendTime = 642;
-														break;
-											}
-											break;
-							case BW_500:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 374;
-														break;
-												case CR_6: _sendTime = 396;
-														break;
-												case CR_7: _sendTime = 418;
-														break;
-												case CR_8: _sendTime = 441;
-														break;
-											}
-											break;
-						}
-						break;
-
-			case SF_10:	switch(_bandwidth)
-						{	// Choosing bandwidth
-							case BW_125:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 1226;
-														break;
-												case CR_6: _sendTime = 1388;
-														break;
-												case CR_7: _sendTime = 1552;
-														break;
-												case CR_8: _sendTime = 1716;
-														break;
-											}
-											break;
-							case BW_250:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 732;
-														break;
-												case CR_6: _sendTime = 815;
-														break;
-												case CR_7: _sendTime = 896;
-														break;
-												case CR_8: _sendTime = 977;
-														break;
-											}
-											break;
-							case BW_500:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 486;
-														break;
-												case CR_6: _sendTime = 527;
-														break;
-												case CR_7: _sendTime = 567;
-														break;
-												case CR_8: _sendTime = 608;
-														break;
-											}
-											break;
-						}
-						break;
-
-			case SF_11:	switch(_bandwidth)
-						{	// Choosing bandwidth
-							case BW_125:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 2375;
-														break;
-												case CR_6: _sendTime = 2735;
-														break;
-												case CR_7: _sendTime = 3095;
-														break;
-												case CR_8: _sendTime = 3456;
-														break;
-											}
-											break;
-							case BW_250:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 1144;
-														break;
-												case CR_6: _sendTime = 1291;
-														break;
-												case CR_7: _sendTime = 1437;
-														break;
-												case CR_8: _sendTime = 1586;
-														break;
-											}
-											break;
-							case BW_500:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 691;
-														break;
-												case CR_6: _sendTime = 766;
-														break;
-												case CR_7: _sendTime = 838;
-														break;
-												case CR_8: _sendTime = 912;
-														break;
-											}
-											break;
-						}
-						break;
-
-			case SF_12: switch(_bandwidth)
-						{	// Choosing bandwidth
-							case BW_125:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 4180;
-														break;
-												case CR_6: _sendTime = 4836;
-														break;
-												case CR_7: _sendTime = 5491;
-														break;
-												case CR_8: _sendTime = 6146;
-														break;
-											}
-											break;
-							case BW_250:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 2000;
-														break;
-												case CR_6: _sendTime = 2244;
-														break;
-												case CR_7: _sendTime = 2521;
-														break;
-												case CR_8: _sendTime = 2800;
-														break;
-											}
-											break;
-							case BW_500:	switch(_codingRate)
-											{	// Choosing coding rate
-												case CR_5: _sendTime = 1102;
-														break;
-												case CR_6: _sendTime = 1241;
-														break;
-												case CR_7: _sendTime = 1381;
-														break;
-												case CR_8: _sendTime = 1520;
-														break;
-											}
-											break;
-						}
-						break;
-			default: _sendTime = MAX_TIMEOUT;
-		}
+		// calculate 'delay'
+		delay = ((0.1*_sendTime) + 1);		
+	
+		float Tpacket = timeOnAir();
+	
+		// calculate final send/receive timeout adding an offset and a random value
+		_sendTime = (uint16_t) Tpacket + (rand()%delay) + 1000;
+	
+		#if (SX1272_debug_mode > 2)		
+			USB.print(F("Tsym (ms):"));
+			USB.println(Tsym);
+			USB.print(F("Tpreamble (ms):"));
+			USB.println(Tpreamble);
+			USB.print(F("payloadSymbNb:"));
+			USB.println(payloadSymbNb);
+			USB.print(F("Tpacket:"));
+			USB.println(Tpacket);
+		#endif
+		
+		// update state
+		state = 0;
 	}
-	else
+	else 
 	{
+		// update state
 		_sendTime = MAX_TIMEOUT;
+		
+		// update state
+		state = 0;
 	}
-	delay = ((0.1*_sendTime) + 1);
-	_sendTime = (uint16_t) ((_sendTime * 1.2) + (rand()%delay));
-	#if (SX1272_debug_mode > 1)
+
+	#if (SX1272_debug_mode > 1)	
 		USB.print(F("Timeout to send/receive is: "));
-		USB.println(_sendTime, DEC);
-	#endif
-	state = 0;
+		USB.println(_sendTime, DEC);	
+	#endif	
+	
 	return state;
 }
+
+
+/*
+ Function: It gets the theoretical value of the time-on-air of the packet
+ Link: http://www.semtech.com/images/datasheet/sx1272.pdf
+ Returns: Float that determines the time-on-air
+*/
+float WaspSX1272::timeOnAir()
+{
+	return timeOnAir( _payloadlength );
+}
+
+/*
+ Function: It gets the theoretical value of the time-on-air of the packet
+ Link: http://www.semtech.com/images/datasheet/sx1272.pdf
+ Returns: Float that determines the time-on-air
+*/
+float WaspSX1272::timeOnAir( uint16_t payloadlength )
+{
+	float BW;
+	float DE = 0;
+	float SF = _spreadingFactor;
+	float PL = payloadlength + OFFSET_PAYLOADLENGTH;
+	float H = _header;
+	float CR = _codingRate;
+	
+	// Dara rate optimization enabled if SF is 11 or 12
+	if( SF > 10) DE = 1.0;
+	else DE = 0.0;
+		
+	// payload correction
+	if( payloadlength == 0 ) PL = 255;
+
+	// Bandwidth value setting
+	if( _bandwidth == BW_125 ) 		BW = 125.0;
+	else if( _bandwidth == BW_250 ) BW = 250.0;
+	else if( _bandwidth == BW_500 ) BW = 500.0;
+	else BW = 125.0;
+
+	// Calculation steps:
+	float Tsym = pow(2,SF)/(BW); // ms
+	float Tpreamble = (8+4.25)*Tsym;// ms
+	float argument1 = ceil( (8.0*PL-4.0*SF+28.0+16.0-20.0*H)/(4.0*(SF-2.0*DE)) )*(CR+4.0);
+	float argument2 = 0;
+	float payloadSymbNb = 8 + max( argument1, argument2);
+	float Tpayload = payloadSymbNb * Tsym;
+	float Tpacket = Tpreamble + Tpayload;	
+	
+	return Tpacket;
+}
+
+
+
 
 /*
  Function: It sets a char array payload packet in a packet struct.
@@ -4153,7 +3945,8 @@ uint8_t WaspSX1272::setPacket(uint8_t dest, char *payload)
 	}
 	
 	// Setting address pointer in FIFO data buffer
-	writeRegister(REG_FIFO_ADDR_PTR, 0x80);  
+	writeRegister(REG_FIFO_TX_BASE_ADDR, 0x00);  
+	writeRegister(REG_FIFO_ADDR_PTR, 0x00);  
 	if( state == 0 )
 	{
 		state = 1;
@@ -4162,7 +3955,7 @@ uint8_t WaspSX1272::setPacket(uint8_t dest, char *payload)
 		writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
 		writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
 		writeRegister(REG_FIFO, packet_sent.length); 	// Writing the packet length in FIFO
-		for(unsigned int i = 0; i < _payloadlength; i++)
+		for( uint16_t i = 0; i < _payloadlength; i++)
 		{
 			writeRegister(REG_FIFO, packet_sent.data[i]);  // Writing the payload in FIFO
 		}
@@ -4180,7 +3973,7 @@ uint8_t WaspSX1272::setPacket(uint8_t dest, char *payload)
 			USB.print("|");
 			USB.printHex(packet_sent.length);			// Printing packet length
 			USB.print("|");
-			for(unsigned int i = 0; i < _payloadlength; i++)
+			for( uint16_t i = 0; i < _payloadlength; i++)
 			{
 				USB.printHex(packet_sent.data[i]);		// Printing payload
 				USB.print("|");
@@ -4241,7 +4034,8 @@ uint8_t WaspSX1272::setPacket(uint8_t dest, uint8_t *payload)
 			USB.println(F(" time **"));
 		#endif
 	}
-	writeRegister(REG_FIFO_ADDR_PTR, 0x80);  // Setting address pointer in FIFO data buffer
+	writeRegister(REG_FIFO_TX_BASE_ADDR, 0x00);
+	writeRegister(REG_FIFO_ADDR_PTR, 0x00);  // Setting address pointer in FIFO data buffer
 	if( state == 0 )
 	{
 		state = 1;
@@ -4315,82 +4109,87 @@ uint8_t WaspSX1272::sendWithTimeout()
 */
 uint8_t WaspSX1272::sendWithTimeout(uint16_t wait)
 {
-	  uint8_t state = 2;
-	  byte value = 0x00;
-	  unsigned long previous;
+	uint8_t state = 2;
+	byte value = 0x00;
+	unsigned long previous;
 
-	  #if (SX1272_debug_mode > 1)
-		  USB.println();
-	      USB.println(F("Starting 'sendWithTimeout'"));
-	  #endif
+	#if (SX1272_debug_mode > 1)
+		USB.println();
+		USB.println(F("Starting 'sendWithTimeout'"));
+	#endif
 
-	  //clearFlags();	// Initializing flags
+	// wait to TxDone flag
+	previous = millis();
+	if( _modem == LORA )
+	{ 
+		/// LoRa mode
+		// Initializing flags
+		clearFlags();	
+		// LORA mode - Tx
+		writeRegister(REG_OP_MODE, LORA_TX_MODE); 
 
-	  // wait to TxDone flag
-	  previous = millis();
-	  if( _modem == LORA )
-	  { // LoRa mode
-		  clearFlags();	// Initializing flags
-		  writeRegister(REG_OP_MODE, LORA_TX_MODE);  // LORA mode - Tx
+		value = readRegister(REG_IRQ_FLAGS);
+		
+		// Wait until the packet is sent (TX Done flag) or the timeout expires
+		while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
+		{
+			value = readRegister(REG_IRQ_FLAGS);
+			// Condition to avoid an overflow (DO NOT REMOVE)
+			if( millis() < previous )
+			{
+				previous = millis();
+			}
+		}
+		state = 1;
+	}
+	else
+	{ 
+		/// FSK mode
+		writeRegister(REG_OP_MODE, FSK_TX_MODE);  // FSK mode - Tx
 
-		  value = readRegister(REG_IRQ_FLAGS);
-		  // Wait until the packet is sent (TX Done flag) or the timeout expires
-		  while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
-		  {
-			  value = readRegister(REG_IRQ_FLAGS);
-			  // Condition to avoid an overflow (DO NOT REMOVE)
-			  if( millis() < previous )
-			  {
-				  previous = millis();
-			  }
-		  }
-		  state = 1;
-	  }
-	  else
-	  { // FSK mode
-		  writeRegister(REG_OP_MODE, FSK_TX_MODE);  // FSK mode - Tx
-
-		  value = readRegister(REG_IRQ_FLAGS2);
-		  // Wait until the packet is sent (Packet Sent flag) or the timeout expires
-		  while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
-		  {
-			  value = readRegister(REG_IRQ_FLAGS2);
-			  // Condition to avoid an overflow (DO NOT REMOVE)
-			  if( millis() < previous )
-			  {
-				  previous = millis();
-			  }
-		  }
-		  state = 1;
-	  }
-	  if( bitRead(value, 3) == 1 )
-	  {
-		  state = 0;	// Packet successfully sent
-		  #if (SX1272_debug_mode > 1)
-			  USB.println(F("## Packet successfully sent ##"));
-			  USB.println();
-		  #endif
-	  }
-	  else
-	  {
-		  if( state == 1 )
-		  {
-			  #if (SX1272_debug_mode > 1)
-				  USB.println(F("** Timeout has expired **"));
-				  USB.println();
-			  #endif
-		  }
-		  else
-		  {
-			  #if (SX1272_debug_mode > 1)
-				  USB.println(F("** There has been an error and packet has not been sent **"));
-				  USB.println();
-			  #endif
-		  }
-	  }
-
-	  clearFlags();		// Initializing flags
-	  return state;
+		value = readRegister(REG_IRQ_FLAGS2);
+		// Wait until the packet is sent (Packet Sent flag) or the timeout expires
+		while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
+		{
+			value = readRegister(REG_IRQ_FLAGS2);
+			
+			// Condition to avoid an overflow (DO NOT REMOVE)
+			if( millis() < previous )
+			{
+				previous = millis();
+			}
+		}
+		state = 1;
+	}
+	if( bitRead(value, 3) == 1 )
+	{
+		state = 0;	// Packet successfully sent
+		#if (SX1272_debug_mode > 1)
+			USB.println(F("## Packet successfully sent ##"));
+			USB.println();
+		#endif
+	}
+	else
+	{
+		if( state == 1 )
+		{
+			#if (SX1272_debug_mode > 1)
+				USB.println(F("** Timeout has expired **"));
+				USB.println();
+			#endif
+		}
+		else
+		{
+			#if (SX1272_debug_mode > 1)
+				USB.println(F("** There has been an error and packet has not been sent **"));
+				USB.println();
+			#endif
+		}
+	}
+	
+	// Initializing flags
+	clearFlags();		
+	return state;
 }
 
 /*
@@ -4560,6 +4359,13 @@ uint8_t WaspSX1272::sendPacketMAXTimeoutACK(uint8_t dest, uint8_t *payload, uint
 /*
  Function: Configures the module to transmit information and receive an ACK.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4591,7 +4397,7 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
 		}
 		else
 		{
-			state_f = 1;
+			state_f = 9;
 		}
 	}
 	else
@@ -4605,6 +4411,14 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
 /*
  Function: Configures the module to transmit information and receive an ACK.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
+   state = 2  --> The ACK has not been received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4621,6 +4435,7 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_
 
 	// Sending packet to 'dest' destination
 	state = sendPacketTimeout(dest, payload, length16);
+
 	// Trying to receive the ACK
 	if( state == 0 )
 	{
@@ -4638,7 +4453,7 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_
 		}
 		else
 		{
-			state_f = 1;
+			state_f = 9;
 		}
 	}
 	else
@@ -4652,6 +4467,14 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_
 /*
  Function: Configures the module to transmit information and receive an ACK.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
+   state = 2  --> The ACK has not been received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4683,7 +4506,7 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t w
 		}
 		else
 		{
-			state_f = 1;
+			state_f = 9;
 		}
 	}
 	else
@@ -4697,6 +4520,13 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t w
 /*
  Function: Configures the module to transmit information and receive an ACK.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4728,7 +4558,7 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_
 		}
 		else
 		{
-			state_f = 1;
+			state_f = 9;
 		}
 	}
 	else
@@ -4750,9 +4580,15 @@ uint8_t WaspSX1272::getACK()
 
 /*
  Function: It gets and stores an ACK if it is received, before ending 'wait' time.
- Returns: Integer that determines if there has been any error
+ Returns: Integer that determines if there has been any error 
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
    state = 2  --> The ACK has not been received
-   state = 1  --> The N-ACK has been received with no errors
+   state = 1  --> not used (reserved)
    state = 0  --> The ACK has been received with no errors
  Parameters:
    wait: time to wait while there is no a valid header received.
@@ -4850,7 +4686,7 @@ uint8_t WaspSX1272::getACK(uint16_t wait)
 						}
 						else
 						{
-							state = 1;
+							state = 3;
 							#if (SX1272_debug_mode > 0)
 								USB.println(F("** N-ACK received **"));
 								USB.println();
@@ -4859,7 +4695,7 @@ uint8_t WaspSX1272::getACK(uint16_t wait)
 					}
 					else
 					{
-						state = 1;
+						state = 4;
 						#if (SX1272_debug_mode > 0)
 							USB.println(F("** ACK length incorrectly received **"));
 							USB.println();
@@ -4868,7 +4704,7 @@ uint8_t WaspSX1272::getACK(uint16_t wait)
 				}
 				else
 				{
-					state = 1;
+					state = 5;
 					#if (SX1272_debug_mode > 0)
 						USB.println(F("** ACK number incorrectly received **"));
 						USB.println();
@@ -4877,7 +4713,7 @@ uint8_t WaspSX1272::getACK(uint16_t wait)
 			}
 			else
 			{
-				state = 1;
+				state = 6;
 				#if (SX1272_debug_mode > 0)
 					USB.println(F("** ACK source incorrectly received **"));
 					USB.println();
@@ -4886,7 +4722,7 @@ uint8_t WaspSX1272::getACK(uint16_t wait)
 		}
 		else
 		{
-			state = 1;
+			state = 7;
 			#if (SX1272_debug_mode > 0)
 				USB.println(F("** ACK destination incorrectly received **"));
 				USB.println();
@@ -4895,7 +4731,7 @@ uint8_t WaspSX1272::getACK(uint16_t wait)
 	}
 	else
 	{
-		state = 1;
+		state = 8;
 		#if (SX1272_debug_mode > 0)
 			USB.println(F("** ACK lost **"));
 			USB.println();
@@ -4932,6 +4768,13 @@ uint8_t WaspSX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, uint8_t *payloa
 /*
  Function: Configures the module to transmit information with retries in case of error.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4960,6 +4803,13 @@ uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload)
 /*
  Function: Configures the module to transmit information with retries in case of error.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4988,6 +4838,13 @@ uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, 
 /*
  Function: Configures the module to transmit information with retries in case of error.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -5016,11 +4873,21 @@ uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uin
 /*
  Function: Configures the module to transmit information with retries in case of error.
  Returns: Integer that determines if there has been any error
+   state = 9  --> The ACK lost (no data available)
+   state = 8  --> The ACK lost
+   state = 7  --> The ACK destination incorrectly received
+   state = 6  --> The ACK source incorrectly received
+   state = 5  --> The ACK number incorrectly received
+   state = 4  --> The ACK length incorrectly received
+   state = 3  --> N-ACK received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length16, uint16_t wait)
+uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, 
+												uint8_t *payload, 
+												uint16_t length16, 
+												uint16_t wait)
 {
 	uint8_t state = 2;
 
@@ -5293,22 +5160,23 @@ uint8_t WaspSX1272::setRTCfromMeshlium()
 {
 	uint8_t length = 0;
 	byte status;
-	char timestamp[20];
 	char buffer[100];
+	char timestamp[30];
 	int year, yearH;
 	int month; 
 	int date;
-	int day_week;
 	int hour;
 	int minute;
 	int second;
-
+	uint8_t meshlium_address = 1;
+  
 	// clear buffer
-	memset( timestamp, 0x00, sizeof(timestamp) );
 	memset( buffer, 0x00, sizeof(buffer) );
+	memset( timestamp, 0x00, sizeof(timestamp) );
 
 	// Creating frame to send
-	frame.createFrame(ASCII);
+	frame.createFrame(ASCII);	
+	frame.decrementSequence();
 	frame.setFrameType(155);
 
 	// Printing frame
@@ -5317,7 +5185,7 @@ uint8_t WaspSX1272::setRTCfromMeshlium()
 	#endif
 
 	// Sending packet before ending a timeout
-	status = sx1272.sendPacketTimeoutACK(1, frame.buffer, frame.length);
+	status = sx1272.sendPacketTimeoutACK( meshlium_address, frame.buffer, frame.length );
 
 	// check tx status
 	if( status == 0 )
@@ -5333,26 +5201,26 @@ uint8_t WaspSX1272::setRTCfromMeshlium()
 		#endif 
 		return 1;
 	}
-
+		
 	// wait to receive packet with Timestamp for several seconds
-	status = sx1272.receivePacketTimeoutACK(10000);
+	status = receivePacketTimeoutACK(10000);
 
 	// check rx status
 	if( status == 0 )
 	{
+		#if (SX1272_debug_mode > 1)
 		USB.println(F("Show packet received: "));
-
-		// show packet received
-		sx1272.showReceivedPacket();
+		showReceivedPacket();
+		#endif
 
 		// get payload length
-		length = sx1272.packet_received.length - OFFSET_PAYLOADLENGTH;
+		length = packet_received.length - OFFSET_PAYLOADLENGTH;
 
 		// check if valid length then copy buffer
 		if( length < sizeof(buffer) )
 		{
 			// copy payload
-			memcpy( buffer, sx1272.packet_received.data, length);
+			memcpy( buffer, packet_received.data, length);
 			
 			#if (SX1272_debug_mode > 1) 
 				USB.print(F("\nbuffer:"));
@@ -5371,7 +5239,7 @@ uint8_t WaspSX1272::setRTCfromMeshlium()
     
 		// get all data fields: "YYYYMMDDHHMMSS"
 		sscanf( buffer, 
-				"%2d%2d%2d%2d%2d%2d%2d", 
+				"%2u%2u%2u%2u%2u%2u%2u", 
 				&yearH, 
 				&year, 
 				&month, 
@@ -5379,24 +5247,40 @@ uint8_t WaspSX1272::setRTCfromMeshlium()
 				&hour, 
 				&minute, 
 				&second );
-
+	
+		
+		unsigned long offsetTime = (unsigned long)(timeOnAir(25) + timeOnAir(frame.length))/1000;
+		unsigned long actualTime =  RTC.getEpochTime(year, 
+													month, 
+													date, 
+													hour, 
+													minute, 
+													second);
+		
+		unsigned long timeToSet = actualTime + offsetTime + 3; // add offset
+		
+		timestamp_t tm;
+		
+		// get time elements from epoch time
+		RTC.breakTimeAbsolute( timeToSet, &tm );
+		
 		// create sentence to set Time
 		snprintf( 	timestamp, 
 					sizeof(timestamp), 
 					"%02u:%02u:%02u:%02u:%02u:%02u:%02u", 
-					year, 
-					month, 
-					date, 
-					RTC.dow(year, month, date), 
-					hour, 
-					minute, 
-					second );
-
+					tm.year, 
+					tm.month, 
+					tm.date,
+					RTC.dow(tm.year, tm.month, tm.date), 
+					tm.hour, 
+					tm.minute,
+					tm.second	);
+					
 		#if (SX1272_debug_mode > 1) 
 			USB.print(F("\ntimestamp:"));
 			USB.println(timestamp);
 		#endif
-		
+					
 		RTC.ON();
 		RTC.setTime(timestamp);
 		
@@ -5436,13 +5320,18 @@ bool WaspSX1272::cadDetected()
 	sx1272.clearFlags();	
 	
     sx1272.getRSSI();
-    USB.print(F("Inside CAD DETECTION -> RSSI: "));
-    USB.println(sx1272._RSSI);   
-	
+    
+	#if (SX1272_debug_mode > 1) 
+		USB.print(F("Inside CAD DETECTION -> RSSI: "));
+		USB.println(sx1272._RSSI);   
+	#endif
 	
 	if( _modem == LORA )
-	{
-		USB.println(F("Set CAD mode"));
+	{	
+		#if (SX1272_debug_mode > 1) 
+			USB.println(F("Set CAD mode"));
+		#endif
+		
 		// Setting LoRa CAD mode
 		sx1272.writeRegister(REG_OP_MODE,0x87);  
 	} 
@@ -5458,11 +5347,15 @@ bool WaspSX1272::cadDetected()
 	// check 'CadDetected' bit in 'RegIrqFlags' register
     if(bitRead(val,0) == 1)
     { 
-		USB.println(F("CAD true"));
+		#if (SX1272_debug_mode > 1) 
+			USB.println(F("CAD true"));
+		#endif
 		return true;
 	}
 	
-	USB.println(F("CAD false"));
+	#if (SX1272_debug_mode > 1) 
+		USB.println(F("CAD false"));
+	#endif
 	return false;
 	
 }

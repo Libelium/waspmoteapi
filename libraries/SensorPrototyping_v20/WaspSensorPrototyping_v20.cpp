@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2009 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.8
+ *  Version:		1.0
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra
  */
@@ -34,12 +34,10 @@
  * 
  */
 WaspSensorPrototyping_v20::WaspSensorPrototyping_v20()
-{
-	pinMode(SENS_PW_3V3,OUTPUT);
-	pinMode(SENS_PW_5V,OUTPUT);
-	
-	digitalWrite(SENS_PW_3V3,LOW);
-	digitalWrite(SENS_PW_5V,LOW);
+{	
+	// init power supply to OFF state
+	PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	
 	// update Waspmote Control Register
 	WaspRegister |= REG_PROTOTYPING;
@@ -79,13 +77,17 @@ int8_t	WaspSensorPrototyping_v20::setBoardMode(uint8_t mode)
 {
 	switch( mode )
 	{
-		case	SENS_ON :	// switch on the power supplies
+		case	SENS_ON :	// update I2C flag
+							Wire.isBoard = true;
+							// switch on the power supplies
 							PWR.setSensorPower(SENS_3V3, SENS_ON);
 							PWR.setSensorPower(SENS_5V, SENS_ON);
 							// Sets RTC on to enable I2C
 							if(!RTC.isON) RTC.setMode(RTC_ON, RTC_I2C_MODE);
 							break;
-		case	SENS_OFF:	// switch off the power supplies
+		case	SENS_OFF:	// update I2C flag
+							Wire.isBoard = false;
+							// switch off the power supplies
 							PWR.setSensorPower(SENS_3V3, SENS_OFF);
 							PWR.setSensorPower(SENS_5V, SENS_OFF);
 							break;
@@ -107,6 +109,7 @@ float	WaspSensorPrototyping_v20::readADC(void)
 	uint8_t i = 0;
 
 	if( !Wire.I2C_ON ) Wire.begin();
+	delay(100);
 	Wire.requestFrom(B0010100, 2);
 	while(Wire.available()){
 		valor[i] = Wire.receive();
