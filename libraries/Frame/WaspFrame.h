@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.5
+    Version:		1.6
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -427,7 +427,16 @@
 /*! \def SENSOR_WF_E
     \brief Liquid Flow sensor in socket E
  */ 
-
+	
+/// Unix/Epoch timestamp
+/*! \def SENSOR_TST
+    \brief Unix (aka Epoch) timestamp value
+ */ 	
+ 
+/// Turbidity sensor
+/*! \def SENSOR_TURB
+    \brief Turbidity sensor
+ */ 
  
 // Gases
 #define SENSOR_CO	 	0
@@ -539,9 +548,9 @@
 #define SENSOR_DINO3	84
 
 // Smart Libelium
-#define SENSOR_DM_ST	85
-#define SENSOR_DM_SP	86
-#define SENSOR_TX_PWR	87
+#define SENSOR_TX_PWR	85
+#define SENSOR_DM_ST	86
+#define SENSOR_DM_SP	87
 #define SENSOR_LUX		88
 
 // GPS
@@ -595,6 +604,12 @@
 // P&S liquid flow sensor depending on socket (Smart Metering)
 #define SENSOR_WF_C		121
 #define SENSOR_WF_E		122
+	
+// Unix/Epoch timestamp
+#define SENSOR_TST		123
+	
+// Turbidity sensor
+#define SENSOR_TURB		124
 
 
 

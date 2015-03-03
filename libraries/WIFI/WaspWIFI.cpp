@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.8
+ *  Version:		1.9
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -271,11 +271,6 @@ uint8_t WaspWIFI::commandMode()
 	// number of retries
 	char question[30];
 	char buffer[20];
-	int CMD_retries=5;
-	int retries=0;
-	bool cmdMode=false;
-	bool timeout=false;
-	unsigned long prev;
 	
 	char cmd_mode_request[20];
 	char cmd_mode_answer[20];
@@ -290,242 +285,166 @@ uint8_t WaspWIFI::commandMode()
 	strcpy_P(ok_answer, (char*)pgm_read_word(&(table_WIFI[102]))); // "OK"	
 	strcpy_P(reboot_answer, (char*)pgm_read_word(&(table_WIFI[103]))); // "*Reboot*"	
 	
-	//////////////////////////////////////////////
-	// Check first if the module has already been set
-	//////////////////////////////////////////////		
+	////////////////////////////////////////////////////////////
+	// Check first if the module has already been set at 115200
+	////////////////////////////////////////////////////////////		
 	
-	baud_rate=WIFI_BAUDRATE;	
-	closeSerial(_uartWIFI);	
+	// WIFI_BAUDRATE is '115200'
+	baud_rate = WIFI_BAUDRATE;	
+	
+	// wait for RN171 uart port stabilization
+	delay(3000);
+	
+	closeSerial(_uartWIFI);
 	beginSerial(baud_rate, _uartWIFI);
+	serialFlush(_uartWIFI);
 	
-	// clean input buffer and send the command 
-	serialFlush(_uartWIFI); 
-	delay(1000); 
-	retries=0;
-	prev=millis();
-	printString(cmd_mode_request,_uartWIFI); // "$$$"	
-	delay(1000);
-	while( !timeout )
+	// "$$$"
+	delay(250);
+	if( sendCommand(cmd_mode_request, cmd_mode_answer, 5000) != 1)
 	{
-		if( checkAnswer(cmd_mode_answer) == 1 )
-		{	
-			#ifdef DEBUG_WIFI
-			USB.print(F("enter CMD at ")); 
-			USB.println(WIFI_BAUDRATE);
-			#endif
-			serialFlush(_uartWIFI); 
-			return 1;
-		}		
-		delay(500);		
-				
-		if( millis()-prev > 10000)
-		{
-			timeout=true;
-		}
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR entering CMD at 115200"));
+		#endif
+	}
+	else
+	{
+		#ifdef DEBUG_WIFI
+		USB.print(F("enter CMD at ")); 
+		USB.println(WIFI_BAUDRATE);
+		#endif
 		
-		if (millis() < prev) prev = millis();	//to avoid millis overflow
-		
-	}		
+		return 1;
+	}	
 	
 	//////////////////////////////////////////////
 	// If not, enter in command mode at 9600
 	//////////////////////////////////////////////	
-	baud_rate=9600;	
-	beginSerial(baud_rate, _uartWIFI);
-	delay(1000);
+	OFF();	
+	baud_rate = 9600;	
 	
-	// clean input buffer and send the command 
-	serialFlush(_uartWIFI); 
-	delay(250); 
-	retries=0;
-	while( retries < CMD_retries)
+	// power up depending on the chosen SOCKET
+	if( _uartWIFI == SOCKET0 )
 	{
-		printString(cmd_mode_request,_uartWIFI); 		
-		delay(1000);
-		for(int j = 0; j < CMD_retries ; j++)
-		{
-			if( checkAnswer(cmd_mode_answer) == 1 )
-			{
-				#ifdef DEBUG_WIFI
-				USB.println(F("enter CMD at 9600")); 
-				#endif
-				cmdMode=true;
-				retries=CMD_retries;
-				break;
-			}	
-			delay(1000);		
-		}		
-		retries++;
+		// set multiplexer on UART0 to SOCKET0
+		Utils.setMuxSocket0();
+		
+		// set microcontroller pins as output
+		pinMode(XBEE_PW,OUTPUT);
+		
+		// power on the module
+		digitalWrite(XBEE_PW, HIGH);
+	}
+	else if( _uartWIFI == SOCKET1 )
+	{		
+		// set multiplexer on UART1 to SOCKET1
+		Utils.setMuxSocket1();  
+		
+		// power on the module 
+		pinMode(DIGITAL6,OUTPUT);
+		digitalWrite(DIGITAL6,HIGH);	
 	}
 	
-	// if we have entered the command mode then proceed to change parameters
-	if( cmdMode == true )
-	{			
-		// Set baudrate to 115200bps	
-		beginSerial(baud_rate, _uartWIFI);
-		serialFlush(_uartWIFI); 	
-		retries=0;
-		while( retries < CMD_retries)
-		{				
-			// Copy "set u b "
-			strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[70])));
-			snprintf(question, sizeof(question), "%s%lu\r", buffer, WIFI_BAUDRATE);	
-			printString(question,_uartWIFI); 	
-			delay(500);
-			for(int j = 0; j < 3 ; j++)
-			{
-				if( checkAnswer(ok_answer) == 1 )
-				{
-					#ifdef DEBUG_WIFI
-					USB.print(F("set baudrate to ")); 
-					USB.println(WIFI_BAUDRATE);
-					#endif
-					retries=CMD_retries;
-					break;
-				}	
-				delay(500);		
-			}		
-			retries++;
-		}	
-
-		
-		// Set debug print to 0x4000 (New scan format output)
-		serialFlush(_uartWIFI); 
-		beginSerial(baud_rate, _uartWIFI);
-		retries=0;
-		while( retries < CMD_retries)
-		{	
-			// Copy "set s p 0x4000\r"
-			strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[6])));
-			printString(question, _uartWIFI); 
-			delay(500);
-			for(int j = 0; j < 3 ; j++)
-			{
-				if( checkAnswer(ok_answer) == 1 )
-				{
-					#ifdef DEBUG_WIFI
-					USB.println(F("set print debug")); 
-					#endif
-					retries=CMD_retries;
-					break;
-				}	
-				delay(500);		
-			}		
-			retries++;
-		}
-		delay(500);
-
-		
-		// Disable RN-171 LEDs
-		serialFlush(_uartWIFI); 
-		beginSerial(baud_rate, _uartWIFI);
-		retries=0;
-		while( retries < CMD_retries)
-		{	
-			// Copy "set s i 0x7\r"
-			strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[95])));
-			printString(question, _uartWIFI); 
-			delay(500);
-			for(int j = 0; j < 3 ; j++)
-			{
-				if( checkAnswer(ok_answer) == 1 )
-				{
-					#ifdef DEBUG_WIFI
-					USB.println(F("LEDs disabled")); 
-					#endif
-					retries=CMD_retries;
-					break;
-				}	
-				delay(500);		
-			}		
-			retries++;
-		}
-		delay(500);
-
-		// Save settings
-		beginSerial(baud_rate, _uartWIFI);	
-		serialFlush(_uartWIFI); 
-		retries=0;
-		while( retries < CMD_retries)
-		{	
-			//printString("save\r",_uartWIFI); 
-			// Copy "save\r"
-			strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[71])));
-			printString(question, _uartWIFI); 
-			delay(500);
-			for(int j = 0; j < 3 ; j++)
-			{
-				if( checkAnswer(save_answer) == 1 )
-				{
-					#ifdef DEBUG_WIFI
-					USB.println(F("save done")); 
-					#endif
-					retries=CMD_retries;
-					break;
-				}	
-				delay(500);		
-			}		
-			retries++;
-		}
-		delay(500);	
-
-		// Reboot WIFI module
-		beginSerial(baud_rate, _uartWIFI);
-		serialFlush(_uartWIFI); 
-		retries=0;
-		while( retries < CMD_retries)
-		{				
-			// Copy "reboot\r"
-			strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[0])));
-			printString(question, _uartWIFI);  
-			delay(500);
-			for(int j = 0; j < 3 ; j++)
-			{
-				if( checkAnswer(reboot_answer) == 1 )
-				{
-					#ifdef DEBUG_WIFI
-					USB.println(F("reboot done")); 
-					#endif
-					retries=CMD_retries;
-					break;
-				}	
-				delay(500);		
-			}		
-			retries++;
-		}
+	// wait for RN171 uart port stabilization
+	delay(3000);
+	
+	closeSerial(_uartWIFI);
+	beginSerial(baud_rate, _uartWIFI);
+	serialFlush(_uartWIFI);
+  
+	// "$$$"
+	delay(250);
+	if( sendCommand(cmd_mode_request, cmd_mode_answer, 5000) != 1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR: $$$"));
+		#endif
+		return 0;
 	}
+	
+	// "set u b 115200"
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[70])));
+	snprintf(question, sizeof(question), "%s%lu\r", buffer, WIFI_BAUDRATE);		
+	if( sendCommand(question, ok_answer, 500) != 1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR: set u b 115200"));
+		#endif
+		return 0;
+	}
+	
+	// "set s p 0x4000\r"
+	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[6])));	
+	if( sendCommand(question, ok_answer, 500) != 1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR: set s p 0x4000"));
+		#endif
+		return 0;
+	}
+	
+	// "set s i 0x7\r"
+	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[95])));	
+	if( sendCommand(question, ok_answer, 500) != 1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR: set s i 0x7"));
+		#endif
+		return 0;
+	}
+  
+	// "save\r"
+	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[71])));
+	if( sendCommand(question, save_answer, 500) != 1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR: save"));
+		#endif
+		return 0;
+	}
+	
+	// "reboot\r"
+	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[0])));
+	if( sendCommand(question, reboot_answer, 500) != 1)
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR: reboot"));
+		#endif
+		return 0;
+	}
+	
 	
 	//////////////////////////////////////////////
 	// Enter in command mode at 115200
 	//////////////////////////////////////////////		
-	baud_rate=WIFI_BAUDRATE;	
-	closeSerial(_uartWIFI);	
-	beginSerial(baud_rate, _uartWIFI);
-	delay(1000);
 	
-	// clean input buffer and send the command 
-	serialFlush(_uartWIFI); 
-	delay(250); 
-	retries=0;
-	while( retries < CMD_retries)
+	baud_rate = WIFI_BAUDRATE;	
+	
+	// wait for RN171 uart port stabilization
+	delay(3000);
+	
+	closeSerial(_uartWIFI);
+	beginSerial(baud_rate, _uartWIFI);
+	serialFlush(_uartWIFI);
+	
+	// "$$$"
+	delay(250);
+	if( sendCommand(cmd_mode_request, cmd_mode_answer, 5000) != 1)
 	{
-		printString(cmd_mode_request,_uartWIFI); 		
-		delay(1000);
-		for(int j = 0; j < CMD_retries ; j++)
-		{
-			if( checkAnswer(cmd_mode_answer) == 1 )
-			{	
-				#ifdef DEBUG_WIFI
-				USB.print(F("enter CMD at ")); 
-				USB.println(WIFI_BAUDRATE);
-				#endif
-				serialFlush(_uartWIFI); 
-				return 1;
-			}	
-			delay(1000);		
-		}		
-		retries++;
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR entering CMD at 115200"));
+		#endif
+	}
+	else
+	{
+		#ifdef DEBUG_WIFI
+		USB.print(F("enter CMD at ")); 
+		USB.println(WIFI_BAUDRATE);
+		#endif
+		
+		return 1;
 	}	
+	
 	serialFlush(_uartWIFI); 
 	return 0; 	
 }
@@ -556,19 +475,22 @@ uint8_t WaspWIFI::checkAnswer(char* pattern)
 {
 	uint8_t i=0;
 	
+	memset(answer, 0x00, sizeof(answer));
+	
 	// check available data
     while(serialAvailable(_uartWIFI))
     {
 		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
-		{
+		{			
 			i++;
+			if( baud_rate == 9600) delay(10);
 		}
     }
 	answer[i]='\0'; 
-
+		
 	// Checks the answer seeking the pattern
 	if(contains(answer,pattern))
-	{ 	
+	{
 		return 1;
 	}
 	else 
@@ -577,6 +499,9 @@ uint8_t WaspWIFI::checkAnswer(char* pattern)
 	}
 
 }
+
+
+
 
 //! Reads data over the UART.
 uint8_t WaspWIFI::readData(uint8_t len)
@@ -680,6 +605,150 @@ uint8_t WaspWIFI::sendCommand(char* comm)
 	// Calls readData to take and to check the answer.
 	return readData(i);
 }
+
+
+
+
+/*******************************************************************************
+ * sendCommand
+ * 
+ * This function sends a command 'comm' over the UART. Then expects to receive
+ * the correct answer specified by 'pattern' within a given 'timeout'
+ * 
+ * The input parameters:
+ * 	'comm': command to be sent to the module
+ * 	'pattern': correct answer to the command expected from the module 
+ * 	'timeout': number of milliseconds to wait for the response 
+ * 
+ * Returns:
+ * 	'1' if OK
+ * 	'0' if error
+ * 
+ ******************************************************************************/
+uint8_t WaspWIFI::sendCommand(char* comm, char* pattern, unsigned long timeout)
+{
+	uint8_t i=0;
+  	
+	// clear uart buffer
+	serialFlush(_uartWIFI); 
+	
+	// print command
+	printString(comm,_uartWIFI); 
+	delay(100);
+	
+	/// read answer
+	
+	// clear buffer
+	memset(answer, 0x00, sizeof(answer));
+	
+	unsigned long previous = millis();
+	
+	// check available data
+    while( (millis() - previous) < timeout )
+    {
+		
+		if(serialAvailable(_uartWIFI))
+		{
+			if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
+			{			
+				i++;
+				if( baud_rate == 9600) delay(10);
+			}
+		}
+			
+		// Checks the answer seeking the pattern
+		if( strlen(answer) >= strlen(comm) )
+		{
+			if(contains(answer,pattern))
+			{			
+				return 1;
+			}
+		}
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < timeout) timeout = millis();
+	}
+		
+	// timeout
+	return 0; 
+}
+
+
+
+/*******************************************************************************
+ * sendCommand
+ * 
+ * This function sends a command 'comm' over the UART. Then expects to receive
+ * the correct answer specified by 'pattern' within a given 'timeout'. If an 
+ * error pattern specified by 'err_pattern' is received the this functions 
+ * returns with error. Another boolean 'flush' input specifies if UART flush is 
+ * required prior to sending the command 
+ * 
+ * Returns:
+ * 	'1' if OK
+ * 	'0' if error
+ * 
+ ******************************************************************************/
+uint8_t WaspWIFI::sendCommand(	char* comm, 
+								char* pattern, 
+								char* err_pattern, 
+								unsigned long timeout,
+								bool flush)
+{
+	uint8_t i=0;
+  	
+	// clear uart buffer
+	if( flush == true )
+	{
+		serialFlush(_uartWIFI); 		
+	}
+	
+	// print command
+	printString(comm,_uartWIFI); 
+	delay(100);
+	
+	/// read answer
+	
+	// clear buffer
+	memset(answer, 0x00, sizeof(answer));
+	
+	unsigned long previous = millis();
+	
+	// check available data
+    while( (millis() - previous) < timeout )
+    {
+		
+		if(serialAvailable(_uartWIFI))
+		{
+			if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
+			{			
+				i++;
+				if( baud_rate == 9600) delay(10);
+			}
+		}
+			
+		// Checks the answer seeking the pattern
+		if( strlen(answer) >= strlen(comm) )
+		{
+			if(contains(answer,pattern))
+			{				
+				return 1;
+			}
+			if(contains(answer,err_pattern))
+			{		
+				return 0;
+			}
+		}
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < timeout) timeout = millis();
+	}
+	
+	// timeout
+	return 0; 
+}
+
+
 
 
 //! Saves current configuration and reboots the device in order to new 
@@ -1039,7 +1108,7 @@ uint8_t WaspWIFI::setAutojoinAuth(uint8_t val)
 	// Copy "set w a "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[8]))); 
 	snprintf(question, sizeof(question), "%s%d\r",buffer,val);
-	return sendCommand(question);
+	return sendCommand(question, "AOK", 5000);
 }
 
 //! Sets the policy for automatically joining/associating with network 
@@ -1051,61 +1120,14 @@ uint8_t WaspWIFI::setJoinMode(uint8_t val)
 	int retries=0;
 	const int MAX_RETRIES=3;
 	
-	// Leaves previous connection.
-	leave();
-	
 	// Copy "set w j "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[9]))); 
 	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	 
-	// First: send command to join wlan 
-	// Second: save current configuration and reboot the device
-	if ((sendCommand(question)==1)&&(saveReboot()==1))
-	{
-		// Enters in command Mode.
-		while(commandMode()!=1)
-		{
-			retries++;
-			if(retries>=MAX_RETRIES)
-			{
-				return 0;
-			}
-		}
-		
-		#ifdef DEBUG_WIFI
-		USB.println(F("waiting to be connected...")); 
-		#endif
-		
-		// If auto
-		if ((val==AUTO_BEST)||(val==AUTO_STOR))
-		{ 
-			// check for MAX_RETRIES
-			retries=0;
-			while(!isConnected()) 
-			{				
-				retries++;
-				if(retries>=MAX_RETRIES)
-				{
-					return 0;
-				}
-			}
-		}
-		else if (val==CREATE_ADHOC)
-		{
-			// Checks until is correctly connected in Adhoc mode.
-			retries=0;
-			while(!isConnected())
-			{
-				retries++;
-				if(retries>=MAX_RETRIES)
-				{
-					return 0;
-				}
-				// wait to be connected
-				delay(5000);
-			}
-		}
-		return 1;
+	// Send command to join wlan 
+	if( sendCommand(question, "AOK", 5000)==1 )
+	{		
+		return 1; 		
 	}
 	
 	return 0;
@@ -1147,7 +1169,7 @@ uint8_t WaspWIFI::setAuthKey(uint8_t secMode, char* pass)
 		snprintf(question, sizeof(question), "%s%s\r", buffer, pass); 
 	}
 	// Sends the command over the UART.
-	return sendCommand(question);
+	return sendCommand(question, "AOK", 5000);
 }
 
 //! Sets the link monitor timeout threshold.
@@ -1273,9 +1295,7 @@ uint8_t WaspWIFI::join(char* ssid)
 	char question[128];
 	char buffer[20];
 	char str_get_ip_answer[20];
-	bool timeout=false;
-	bool retry=false;
-	unsigned long prev;
+	int retries=5;
 	
 	
 	// Copy "join "
@@ -1287,59 +1307,51 @@ uint8_t WaspWIFI::join(char* ssid)
 	snprintf(question, sizeof(question), "%s%s\r", buffer, ssid);
 	serialFlush(_uartWIFI); 
 	
-	// send command
-	printString(question,_uartWIFI); 
-	delay(100);
-	
 	// in the case it is static IP there is no answer when joining
 	// so it is necessary to ask for it
 	if( _dhcpOpts == DHCP_OFF )
-	{
-		// check connectivity
-		delay(2000);
-		if( isConnected() == true)
-		{
-			return 1;
-		}
-	}	
-	
-	// check for the correct answer
-	prev=millis();
-	while( !timeout )
-	{
-		// check correct answer
-		if( checkAnswer(str_get_ip_answer) == 1 )
+	{		
+		while( retries>0 )
 		{	
-			serialFlush(_uartWIFI); 
-			return 1;
-		}
-		// check failure
-		if( contains( answer, Disconn_pattern) == true )
-		{	
-			#ifdef DEBUG_WIFI
-			USB.println(F("err pattern2")); 
-			#endif
-			serialFlush(_uartWIFI); 
-			timeout=true;
-		}		
+			// "join ??" command
+			if( sendCommand( question, "Associated!", Disconn_pattern, 10000, true) == 1)
+			{
+				// Copy "get ip\r"
+				strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[72])));
+				// "IF=UP"
+				strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[73])));
 				
-		if( millis()-prev > 40000)
-		{
-			timeout=true;
-		}	
-		
-		if( !retry && (millis()-prev > 20000) )
-		{
+				// "get ip"
+				if( sendCommand( question, buffer, 10000) == 1)
+				{				
+					return 1;
+				}		
+			}
+			
 			// retry
 			leave();
-			delay(500);
-			printString(question,_uartWIFI); 
-			retry=true;
+			delay(500);		
+			retries--;				
 		}
-				
-		if (millis() < prev) prev = millis();	//to avoid millis overflow
-		delay(500);			
+			
+		return 0;
 	}	
+	
+	unsigned long timeout = 10000;
+	
+	while( retries>0 )
+	{
+		// send command
+		if( sendCommand( question, str_get_ip_answer, Disconn_pattern, timeout, false) == 1)
+		{
+			return 1;
+		}
+		
+		// retry
+		leave();
+		delay(500);		
+		retries--;	
+	}
 	
 	// if the module did not connect or returned error then call "leave" 
 	// function and return error in the case leave does not respond, then 
@@ -1591,7 +1603,7 @@ uint8_t WaspWIFI::setDHCPoptions(uint8_t val)
 	// Copy "set i d "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[36])));
 	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
-	return sendCommand(question);  
+	return sendCommand(question, "AOK", 5000);  
 }
 
 //! Sets the IP options.
@@ -1616,7 +1628,7 @@ uint8_t WaspWIFI::setConnectionOptions(uint8_t val)
 	// Copy "set i p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[38])));
 	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
-	return sendCommand(question);  
+	return sendCommand(question, "AOK", 5000);  
 }
 	
 //! Sets the TCP connection password. Provides minimal authentication by 
@@ -3803,60 +3815,36 @@ uint8_t WaspWIFI::storeData()
 //! Checks if the module is connected to the Access Point 
 //! (Check if it has an IP address).
 bool WaspWIFI::isConnected()
+{	
+	return isConnected(10000);
+}
+
+//! Checks if the module is connected to the Access Point 
+//! (Check if it has an IP address).
+bool WaspWIFI::isConnected(unsigned long timeout)
 {
+	char question[20];
 	char buffer[20];
 	uint16_t i=0;
-	bool aux_timeout=false;
+	bool result = false;
 	unsigned long aux_previous;	
-		
+	
 	#ifdef DEBUG_WIFI
 	USB.println(F("get ip\r"));  
 	#endif
 	
-	// Sends 'get ip' command to know if the module has good IP address.
-	//~ serialFlush(_uartWIFI);
-	
 	// Copy "get ip\r"
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[72])));
-	printString(buffer,_uartWIFI); 
-	
-	// Waits an answer from the UART.  
-	if(!waitForData(10))
-	{		
-		return false;
-	}
-	
-	aux_previous=millis();	
-	while(serialAvailable(_uartWIFI) && !aux_timeout)
-	{
-		if ((i<(sizeof(answer)-1))&&((answer[i]=serialRead(_uartWIFI))!='\0'))
-		{
-			i++;
-		}
-		delay(10);
-		
-		// check the timeout overflow
-		if( millis() < aux_previous )
-		{
-			aux_previous = millis();
-		}
-		
-		if( (millis() - aux_previous)>FTP_TIMEOUT )
-		{
-			aux_timeout=true;
-		}
-	}
-	answer[i]='\0';  
-
-	// Checks the answer.
+	strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[72])));	
 	// Copy "IF=UP"
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[73])));
+	
+	result = sendCommand( question, buffer, timeout);
+		
 	if (contains(answer,buffer))
 	{ 	
 		#ifdef DEBUG_WIFI
 		USB.println(F("contains IF=UP"));  
-		#endif
-		return true;
+		#endif		
 	}
 	else 
 	{ 	
@@ -3864,8 +3852,9 @@ bool WaspWIFI::isConnected()
 		USB.println(F("DOES NOT contain IF=UP"));  
 		USB.println(answer);		
 		#endif 
-		return false;
 	}
+	
+	return result;
 }
 
 //! Displays connection status

@@ -152,9 +152,9 @@ const char	str_DIMG2[] PROGMEM	= "DIMG2";	// 83
 const char	str_DINO3[] PROGMEM	= "DINO3";	// 84
 
 //Smart Libelium
-const char	str_DM_ST[]		PROGMEM = "DM_ST";	// 85
-const char	str_DM_SP[]		PROGMEM = "DM_SP";	// 86
-const char	str_TX_PWR[]	PROGMEM = "TX_PWR";	// 87
+const char	str_TX_PWR[]	PROGMEM = "TX_PWR";	// 85
+const char	str_DM_ST[]		PROGMEM = "DM_ST";	// 86
+const char	str_DM_SP[]		PROGMEM = "DM_SP";	// 87
 const char	str_LUX[]		PROGMEM = "LUX";	// 88
 
 //GPS
@@ -208,6 +208,12 @@ const char	str_HALL_F[]	PROGMEM = "HALL_F";	// 120
 // P&S liquid flow sensor depending on socket (Smart Metering)
 const char	str_WF_C[]		PROGMEM = "WF_C";	// 121
 const char	str_WF_E[]		PROGMEM = "WF_E";	// 122
+
+// Unix Epoch timestamp
+const char	str_TST[]		PROGMEM = "TST";	// 123
+
+// Turbidity sensor
+const char	str_TURB[]		PROGMEM = "TURB";	// 124
 
 
 
@@ -329,9 +335,9 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_DINO3,		// 84
 	
 	//Smart Libelium
-	str_DM_ST,		// 85
-	str_DM_SP,		// 86
-	str_TX_PWR,		// 87
+	str_TX_PWR,		// 85
+	str_DM_ST,		// 86
+	str_DM_SP,		// 87
 	str_LUX,		// 88
 	
 	str_SPEED,		// 89
@@ -384,6 +390,12 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	// P&S liquid flow sensor depending on socket (Smart Metering)
 	str_WF_C,	// 121
 	str_WF_E,	// 122
+	
+	// Unix/Epoch timestamp
+	str_TST,	// 123
+	
+	// Turbidity sensor
+	str_TURB,	// 124
 };
 
 
@@ -514,9 +526,9 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	
 
 	//Smart Libelium
-	0,	//str_DM_ST,	// 85
-	0,	//str_DM_Sp,	// 86
-	0,	//str_TX_PWR	// 87
+	0,	//str_TX_PWR	// 85
+	0,	//str_DM_ST,	// 86
+	0,	//str_DM_SP,	// 87
 	4,	//str_LUX		// 88
 	
 	//GPS
@@ -569,7 +581,13 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	
 	// P&S liquid flow sensor depending on socket (Smart Metering)	
 	2, // str_WF_C,		// 121
-	2, // str_WF_E,		// 121
+	2, // str_WF_E,		// 122
+	
+	// Unix/Epoch timestamp
+	4, // str_TST,		// 123
+	
+	// Turbidity sensor
+	2, // str_TURB,		// 124
 	
 };
 
@@ -695,9 +713,9 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1, //str_DINO3,		// 84
 
 	//Smart Libelium
-	3,	//str_DM_ST,	// 85
-	3,	//str_DM_SP,	// 86
-	1,	//str_TX_PWR	// 87
+	1,	//str_TX_PWR	// 85
+	3,	//str_DM_ST,	// 86
+	3,	//str_DM_SP,	// 87
 	1,	//str_LUX		// 88
 	
 	//GPS
@@ -751,6 +769,12 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	// P&S liquid flow sensor depending on socket (Smart Metering)
 	1, // str_WF_C,		// 121
 	1, // str_WF_E,		// 122
+	
+	// Unix/Epoch timestamp
+	1, // str_TST,		// 123
+	
+	// Turbidity sensor
+	1, // str_TURB,		// 124
 };
 
 
@@ -873,9 +897,9 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3, //str_DINO3,		// 84
 
 	//Smart Libelium
-	0,	//str_DM_ST,	// 85
-	0,	//str_DM_SP,	// 86
-	0,	//str_TX_PWR	// 87
+	0,	//str_TX_PWR	// 85
+	0,	//str_DM_ST,	// 86
+	0,	//str_DM_SP,	// 87
 	3,	//str_LUX		// 88
 	
 	//GPS
@@ -929,6 +953,12 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	// P&S liquid flow sensor depending on socket (Smart Metering)
 	3, // str_WF_C,		// 121
 	3, // str_WF_E,		// 122
+	
+	// Unix/Epoch timestamp
+	0, // str_TST,		// 123
+	
+	// Turbidity sensor
+	1, // str_TURB,		// 124
 };
 
 #endif

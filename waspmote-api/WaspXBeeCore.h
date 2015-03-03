@@ -1,7 +1,7 @@
 /*! \file WaspXBeeCore.h
     \brief Library for managing the XBee modules
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Yuri Carmona
 
@@ -594,6 +594,77 @@ struct request_boot_t
 
 
 
+
+//! Structure : rxPacket80_t
+/*! This structure defines the XBee API frames related to RX data. 
+ * The Frame type for this sort frames is 0x80.
+ */
+struct rxPacket80_t
+{
+	uint8_t 	start;
+	uint16_t 	length;
+	uint8_t 	frameType;	
+	uint8_t 	macS[8];
+	uint8_t 	rssi;
+	uint8_t 	options;
+	uint8_t		data[100];
+	uint8_t		checksum;
+};
+
+//! Structure : rxPacket81_t
+/*! This structure defines the XBee API frames related to RX data. 
+ * The Frame type for this sort frames is 0x81.
+ */
+struct rxPacket81_t
+{
+	uint8_t 	start;
+	uint16_t 	length;
+	uint8_t 	frameType;	
+	uint8_t 	naS[2];
+	uint8_t 	rssi;
+	uint8_t 	options;
+	uint8_t		data[100];
+	uint8_t		checksum;
+};
+
+//! Structure : rxPacket90_t
+/*! This structure defines the XBee API frames related to RX data. 
+ * The Frame type for this sort frames is 0x90.
+ */
+struct rxPacket90_t
+{
+	uint8_t 	start;
+	uint16_t 	length;
+	uint8_t 	frameType;	
+	uint8_t 	frameID;	
+	uint8_t 	macS[8];
+	uint8_t 	reserved[2];
+	uint8_t 	options;
+	uint8_t		data[100];
+	uint8_t		checksum;
+};
+
+//! Structure : rxPacket91_t
+/*! This structure defines the XBee API frames related to RX data. 
+ * The Frame type for this sort frames is 0x91.
+ */
+struct rxPacket91_t
+{
+	uint8_t 	start;
+	uint16_t 	length;
+	uint8_t 	frameType;	
+	uint8_t 	macS[8];
+	uint8_t 	reserved[2];
+	uint8_t 	srcEndPoint;
+	uint8_t 	dstEndPoint;
+	uint16_t 	clusterID;
+	uint16_t 	profileID;
+	uint8_t 	options;
+	uint8_t		data[100];
+	uint8_t		checksum;
+};
+
+
 //! Variable :  Waspmote serial id
 /*!
 */ 
@@ -974,12 +1045,54 @@ public:
     \return '0' on success, '1' otherwise
      */
     uint8_t sendXBee(struct packetXBee* packet);	
+    
+	//! It sends a packet from one XBee to another XBee in API mode
+	/*! This function performs application-level retries.
+	 * 	This function is only used for 64-bit addressing.
+  	/*!
+    \param char* macAddress : destination MAC address
+    \param char* data : data to be sent (as string)
+    \return '0' on success, '1' error
+     */
+    uint8_t send( char* macAddress, char* data );
+    
+    //! It sends a packet from one XBee to another XBee in API mode
+	/*! This function performs application-level retries.
+	 * 	This function is only used for 64-bit addressing.
+  	/*!
+    \param char* macAddress : destination MAC address
+    \param uint8_t* pointer : pointer to buffer of data to be sent
+    \param uint16_t length  : length of the buffer
+    \return '0' on success, '1' error
+     */
+	uint8_t send( char* macAddress, uint8_t* pointer, uint16_t length );    
 		
 	//! It treats the data from XBee UART
   	/*!
     \return '0' on success, '1' otherwise
     */
     int8_t treatData();	
+    
+    //! This function receives a new xbee data packet
+  	/*! If OK, the result is stored in _payload and _length
+    \param uint32_t timeout : ms to wait until time-out before a packet arrives
+    \return 
+		'6' --> ERROR: Error escaping character within payload bytes
+		'5' --> ERROR: Error escaping character in checksum byte
+		'4' --> ERROR: Checksum is not correct	
+		'3' --> ERROR: Checksum byte is not available	
+		'2' --> ERROR: Frame Type is not valid
+		'1' --> ERROR: timeout when receiving answer
+		'0' --> OK: The command has been executed with no errors
+     */
+    int8_t receivePacketTimeout( uint32_t timeout);
+    
+    //! It sets the RTC settings with Meshlium timestamp configuration
+	/*!  This function sends a special Frame to Meshlium (Meshlium's MAC address 
+	 * must be indicated as input), and then Meshlium returns an answer with the
+	 * timestamp. This function parses the info and sets the RTC Time and Date. 
+	 */
+    uint8_t setRTCfromMeshlium(char* address);
 
 	//! The user introduces an AT command within a string and the function 
 	//! executes it without knowing its meaning
@@ -1118,7 +1231,7 @@ public:
 	int8_t setDestinationParams(	packetXBee* paq, 
 									uint8_t* address, 
 									uint8_t* data, 
-									int length	);
+									uint16_t length	);
 	
 	
 	//! It sets the destination parameters, such as the receiver address and 
@@ -1136,7 +1249,7 @@ public:
 	int8_t setDestinationParams(	packetXBee* paq, 
 									uint8_t* address, 
 									uint8_t* data, 
-									int length,
+									uint16_t length,
 									uint8_t type	);
 																	
 									
@@ -1154,7 +1267,7 @@ public:
 	int8_t setDestinationParams(	packetXBee* paq, 
 									const char* address, 
 									uint8_t* data, 
-									int length	);	
+									uint16_t length	);	
 		
 	//! It sets the destination parameters, such as the receiver address and 
 	//! the data to send
@@ -1171,7 +1284,7 @@ public:
 	int8_t setDestinationParams(	packetXBee* paq, 
 									const char* address, 
 									uint8_t* data, 
-									int length,
+									uint16_t length,
 									uint8_t type	);					
 							
 	//! It sets the destination parameters, such as the receiver address and 
@@ -1459,9 +1572,17 @@ public:
 	//! Variable : specifies if the re-programming process is running
   	/*!
 	 */
-	uint8_t programming_ON;
+	uint8_t programming_ON;	
 
-
+	//! Variable : buffer for a received data packet
+  	/*!
+	 */
+	uint8_t 	_payload[MAX_DATA];	
+	
+	//! Variable : specifies the number of bytes in _payload
+  	/*!
+	 */
+	uint16_t 	_length;
 
 protected:
 	

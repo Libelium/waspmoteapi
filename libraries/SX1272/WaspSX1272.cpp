@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Covadonga Albiñana, Yuri Carmona
  */
@@ -59,8 +59,10 @@ WaspSX1272::WaspSX1272()
  Function: Sets the module ON.
  Returns: Nothing
 */
-void WaspSX1272::ON()
+uint8_t WaspSX1272::ON()
 {
+	uint8_t state = 2;
+	
 	#if (SX1272_debug_mode > 1)
 		USB.println();
 		USB.println(F("Starting 'ON'"));
@@ -81,15 +83,24 @@ void WaspSX1272::ON()
 	SPI.setDataMode(SPI_MODE0);
 	
 	// Set Maximum Over Current Protection
-	setMaxCurrent(0x1B);
+	state = setMaxCurrent(0x1B);
 	
-	#if (SX1272_debug_mode > 1)
-		USB.println(F("## Setting ON with maximum current supply ##"));
-		USB.println();
-	#endif
+	if( state == 0 )
+	{
+		#if (SX1272_debug_mode > 1)
+			USB.println(F("## Setting ON with maximum current supply ##"));
+			USB.println();
+		#endif
+	}
+	else
+	{
+		return 1;
+	}
 	
 	// set LoRa mode
-	setLORA();
+	state = setLORA();
+	
+	return state;
 }
 
 /*
@@ -254,6 +265,11 @@ uint8_t WaspSX1272::setLORA()
 	writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// LoRa standby mode
 
 	writeRegister(REG_MAX_PAYLOAD_LENGTH,MAX_LENGTH);
+		
+	// Set RegModemConfig1 to Default values
+	writeRegister(REG_MODEM_CONFIG1, 0x08);	
+	// Set RegModemConfig2 to Default values
+	writeRegister(REG_MODEM_CONFIG2, 0x74);		
 
 	//delay(100);
 
@@ -441,7 +457,7 @@ int8_t WaspSX1272::setMode(uint8_t mode)
 					break;
 
 		// mode 3 (worst reach, less time on air)
-		case 3: 	setCR(CR_5);		// CR = 4/6
+		case 3: 	setCR(CR_5);		// CR = 4/5
 					setSF(SF_10);		// SF = 10
 					setBW(BW_125);		// BW = 125 KHz
 					break;
@@ -3019,7 +3035,7 @@ uint8_t WaspSX1272::receivePacketTimeout()
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::receivePacketTimeout(uint16_t wait)
+uint8_t WaspSX1272::receivePacketTimeout(uint32_t wait)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -3087,7 +3103,7 @@ uint8_t WaspSX1272::receivePacketTimeoutACK()
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::receivePacketTimeoutACK(uint16_t wait)
+uint8_t WaspSX1272::receivePacketTimeoutACK(uint32_t wait)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -3108,7 +3124,7 @@ uint8_t WaspSX1272::receivePacketTimeoutACK(uint16_t wait)
 		if( availableData(wait) )
 		{
 			// If packet received, getPacket
-			state = getPacket();
+			state = getPacket();		
 		}
 		else
 		{
@@ -3182,7 +3198,7 @@ uint8_t	WaspSX1272::receiveAll()
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::receiveAll(uint16_t wait)
+uint8_t WaspSX1272::receiveAll(uint32_t wait)
 {
 	uint8_t state = 2;
 	byte config1;
@@ -3234,7 +3250,7 @@ boolean	WaspSX1272::availableData()
  Parameters:
    wait: time to wait while there is no a valid header received.
 */
-boolean	WaspSX1272::availableData(uint16_t wait)
+boolean	WaspSX1272::availableData(uint32_t wait)
 {
 	byte value;
 	byte header = 0;
@@ -3433,7 +3449,7 @@ int8_t WaspSX1272::getPacket()
  Parameters:
    wait: time to wait while there is no a valid header received.
 */
-int8_t WaspSX1272::getPacket(uint16_t wait)
+int8_t WaspSX1272::getPacket(uint32_t wait)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -3478,6 +3494,20 @@ int8_t WaspSX1272::getPacket(uint16_t wait)
 		}
 		else
 		{
+			if( bitRead(value, 6) != 1 )
+			{ 
+				#if (SX1272_debug_mode > 0)
+					USB.println(F("NOT 'RxDone' flag"));
+				#endif
+			}
+			
+			if( _CRC != CRC_ON )
+			{ 
+				#if (SX1272_debug_mode > 0)
+					USB.println(F("NOT 'CRC_ON' enabled"));
+				#endif
+			}
+			
 			if( (bitRead(value, 5) == 0) && (_CRC == CRC_ON) )
 			{ 
 				// CRC is correct
@@ -4107,7 +4137,7 @@ uint8_t WaspSX1272::sendWithTimeout()
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendWithTimeout(uint16_t wait)
+uint8_t WaspSX1272::sendWithTimeout(uint32_t wait)
 {
 	uint8_t state = 2;
 	byte value = 0x00;
@@ -4211,7 +4241,9 @@ uint8_t WaspSX1272::sendPacketMAXTimeout(uint8_t dest, char *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketMAXTimeout(uint8_t dest,  uint8_t *payload, uint16_t length16)
+uint8_t WaspSX1272::sendPacketMAXTimeout(	uint8_t dest,  
+											uint8_t *payload, 
+											uint16_t length16)
 {
 	return sendPacketTimeout(dest, payload, length16, MAX_TIMEOUT);
 }
@@ -4249,7 +4281,9 @@ uint8_t WaspSX1272::sendPacketTimeout(uint8_t dest, char *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t length16)
+uint8_t WaspSX1272::sendPacketTimeout(	uint8_t dest, 
+										uint8_t *payload, 
+										uint16_t length16)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -4282,7 +4316,7 @@ uint8_t WaspSX1272::sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t l
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeout(uint8_t dest, char *payload, uint16_t wait)
+uint8_t WaspSX1272::sendPacketTimeout(uint8_t dest, char *payload, uint32_t wait)
 {
 	uint8_t state = 2;
 
@@ -4306,7 +4340,10 @@ uint8_t WaspSX1272::sendPacketTimeout(uint8_t dest, char *payload, uint16_t wait
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t length16, uint16_t wait)
+uint8_t WaspSX1272::sendPacketTimeout(	uint8_t dest, 
+										uint8_t *payload, 
+										uint16_t length16, 
+										uint32_t wait)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -4351,7 +4388,9 @@ uint8_t WaspSX1272::sendPacketMAXTimeoutACK(uint8_t dest, char *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketMAXTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t length16)
+uint8_t WaspSX1272::sendPacketMAXTimeoutACK(uint8_t dest, 
+											uint8_t *payload, 
+											uint16_t length16)
 {
 	return sendPacketTimeoutACK(dest, payload, length16, MAX_TIMEOUT);
 }
@@ -4423,7 +4462,9 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t length16)
+uint8_t WaspSX1272::sendPacketTimeoutACK(	uint8_t dest, 
+											uint8_t *payload, 
+											uint16_t length16)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -4479,7 +4520,9 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait)
+uint8_t WaspSX1272::sendPacketTimeoutACK(	uint8_t dest, 
+											char *payload,
+											uint32_t wait)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -4531,7 +4574,10 @@ uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t w
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t length16, uint16_t wait)
+uint8_t WaspSX1272::sendPacketTimeoutACK(	uint8_t dest, 
+											uint8_t *payload, 
+											uint16_t length16, 
+											uint32_t wait)
 {
 	uint8_t state = 2;
 	uint8_t state_f = 2;
@@ -4593,7 +4639,7 @@ uint8_t WaspSX1272::getACK()
  Parameters:
    wait: time to wait while there is no a valid header received.
 */
-uint8_t WaspSX1272::getACK(uint16_t wait)
+uint8_t WaspSX1272::getACK(uint32_t wait)
 {
 	uint8_t state = 2;
 	byte value = 0x00;
@@ -4748,7 +4794,8 @@ uint8_t WaspSX1272::getACK(uint16_t wait)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, char  *payload)
+uint8_t WaspSX1272::sendPacketMAXTimeoutACKRetries(	uint8_t dest, 
+													char  *payload)
 {
 	return sendPacketTimeoutACKRetries(dest, payload, MAX_TIMEOUT);
 }
@@ -4760,7 +4807,9 @@ uint8_t WaspSX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, char  *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length16)
+uint8_t WaspSX1272::sendPacketMAXTimeoutACKRetries(	uint8_t dest, 
+													uint8_t *payload, 
+													uint16_t length16)
 {
 	return sendPacketTimeoutACKRetries(dest, payload, length16, MAX_TIMEOUT);
 }
@@ -4814,7 +4863,9 @@ uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length16)
+uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, 
+												uint8_t *payload, 
+												uint16_t length16)
 {
 	uint8_t state = 2;
 
@@ -4849,7 +4900,9 @@ uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, 
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uint16_t wait)
+uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, 
+												char *payload, 
+												uint32_t wait)
 {
 	uint8_t state = 2;
 
@@ -4887,7 +4940,7 @@ uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uin
 uint8_t WaspSX1272::sendPacketTimeoutACKRetries(uint8_t dest, 
 												uint8_t *payload, 
 												uint16_t length16, 
-												uint16_t wait)
+												uint32_t wait)
 {
 	uint8_t state = 2;
 

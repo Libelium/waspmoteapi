@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation: Manuel Calahorra
  */
@@ -447,14 +447,14 @@ uint8_t	WaspSensorCities::loadInt()
 
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
 	delay(1);
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 2;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 2; // empty: not mounted
 	delay(1);
 	digitalWrite(SENS_INT_CITIES_CLK_REG, LOW);
 	delay(2);
 
 	digitalWrite(SENS_INT_CITIES_CLK_REG, HIGH);
 	delay(1);
-	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 4;
+	if(digitalRead(SENS_INT_CITIES_DO)) intFlag |= 4; // empty: connected to ground
 	delay(1);
 	digitalWrite(SENS_INT_CITIES_CLK_REG, LOW);
 	delay(2);

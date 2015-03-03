@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.1
+ *  Version:		2.2
  *  Design:			Ahmad Saad
  */
  
@@ -559,10 +559,10 @@ DIClass::DIClass()
 }
 
 //!*************************************************************************************
-//!	Name:	DIClass()										
-//!	Description: Class contructor		
-//!	Param : channel of the ADC to configure								
-//!	Returns: void							
+//!	Name:	DIClass()
+//!	Description: Class contructor
+//!	Param : channel of the ADC to configure
+//!	Returns: void
 //!*************************************************************************************
 DIClass::DIClass(uint8_t channel)
 {
@@ -602,51 +602,53 @@ float DIClass::readDI()
 
 
 //!*************************************************************************************
-//!	Name:	readDI()
-//!	Description: read the value of the DI sensor
-//!	Param: void
+//!	Name:	setCalibrationPoints()
+//!	Description:  Non-Lineal Calibration process, with 3 points
+//!	Param: calibrationValues (x1,x2,x3,y1,y2,y3)
 //!	Returns: 	float: DI  value of the sensor
 //!*************************************************************************************
 void DIClass::setCalibrationPoints(float calibrationValues[])
 {
-// The calibration process use a Non-Lineal Calibration process
-  // The process uses 3-points to calibrate the sensor
-  // The complete process is decribed in the next link: 
-  // http://es.wikipedia.org/wiki/Regresi%C3%B3n_no_lineal
-  
-  // The sensor has a logarithmic response: 
-  // y = a * log10(x) + b; y(volts), x(ppm) 
-  // x(ppm) = 10 exp ((y-b)/a)
-  // a = slope of the logarithmic function
-  // b = intersection of the logarithmic function
-  
-  // The next variables are neccesary to calculate the slope and the intersection
-  
-  // Summation of the voltages (y values) 
-  float SUMy = calibrationValues[3] + calibrationValues[4] + calibrationValues[5];
-  
-  // y values average
-  float SUMy_avg = SUMy / 3; 
+	// This function is no neccesary. The next function (below) is more general.
+	
+	// The calibration process use a Non-Lineal Calibration process
+	// The process uses 3-points to calibrate the sensor
+	// The complete process is decribed in the next link: 
+	// http://es.wikipedia.org/wiki/Regresi%C3%B3n_no_lineal
 
-  // Summation of the logarithm of the x values
-  float SUMLogx = log10(calibrationValues[0]) + log10(calibrationValues[1]) + log10(calibrationValues[2]);
-  
-  // Summation of the logarithm of the x values
-  float SUMLogx_2 = log10(calibrationValues[0])*log10(calibrationValues[0]) + 
-                    log10(calibrationValues[1])*log10(calibrationValues[1]) + 
-                    log10(calibrationValues[2])*log10(calibrationValues[2]); 
-                    
-  float SUMLogx_y = log10(calibrationValues[0])* calibrationValues[3]+ 
-                    log10(calibrationValues[1])* calibrationValues[4]+ 
-                    log10(calibrationValues[2])* calibrationValues[5]; 
-   
-  // Sum of the square of the logarithm of the x values
-  float SUMLogx_avg = SUMLogx / 3;
+	// The sensor has a logarithmic response: 
+	// y = a * log10(x) + b; y(volts), x(ppm) 
+	// x(ppm) = 10 exp ((y-b)/a)
+	// a = slope of the logarithmic function
+	// b = intersection of the logarithmic function
 
-  // Slope of the logarithmic function 
-  slope = (SUMLogx_y - SUMy_avg * SUMLogx) / (SUMLogx_2 - SUMLogx_avg * SUMLogx);  
-  // Intersection of the logarithmic function
-  intersection = SUMy_avg - (slope * SUMLogx_avg);
+	// The next variables are neccesary to calculate the slope and the intersection
+
+	// Summation of the voltages (y values) 
+	float SUMy = calibrationValues[3] + calibrationValues[4] + calibrationValues[5];
+
+	// y values average
+	float SUMy_avg = SUMy / 3; 
+
+	// Summation of the logarithm of the x values
+	float SUMLogx = log10(calibrationValues[0]) + log10(calibrationValues[1]) + log10(calibrationValues[2]);
+  
+	// Summation of the logarithm of the x values
+	float SUMLogx_2 = 	log10(calibrationValues[0])*log10(calibrationValues[0]) + 
+						log10(calibrationValues[1])*log10(calibrationValues[1]) + 
+						log10(calibrationValues[2])*log10(calibrationValues[2]); 
+
+	float SUMLogx_y = 	log10(calibrationValues[0])* calibrationValues[3]+ 
+						log10(calibrationValues[1])* calibrationValues[4]+ 
+						log10(calibrationValues[2])* calibrationValues[5];
+
+	// Sum of the square of the logarithm of the x values
+	float SUMLogx_avg = SUMLogx / 3;
+
+	// Slope of the logarithmic function 
+	slope = (SUMLogx_y - SUMy_avg * SUMLogx) / (SUMLogx_2 - SUMLogx_avg * SUMLogx);  
+	// Intersection of the logarithmic function
+	intersection = SUMy_avg - (slope * SUMLogx_avg);
 
 	#if DEBUG_MODE == 1
 		USB.print("Slope: "); 
@@ -654,12 +656,93 @@ void DIClass::setCalibrationPoints(float calibrationValues[])
 
 		USB.print("Intersection: "); 
 		USB.println(intersection);
-	#endif  
+	#endif
 }
 
+
+
+//!*************************************************************************************
+//!	Name:	setCalibrationPoints()
+//!	Description: Calculate the slope and the intersection, of the log function
+//!	Param: void
+//!	Returns:	calVoltages: voltages getted in the calibration process
+//!				calConcentrations: concentrations used to calibrate (10, 100, 1000 ppms)
+//!				numPoints: number of points used to calibrate
+//!*************************************************************************************
+void DIClass::setCalibrationPoints(float calVoltages[], float calConcentrations[],  uint8_t numPoints)
+{
+	// The calibration process use a Non-Lineal Calibration process
+	// The process uses 3-points to calibrate the sensor
+	// The complete process is decribed in the next link: 
+	// http://es.wikipedia.org/wiki/Regresi%C3%B3n_no_lineal
+	
+	// The sensor has a logarithmic response: 
+	// y = a * log10(x) + b; y(volts), x(ppm) 
+	// x(ppm) = 10 exp ((y-b)/a)
+	// a = slope of the logarithmic function
+	// b = intersection of the logarithmic function
+	
+	// The next variables are neccesary to calculate the slope and the intersection
+	
+	// Summation of the voltages (y values)
+	float SUMy = 0.0;
+
+	for (int i = 0; i < numPoints; i++) {
+		SUMy = SUMy + calVoltages[i];
+	}
+
+	// y values average
+	float SUMy_avg = SUMy / numPoints; 
+
+	// Summation of the logarithm of the x values
+	float SUMLogx = 0.0;
+
+	for (int i = 0; i < numPoints; i++) { 
+		SUMLogx	= SUMLogx + log10(calConcentrations[i]);
+	}
+	
+	// Sum of the square of the logarithm of the x values
+	float SUMLogx_2 = 0.0;
+
+	for (int i = 0; i < numPoints; i++) {
+		SUMLogx_2 = SUMLogx_2 + log10(calConcentrations[i])*log10(calConcentrations[i]);
+	}
+
+	// Sumation of the logx * y
+	float SUMLogx_y = 0.0;
+
+	for (int i = 0; i < numPoints; i++) {
+		SUMLogx_y = SUMLogx_y + log10(calConcentrations[i])* calVoltages[i];
+	}
+
+	// Average of the log x values
+	float SUMLogx_avg = SUMLogx / numPoints;
+
+	// Slope of the logarithmic function 
+	slope = (SUMLogx_y - SUMy_avg * SUMLogx) / (SUMLogx_2 - SUMLogx_avg * SUMLogx);
+	// Intersection of the logarithmic function
+	intersection = SUMy_avg - (slope * SUMLogx_avg);
+
+	#if DEBUG_MODE == 1
+		USB.print("Slope: "); 
+		USB.println(slope);
+
+		USB.print("Intersection: "); 
+		USB.println(intersection);
+	#endif
+}
+
+
+//!*************************************************************************************
+//!	Name:	calculateConcentration()
+//!	Description: Calculate the concentration in ppm from the input voltage
+//!	Param: float input: the voltage measured
+//!	Returns: float, the concentration in ppms
+//!*************************************************************************************
 float DIClass::calculateConcentration(float input)
 {
-	return  pow(10, ((input - intersection) / slope));   
+	// y = a * log10(x) + b => x = 10 ^ ((y - b) / a)
+	return  pow(10, ((input - intersection) / slope));
 }
 
 //!*************************************************************************************

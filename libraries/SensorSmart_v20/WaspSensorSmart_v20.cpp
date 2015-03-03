@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -483,6 +483,9 @@ float WaspSensorSmart_v20::readTempDS1820()
  * 						- SENS_FLOW_FS100A : Selects FS100A flow sensor
  * 						- SENS_FLOW_FS200A : Selects FS200A flow sensor 
  * 						- SENS_FLOW_FS400A : Selects FS400A flow sensor
+ * 						- SENS_FLOW_YFS401 : Selects YFS401 flow sensor
+ * 						- SENS_FLOW_FS300 : Selects FS300 flow sensor 
+ * 						- SENS_FLOW_YFG1 : Selects YFG1 flow sensor
  *
  *  Return:		float flow : flow measured by the sensor in liters/minute
  * 							 -1.0 for error in sensor type selection
@@ -532,6 +535,15 @@ float WaspSensorSmart_v20::readTempDS1820()
 									break;
 
 		case SENS_FLOW_FS400	:	flow = float(value) / 6.5;
+									break;
+
+		case SENS_FLOW_YFS401	:	flow = float(value) / 96;
+									break;
+
+		case SENS_FLOW_FS300	:	flow = float(value) / 5.4;
+									break;
+
+		case SENS_FLOW_YFG1		:	flow = float(value) / 1.85;
 									break;
 
 		default 				:	flow = -1.0;

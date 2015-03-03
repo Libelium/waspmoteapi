@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.6
+ *  Version:		1.7
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -401,10 +401,7 @@ void WaspFrame::createFrame(uint8_t mode)
 	_mode = mode;	
 	
 	// init buffer
-	for( int i=0; i < MAX_DATA ; i++ )
-	{
-		buffer[i]='\0';
-	}
+	memset( buffer, 0x00, sizeof(buffer) );
 	
 	// init counter
 	numFields = 0;	
@@ -578,7 +575,7 @@ void WaspFrame::createFrame(uint8_t mode)
 
 
 
-
+#ifdef WaspAES_h
 /* 
  * createEncryptedFrame () - Create encrypted frame from previous created frame
  * The inner 'frame.buffer' is used for encapsulating the new Waspmote frame. 
@@ -691,7 +688,7 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	
 	return 1;
 }
-
+#endif
 
 
 

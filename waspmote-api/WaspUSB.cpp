@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
@@ -568,6 +568,45 @@ void  WaspUSB::printf(char *fmt, ... )
     va_end (args);
     USB.print(tmp);
 }
+
+
+
+
+/*
+ * print - It prints a buffer specifying the length of the buffer
+ * 
+ */
+void WaspUSB::print(uint8_t* pointer, uint16_t length)
+{
+	beginSerial(USB_RATE, _uart);
+	digitalWrite(MUX_PW,HIGH);
+	digitalWrite(MUX_USB_XBEE,LOW);
+	for( uint16_t i = 0; i < length; i++ )
+	{
+		printByte( pointer[i], _uart);
+	}	
+	delay(DELAY_TIME);
+	digitalWrite(MUX_USB_XBEE,HIGH);
+}
+
+
+
+/*
+ * print - It prints a buffer specifying the length of the buffer
+ * This functions adds an End Of Line after printing the buffer
+ * 
+ */
+void WaspUSB::println(uint8_t* pointer, uint16_t length)
+{
+	beginSerial(USB_RATE, _uart);
+	digitalWrite(MUX_PW,HIGH);
+	digitalWrite(MUX_USB_XBEE,LOW);
+	print(pointer, length);
+	println();
+	delay(DELAY_TIME);
+	digitalWrite(MUX_USB_XBEE,HIGH);
+}
+
 
 
 /// Preinstantiate Objects /////////////////////////////////////////////////////

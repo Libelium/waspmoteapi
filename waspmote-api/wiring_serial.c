@@ -1,5 +1,6 @@
 /*
  *  Copyright (c) 2005-2006 David A. Mellis
+ *  Modified for Waspmote by Libelium, 2015
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +30,6 @@
 // is the index of the location from which to read.
 #define RX_BUFFER_SIZE_0 512
 #define RX_BUFFER_SIZE_1 512
-#define	UART_LIMIT 134217728
 
 	unsigned char rx_buffer0[RX_BUFFER_SIZE_0];
 	unsigned char rx_buffer1[RX_BUFFER_SIZE_1];
@@ -166,11 +166,6 @@ SIGNAL(USART0_RX_vect)
 		if (i != rx_buffer_tail0) {
 			rx_buffer0[rx_buffer_head0] = c;
 			rx_buffer_head0 = i;
-			if(rx_buffer_head0==UART_LIMIT)
-			{
-				rx_buffer_head0=0;
-				rx_buffer_tail0=0;
-			}
 		}
 }
 
@@ -187,11 +182,6 @@ SIGNAL(USART1_RX_vect)
 		if (i != rx_buffer_tail1) {
 			rx_buffer1[rx_buffer_head1] = c;
 			rx_buffer_head1 = i;
-			if(rx_buffer_head1==UART_LIMIT)
-			{
-				rx_buffer_head1=0;
-				rx_buffer_tail1=0;
-			}
 		}
 }
 

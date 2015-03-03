@@ -1,6 +1,6 @@
 /*! \file WaspUSB.h
     \brief Library for managing the USB interface
-    Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 
@@ -339,6 +339,22 @@ public:
 	\return void
 	 */
     void printFloat(double number, uint8_t digits);
+    
+    //! It prints a buffer specifying the length of the buffer
+  	/*!
+	\param uint8_t* pointer : pointer to data to be printed
+	\param uint16_t length : length of data
+	\return void
+	 */
+    void print(uint8_t* pointer, uint16_t length);
+    
+    //! It prints a buffer specifying the length of the buffer
+  	/*! This functions adds an End Of Line after printing the buffer
+	\param uint8_t* pointer : pointer to data to be printed
+	\param uint16_t length : length of data
+	\return void
+	 */
+    void println(uint8_t* pointer, uint16_t length);
 };
 
 extern WaspUSB USB;

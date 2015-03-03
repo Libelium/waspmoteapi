@@ -1,7 +1,7 @@
 /*! \file WaspWIFI.h
     \brief Library for managing WIFI modules
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.5
+    Version:		1.6
     Design:			David Gascón
     Implementation:	Joaquín Ruiz, Yuri Carmona
 
@@ -60,10 +60,10 @@
 
 //! JOIN MODES //
 
-#define MANUAL		0
-#define AUTO_STOR	1
-#define AUTO_BEST	2
-#define CREATE_ADHOC	4
+#define MANUAL			0
+#define AUTO_STOR		1
+#define AUTO_BEST		2	// not reliable (deprecated)
+#define CREATE_ADHOC	4	// not reliable (deprecated)
 
 //! DHCP OPTIONS //
 
@@ -217,8 +217,14 @@ class WaspWIFI
       \return '1' on success, '0' otherwise.
     */
     uint8_t sendCommand(char* comm);
-
-    //! Saves current configuration and reboots the device in order to new
+	uint8_t sendCommand(char* comm, char* pattern, unsigned long timeout);
+	uint8_t sendCommand(char* comm, 
+						char* pattern, 
+						char* err_pattern, 
+						unsigned long timeout,
+						bool flush);
+					
+	//! Saves current configuration and reboots the device in order to new
     //! configuration takes effect.
     /*!
       \param void
@@ -813,6 +819,7 @@ class WaspWIFI
       \return true on success, false otherwise
     */ 
     bool isConnected();
+    bool isConnected(unsigned long timeout);
 
     //! Displays connection status
     /*!

@@ -1,7 +1,7 @@
 /*! \file WaspSensorSmart_v20.h
     \brief Library for managing the Smart Metering Sensor Board
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
 
     Design:		David Gascón
 
@@ -120,9 +120,24 @@
     \brief Specifies the FS400 as flow sensor in use
     
  */
-#define SENS_FLOW_FS100	1
-#define SENS_FLOW_FS200	2
-#define SENS_FLOW_FS400	4
+/*! \def SENS_FLOW_YFS401
+    \brief Specifies the YFS401 as flow sensor in use
+    
+ */
+/*! \def SENS_FLOW_FS300
+    \brief Specifies the FS300 as flow sensor in use
+    
+ */
+/*! \def SENS_FLOW_YFG1
+    \brief Specifies the YFG1 as flow sensor in use
+    
+ */
+#define SENS_FLOW_FS100		1
+#define SENS_FLOW_FS200		2
+#define SENS_FLOW_FS400		4
+#define SENS_FLOW_YFS401	8
+#define SENS_FLOW_FS300		16
+#define SENS_FLOW_YFG1		32
 
 
 /******************************************************************************

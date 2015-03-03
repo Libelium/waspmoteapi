@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.6
+ *  Version:		1.7
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -78,6 +78,8 @@ const char scan_network	[] 		PROGMEM = 	"7E000408524E4413";		// AT+ND
 const char set_duration_energy[] PROGMEM = 	"7E0005085245440000"; 	// AT+ED
 const char set_duration_energy_ZB[] PROGMEM="7E0005085253440000"; 	// AT+SD
 const char get_low_dest_address[] PROGMEM =	"7E00040852444C15"; 	// AT+DL
+const char timestamp_packet[] 	PROGMEM =	"%2u%2u%2u%2u%2u%2u%2u";
+const char timestamp_rtc[] 		PROGMEM =	"%02u:%02u:%02u:%02u:%02u:%02u:%02u";
 
 const char* const table_CORE[] PROGMEM= 	  
 {   
@@ -127,7 +129,9 @@ const char* const table_CORE[] PROGMEM=
 	scan_network,			// 43
 	set_duration_energy,	// 44
 	set_duration_energy_ZB,	// 45  
-	get_low_dest_address,	// 46	
+	get_low_dest_address,	// 46
+	timestamp_packet,		// 47
+	timestamp_rtc,			// 48
 };
 
 
@@ -2159,6 +2163,9 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
     error=0;
     XBee_ON=1;
     
+    // clear input buffer before using the XBee
+	flush();
+    
     return error;
 }
 
@@ -2772,7 +2779,7 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
 int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq, 
 											uint8_t* address, 
 											uint8_t* data, 
-											int length	)
+											uint16_t length	)
 {
 	// call setDestinationParams function using MAC_TYPE 
 	return setDestinationParams(paq, address, data, length, MAC_TYPE);
@@ -2794,7 +2801,7 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
 int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq, 
 											uint8_t* address, 
 											uint8_t* data, 
-											int length,
+											uint16_t length,
 											uint8_t type	)
 {
 	// conversion from uint8_t* to char*
@@ -2820,7 +2827,7 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
 int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq, 
 											const char* address, 
 											uint8_t* data, 
-											int length	)
+											uint16_t length	)
 {
 	// call setDestinationParams function using MAC_TYPE
 	return setDestinationParams(paq, address, data, length, MAC_TYPE);	
@@ -2842,7 +2849,7 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
 int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq, 
 											const char* address, 
 											uint8_t* data, 
-											int length,
+											uint16_t length,
 											uint8_t type	)
 {
 	uint8_t destination[8];
@@ -2897,7 +2904,7 @@ int8_t WaspXBeeCore::setDestinationParams(	packetXBee* paq,
 		
     
     // fill data field until the end of the string
-    for( int i=0 ; i < length ; i++ )
+    for( uint16_t i=0 ; i < length ; i++ )
     {
         paq->data[data_ind]=data[i];
         data_ind++;
@@ -6873,6 +6880,507 @@ void WaspXBeeCore::gen_escaped_frame(	uint8_t* TX,
 	// once the conversion is made, set the final length of the frame adding 
 	// the number of extra bytes due to escaped characters
 	*final_length=length+escaped;
+}
+
+
+
+
+/*
+ * Function: receive a new xbee data packet
+ * 
+ * Parameters:
+ * 	timeout : milliseconds to wait until time-out before a packet arrives
+ * 
+ * Returns: Integer that determines if there has been any error 
+ * 	'6' --> ERROR: Error escaping character within payload bytes
+ * 	'5' --> ERROR: Error escaping character in checksum byte
+ * 	'4' --> ERROR: Checksum is not correct	
+ * 	'3' --> ERROR: Checksum byte is not available	
+ * 	'2' --> ERROR: Frame Type is not valid
+ * 	'1' --> ERROR: timeout when receiving answer
+ * 	'0' --> OK: The command has been executed with no errors
+*/
+int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
+{
+	unsigned long previous;
+	int i=0;
+	uint16_t start 	= 0;
+	uint16_t end 	= 0;
+	uint16_t length = 0;
+	bool doneStep1 = false;
+	bool doneStep2 = false;
+	bool doneStep3 = false;
+	bool pendingEscaped = false;
+	uint8_t c;	
+	uint8_t frameType = 0;	
+	uint8_t buffer[150] = {0};	
+	uint8_t checksum = 0;
+
+	// clear packet structure
+	memset( &_payload, 0x00, sizeof(_payload) );
+	memset( buffer, 0x00, sizeof(buffer) );
+	
+	// init previous
+	previous = millis();
+	
+	// Perform the different steps within a given timeout
+	while( (millis()-previous) < timeout )
+	{		
+		/// STEP 1: search start delimiter 0x7E and drop any other byte
+		if( !doneStep1 )
+		{
+			int nBytes = available();
+			for (int k = 0; k < nBytes; k++)			
+			{
+				c = serialRead(uart);
+				if( c == 0x7E )
+				{
+					i = 0;
+					memset( buffer, 0x00, sizeof(buffer) );
+					buffer[i] = c;
+					i++;
+					doneStep1 = true;
+					break;
+				}
+				else
+				{
+					// keep searching
+				}
+			}
+		}
+		
+		/// STEP 2: get the packet length and frame type
+		if( doneStep1 && !doneStep2 )
+		{
+			if( available() >= 3 )
+			{
+				// get following bytes with frame length and frame type:
+				length += (uint16_t)((serialRead(uart)&0xFF) << 8);
+				length += (uint16_t)(serialRead(uart)&0xFF) ;			
+				frameType = serialRead(uart);		
+				
+				// check frame type
+				if( (frameType == 0x80) 
+				|| 	(frameType == 0x81)   
+				|| 	(frameType == 0x90)   
+				|| 	(frameType == 0x91))
+				{					
+					buffer[i] = (length>>8)&0xFF;
+					i++;		
+					buffer[i] = length&0xFF;
+					i++;		
+					buffer[i] = frameType;
+					i++;
+					doneStep2 = true;		
+				}
+				else
+				{
+					// start searching again
+					doneStep1 = false;
+				}	
+			}
+		}
+		
+		/// STEP 3: get all packet bytes performing the API=2 conversion		
+		if( doneStep1 && doneStep2 && !doneStep3)
+		{	
+			int nBytes = available();
+			for (int k = 0; k < nBytes; k++)			
+			{
+				c = serialRead(uart);
+					
+				// check if escaped char
+				if( c == 0x7D )
+				{	
+					pendingEscaped = true;	
+					if( available() > 0 )
+					{
+						buffer[i] = serialRead(uart) xor 0x20;			
+						i++;
+						k++;
+						pendingEscaped = false;	
+					}			
+				}
+				else
+				{
+					if( pendingEscaped == true )
+					{
+						buffer[i] = c xor 0x20;	
+						i++;
+						pendingEscaped = false;
+					}
+					else
+					{
+						buffer[i] = c;
+						i++;
+						pendingEscaped = false;
+					}	
+				}					
+				
+				if( i >= (length+3) )
+				{
+					doneStep3 = true;					
+					_length = i; // not including escaped chars		
+					break;
+				}	
+			}
+		}
+		
+		/// STEP 4: Checksum and copy payload
+		if( doneStep1 && doneStep2 && doneStep3 )
+		{
+			if( available() )
+			{
+				c = serialRead(uart);
+				
+				// check if escaped char
+				if( c == 0x7D )
+				{				
+					if( available() )
+					{
+						checksum = serialRead(uart) xor 0x20;					
+					}
+					else
+					{
+						// ERROR: Error escaping character
+						return 5;
+					}					
+				}
+				else
+				{
+					checksum = c;		
+				}					
+
+				// generate checksum from buffer
+				uint8_t gen_checksum = getChecksum(buffer);
+				
+				// check checksum
+				if( gen_checksum == checksum )
+				{		
+					// Checksum is correct
+				}	
+				else
+				{	
+					// ERROR: Checksum is not correct					
+					return 4;
+				}		
+			}
+			else
+			{
+				// ERROR: Checksum byte not available	
+				return 3;
+			}
+			
+			// Depending on frame type extract payload and 
+			// calculate paylaod length
+			if( frameType == 0x80 )
+			{
+				rxPacket80_t* received = (rxPacket80_t*) buffer;
+				
+				// substract header size
+				_length = _length - 14 ; 
+				
+				// copy payload
+				memcpy( _payload, received->data, _length);
+			}
+			else if (frameType == 0x81) 
+			{
+				rxPacket81_t* received = (rxPacket81_t*) buffer;
+				
+				// substract header size
+				_length = _length - 8 ;
+				
+				// copy payload
+				memcpy( _payload, received->data, _length);
+			}  
+			else if (frameType == 0x90) 
+			{
+				rxPacket90_t* received = (rxPacket90_t*) buffer;
+				
+				// substract header size
+				_length = _length - 15 ;
+				
+				// copy payload
+				memcpy( _payload, received->data, _length);
+			}  
+			else if (frameType == 0x91)
+			{
+				rxPacket91_t* received = (rxPacket91_t*) buffer;
+				
+				// substract header size
+				_length = _length - 21 ;
+				
+				// copy payload
+				memcpy( _payload, received->data, _length);
+			}
+			else
+			{
+				// ERROR: frameType not valid
+				return 2;
+			}
+	
+			// return OK
+			return 0;
+		}
+		
+		//avoid millis overflow problem
+		if( millis() < previous ) previous = millis(); 
+	}
+	
+	// ERROR: timeout when receiving answer
+	return 1;
+	
+}
+
+
+
+
+
+
+
+
+/*
+ * Function: It sets the RTC settings with Meshlium timestamp configuration
+ * This function sends a special Frame to Meshlium (Meshlium's MAC address must 
+ * be indicated as input), and then Meshlium returns an answer with the 
+ * timestamp. This function parses the info and sets the RTC Time and Date. 
+ * 
+ * Returns: Integer that determines if there has been any error   
+ * state = 2  --> ERROR: error receiving timestamp info
+ * state = 1  --> ERROR: error sending timestamp request
+ * state = 0  --> OK: The command has been executed with no errors
+ */
+uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
+{
+	uint16_t length = 0;
+	bool status = false;
+	char buffer[100];
+	char timestamp[30];
+	int year, yearH;
+	int month; 
+	int date;
+	int hour;
+	int minute;
+	int second;
+	packetXBee packet; 
+	int retries;
+  
+	// define the correct response length 
+	//(19B for something like "20150203144622+0000")
+	uint16_t PATTERN_LENGTH = 19;
+	
+	// clear buffers
+	memset( buffer, 0x00, sizeof(buffer) );
+	memset( timestamp, 0x00, sizeof(timestamp) );
+	memset( &packet, 0x00, sizeof(packet) );
+
+	// Create frame to send
+	uint8_t request[] = { 	0x3C, 0x3D, 0x3E, 0x9B, 0x00, 0x23, 0x33, 0x38, 0x37, 
+							0x32, 0x36, 0x34, 0x35, 0x33, 0x39, 0x23, 0x6E, 0x6F, 
+							0x64, 0x65, 0x31, 0x23, 0x30, 0x23};
+	uint16_t requestLen = sizeof(request);
+	
+	// Choose transmission mode: UNICAST or BROADCAST
+	packet.mode = UNICAST; 
+
+	// set destination XBee parameters to packet
+	setDestinationParams( &packet, address, request, requestLen, MAC_TYPE);   
+
+	// flush rx buffer
+	flush();
+  
+	// set retries to '3' attempts
+	retries = 3;
+
+	while( (retries > 0) && (status==false) )
+	{		
+		
+		/// SEND /////////////////////////////////////////////////
+		
+		// sending function  
+		sendXBee( &packet );
+
+		// check tx flag
+		if( error_TX == 0 )
+		{
+			status = true;
+		}
+
+		/// RECEIVE ///////////////////////////////////////////////
+	  
+		if( status == true )
+		{		
+			// wait for response
+			int error = receivePacketTimeout( 5000 );
+		
+			if( error == 0 )
+			{
+				if( _length == PATTERN_LENGTH )
+				{
+					status = true;
+					memcpy( buffer, _payload, _length);
+				}
+				else
+				{				
+					status = false;			
+				}
+			}
+			else
+			{			
+				status = false;
+			}
+			
+			/// PARSE RESPONSE IF SUCCESS //////////////////////////////
+		  
+			// check rx status
+			if( status == true )
+			{
+				char question[100];
+				
+				// "%2u%2u%2u%2u%2u%2u%2u"
+				strcpy_P(question, (char*)pgm_read_word(&(table_CORE[47]))); 
+				if( question == NULL ) return 1;
+				
+				// get all data fields: "YYYYMMDDHHMMSS"
+				sscanf( buffer, 
+						question, 
+						&yearH, 
+						&year, 
+						&month, 
+						&date, 
+						&hour, 
+						&minute, 
+						&second );
+
+				// check if valid date and time:
+				if( (year > 0) 	&&
+					(month > 0) &&
+					(month < 13) &&
+					(date > 0) 	&&
+					(date < 32) &&
+					(hour >= 0) &&
+					(hour < 24) &&
+					(minute >= 0) &&
+					(minute < 60) &&
+					(second >= 0) &&
+					(second < 60) )
+				{
+					status = true;					
+				}
+				else
+				{
+					status = false;
+				}
+				
+				if( status == true)
+				{
+					// "%02u:%02u:%02u:%02u:%02u:%02u:%02u"
+					strcpy_P(question, (char*)pgm_read_word(&(table_CORE[48]))); 
+					if( question == NULL ) return 1;
+					
+					// create sentence to set Time
+					snprintf( timestamp, 
+							sizeof(timestamp), 
+							question, 
+							year, 
+							month, 
+							date,
+							RTC.dow(year, month, date), 
+							hour, 
+							minute,
+							second );
+			
+					// set new timestamp
+					RTC.ON();
+					RTC.setTime(timestamp);
+				}
+			}
+		}
+			
+		if( status == false )
+		{	
+			// if error, wait for another retry
+			retries--;
+			delay(1000);	
+		}	
+	}
+	
+
+	return 0;
+}
+
+
+
+
+
+/*
+ * Function: Send a packet from one XBee to another XBee in API mode
+ * This function performs application-level retries.
+ * This function is only used for 64-bit addressing.
+ * 
+ * return:
+ * 	'0' OK
+ * 	'1' error
+ */
+uint8_t WaspXBeeCore::send( char* macAddress, char* data )
+{	
+	return send( macAddress, (uint8_t*)data, (uint16_t)strlen(data) );
+}
+
+/*
+ * Function: Send a packet from one XBee to another XBee in API mode
+ * This function performs application-level retries.
+ * This function is only used for 64-bit addressing.
+ * 
+ * 
+ * Return:
+ * 	'0' OK
+ * 	'1' error
+ */
+uint8_t WaspXBeeCore::send( char* macAddress, uint8_t* pointer, uint16_t length )
+{	
+	// counter for retries
+	uint8_t counter = 0;
+	const uint8_t RETRIES = 3;
+	
+	// Pointer to an XBee packet structure 
+	packetXBee packet;
+	
+	// clear buffer
+	memset( &packet, 0x00, sizeof(packet) );
+	
+	// Choose transmission mode: UNICAST or BROADCAST
+	packet.mode = UNICAST;
+
+	// Set destination XBee parameters to packet
+	setDestinationParams( &packet, macAddress, pointer, length);
+	
+	// Send the packet until reach a successful transmision or reach
+	// the specified number of retries	
+	while( counter <= RETRIES )
+	{
+		// Send XBee packet
+		sendXBee( &packet );
+		
+		// Check TX flag
+		if( error_TX == 0 )
+		{
+			// Send successful, exit the while loop
+			return 0;
+		}
+		else
+		{
+			// Error transmitting the packet
+			// wait for random delay
+			delay( (unsigned long)rand()%700LU + 300LU );
+		}
+		
+		// increment counter
+		counter++;
+	}
+	
+	return 1;
+	
 }
 
 

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -239,8 +239,11 @@ float	WaspSensorEvent_v20::readValue(uint8_t sensor, uint8_t type)
 									}
 									break;
 		case 	SENS_FLOW_FS100	:	
-		case 	SENS_FLOW_FS200 :	
-		case 	SENS_FLOW_FS400	:	aux = flowReading(type);
+		case 	SENS_FLOW_FS200	:	
+		case 	SENS_FLOW_FS400	:	
+		case 	SENS_FLOW_YFS401 :	
+		case 	SENS_FLOW_FS300	:	
+		case 	SENS_FLOW_YFG1	:	aux = flowReading(type);
 									break;
 		case 	SENS_TEMPERATURE:	if(sensor == SENS_SENSIRION)
 									{
@@ -393,6 +396,9 @@ uint8_t	WaspSensorEvent_v20::loadInt(void)
  * 						- SENS_FLOW_FS100 : Selects FS100A flow sensor
  * 						- SENS_FLOW_FS200 : Selects FS200A flow sensor 
  * 						- SENS_FLOW_FS400 : Selects FS400A flow sensor
+ * 						- SENS_FLOW_YFS401 : Selects YFS401 flow sensor
+ * 						- SENS_FLOW_FS300 : Selects FS300 flow sensor 
+ * 						- SENS_FLOW_YFG1 : Selects YFG1 flow sensor
  *
  *  Return:		float flow : flow measured by the sensor in litres/minute
  * 							 -1.0 for error in sensor type selection
@@ -433,6 +439,15 @@ uint8_t	WaspSensorEvent_v20::loadInt(void)
 									break;
 
 		case SENS_FLOW_FS400	:	flow = float(value) / 6.5;
+									break;
+
+		case SENS_FLOW_YFS401	:	flow = float(value) / 96;
+									break;
+
+		case SENS_FLOW_FS300	:	flow = float(value) / 5.5;
+									break;
+
+		case SENS_FLOW_YFG1		:	flow = float(value) / 1.85;
 									break;
 
 		default 				:	flow = -1.0;

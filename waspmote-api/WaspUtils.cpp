@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.7
+ *  Version:		1.8
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -417,7 +417,26 @@ unsigned long WaspUtils::readSerialID()
 	{
 		id = 0;
 	}
-				
+	
+	// try from EEPROM
+	if( id == 0 )
+	{
+		// get eeprom serial id (latest Waspmote batches)
+		unsigned long eeprom_id = Utils.getSerialEEPROM();
+		
+		// check correct value of serial id
+		// -> 0x0A0A0A0A is a wrong value for default Waspmote EEPROM 
+		// -> 0xFFFFFFFF is a wrong value
+		if( (id != 0x0A0A0A0A) && (id !=0xFFFFFFFF) )
+		{
+			id = eeprom_id;
+		}
+		else
+		{
+			id = 0;
+		}
+	}
+	
     digitalWrite(LED0,LOW);
     Utils.setLED(LED0,LED_OFF);
 	Utils.setLED(LED1,LED_OFF);

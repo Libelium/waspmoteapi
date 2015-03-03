@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Covadonga Albiñana, Yuri Carmona
 
@@ -242,7 +242,7 @@ const uint8_t OFFSET_RSSI = 137;
 const uint8_t NOISE_FIGURE = 6.0;
 const uint8_t NOISE_ABSOLUTE_ZERO = 174.0;
 const uint16_t MAX_TIMEOUT = 10000;		//10000 msec = 10.0 sec
-const uint16_t MAX_WAIT = 12000;		//12000 msec = 12.0 sec
+const uint32_t MAX_WAIT = 12000;		//12000 msec = 12.0 sec
 const uint32_t MESH_TIMEOUT = 3600000;  //3600000 msec = 3600 sec = 1 hour
 const uint8_t MAX_RETRIES = 5;
 const uint8_t CORRECT_PACKET = 0;
@@ -311,7 +311,7 @@ public:
 	\param void
 	\return void
 	 */
-	void ON();
+	uint8_t ON();
 
 	//! It puts the module OFF
   	/*!
@@ -697,10 +697,10 @@ public:
 
 	//! It receives a packet before a timeout.
   	/*!
-  	\param uint16_t wait : time to wait to receive something.
+  	\param uint32_t wait : time to wait to receive something.
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t receivePacketTimeout(uint16_t wait);
+	uint8_t receivePacketTimeout(uint32_t wait);
 
 	//! It receives a packet before MAX_TIMEOUT and reply with an ACK.
   	/*!
@@ -718,10 +718,10 @@ public:
 
 	//! It receives a packet before a timeout and reply with an ACK.
   	/*!
-  	\param uint16_t wait : time to wait to receive something.
+  	\param uint32_t wait : time to wait to receive something.
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t receivePacketTimeoutACK(uint16_t wait);
+	uint8_t receivePacketTimeoutACK(uint32_t wait);
 
 	//! It puts the module in 'promiscuous' reception mode.
   	/*!
@@ -732,10 +732,10 @@ public:
 
 	//! It puts the module in 'promiscuous' reception mode with a timeout.
   	/*!
-  	\param uint16_t wait : time to wait to receive something.
+  	\param uint32_t wait : time to wait to receive something.
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t receiveAll(uint16_t wait);
+	uint8_t receiveAll(uint32_t wait);
 
 	//! It checks if there is an available packet and its destination.
   	/*!
@@ -748,11 +748,11 @@ public:
 	//! timeout.
   	/*!
   	 *
-  	\param uint16_t wait : time to wait while there is no a valid header 
+  	\param uint32_t wait : time to wait while there is no a valid header 
   	received.
 	\return 'true' on success, 'false' otherwise
 	 */
-	boolean	availableData(uint16_t wait);
+	boolean	availableData(uint32_t wait);
 
 	//! It writes a packet in FIFO in order to send it.
 	/*!
@@ -790,11 +790,11 @@ public:
 	//! 'wait' time.
 	/*!
 	 *
-	\param uint16_t wait : time to wait while there is not a complete packet 
+	\param uint32_t wait : time to wait while there is not a complete packet 
 	received.
 	\return '0' on success, '1' otherwise
 	*/
-	int8_t getPacket(uint16_t wait);
+	int8_t getPacket(uint32_t wait);
 
 	//! It sends the packet stored in FIFO before ending MAX_TIMEOUT.
 	/*!
@@ -812,10 +812,10 @@ public:
 
 	//! It tries to send the packet stored in FIFO before ending 'wait' time.
 	/*!
-	\param uint16_t wait : time to wait to send the packet.
+	\param uint32_t wait : time to wait to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendWithTimeout(uint16_t wait);
+	uint8_t sendWithTimeout(uint32_t wait);
 
 	//! It tries to send the packet which payload is a parameter before ending 
 	//! MAX_TIMEOUT.
@@ -867,12 +867,12 @@ public:
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
-	\param uint16_t wait : time to wait.
+	\param uint32_t wait : time to wait.
 	\return '0' on success, '1' otherwise
 	*/
 	uint8_t sendPacketTimeout(	uint8_t dest, 
 								char *payload, 
-								uint16_t wait);
+								uint32_t wait);
 
 	//! It sends the packet which payload is a parameter before ending 'wait' 
 	//! time.
@@ -880,13 +880,13 @@ public:
 	\param uint8_t dest : packet destination.
 	\param uint8_t *payload : packet payload.
 	\param uint16_t length : payload buffer length.
-	\param uint16_t wait : time to wait.
+	\param uint32_t wait : time to wait.
 	\return '0' on success, '1' otherwise
 	*/
 	uint8_t sendPacketTimeout(	uint8_t dest, 
 								uint8_t *payload, 
 								uint16_t length, 
-								uint16_t wait);
+								uint32_t wait);
 
 	//! It sends the packet which payload is a parameter before MAX_TIMEOUT, 
 	//! and replies with ACK.
@@ -973,7 +973,7 @@ public:
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
-	\param uint16_t wait : time to wait to send the packet.
+	\param uint32_t wait : time to wait to send the packet.
 	\return '9'  --> The ACK lost (no data available)
 			'8'  --> The ACK lost
 			'7'  --> The ACK destination incorrectly received
@@ -987,7 +987,7 @@ public:
 	*/
 	uint8_t sendPacketTimeoutACK(	uint8_t dest, 
 									char *payload,
-									uint16_t wait);
+									uint32_t wait);
 
 	//! It sends the packet which payload is a parameter before 'wait' time, 
 	//! and replies with ACK.
@@ -995,7 +995,7 @@ public:
 	\param uint8_t dest : packet destination.
 	\param uint8_t payload: packet payload.
 	\param uint16_t length : payload buffer length.
-	\param uint16_t wait : time to wait to send the packet.
+	\param uint32_t wait : time to wait to send the packet.
 	\return '9'  --> The ACK lost (no data available)
 			'8'  --> The ACK lost
 			'7'  --> The ACK destination incorrectly received
@@ -1010,7 +1010,7 @@ public:
 	uint8_t sendPacketTimeoutACK(uint8_t dest, 
 									uint8_t *payload, 
 									uint16_t length, 
-									uint16_t wait);
+									uint32_t wait);
 
 	//! It sets the destination of a packet.
   	/*!
@@ -1067,7 +1067,7 @@ public:
  	//! 'wait' time.
 	/*!
 	 *
-	\param uint16_t wait : time to wait while there is no an ACK received.
+	\param uint32_t wait : time to wait while there is no an ACK received.
 	\return '8'  --> The ACK lost
 			'7'  --> The ACK destination incorrectly received
 			'6'  --> The ACK source incorrectly received
@@ -1078,7 +1078,7 @@ public:
 			'1'  --> not used (reserved)
 			'0'  --> The ACK has been received with no errors
 	*/
-	uint8_t getACK(uint16_t wait);
+	uint8_t getACK(uint32_t wait);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries 
 	//! value, before ending MAX_TIMEOUT time.
@@ -1127,12 +1127,12 @@ public:
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
-	\param uint16_t wait : time to wait while trying to send the packet.
+	\param uint32_t wait : time to wait while trying to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
 	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, 
 										char *payload, 
-										uint16_t wait);
+										uint32_t wait);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries 
 	//! value, before ending 'wait' time.
@@ -1140,13 +1140,13 @@ public:
 	\param uint8_t dest : packet destination.
 	\param uint8_t *payload : packet payload.
 	\param uint16_t length : payload buffer length.
-	\param uint16_t wait : time to wait while trying to send the packet.
+	\param uint32_t wait : time to wait while trying to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
 	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, 
 										uint8_t *payload, 
 										uint16_t length, 
-										uint16_t wait);
+										uint32_t wait);
 
 	//! It gets the internal temperature of the module.
 	/*!
