@@ -211,7 +211,7 @@
 #define NAK		0x15
 #define SOH		0x01
 #define EOT		0x04
-#define CAN		0x18
+#define CANC	0x18
 
 
 
