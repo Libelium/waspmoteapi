@@ -186,8 +186,9 @@ void Sd2Card::chipSelectHigh() {
 //------------------------------------------------------------------------------
 void Sd2Card::chipSelectLow() {
   SPI.begin();
+  SPI.setDataMode(SPI_MODE0);
   SPI.setClockDivider(SPI_CLOCK_DIV2);
-  digitalWrite(m_chipSelectPin, LOW);
+  SPI.setSPISlave(SD_SELECT);
 }
 //------------------------------------------------------------------------------
 /** Erase a range of blocks.
@@ -270,10 +271,11 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 
 	pinMode(m_chipSelectPin, OUTPUT);
 	digitalWrite(m_chipSelectPin, HIGH);
-
+	
 	// set SCK rate for initialization commands	
 	SPI.begin();
-	SPI.setClockDivider(SPI_CLOCK_DIV2);
+	SPI.setDataMode(SPI_MODE0);
+	SPI.setClockDivider(SPI_CLOCK_DIV2);	
 
 	// must supply min of 74 clock cycles with CS high.
 	for (uint8_t i = 0; i < 10; i++) SPI.transfer(0XFF);

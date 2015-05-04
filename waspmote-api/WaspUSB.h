@@ -349,12 +349,29 @@ public:
     void print(uint8_t* pointer, uint16_t length);
     
     //! It prints a buffer specifying the length of the buffer
-  	/*! This functions adds an End Of Line after printing the buffer
+  	/*! This function adds an End Of Line after printing the buffer
 	\param uint8_t* pointer : pointer to data to be printed
 	\param uint16_t length : length of data
 	\return void
 	 */
     void println(uint8_t* pointer, uint16_t length);
+    
+    //! It prints a buffer in HEX format specifying the length of the buffer
+  	/*! 
+	\param uint8_t* pointer : pointer to data to be printed
+	\param uint16_t length : length of data
+	\return void
+	 */
+    void printHex(uint8_t* pointer, uint16_t length); 
+     
+    //! It prints a buffer in HEX format specifying the length of the buffer
+  	/*! This function adds an End Of Line after printing the buffer
+	\param uint8_t* pointer : pointer to data to be printed
+	\param uint16_t length : length of data
+	\return void
+	 */
+    void printHexln(uint8_t* pointer, uint16_t length);
+    
 };
 
 extern WaspUSB USB;

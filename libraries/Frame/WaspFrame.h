@@ -438,6 +438,101 @@
     \brief Turbidity sensor
  */ 
  
+ 
+/// Version parameters
+/*! \def SENSOR_VAPI
+    \brief API version
+ */ 
+/*! \def SENSOR_VPROG
+    \brief Program version
+ */ 
+/*! \def SENSOR_VBOOT
+    \brief Bootloader version
+ */ 
+
+
+/// Gases PRO
+/*! \def SENSOR_GP_CL2
+    \brief Chlorine measurement type
+ */
+/*! \def SENSOR_GP_CO
+    \brief Carbon Monoxide measurement type
+ */
+/*! \def SENSOR_GP_ETO
+    \brief Ethylene Oxide measurement type
+ */
+/*! \def SENSOR_GP_H2
+    \brief Hydrogen measurement type
+ */
+/*! \def SENSOR_GP_H2S
+    \brief Hydrogen Sulphide measurement type
+ */
+/*! \def SENSOR_GP_HCL
+    \brief Hydrogen Chloride measurement type
+ */
+/*! \def SENSOR_GP_HCN
+    \brief Hydrogen Cyanide measurement type
+ */
+/*! \def SENSOR_GP_NH3
+    \brief Ammonia measurement type
+ */
+/*! \def SENSOR_GP_NO
+    \brief Nitrogen Monoxide measurement type
+ */
+/*! \def SENSOR_GP_NO2
+    \brief Nitrogen Dioxide measurement type
+ */
+/*! \def SENSOR_GP_O2
+    \brief Oxygen measurement type
+ */
+/*! \def SENSOR_GP_PH3
+    \brief Phospine measurement type
+ */
+/*! \def SENSOR_GP_SO2
+    \brief Sulfur Dioxide measurement type
+ */
+/*! \def SENSOR_GP_CH4
+    \brief Methane and other combustible gases measurement type
+ */
+/*! \def SENSOR_GP_O3
+    \brief Ozone measurement type
+ */
+/*! \def SENSOR_GP_CO2
+    \brief Carbon Dioxide measurement type
+ */
+/*! \def SENSOR_GP_TC
+    \brief Temperature Celsius measurement type
+ */
+/*! \def SENSOR_GP_TF
+    \brief Temperature Fahrenheit measurement type
+ */
+/*! \def SENSOR_GP_HUM
+    \brief Humidity measurement type
+ */
+/*! \def SENSOR_GP_PRES
+    \brief Pressure measurement type
+ */
+/*! \def SENSOR_OPC_TC
+    \brief Temperature Celsius measurement type
+ */
+/*! \def SENSOR_OPC_TF
+    \brief Temperature Fahrenheit measurement type
+ */
+/*! \def SENSOR_OPC_PM1
+    \brief PM1 measurement type
+ */
+/*! \def SENSOR_OPC_PM2_5
+    \brief PM2.5 measurement type
+ */
+/*! \def SENSOR_OPC_PM10
+    \brief PM10 measurement type
+ */
+/*! \def SENSOR_OPC_PART
+    \brief Particle bin counter measurement type
+ */
+
+
+ 
 // Gases
 #define SENSOR_CO	 	0
 #define SENSOR_CO2 		1
@@ -611,6 +706,42 @@
 // Turbidity sensor
 #define SENSOR_TURB		124
 
+// Version parameters
+#define SENSOR_VAPI		125
+#define SENSOR_VPROG	126
+#define SENSOR_VBOOT	127
+
+
+// Gases PRO
+#define SENSOR_GP_CL2	128
+#define SENSOR_GP_CO	129
+#define SENSOR_GP_ETO	130
+#define SENSOR_GP_H2	131
+#define SENSOR_GP_H2S	132
+#define SENSOR_GP_HCL	133
+#define SENSOR_GP_HCN	134
+#define SENSOR_GP_NH3	135
+#define SENSOR_GP_NO	136
+#define SENSOR_GP_NO2	137
+#define SENSOR_GP_O2	138
+#define SENSOR_GP_PH3	139
+#define SENSOR_GP_SO2	140
+#define SENSOR_GP_CH4	141
+#define SENSOR_GP_O3	142
+#define SENSOR_GP_CO2	143
+#define SENSOR_GP_TC	144
+#define SENSOR_GP_TF	145
+#define SENSOR_GP_HUM	146
+#define SENSOR_GP_PRES	147
+
+// OPCN2 Dust Sensor
+#define SENSOR_OPC_TC		148
+#define SENSOR_OPC_TF		149
+#define SENSOR_OPC_P		150
+#define SENSOR_OPC_PM1		151
+#define SENSOR_OPC_PM2_5	152
+#define SENSOR_OPC_PM10		153
+#define SENSOR_OPC_PART		154
 
 
 // define MACROS in order to manage bits inside Bytes
@@ -879,6 +1010,7 @@ public:
     int8_t addSensor(uint8_t type, char* str);
 
     int8_t addSensor(uint8_t type, double val1, double val2);
+    int8_t addSensor(uint8_t type, unsigned long val1, unsigned long val2);
     int8_t addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t val3);
     int8_t addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t val3, int val4);
     int8_t addSensor(uint8_t type, int val1,int val2,int val3);

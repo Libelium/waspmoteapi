@@ -22,6 +22,8 @@
   
 
 #include <Waspmote.h>
+
+//define global variable for Waspmote serial id
 volatile unsigned long _serial_id;
 
 int main(void)

@@ -223,6 +223,16 @@ class WaspWIFI
 						char* err_pattern, 
 						unsigned long timeout,
 						bool flush);
+						
+	uint8_t sendCommand(char* command, 
+						char* ans1, 
+						char* ans2, 
+						char* ans3, 
+						char* ans4, 
+						uint32_t timeout);
+						
+	//! It seeks 'pattern' inside the 'buffer' array
+	bool find( uint8_t* buffer, uint16_t length, char* pattern);	
 					
 	//! Saves current configuration and reboots the device in order to new
     //! configuration takes effect.

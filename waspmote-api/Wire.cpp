@@ -53,6 +53,8 @@ TwoWire::TwoWire()
 	isBoard = false;
 	_5V_ON  = false;
 	_3V3_ON = false;
+	
+	readTimeout = I2C_TIMEOUT;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -409,6 +411,307 @@ void TwoWire::secureEnd()
 	}	
 }
 
+/* Function: 	This function writes a bit via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: data to send
+ *				pos: position of the bit to write [7|6|5|4|3|2|1|0]
+ * Return: 		1 if OK, -1 if error
+ * 				
+ */
+int8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, bool data, uint8_t pos)
+{
+	uint8_t buffer;
+	uint8_t mask;
+	uint8_t error;
+	
+
+	// Read the register
+	error = readBytes(devAddr, regAddr, &buffer, 1);
+	if (error != 1)
+	{
+		return error;
+	}
+	
+
+	#ifdef I2C_DEBUG_FULL		
+		USB.print(F("Bit pos: "));
+		USB.println(pos, DEC);	
+		USB.print("Old value: ");
+		USB.println(buffer, BIN);
+	#endif
+	// Mask to the read data and stores the value
+	mask = ~(1 << pos);
+	data = (data << pos) & mask;
+	buffer &= mask;	
+	buffer |= data;
+	
+	#ifdef I2C_DEBUG_FULL
+		USB.print("mask: ");
+		USB.println(mask, BIN);
+		USB.print("data: ");
+		USB.println(data, BIN);
+		USB.print("New value: ");
+		USB.println(buffer, BIN);
+	#endif
+	
+	// Write the register
+	writeBytes(devAddr, regAddr, &buffer, 1);
+	if (error != 1)
+	{
+		return error;
+	}	
+	
+	return 1;
+}
+
+/* Function: 	This function writes some bits via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: data to send
+ *				pos: first position of the bits to write starting by the LSb [7|6|5|4|3|2|1|0]
+ *				length: number of bits to write
+ * Return: 		1 if OK, -1 if error
+ */
+int8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length)
+{
+	uint8_t buffer;
+	uint8_t mask;
+	uint8_t error;
+	
+	// Read the register
+	error = readBytes(devAddr, regAddr, &buffer, 1);
+	if (error != 1)
+	{
+		return error;
+	}	
+	
+	#ifdef I2C_DEBUG_FULL		
+		USB.print(F("Bit pos: "));
+		USB.println(pos, DEC);		
+		USB.print(F("Bit length: "));
+		USB.println(length, DEC);	
+		USB.print("Old value: ");
+		USB.println(buffer, BIN);
+	#endif
+	
+	// Mask to the read data and stores the value
+	mask = (((1 << length) - 1) << pos);
+	data = (data << pos) & mask;
+	buffer &= ~mask;	
+	buffer |= data;
+	
+	#ifdef I2C_DEBUG_FULL
+		USB.print("mask: ");
+		USB.println(mask, BIN);
+		USB.print("data: ");
+		USB.println(data, BIN);
+		USB.print("New value: ");
+		USB.println(buffer, BIN);
+	#endif
+	        
+	// Write the register
+	writeBytes(devAddr, regAddr, &buffer, 1);
+	if (error != 1)
+	{
+		return error;
+	}	
+	
+	return 1;
+}
+
+/* Function: 	This function writes bytes via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: data to send
+ *				length: number of bytes to send
+ * Return: 		Nothing
+ */
+void TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
+{	
+    
+	#ifdef I2C_DEBUG
+        USB.print(F("I2C (0x"));
+        USB.printHex(devAddr);
+        USB.print(F(") writing "));
+        USB.print(length, DEC);
+        USB.print(F(" bytes to 0x"));
+        USB.printHex(regAddr);
+        USB.print(F("..."));
+    #endif
+	
+	// Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+    
+    for (uint8_t k = 0; k < length; k += min(length, BUFFER_LENGTH))
+    {
+        Wire.beginTransmission(devAddr);
+        Wire.send(regAddr + k);   
+		
+        for (uint8_t i = 0; i < length; i++) {
+            Wire.send( data[i]);
+			#ifdef I2C_DEBUG
+                USB.printHex(data[i]);
+                if (i + 1 < length)
+                {
+					USB.print(F(" "));
+				}
+			#endif
+        }        
+		Wire.endTransmission();
+    }	
+
+	#ifdef I2C_DEBUG
+        USB.println(F(". Done"));
+    #endif
+}
+
+/* Function: 	This function reads a bit via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: buffer to store the data
+ *				pos: position of the bit to read [7|6|5|4|3|2|1|0]
+ * Return: 		Bytes read, -1 if error
+ */
+int8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos)
+{
+	uint8_t buffer, mask;
+	int8_t answer;
+	
+	answer = readBytes( devAddr, regAddr, &buffer, 1);
+	
+	#ifdef I2C_DEBUG_FULL		
+		USB.print(F("Bit pos: "));
+		USB.println(pos, DEC);
+		USB.print("Old value: ");
+		USB.println(buffer, BIN);
+	#endif
+	
+	mask = 1 << pos;	
+	if ((mask & buffer) != 0)
+	{
+		data[0] = 1;
+	}
+	else
+	{
+		data[0] = 0;
+		
+	}
+	
+	#ifdef I2C_DEBUG_FULL
+		USB.print("mask: ");
+		USB.println(mask, BIN);
+		USB.print("New value: ");
+		USB.println(data[0], BIN);
+	#endif
+	
+	return answer;	
+}
+
+/* Function: 	This function reads a bit via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: buffer to store the data
+ *				pos: position of the bit to read starting by the LSb  [7|6|5|4|3|2|1|0]
+ * Return: 		Bytes read, -1 if error
+ */
+int8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length)
+{
+	uint8_t buffer, mask;
+	int8_t answer;
+	
+
+	answer = readBytes( devAddr, regAddr, &buffer, 1);	
+	
+	#ifdef I2C_DEBUG_FULL		
+		USB.print(F("Bit pos: "));
+		USB.println(pos, DEC);		
+		USB.print(F("Bit length: "));
+		USB.println(length, DEC);	
+		USB.print("Old value: ");
+		USB.println(buffer, BIN);
+	#endif
+	
+	// Mask to the read data and stores the value
+	buffer = buffer >> pos;
+	mask = ((1 << length) - 1);
+	buffer &= mask;
+	data[0] = buffer;	
+	
+	#ifdef I2C_DEBUG_FULL
+		USB.print("mask: ");
+		USB.println(mask, BIN);
+		USB.print("New value: ");
+		USB.println(buffer, BIN);
+	#endif
+	
+	return answer;	
+}
+
+/* Function: 	This function reads bytes via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: buffer to store the data
+ *				length: number of bytes to read
+ * Return: 		Bytes read, -1 if error
+ */
+int8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
+{
+    
+	#ifdef I2C_DEBUG
+        USB.print(F("I2C (0x"));
+        USB.printHex(devAddr);
+        USB.print(F(") reading "));
+        USB.print(length, DEC);
+        USB.print(F(" bytes from 0x"));
+        USB.printHex(regAddr);
+        USB.print(F("..."));
+    #endif
+
+    int8_t count = 0;
+    uint32_t t1;
+
+    // Inits I2C bus
+	if( !Wire.I2C_ON ) Wire.begin();
+    
+    for (uint8_t k = 0; k < length; k += min(length, BUFFER_LENGTH))
+    {
+        Wire.beginTransmission(devAddr);
+        Wire.send(regAddr + k);
+        Wire.endTransmission();
+		t1 = millis();
+        Wire.requestFrom(devAddr, (uint8_t)min(length - k, BUFFER_LENGTH));
+        
+		
+        for (; Wire.available() && ((readTimeout == 0) || (millis() - t1) < readTimeout); count++)
+        {
+            data[count] = Wire.receive();
+            #ifdef I2C_DEBUG
+                USB.printHex(data[count]);
+                if (count + 1 < length)
+                {
+					USB.print(F(" "));
+				}
+			#endif
+        }        
+		Wire.endTransmission();
+    }
+
+
+    // check for timeout
+    if ((readTimeout > 0) && ((millis() - t1) >= readTimeout) && (count < length))
+    {
+		count = -1; // timeout
+	}
+
+	#ifdef I2C_DEBUG
+        USB.print(F(". Done ("));
+        USB.print(count, DEC);
+        USB.println(F(" read)."));
+    #endif
+
+    return count;
+}
 
 
 

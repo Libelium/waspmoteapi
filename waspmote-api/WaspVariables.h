@@ -52,9 +52,22 @@ volatile	uint16_t	intConf;
 volatile 	uint8_t	intCounter;
 volatile 	uint8_t	intArray[8];
 
-
 /*! \def WaspRegister
     \brief Bitmap used for managing the different modules and power supplies 
     by different libraries
  */
 volatile unsigned long WaspRegister;
+
+/*! \def pwrGasRegister
+    \brief Bitmap used for managing the power supply for Gases PRO board	
+    0: dust sensor
+	1: gas sensor on socket 1 or C
+	2: gas sensor on socket 2
+	3: gas sensor on socket 3 or F
+	4: gas sensor on socket 4 or A
+	5: gas sensor on socket 5 or B
+	6: gas sensor on socket 6
+ */
+volatile uint8_t	pwrGasPRORegister;
+
+

@@ -57,6 +57,9 @@ WaspSensorEvent_v20::WaspSensorEvent_v20()
 	
 	// update Waspmote Control Register
 	WaspRegister |= REG_EVENTS;
+	
+	// init interruption attribute flag 
+	_intEnabled = false;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -172,30 +175,60 @@ int8_t	WaspSensorEvent_v20::setThreshold(uint8_t sensor, float threshold)
  * 
  */
 float	WaspSensorEvent_v20::readValue(uint8_t sensor)
-{
-	uint16_t aux=0;
+{	
+	// variable to read sensors
+	int aux = 0;
+	
+	// get actual interruption state flag
+	bool isEnabled = _intEnabled;
+	
+	// disable interruption
+	detachInt();
+	
 	switch( sensor )
 	{
-		case	SENS_SOCKET1	:	aux=analogRead(ANALOG1);
+		case	SENS_SOCKET1	:	aux = analogRead(ANALOG1);
 									break;
-		case	SENS_SOCKET2	:	aux=analogRead(ANALOG2);
+		case	SENS_SOCKET2	:	aux = analogRead(ANALOG2);
 									break;
-		case	SENS_SOCKET3	:	aux=analogRead(ANALOG4);
+		case	SENS_SOCKET3	:	aux = analogRead(ANALOG4);
 									break;
-		case	SENS_SOCKET4	:	aux=analogRead(ANALOG3);
+		case	SENS_SOCKET4	:	aux = analogRead(ANALOG3);
 									break;
-		case	SENS_SOCKET5	:	aux=analogRead(ANALOG6);
+		case	SENS_SOCKET5	:	aux = analogRead(ANALOG6);
 									break;
-		case	SENS_SOCKET6	:	aux=analogRead(ANALOG7);
+		case	SENS_SOCKET6	:	aux = analogRead(ANALOG7);
 									break;
-		case	SENS_SOCKET7	:	aux=digitalRead(DIGITAL5);
+		case	SENS_SOCKET7	:	aux = digitalRead(DIGITAL5);	
+									// re-enable interruption if needed
+									if( isEnabled == true )
+									{										
+										delay(50);
+										attachInt();
+									}
 									return aux;
 									break;
-		case	SENS_SOCKET8	:	aux=analogRead(ANALOG5);
+		case	SENS_SOCKET8	:	aux = analogRead(ANALOG5);
 									break;
-		default					:	return -1.0;
+		default					:	aux = -1;
 	}
-	return	(aux*3.3)/1023;
+	
+	// re-enable interruption if needed
+	if( isEnabled == true )
+	{	
+		delay(50);
+		attachInt();
+	}
+	
+	if( aux == -1 )
+	{
+		return (float)-1.0;
+	}
+	
+	// perform conversion
+	float value = ((float)aux * 3.3)/1023.0;
+	
+	return	value;
 }
 
 /*	readValue: Reads the analog to digital converter input indicated of the given
@@ -281,6 +314,7 @@ void	WaspSensorEvent_v20::attachInt(void)
 {
 	digitalWrite(SENS_INT_ENABLE,HIGH); 
 	enableInterrupts(SENS_INT);
+	_intEnabled = true;
 }
 
 
@@ -293,6 +327,7 @@ void	WaspSensorEvent_v20::detachInt(void)
 {
 	digitalWrite(SENS_INT_ENABLE,LOW); 
 	disableInterrupts(SENS_INT);
+	_intEnabled = false;
 }
 
 

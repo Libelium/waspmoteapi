@@ -150,6 +150,42 @@ class WaspUtils
    */
   void blinkLEDs(uint16_t time);
   
+	//! It blinks the red LED once during 200ms
+	void blinkRedLED();
+	
+	//! It blinks the red LED once during 'time' milliseconds
+	/*!
+	\param uint16_t time : time for blinking
+	\return void
+	*/
+	void blinkRedLED( uint16_t time );
+	
+	//! It blinks the red LED for 'num' times, and during 'time' milliseconds
+	/*!
+	\param uint16_t time : time for blinking
+	\param uint8_t num : number of blink actions
+	\return void
+	*/
+	void blinkRedLED( uint16_t time, uint8_t num );
+	
+	//! It blinks the green LED once during 200ms
+	void blinkGreenLED();
+	
+	//! It blinks the green LED once during 'time' milliseconds
+	/*!
+	\param uint16_t time : time for blinking
+	\return void
+	*/
+	void blinkGreenLED( uint16_t time );
+	
+	//! It blinks the green LED for 'num' times, and during 'time' milliseconds
+	/*!
+	\param uint16_t time : time for blinking
+	\param uint8_t num : number of blink actions
+	\return void
+	*/
+	void blinkGreenLED( uint16_t time, uint8_t num );
+  
   
   //! It blinks LED, with the specified time for blinking
   /*!
@@ -262,6 +298,12 @@ class WaspUtils
    
   //! It reads the Waspmote unique serial identifier
   /*!
+  \return unsigned long: Waspmote unique serial identifier
+   */
+  unsigned long readSerialChip();
+   
+  //! It reads the Waspmote unique serial identifier
+  /*! If fails, we try to read from EEPROM
   \return unsigned long: Waspmote unique serial identifier
    */
   unsigned long readSerialID();  
@@ -455,3 +497,4 @@ class WaspUtils
 extern WaspUtils Utils;
 
 #endif
+

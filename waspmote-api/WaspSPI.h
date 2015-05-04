@@ -71,6 +71,23 @@
 #define SPI_CLOCK_DIV32 	0x06
 
 
+/*! SPI DATA MODES: There are four combinations of SCK phase and polarity with 
+respect to serial data, which are determined by control bits CPHA and CPOL. Data 
+bits are shifted out and latched in on opposite edges of the SCK signal,
+ensuring sufficient time for data signals to stabilize.
+*/
+/*! \def SPI_MODE0
+ \brief CPOL=0, CPHA=0
+ */
+/*! \def SPI_MODE1
+ \brief CPOL=0, CPHA=1
+ */
+/*! \def SPI_MODE2
+ \brief CPOL=1, CPHA=0
+ */
+/*! \def SPI_MODE3
+ \brief CPOL=1, CPHA=1
+ */
 #define SPI_MODE0 			0x00
 #define SPI_MODE1 			0x04
 #define SPI_MODE2 			0x08
@@ -81,6 +98,8 @@
 #define SPI_CLOCK_MASK 		0x03  // SPR1 = bit 1, SPR0 = bit 0 on SPCR
 #define SPI_2XCLOCK_MASK 	0x01  // SPI2X = bit 0 on SPSR
 
+#define DUST_SENSOR_CS DIGITAL2
+#define DUST_SENSOR_POWER DIGITAL1
 
 
 /*! \def SD_SELECT
@@ -92,6 +111,9 @@
 /*! \def SOCKET1_SELECT
     \brief select SOCKET 1 on SPI bus
  */
+/*! \def DUST_SENSOR_SELECT
+    \brief select Particle sensor on SPI bus
+ */
 /*! \def ALL_DESELECTED
     \brief deselect all devides on SPI bus
  */
@@ -99,6 +121,7 @@ enum spi_selection {
 	SD_SELECT,
 	SOCKET0_SELECT,
 	SOCKET1_SELECT,
+	DUST_SENSOR_SELECT,
 	ALL_DESELECTED,
 };
 
@@ -116,6 +139,7 @@ public:
 	{
 		isSD = false;
 		isSX = false;
+		isDustSensor = false;
 	};
  
 	static byte transfer(uint8_t _data);

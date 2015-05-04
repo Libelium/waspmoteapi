@@ -590,6 +590,24 @@ void WaspUSB::print(uint8_t* pointer, uint16_t length)
 }
 
 
+/*
+ * print - It prints a buffer in HEX format specifying the length of the buffer
+ * 
+ */
+void WaspUSB::printHex(uint8_t* pointer, uint16_t length)
+{
+	beginSerial(USB_RATE, _uart);
+	digitalWrite(MUX_PW,HIGH);
+	digitalWrite(MUX_USB_XBEE,LOW);
+	for( uint16_t i = 0; i < length; i++ )
+	{		
+		puthex((char)pointer[i], _uart);
+	}	
+	delay(DELAY_TIME);
+	digitalWrite(MUX_USB_XBEE,HIGH);
+}
+
+
 
 /*
  * print - It prints a buffer specifying the length of the buffer
@@ -602,6 +620,24 @@ void WaspUSB::println(uint8_t* pointer, uint16_t length)
 	digitalWrite(MUX_PW,HIGH);
 	digitalWrite(MUX_USB_XBEE,LOW);
 	print(pointer, length);
+	println();
+	delay(DELAY_TIME);
+	digitalWrite(MUX_USB_XBEE,HIGH);
+}
+
+
+
+/*
+ * print - It prints a buffer in HEX format specifying the length of the buffer
+ * This function adds an End Of Line after printing the buffer
+ * 
+ */
+void WaspUSB::printHexln(uint8_t* pointer, uint16_t length)
+{
+	beginSerial(USB_RATE, _uart);
+	digitalWrite(MUX_PW,HIGH);
+	digitalWrite(MUX_USB_XBEE,LOW);
+	printHex(pointer, length);
 	println();
 	delay(DELAY_TIME);
 	digitalWrite(MUX_USB_XBEE,HIGH);

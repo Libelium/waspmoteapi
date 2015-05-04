@@ -215,6 +215,44 @@ const char	str_TST[]		PROGMEM = "TST";	// 123
 // Turbidity sensor
 const char	str_TURB[]		PROGMEM = "TURB";	// 124
 
+// Version parameters
+const char	str_VAPI[]	PROGMEM = "VAPI";	// 125
+const char	str_VPROG[]	PROGMEM = "VPROG";	// 126
+const char	str_VBOOT[]	PROGMEM = "VBOOT";	// 127
+
+
+// Gases PRO board
+const char	str_GP_CL2[]	PROGMEM = "GP_CL2";		// 128
+const char	str_GP_CO[]		PROGMEM = "GP_CO";		// 129
+const char	str_GP_ETO[]	PROGMEM = "GP_ETO";		// 130
+const char	str_GP_H2[]		PROGMEM = "GP_H2";		// 131
+const char	str_GP_H2S[]	PROGMEM = "GP_H2S";		// 132
+const char	str_GP_HCL[]	PROGMEM = "GP_HCL";		// 133
+const char	str_GP_HCN[]	PROGMEM = "GP_HCN";		// 134
+const char	str_GP_NH3[]	PROGMEM = "GP_NH3";		// 135
+const char	str_GP_NO[]		PROGMEM = "GP_NO";		// 136
+const char	str_GP_NO2[]	PROGMEM = "GP_NO2";		// 137
+const char	str_GP_O2[]		PROGMEM = "GP_O2";		// 138
+const char	str_GP_PH3[]	PROGMEM = "GP_PH3";		// 139
+const char	str_GP_SO2[]	PROGMEM = "GP_SO2";		// 140
+const char	str_GP_CH4[]	PROGMEM = "GP_CH4";		// 141
+const char	str_GP_O3[]		PROGMEM = "GP_O3";		// 142
+const char	str_GP_CO2[]	PROGMEM = "GP_CO2";		// 143
+const char	str_GP_TC[]		PROGMEM = "GP_TC";		// 144
+const char	str_GP_TF[]		PROGMEM = "GP_TF";		// 145
+const char	str_GP_HUM[]	PROGMEM = "GP_HUM";		// 146
+const char	str_GP_PRES[]	PROGMEM = "GP_PRES";	// 147
+
+// OPCN2 Dust Sensor
+const char	str_OPC_tc[]	PROGMEM = "TC";		// 148
+const char	str_OPC_tf[]	PROGMEM = "TF";		// 149
+const char	str_OPC_p[]		PROGMEM = "P";		// 150
+const char	str_OPC_pm1[]	PROGMEM = "PM1";	// 151
+const char	str_OPC_pm2_5[]	PROGMEM = "PM2_5";	// 152
+const char	str_OPC_pm10[]	PROGMEM = "PM10";	// 153
+const char	str_OPC_part[]	PROGMEM = "PART";	// 154
+
+
 
 
 /******************************************************************************* 
@@ -396,6 +434,42 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	
 	// Turbidity sensor
 	str_TURB,	// 124
+	
+	// Version parameters
+	str_VAPI,	// 125
+	str_VPROG,	// 126
+	str_VBOOT,	// 127
+	
+	// Gases PRO Board
+	str_GP_CL2,		// 128
+	str_GP_CO,		// 129
+	str_GP_ETO,		// 130
+	str_GP_H2,		// 131
+	str_GP_H2S,		// 132
+	str_GP_HCL,		// 133
+	str_GP_HCN,		// 134
+	str_GP_NH3,		// 135
+	str_GP_NO,		// 136
+	str_GP_NO2,		// 137 
+	str_GP_O2,		// 138
+	str_GP_PH3,		// 139
+	str_GP_SO2,		// 140
+	str_GP_CH4,		// 141
+	str_GP_O3,		// 142
+	str_GP_CO2,		// 143
+	str_GP_TC,		// 144
+	str_GP_TF,		// 145
+	str_GP_HUM,		// 146
+	str_GP_PRES,	// 147
+
+	// OPCN2 Dust Sensor
+	str_OPC_tc,	// 148
+	str_OPC_tf,	// 149
+	str_OPC_p,	// 150
+	str_OPC_pm1,	// 151
+	str_OPC_pm2_5,	// 152
+	str_OPC_pm10,	// 153
+	str_OPC_part,	// 154
 };
 
 
@@ -589,6 +663,42 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	// Turbidity sensor
 	2, // str_TURB,		// 124
 	
+	// Version parameters
+	0, // str_VAPI,		// 125
+	0, // str_VPROG,	// 126
+	0, // str_VBOOT,	// 127	
+	
+	// Gases PRO Board
+	2,	//str_GP_CL2,		// 128
+	2,	//str_GP_CO,		// 129
+	2,	//str_GP_ETO,		// 130
+	2,	//str_GP_H2,		// 131
+	2,	//str_GP_H2S,		// 132
+	2,	//str_GP_HCL,		// 133
+	2,	//str_GP_HCN,		// 134
+	2,	//str_GP_NH3,		// 135
+	2,	//str_GP_NO,		// 136
+	2,	//str_GP_NO2,		// 137
+	2,	//str_GP_O2,		// 138
+	2,	//str_GP_PH3,		// 139
+	2,	//str_GP_SO2,		// 140
+	2,	//str_GP_CH4,		// 141
+	2,	//str_GP_O3,		// 142
+	2,	//str_GP_CO2,		// 143
+	2,	//str_GP_TC			// 144
+	2,	//str_GP_TF			// 145
+	2,	//str_GP_HUM		// 146
+	2,	//str_GP_PRES		// 147
+	
+	
+	2,	//str_OPC_tc	// 148
+	2,	//str_OPC_tf	// 149
+	2,	//str_OPC_p		// 150
+	2,	//str_OPC_pm1	// 151
+	2,	//str_OPC_pm2_5	// 152
+	2,	//str_OPC_pm10	// 153
+	2,	//str_OPC_part	// 154
+	
 };
 
 
@@ -775,6 +885,42 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	
 	// Turbidity sensor
 	1, // str_TURB,		// 124
+	
+	// Version parameters
+	1, // str_VAPI,		// 125
+	1, // str_VPROG,	// 126
+	1, // str_VBOOT,	// 127
+		
+	// Gases PRO Board
+	1,	//str_GP_CL2,		// 128
+	1,	//str_GP_CO,		// 129
+	1,	//str_GP_ETO,		// 130
+	1,	//str_GP_H2,		// 131
+	1,	//str_GP_H2S,		// 132
+	1,	//str_GP_HCL,		// 133
+	1,	//str_GP_HCN,		// 134
+	1,	//str_GP_NH3,		// 135
+	1,	//str_GP_NO,		// 136
+	1,	//str_GP_NO2,		// 137
+	1,	//str_GP_O2,		// 138
+	1,	//str_GP_PH3,		// 139
+	1,	//str_GP_SO2,		// 140
+	1,	//str_GP_CH4,		// 141
+	1,	//str_GP_O3,		// 142
+	1,	//str_GP_CO2,		// 143
+	1,	//str_GP_TC			// 144
+	1,	//str_GP_TF			// 145
+	1,	//str_GP_HUM		// 146
+	1,	//str_GP_PRES		// 147
+
+	// OPC_N2
+	1,	//str_OPC_tc		// 148
+	1,	//str_OPC_tf		// 149
+	1,	//str_OPC_p			// 150
+	1,	//str_OPC_pm1		// 151
+	1,	//str_OPC_pm2_5		// 152
+	1,	//str_OPC_pm10		// 153
+	2,	//str_OPC_part		// 154
 };
 
 
@@ -959,6 +1105,42 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	
 	// Turbidity sensor
 	1, // str_TURB,		// 124
+	
+	// Version parameters
+	0, // str_VAPI,		// 125
+	0, // str_VPROG,	// 126
+	0, // str_VBOOT,	// 127
+	
+	// Gases PRO Board
+	3,	//str_GP_CL2,		// 128
+	3,	//str_GP_CO,		// 129
+	3,	//str_GP_ETO,		// 130
+	3,	//str_GP_H2,		// 131
+	3,	//str_GP_H2S,		// 132
+	3,	//str_GP_HCL,		// 133
+	3,	//str_GP_HCN,		// 134
+	3,	//str_GP_NH3,		// 135
+	3,	//str_GP_NO,		// 136
+	3,	//str_GP_NO2,		// 137
+	3,	//str_GP_O2,		// 138
+	3,	//str_GP_PH3,		// 139
+	3,	//str_GP_SO2,		// 140
+	3,	//str_GP_CH4,		// 141
+	3,	//str_GP_O3,		// 142
+	3,	//str_GP_CO2,		// 143	
+	3,	//str_GP_TC			// 144
+	2,	//str_GP_TF			// 145
+	2,	//str_GP_HUM		// 146
+	0,	//str_GP_PRES		// 147	
+	
+		// OPC_N2
+	2,	//str_OPC_tc		// 148
+	2,	//str_OPC_tf		// 149
+	0,	//str_OPC_p			// 150
+	4,	//str_OPC_pm1		// 151
+	4,	//str_OPC_pm2_5		// 152
+	4,	//str_OPC_pm10		// 153
+	0,	//str_OPC_part		// 154
 };
 
 #endif

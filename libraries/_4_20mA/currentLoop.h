@@ -32,10 +32,10 @@
 /***********************************************************************
 * Configuration Selection
 ************************************************************************/	
-#define CHANNEL1 1
-#define CHANNEL2 2
-#define CHANNEL3 3
-#define CHANNEL4 4
+#define CHANNEL1 ANALOG1
+#define CHANNEL2 ANALOG2
+#define CHANNEL3 ANALOG5
+#define CHANNEL4 ANALOG6
 
 #define SUPPLY12V 12
 #define SUPPLY5V 5

@@ -348,6 +348,9 @@
 /*! \def REG_SX
     \brief Bit dedicated to the marking of the Semtech module 
  */
+/*! \def REG_DUST_GASES_PRO
+    \brief Bit dedicated to the marking of the Dust sensor in Gases PRO Board
+ */
 #define	REG_5V				1		// bit 0
 #define	REG_3V3				2 		// bit 1
 #define	REG_SOCKET0			4 		// bit 2
@@ -366,6 +369,7 @@
 #define	REG_OTA				32768	// bit 15
 #define	REG_SD				65536	// bit 16
 #define	REG_SX				131072	// bit 17
+#define	REG_DUST_GASES_PRO	262144	// bit 18
 
 
 /*******************************************************************************

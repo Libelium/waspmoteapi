@@ -25,6 +25,10 @@
 
 #define BUFFER_LENGTH 32
 
+//#define I2C_DEBUG
+//#define I2C_DEBUG_FULL
+#define I2C_TIMEOUT		250			// timeout for I2C reads in milliseconds
+
 class TwoWire
 {
   private:
@@ -46,6 +50,7 @@ class TwoWire
     static void onRequestService(void);
     static void onReceiveService(uint8_t*, int);
   
+	unsigned long readTimeout;	// I2C timeout
   
   public:
     TwoWire();
@@ -77,6 +82,77 @@ class TwoWire
 	
     void secureBegin();
     void secureEnd();
+	
+	
+	//! This function writes a bit via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t data: data to send
+	\param uint8_t pos: position of the bit to write [7|6|5|4|3|2|1|0]
+	\return		1 if OK
+				-1 if error
+	*/
+	int8_t writeBit(uint8_t devAddr, uint8_t regAddr, bool data, uint8_t pos);
+	
+	//! This function writes some bits via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t data: data to send
+	\param uint8_t pos: first position of the bits to write starting by the LSb [7|6|5|4|3|2|1|0]
+	\param uint8_t length: number of bits to write
+	\return		1 if OK
+				-1 if error
+	*/
+	int8_t writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length);
+	
+	//! This function writes bytes via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t *data: data to send
+	\param uint8_t length: number of bytes to write
+	\return		1 if OK
+				-1 if error
+	*/
+	void writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
+	
+	//! This function reads a bit via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t *data: buffer to store the data
+	\param uint8_t pos: position of the bit to read [7|6|5|4|3|2|1|0]
+	\return		Bytes read
+				-1 if error
+	*/
+	int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos);
+	
+	//! This function reads some bits via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t data: buffer to store the data
+	\param uint8_t pos: first position of the bits to read starting by the LSb [7|6|5|4|3|2|1|0]
+	\param uint8_t length: number of bits to read
+	\return		Bytes read
+				-1 if error
+	*/
+	int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length);
+	
+	//! This function reads bytes via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t data: buffer to store the data
+	\param uint8_t length: number of bytes to read
+	\return		Bytes read
+				-1 if error
+	*/
+	int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
+
+	
 };
 
 extern TwoWire Wire;

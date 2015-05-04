@@ -94,7 +94,8 @@ class WaspSensorSW
 	private:
 		
 		//! Read from the ADC
-		float getMeasure(uint8_t, uint8_t);
+		float getMeasure(uint8_t, uint8_t);		
+		
 
 		
 };
@@ -253,6 +254,11 @@ class DIClass
 		DIClass(uint8_t);
 		float readDI();
 		void setCalibrationPoints(float calibrationValues[]);
+		
+		void setCalibrationPoints(	float calVoltages[], 
+									float calConcentrations[],  
+									uint8_t numPoints);
+
 		float calculateConcentration(float input);
 
 	private:

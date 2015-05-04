@@ -1432,6 +1432,125 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 }
 
 
+/*
+ * addSensor( type, val1, val2) - add sensor to frame
+ * 
+ * Parameters:
+ * 	type : Refers to the type of sensor data
+ * 	val1 : indicates the sensor value as a float 	
+ *  val2 : indicates the sensor value as a float 	
+ * 
+ * Returns: 
+ * 	'length' of the composed frame when ok 
+ * 	-1 when the maximum length of the frame is reached 
+ * 
+ */
+int8_t WaspFrame::addSensor(uint8_t type, unsigned long val1, unsigned long val2)
+{
+
+	char str1[20];
+	char str2[20];
+
+	if(_mode == ASCII)
+	{
+		// get name of sensor from table
+		char name[10];
+		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		
+		// convert from integer to string
+		ultoa( val1, str1, 10);
+		ultoa( val2, str2, 10);
+	
+		
+		// check if new sensor value fits in the frame or not
+		// in the case the maximum length is reached, exit with error
+		// if not, then add the new sensor length to the total length
+		if(!checkLength( strlen(name) +
+						 strlen(str1) + strlen(str2) +
+						 strlen(";") +
+						 strlen(":")  +
+						 strlen("#") 	))
+		{
+			return -1;
+		}
+		
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value in str1
+		// 'index_4' is needed for adding ';'
+		// 'index_5' is needed for adding sensor value in str2
+		// 'index_6' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen("#");
+		int index_2 = length-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen("#");
+		int index_3 = length-strlen(str1)-strlen(";")-strlen(str2)-strlen("#");
+		int index_4 = length-strlen(";")-strlen(str2)-strlen("#");
+		int index_5 = length-strlen(str2)-strlen("#");
+		int index_6 = length-strlen("#");
+
+		
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
+	
+		// add input string defined in 'str1'
+		memcpy ( &buffer[index_3], str1, strlen(str1) );
+		
+		// add ';'
+		memcpy ( &buffer[index_4], ";", strlen(";") );
+	
+		// add input string defined in 'str2'
+		memcpy ( &buffer[index_5], str2, strlen(str2) );		
+	
+		// add separator '#'
+		memcpy ( &buffer[index_6], "#", strlen("#") );		
+		
+		// increment sensor fields counter 
+		numFields++;
+		
+		// set sensor fields counter
+		buffer[4] = numFields;
+	}
+	else
+	{
+		// check if the data input type corresponds to the sensor	
+		if(checkFields(type, TYPE_ULONG, 2) == -1 ) return -1;
+		
+		// set data bytes (in this case, double is 4...)
+		char valB1[4]; char valB2[4];
+		memcpy(valB1,&val1,4);
+		memcpy(valB2,&val2,4);
+		
+		// check if new sensor value fits /1+4+4/
+		if(!checkLength(9))
+		{
+			return -1;
+		}
+
+		// concatenate sensor name to frame string
+
+        buffer[length-9] = (char)type;
+        buffer[length-8] = valB1[0];
+		buffer[length-7] = valB1[1];
+        buffer[length-6] = valB1[2];
+		buffer[length-5] = valB1[3];
+        buffer[length-4] = valB2[0];
+		buffer[length-3] = valB2[1];
+        buffer[length-2] = valB2[2];
+		buffer[length-1] = valB2[3];
+		buffer[length] = '\0';
+
+		// increment sensor fields counter 
+		numFields++;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
+
+	}		
+
+	return length;
+}
 
 
 

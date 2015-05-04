@@ -65,7 +65,7 @@ void WaspSPI::close()
 	// Close SPI COM only when all modules are off
 	// if one of them is still on, then do not proceed with
 	// the closing process
-	if( (SPI.isSD == false) && (SPI.isSX == false) )
+	if( (SPI.isSD == false) && (SPI.isSX == false) && (SPI.isDustSensor == false) )
 	{
 		// define SPI pins as INPUTs (high impedance)	
 		pinMode(SD_SCK, INPUT);
@@ -226,26 +226,40 @@ void WaspSPI::setSPISlave(uint8_t SELECTION)
 {
 	pinMode(SD_SS,OUTPUT);	
 	pinMode(SOCKET0_SS,OUTPUT);
-	pinMode(MUX_TX,OUTPUT);
+	
 	digitalWrite(SD_SS,HIGH);
 	digitalWrite(SOCKET0_SS,HIGH);
-	digitalWrite(GPRS_PW,HIGH);
+	
+	if( WaspRegister & REG_DUST_GASES_PRO )
+	{
+		pinMode(DUST_SENSOR_CS,OUTPUT);
+		digitalWrite(DUST_SENSOR_CS,HIGH);
+	}	
 	
 	switch(SELECTION)
 	{
-		case SD_SELECT:		 digitalWrite(SD_SS,LOW);
-							 break;
-		case SOCKET0_SELECT: digitalWrite(SOCKET0_SS,LOW);
-							 break;
-		case SOCKET1_SELECT: Utils.setMuxSocket1();
-							 digitalWrite(MUX_TX,LOW);
-							 break;
-		case ALL_DESELECTED: digitalWrite(SD_SS,HIGH);							 
-							 digitalWrite(SOCKET0_SS,HIGH);
-							 Utils.setMuxSocket1();
-							 digitalWrite(MUX_TX,HIGH);
-							 break;
-		
+		case SD_SELECT:		 		digitalWrite(SD_SS,LOW);
+									break;
+		case SOCKET0_SELECT:		digitalWrite(SOCKET0_SS,LOW);
+									break;
+		case SOCKET1_SELECT:		Utils.setMuxSocket1();
+									digitalWrite(MUX_TX,LOW);
+									break;
+		case DUST_SENSOR_SELECT:	if( WaspRegister & REG_DUST_GASES_PRO )
+									{
+										digitalWrite(DUST_SENSOR_CS,LOW);
+									}
+									break;
+		case ALL_DESELECTED:		digitalWrite(SD_SS,HIGH);							 
+									digitalWrite(SOCKET0_SS,HIGH);
+									
+									if( WaspRegister & REG_DUST_GASES_PRO )
+									{
+										digitalWrite(DUST_SENSOR_CS,HIGH);
+									}	
+																		
+									break;
+		default:					break;		
 	}
 }
 
@@ -259,7 +273,17 @@ void WaspSPI::setSPISlave(uint8_t SELECTION)
  *
  ******************************************************************************/
 void WaspSPI::secureBegin()
-{
+{	
+	// this codeblock belongs to the performance of the SD card
+	// check if Dust sensor was not powered on before using the SD card
+	if( WaspRegister & REG_DUST_GASES_PRO )
+	{
+		if( (WaspRegister & REG_3V3) && (SPI.isDustSensor == false) )		
+		{
+			digitalWrite(DUST_SENSOR_POWER,HIGH);		
+		}
+	}	
+	
 	// this codeblock belongs to the performance of the SD card
 	// check if Semtech module was not powered on before using the SD card
 	if( WaspRegister & REG_SX )
@@ -289,7 +313,17 @@ void WaspSPI::secureBegin()
  *
  ******************************************************************************/
 void WaspSPI::secureEnd()
-{	
+{		
+	// this codeblock belongs to the performance of the SD card
+	// check if Dust sensor was not powered on before using the SD card
+	if( WaspRegister & REG_DUST_GASES_PRO )
+	{
+		if( (WaspRegister & REG_3V3) && (SPI.isDustSensor == false) )		
+		{
+			digitalWrite(DUST_SENSOR_POWER,LOW);		
+		}
+	}	
+	
 	// this codeblock belongs to the performance of the SD card
 	// switch off the SX module if it was not powered on 
 	if( WaspRegister & REG_SX )
@@ -307,7 +341,6 @@ void WaspSPI::secureEnd()
 		pinMode(MEM_PW,OUTPUT);
 		digitalWrite(MEM_PW, LOW);				
 	}
-	
 	
 	
 }

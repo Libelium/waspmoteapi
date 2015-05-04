@@ -104,6 +104,63 @@ void WaspUtils::blinkLEDs(uint16_t time)
 }
 
 
+/* blinkRedLED(time, num) - blinks the red LED once during 200ms
+ */
+void WaspUtils::blinkRedLED() 
+{
+	blinkRedLED( 200, 1 );
+}
+
+/* blinkRedLED(time, num) - blinks the red LED once during 'time' milliseconds
+ */
+void WaspUtils::blinkRedLED( uint16_t time ) 
+{
+	blinkRedLED( time, 1 );
+}
+
+/* blinkRedLED(time, num) - blinks the red LED for 'num' times, and during 
+ * 'time' milliseconds
+ */
+void WaspUtils::blinkRedLED( uint16_t time, uint8_t num ) 
+{
+	for( int i = 0; i < num ; i++ )
+	{
+		setLED(LED0,LED_ON);
+		delay(time);
+		setLED(LED0,LED_OFF);
+		delay(time);	
+	}
+}
+
+/* blinkGreenLED(time, num) - blinks the green LED once during 200ms
+ */
+void WaspUtils::blinkGreenLED() 
+{
+	blinkGreenLED( 200, 1 );
+}
+
+/* blinkGreenLED(time, num) - blinks the green LED once during 'time' milliseconds
+ */
+void WaspUtils::blinkGreenLED( uint16_t time ) 
+{
+	blinkGreenLED( time, 1);
+}
+
+/* blinkGreenLED(time, num) - blinks the green LED for 'num' times, and during 
+ * 'time' milliseconds
+ */
+void WaspUtils::blinkGreenLED( uint16_t time, uint8_t num ) 
+{
+	for( int i = 0; i < num ; i++ )
+	{
+		setLED(LED1,LED_ON);
+		delay(time);
+		setLED(LED1,LED_OFF);
+		delay(time);	
+	}
+}
+
+
 
 /* externalLedBlink(time) - blinks external LED, with the specified time of blinking
  *
@@ -355,6 +412,93 @@ void WaspUtils::setAuthKey(char* authkey)
 
 
 
+/* readSerialChip() - reads the Waspmote unique serial identifier chip several 
+ * times and compare if always is equal
+ *  
+ */
+unsigned long WaspUtils::readSerialChip()
+{	
+	int data[64];
+	int aux_48[48];
+	unsigned long id = 0;
+	int attempts = 2;
+	unsigned long id_array[attempts];	
+	unsigned long ID_ERROR = 0xFFFFFFFF;
+	unsigned long seed = 1;
+		
+	for(int index = 0; index < attempts; index++)
+	{
+		// init seed
+		seed = 1;
+		
+		WaspOneWire OneWire(LED1);
+	
+		Utils.setLED(LED0,LED_OFF);
+		Utils.setLED(LED1,LED_OFF);
+		
+		// init variable
+		id_array[index] = 0;	
+		
+		// Powering the serial ID chip
+		pinMode(LED0, OUTPUT);
+		digitalWrite(LED0,HIGH);
+	
+		// reset DS2411 chip
+		OneWire.resetSerialID();	
+		
+		Utils.setLED(LED1,LED_ON);
+		delay(10);
+	  
+		// ask the ID number
+		OneWire.write(0x33,0);
+		delay(50);
+		
+		// read the ID number
+		for (int i = 63; i >= 0;i--)
+		{
+			data[i] = OneWire.read_bit();
+			delay(1);
+		}
+
+		for (int i = 8;i < 56;i++)
+		{
+			aux_48[i-8]=data[i];
+		}
+		
+		// convert from the array to integer
+		for(int i=(48-1);i>=0;i--)
+		{
+			if(aux_48[i] == 1)
+			{
+				id_array[index] += seed;
+			}
+			seed = seed * 2;
+		}			
+		
+		if (id_array[index] == ID_ERROR) 
+		{
+			id_array[index] = 0;
+		}
+		
+		// Powering off the serial ID chip
+		digitalWrite(LED0,LOW);
+		Utils.setLED(LED0,LED_OFF);
+		Utils.setLED(LED1,LED_OFF);
+	}		
+	
+	for(int index = 0; index < attempts-1; index++)
+	{
+		if( id_array[index] != id_array[index+1] )
+		{
+			return 0;
+		}
+	}
+	
+	// give value
+	id = id_array[0];
+	
+	return id;
+}
 
 
 /* readSerialID() - reads the Waspmote unique serial identifier
@@ -363,71 +507,18 @@ void WaspUtils::setAuthKey(char* authkey)
  */
 unsigned long WaspUtils::readSerialID()
 {
-	Utils.setLED(LED0,LED_OFF);
-	Utils.setLED(LED1,LED_OFF);
-	
-	WaspOneWire OneWire(LED1);
-	
-	int data[64];
-	int aux_48[48];
-	unsigned long id = 0;
-	unsigned long ID_ERROR = 0xFFFFFFFF;
-	unsigned long seed = 1;
-	
-	// Powering the serial ID chip
-	pinMode(LED0, OUTPUT);
-	digitalWrite(LED0,HIGH);
-	
-	// reset DS2411 chip
-	OneWire.resetSerialID();
-	
-	// REVISAR ESTO: con unas placas funciona asi
-	// con otras hay que comentar las dos siguientes lineas
-	// para que funcione
-	Utils.setLED(LED1,LED_ON);
-	delay(10);
-  
-    // ask the ID number
-	OneWire.write(0x33,0);
-	delay(50);
-	
-	// read the ID number
-	for (int i = 63; i >= 0;i--)
-	{
-		data[i] = OneWire.read_bit();
-		delay(1);
-	}
-
-	for (int i = 8;i < 56;i++)
-	{
-		aux_48[i-8]=data[i];
-	}
-	
-	// convert from the array to integer
-	for(int i=(48-1);i>=0;i--)
-	{
-		if(aux_48[i] == 1)
-		{
-			id += seed;
-		}
-		seed = seed * 2;
-	}			
-	
-	if (id == ID_ERROR) 
-	{
-		id = 0;
-	}
-	
-	// try from EEPROM
+	unsigned long eeprom_id;
+	unsigned long id = readSerialChip();
+		
 	if( id == 0 )
 	{
 		// get eeprom serial id (latest Waspmote batches)
-		unsigned long eeprom_id = Utils.getSerialEEPROM();
+		eeprom_id = Utils.getSerialEEPROM();
 		
 		// check correct value of serial id
 		// -> 0x0A0A0A0A is a wrong value for default Waspmote EEPROM 
 		// -> 0xFFFFFFFF is a wrong value
-		if( (id != 0x0A0A0A0A) && (id !=0xFFFFFFFF) )
+		if( (eeprom_id != 0x0A0A0A0A) && (eeprom_id !=0xFFFFFFFF) )
 		{
 			id = eeprom_id;
 		}
@@ -436,10 +527,6 @@ unsigned long WaspUtils::readSerialID()
 			id = 0;
 		}
 	}
-	
-    digitalWrite(LED0,LOW);
-    Utils.setLED(LED0,LED_OFF);
-	Utils.setLED(LED1,LED_OFF);
 	
 	return id;
 }
@@ -1196,3 +1283,4 @@ uint8_t WaspUtils::getBootVersion()
 
 
 WaspUtils Utils = WaspUtils();
+

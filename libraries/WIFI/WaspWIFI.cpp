@@ -257,6 +257,7 @@ const char* const table_WIFI[] PROGMEM=
 	reboot_answer,			// 103
 	aok_answer,				// 104
 	exit_answer,			// 105
+	ftp_error_answer,		// 106
 };
 
 
@@ -746,6 +747,133 @@ uint8_t WaspWIFI::sendCommand(	char* comm,
 	
 	// timeout
 	return 0; 
+}
+
+
+
+/*
+ * 
+ * name: sendCommand
+ * @param	char* command: command to be sent
+ * @param	char* ans1: expected answer
+ * @param	char* ans2: expected answer
+ * @param	char* ans3: expected answer
+ * @param	char* ans4: expected answer
+ * @param	uint32_t timeout: time to wait for response
+ * @return 	'0' if timeout error, 
+ * 			'1' if ans1
+ * 			'2' if ans2
+ * 			'3' if ans3
+ * 			'4' if ans4
+ * 
+ */
+uint8_t  WaspWIFI::sendCommand(	char* command, 
+								char* ans1, 
+								char* ans2, 
+								char* ans3, 
+								char* ans4, 
+								uint32_t timeout)
+{
+	// index counter
+	uint8_t i = 0;
+  	
+	// clear uart buffer before sending command
+	serialFlush(_uartWIFI); 	
+	
+	/// 1. print command
+	printString( command, _uartWIFI ); 
+	
+	/// 2. read answer	
+	// clear buffer
+	memset( answer, 0x00, sizeof(answer) );
+	uint16_t length = 0;
+	
+	// get actual instant
+	unsigned long previous = millis();
+	
+	// check available data for 'timeout' milliseconds
+    while( (millis() - previous) < timeout )
+    {
+		if( serialAvailable(_uartWIFI) )
+		{
+			if ( i < (sizeof(answer)-1) )
+			{	
+				answer[i++] = serialRead(_uartWIFI);				
+				length++;				
+			}
+		}
+			
+		// Check 'ans1'
+		if( find( (uint8_t*)answer, length, ans1 ) == true )
+		{				
+			return 1;
+		}
+		
+		// Check 'ans2'
+		if( ans2 != NULL )
+		{
+			if( find( (uint8_t*)answer, length, ans2 ) == true )
+			{		
+				return 2;
+			}
+		}
+		
+		// Check 'ans3'
+		if( ans3 != NULL )
+		{
+			if( find( (uint8_t*)answer, length, ans3 ) == true )
+			{		
+				return 3;
+			}
+		}
+		
+		// Check 'ans4'
+		if( ans4 != NULL )
+		{
+			if( find( (uint8_t*)answer, length, ans4 ) == true )
+			{		
+				return 4;
+			}
+		}	
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < previous) previous = millis();
+	}
+		
+	// timeout
+	return 0; 
+	
+}
+
+
+/*
+ * 
+ * name: find
+ * @param	uint8_t* buffer: pointer to buffer to be scanned
+ * @param	uint16_t length: actual length of buffer
+ * @param	char* pattern: pattern to find
+ * @return 	'0' not found, 
+ * 			'1' pattern found
+ * 
+ */
+bool WaspWIFI::find( uint8_t* buffer, uint16_t length, char* pattern)
+{
+	int result;
+	
+	if( length >= strlen(pattern) )
+	{		
+		for(uint16_t i = 0; i <= length-strlen(pattern); i++)
+		{
+			result = memcmp( &buffer[i], pattern, strlen(pattern) );
+			
+			if( result == 0 )
+			{
+				return true;
+			}
+		}
+	}
+	
+	return false;
 }
 
 
@@ -1754,7 +1882,7 @@ uint8_t WaspWIFI::getFile(	char* filename,
 	int maxBuffer=256;
 	int i=0;
 	int readRet=0;
-	unsigned long int previous;
+	unsigned long previous;
 	bool stop, end, timeout;
 	unsigned long total=0;
 		
@@ -1877,426 +2005,385 @@ uint8_t WaspWIFI::getFile(	char* filename,
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[49])));
 	snprintf(question, sizeof(question), "%s%s\r", buffer, remote_folder);
 	
-	if (sendCommand(question)==1)
-	{			
-		// Sends the command that gets the file.
-		// Copy "ftp g "
-		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[50])));
-		snprintf(question, sizeof(question), "%s%s\r", buffer, filename);		
-		serialFlush(_uartWIFI);
-			
+	if( sendCommand(question) !=1 )
+	{
 		#ifdef DEBUG_WIFI
-		USB.println(question);
-		beginSerial(baud_rate,_uartWIFI);
-		delay(100); 
+		USB.println(F("Error: setting FTP server directory"));  
 		#endif
-		
-		serialFlush(_uartWIFI);
-		printString(question,_uartWIFI);
-		
-		// Waits an answer over the uart. OPEN indicates success
-		plong=strlen(question);		
-		plong=plong+30;		
-		if(!waitForData(plong))
-		{
-			#ifdef DEBUG_WIFI
-			USB.println(F("TIMEOUT")); 
-			#endif
-			SD.OFF();
-			baud_rate=WIFI_BAUDRATE;
-			ON(_uartWIFI);
-			return 0;
-		}		
-
-		i=0;
-		answer[i]='\0';
-		
-		char buffer1[20];
-		char buffer2[20];
-		char buffer3[20];
-		char buffer4[20];
-
-		// Copy "timeout\0"
-		strcpy_P(buffer1, (char*)pgm_read_word(&(table_WIFI[51])));
-		// Copy "*CLOS*"
-		strcpy(buffer2, CLOS_pattern);
-		// Copy "ERR\0"
-		strcpy_P(buffer3, (char*)pgm_read_word(&(table_WIFI[1])));
-		// Copy "OPEN\0"
-		strcpy_P(buffer4, (char*)pgm_read_word(&(table_WIFI[53])));
-		
-		// set previous time
-		previous=millis();
+		return 0; 
+	}			
 	
-		/// OPEN
+	
+	// Sends the command that gets the file.
+	// Copy "ftp g "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[50])));
+	snprintf(question, sizeof(question), "%s%s\r", buffer, filename);		
+	serialFlush(_uartWIFI);
 		
-		// Checks the answer (Until "timeout\0", "*CLOS*", "ERR\0" or "OPEN\0")
-		while(!( contains( answer, buffer1)	||
-				 contains( answer, buffer2)	||
-				 contains( answer, buffer3)	||
-				 contains( answer, buffer4)   ) )
-		{ 	
-			stop=false;
-			while( serialAvailable(_uartWIFI) && !stop )
-			{
-				if( i < maxBuffer-1 )
-				{
-					answer[i]=serialRead(_uartWIFI);
-					if(answer[i]=='\0')
-					{
-						stop=true;
-					}
-					i++;
-				}
-				else
-				{
-					stop=true;
-				}
-				// necessary delay so as to read the whole first sentence
-				delay(10);					
+	#ifdef DEBUG_WIFI
+	USB.println(question);
+	beginSerial(baud_rate,_uartWIFI);
+	delay(100); 
+	#endif	
+
+	// clear buffer
+	memset(answer, 0x00, sizeof(answer));		
+	
+	// Copy strings from Flash memory
+	char str_timeout[20];
+	char str_close[20];
+	char str_error[20];
+	char str_open[20];		
+	char ftp_error_answer[20];
+	
+	// Copy "timeout\0"
+	strcpy_P(str_timeout, (char*)pgm_read_word(&(table_WIFI[51])));
+	// Copy "*CLOS*"
+	strcpy(str_close, CLOS_pattern);
+	// Copy "ERR\0"
+	strcpy_P(str_error, (char*)pgm_read_word(&(table_WIFI[1])));
+	// Copy "*OPEN*"
+	strcpy_P( str_open, (char*)pgm_read_word(&(table_WIFI[5])));
+	// Copy "FTP ERR"
+	strcpy_P( ftp_error_answer, (char*)pgm_read_word(&(table_WIFI[106])));	
+	
+	
+	////////////////////////////////////////////////////////////////////////
+	// OPEN
+	////////////////////////////////////////////////////////////////////////
+	
+	// Send FTP GET commmand waiting for different answers:
+	//	OK:"*OPEN*"
+	//	ERROR: "timeout\0"
+	//	ERROR:"*CLOS*"
+	//	ERROR:"ERR\0"
+	uint8_t result = sendCommand(question, 
+									str_open, 
+									str_timeout, 
+									str_close, 
+									str_error, 
+									FTP_TIMEOUT );
+	
+	if( result == 0 )
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("FTP_TIMEOUT2"));
+		#endif	
+		baud_rate=WIFI_BAUDRATE;
+		ON(_uartWIFI);
+		return 0;
+	}
+	
+	if( result == 2 )
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("timeout pattern"));
+		#endif	
+		baud_rate=WIFI_BAUDRATE;
+		ON(_uartWIFI);
+		return 0;			
+	}
+	
+	if( result == 3 )
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("close pattern"));
+		#endif	
+		baud_rate=WIFI_BAUDRATE;
+		ON(_uartWIFI);
+		return 0;			
+	}
+	
+	if( result == 4 )
+	{
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR pattern"));
+		#endif	
+		baud_rate=WIFI_BAUDRATE;
+		ON(_uartWIFI);
+		return 0;			
+	}
+	
+			
+	////////////////////////////////////////////////////////////////////////////
+	// RECEPTION OF FILE			
+	////////////////////////////////////////////////////////////////////////////
+	if( result != 1 )
+	{
+		// *OPEN* pattern NOT found 
+		return 0;
+	}	
+	
+	// In this point of the function:
+	// *OPEN* pattern has been found 
+	// The rest of the file is currently being 
+	// written via UART from the WiFi module	
+	
+	// If there is no problem *OPEN* should appear 
+	// but no "FTP ERR" should be received
+	if( find( (uint8_t*)answer, sizeof(answer), ftp_error_answer ) == false)
+	{		
+		// set index in answer to the beginning
+		i=0;	
+		memset( answer, 0x00, sizeof(answer) );	
+		
+		end = false;
+		timeout = false;
+		previous = millis();
+		
+		/* define the prevention block size which is calculated as the 
+		 * maximum of the strings to be checked while the file is downloaded
+		 * these strings are written by the module to indicate errors, pauses
+		 * or to indicate the finalization of the downloading process
+		 * the strings to be scanned are: "*CLOS*", "timeout=" and "Disconn".
+		 * Thus, the prevention block is not written in the SD file until it 
+		 * has been checked in the next loop			 
+		 *        ______________________________________________________
+		 *       |   |   |   |   |   |        |   |   |   |             |
+		 * 1st:  |   |   |   |   |   |  ..... |   |   |   | PREVENTION  |
+		 *       |___|___|___|___|___|________|___|___|___|_____________|			 
+		 * 
+		 *        ______________________________________________________
+		 *       |               |   |        |   |   |   |             |
+		 * 2nd:  |  PREVENTION   |   |  ..... |   |   |   | PREVENTION  |
+		 *       |_______________|___|________|___|___|___|_____________|
+		 * 
+		 * 
+		 */			
+		const int PREVENTION_BLOCK = strlen(timeout_pattern)-1;	
+		int nBytes;
+		while( !end && !timeout )
+		{						
+			// check "timeout=" pattern
+			if( findPattern( (uint8_t*)answer, timeout_pattern, readRet) != -1 )
+			{									
+				#ifdef DEBUG_WIFI
+				USB.println(F("err pattern3")); 
+				USB.print(F("\nanswer:"));
+				USB.println( (uint8_t*)answer, readRet);
+				#endif		
+				SD.OFF();	
+				baud_rate = WIFI_BAUDRATE;
+				ON(_uartWIFI);
+				return 0;
+			}						
+			
+			// check "Disconn" pattern
+			if( findPattern( (uint8_t*)answer, Disconn_pattern, readRet) != -1 )
+			{									
+				#ifdef DEBUG_WIFI
+				USB.println(F("err pattern2")); 
+				USB.print(F("\nanswer:"));
+				USB.println( (uint8_t*)answer, readRet);
+				#endif	
+				SD.OFF();		
+				baud_rate = WIFI_BAUDRATE;
+				ON(_uartWIFI);
+				return 0;
 			}
 			
-			answer[i]='\0';				
+			// check end of transmission: "*CLOS*" pattern			
+			if( findPattern((uint8_t*)answer,CLOS_pattern,readRet) != -1 )
+			{								
+				#ifdef DEBUG_WIFI
+				USB.println(F("end of file")); 
+				#endif	
+				// substract ending pattern from number of read bytes					
+				readRet = readRet-strlen(CLOS_pattern);
+				end = true;
+			}		
 			
-			if(previous > millis())
+			// calculate number of bytes to be written into file
+			if( (readRet>PREVENTION_BLOCK)&&(end == false) )
 			{
-				previous=millis();
+				// regular writing: Write all except for the prev. block
+				nBytes = readRet-PREVENTION_BLOCK;
+			}				
+			else if( end == true)
+			{
+				// end of file: 'readRet' counter avoids the ending pattern
+				nBytes = readRet;
+			}
+			else
+			{
+				// not enough data and not end of file: Do not write 
+				nBytes = 0;					
+			}	
+			
+			// write data to file if there is something to be written						
+			if( nBytes > 0 )
+			{
+				if( file.write((uint8_t*)answer, nBytes) != nBytes )
+				{
+					#ifdef DEBUG_WIFI
+					USB.println(F("WRITING ERR")); 
+					#endif
+					file.close(); 
+					SD.OFF();
+					baud_rate=WIFI_BAUDRATE;
+					ON(_uartWIFI);
+					return 0;    
+				}	
+			}
+			
+			// check the end of transmission
+			if( end == true )
+			{			
+				#ifdef DEBUG_WIFI
+				USB.println(F("-----> end==true")); 
+				#endif					
+				break;
+			}			
+
+			// Copy 'prevention block' from the end to the beginning of 
+			// 'answer' when received more than PREVENTION_BLOCK bytes
+			if( readRet > PREVENTION_BLOCK )
+			{
+				for(int t = 0; t<PREVENTION_BLOCK; t++)
+				{
+					answer[t] = answer[t+nBytes];
+				}
+				// set offset to the end of the block
+				i = PREVENTION_BLOCK;
+				readRet = PREVENTION_BLOCK;
+			}
+			else
+			{
+				// there are less than PREVENTION_BLOCK bytes to be checked 
+				// in  'answer', so assign 'readRet' to 'i' counter
+				i=readRet;
+			}
+
+			// Read all available data we can store in 'answer'
+			bool escape=false;	
+			if(	serialAvailable(_uartWIFI) > 0 )
+			{
+				while( serialAvailable(_uartWIFI) && !escape )
+				{					
+					// set last previous instant when data was received					
+					previous = millis();
+				
+					// read data
+					if( i<maxBuffer )
+					{
+						answer[i] = serialRead(_uartWIFI);						
+						i++;
+						total++;
+					}
+					else
+					{
+						// buffer completed
+						escape=true;
+					}
+				}
+				// Update counters
+				readRet=i;
+				i=0;	
+			}
+			else if( i>0 )
+			{
+				// no available data but 'i' pending bytes to be kept in 'answer'
+				readRet=i;
+				//i=i;
+			}
+			else
+			{				
+				// Update counters to zero
+				readRet=0;
+				i=0;	
+			}
+			
+			// check the timeout overflow
+			if( millis()< previous )
+			{
+				previous = millis();
 			}
 			
 			if( (millis()-previous)>FTP_TIMEOUT )
 			{
-				#ifdef DEBUG_WIFI
-				USB.println(F("FTP_TIMEOUT2"));
-				#endif	
-				baud_rate=WIFI_BAUDRATE;
-				ON(_uartWIFI);
-				return 0;
+				timeout = true;
 			}	
-			
-		}
+		}			
 		
-		// Store the number of received bytes
-		readRet=i;	
-		
-		
-		/// RECEPTION OF FILE		
-		
-		
-		char ftp_error_answer[20];
-		char str_open[20];
-
-		// Copy strings from Flash memory
-		strcpy_P( ftp_error_answer, (char*)pgm_read_word(&(table_WIFI[106]))); 	// "FTP ERR"
-		strcpy_P( str_open, (char*)pgm_read_word(&(table_WIFI[5]))); 	// "*OPEN*"
-			
-		
-		// If there is no problem *OPEN* should appear 
-		// but no "FTP ERR" should be received
-		if( (contains(answer, buffer4)) && (!contains(answer, ftp_error_answer)) )
-		{	
-			// find starting pattern	
-			char* pointer = strstr((const char*)answer, str_open);	
-			if( pointer != NULL)
-			{
-				i = (int)pointer - (int)answer;
-			}
-			else
-			{		
-				#ifdef DEBUG_WIFI
-				USB.println(F("*OPEN* NOT found!")); 
-				USB.print("answer:");
-				USB.println(answer);
-				USB.println("--------------------");
-				#endif	
-				SD.OFF();
-				baud_rate=WIFI_BAUDRATE;
-				ON(_uartWIFI);	
-				return 0;
-			}
-			
-			// set the index to the beginning of the file and start storing the 
-			// file until the ending pattern appears: *CLOS*
-			i=i+strlen(str_open);
-						
-			// set number of bytes to be checked in 'answer'
-			readRet=readRet-i;	
-						
-			// Copy first bytes to the beginning of 'answer'
-			if(readRet>0)
-			{
-				for(int t = 0; t < readRet; t++)
-				{
-					answer[t]=answer[t+i];
-				}				
-			}
-			
-			// set index in answer to the beginning
-			i=0;		
-			
-			end = false;
-			timeout=false;	
-			/* define the prevention block size which is calculated as the 
-			 * maximum of the strings to be checked while the file is downloaded
-			 * these strings are written by the module to indicate errors, pauses
-			 * or to indicate the finalization of the downloading process
-			 * the strings to be scanned are: "*CLOS*", "timeout=" and "Disconn".
-			 * Thus, the prevention block is not written in the SD file until it 
-			 * has been checked in the next loop			 
-			 *        ______________________________________________________
-			 *       |   |   |   |   |   |        |   |   |   |             |
-			 * 1st:  |   |   |   |   |   |  ..... |   |   |   | PREVENTION  |
-			 *       |___|___|___|___|___|________|___|___|___|_____________|			 
-			 * 
-			 *        ______________________________________________________
-			 *       |               |   |        |   |   |   |             |
-			 * 2nd:  |  PREVENTION   |   |  ..... |   |   |   | PREVENTION  |
-			 *       |_______________|___|________|___|___|___|_____________|
-			 * 
-			 * 
-			 */			
-			const int PREVENTION_BLOCK=strlen(timeout_pattern)-1;	
-			int nBytes;
-			while( !end && !timeout )
-			{						
-				// check "timeout=" pattern
-				if( findPattern((uint8_t*)answer,timeout_pattern,readRet) != -1 )
-				{									
-					#ifdef DEBUG_WIFI
-					USB.println(F("err pattern3")); 
-					USB.print(F("\nanswer:"));
-					for(int q = 0; q<readRet ; q++)
-					{
-						USB.print(answer[q]);
-					}
-					USB.println();
-					#endif		
-					SD.OFF();	
-					baud_rate=WIFI_BAUDRATE;
-					ON(_uartWIFI);
-					return 0;
-				}						
-				
-				// check "Disconn" pattern
-				if( findPattern((uint8_t*)answer,Disconn_pattern,readRet) != -1 )
-				{									
-					#ifdef DEBUG_WIFI
-					USB.println(F("err pattern2")); 
-					USB.print(F("\nanswer:"));
-					for(int q = 0; q<readRet ; q++)
-					{
-						USB.print(answer[q]);
-					}
-					USB.println();
-					#endif	
-					SD.OFF();		
-					baud_rate=WIFI_BAUDRATE;
-					ON(_uartWIFI);
-					return 0;
-				}
-				
-				// check end of transmission: "*CLOS*" pattern
-				//if( findPattern((uint8_t*)answer,"*CLOS*",readRet) != -1 )				
-				if( findPattern((uint8_t*)answer,CLOS_pattern,readRet) != -1 )
-				{								
-					#ifdef DEBUG_WIFI
-					USB.println(F("end of file")); 
-					#endif	
-					//readRet=readRet-strlen("*CLOS*");
-					readRet=readRet-strlen(CLOS_pattern);
-					end=true;
-				}		
-				
-				// calculate number of bytes to be written into file
-				if( (readRet>PREVENTION_BLOCK)&&(end == false) )
-				{
-					// regular writing: Write all except for the prev. block
-					nBytes=readRet-PREVENTION_BLOCK;
-				}				
-				else if( end == true)
-				{
-					// end of file: 'readRet' counter avoids the ending pattern
-					nBytes=readRet;
-				}
-				else
-				{
-					// not enough data and not end of file: Do not write 
-					nBytes=0;					
-				}	
-				
-				// write data to file if there is something to be written						
-				if( nBytes > 0 )
-				{
-					if( file.write((uint8_t*)answer, nBytes) != nBytes )
-					{
-						#ifdef DEBUG_WIFI
-						USB.println(F("WRITING ERR")); 
-						#endif
-						file.close(); 
-						SD.OFF();
-						baud_rate=WIFI_BAUDRATE;
-						ON(_uartWIFI);
-						return 0;    
-					}	
-				}
-				
-				// check the end of transmission
-				if(end==true)
-				{			
-					#ifdef DEBUG_WIFI
-					USB.println(F("-----> end==true")); 
-					#endif
-					break;
-				}				
-
-				// Copy 'prevention block' from the end to the beginning of 
-				// 'answer' when received more than PREVENTION_BLOCK bytes
-				if(readRet>PREVENTION_BLOCK)
-				{
-					for(int t = 0; t<PREVENTION_BLOCK; t++)
-					{
-						answer[t]=answer[t+nBytes];
-					}
-					// set offset to the end of the block
-					i=PREVENTION_BLOCK;
-					readRet=PREVENTION_BLOCK;
-				}
-				else
-				{
-					// there are less than PREVENTION_BLOCK bytes to be checked 
-					// in  'answer', so assign 'readRet' to 'i' counter
-					i=readRet;
-				}
-
-				// Read all available data we can store in 'answer'
-				bool escape=false;	
-				if(	serialAvailable(_uartWIFI) > 0 )
-				{
-					while( serialAvailable(_uartWIFI) && !escape )
-					{					
-						// set last previous instant when data was received					
-						previous=millis();
-					
-						// read data
-						if( i<maxBuffer )
-						{
-							answer[i]=serialRead(_uartWIFI);
-							i++;
-							total++;
-						}
-						else
-						{
-							// buffer completed
-							escape=true;
-						}
-					}
-					// Update counters
-					readRet=i;
-					i=0;	
-				}
-				else if( i>0 )
-				{
-					// no available data but 'i' pending bytes to be kept in 'answer'
-					readRet=i;
-					//i=i;
-				}
-				else
-				{				
-					// Update counters to zero
-					readRet=0;
-					i=0;	
-				}
-				
-				// check the timeout overflow
-				if( millis()< previous )
-				{
-					previous=millis();
-				}
-				
-				if( (millis()-previous)>FTP_TIMEOUT )
-				{
-					timeout=true;
-				}	
-			}			
-			
-			// check timeout
-			if( timeout == true )
-			{			
-				#ifdef DEBUG_WIFI
-				USB.println(F("FTP_TIMEOUT")); 
-				for(uint16_t t = 0; t < sizeof(answer); t++)
-				{
-					USB.printHex(answer[t]);
-				}
-				USB.println();								
-				#endif
-				SD.OFF();	
-				baud_rate=WIFI_BAUDRATE;
-				ON(_uartWIFI);
-				return 0;				
-			}	
-			
-			if( end == false )
-			{	
-				#ifdef DEBUG_WIFI
-				USB.println(F("FALSE END")); 
-				#endif	
-				SD.OFF();	
-				baud_rate=WIFI_BAUDRATE;
-				ON(_uartWIFI);
-				return 0;					
-			}
-			
-			// check if not received bytes but received *CLOS* => false positive
-			//if( total <= strlen("*CLOS*") )
-			if( total <= strlen(CLOS_pattern) )
-			{	
-				#ifdef DEBUG_WIFI
-				USB.println(F("total=0")); 
-				#endif	
-				SD.OFF();	 
-				baud_rate=WIFI_BAUDRATE;
-				ON(_uartWIFI);
-				return 0;					
-			}			
-			
+		// check timeout
+		if( timeout == true )
+		{			
 			#ifdef DEBUG_WIFI
-			USB.println(F("DOWNLOAD OK")); 									
-			// get statistics
-			getStats();	
-			#endif	
-			
-			// CHANGE BAUDRATE TO 115200 bps
-			printString("set uart instant 115200\r",_uartWIFI);
-			delay(100);
-			closeSerial(_uartWIFI);
-			delay(100);
-			baud_rate=WIFI_BAUDRATE;
-			beginSerial(baud_rate,_uartWIFI);
-			delay(100);
-			serialFlush(_uartWIFI);
-			delay(100);
-			SD.OFF();		
-			return 1;
-		}
-		else
-		{
-			// Otherwise means error while 'get ftp' command.
-			#ifdef DEBUG_WIFI
-			USB.println(F("ERR appeared in module response"));
-			USB.print(F("\nanswer:"));
-			for(int q = 0; q<readRet ; q++)
+			USB.println(F("FTP_TIMEOUT")); 
+			for(uint16_t t = 0; t < sizeof(answer); t++)
 			{
-				USB.print(answer[q]);
+				USB.printHex(answer[t]);
 			}
-			USB.println();			
+			USB.println();								
 			#endif
-			SD.OFF();				
+			SD.OFF();	
 			baud_rate=WIFI_BAUDRATE;
 			ON(_uartWIFI);
-			return 0;
+			return 0;				
+		}	
+		
+		if( end == false )
+		{	
+			#ifdef DEBUG_WIFI
+			USB.println(F("FALSE END")); 
+			#endif	
+			SD.OFF();	
+			baud_rate=WIFI_BAUDRATE;
+			ON(_uartWIFI);
+			return 0;					
 		}
 		
+//~ 			// check if not received bytes but received *CLOS* => false positive			
+//~ 			if( total <= strlen(CLOS_pattern) )
+//~ 			{	
+//~ 				#ifdef DEBUG_WIFI
+//~ 				USB.print(F("total="));
+//~ 				USB.println(total);			 
+//~ 				#endif	
+//~ 				SD.OFF();	 
+//~ 				baud_rate=WIFI_BAUDRATE;
+//~ 				ON(_uartWIFI);
+//~ 				return 0;					
+//~ 			}			
+		
+		#ifdef DEBUG_WIFI
+		USB.println(F("DOWNLOAD OK"));
+		USB.print(F("\n\n\n"));		 									
+		// get statistics
+		getStats();	
+		#endif	
+		
+		// CHANGE BAUDRATE TO 115200 bps
+		printString("set uart instant 115200\r",_uartWIFI);
+		delay(100);
+		closeSerial(_uartWIFI);
+		delay(100);
+		baud_rate=WIFI_BAUDRATE;
+		beginSerial(baud_rate,_uartWIFI);
+		delay(100);
+		serialFlush(_uartWIFI);
+		delay(100);
+		SD.OFF();		
+		return 1;
 	}
+	else
+	{
+		// Otherwise means error while 'get ftp' command.
+		#ifdef DEBUG_WIFI
+		USB.println(F("ERR appeared in module response"));
+		USB.print(F("\nanswer:"));
+		for(int q = 0; q<readRet ; q++)
+		{
+			USB.print(answer[q]);
+		}
+		USB.println();			
+		#endif
+		SD.OFF();				
+		baud_rate=WIFI_BAUDRATE;
+		ON(_uartWIFI);
+		return 0;
+	}	
+	
 	
 	#ifdef DEBUG_WIFI
 	USB.println(F("SEND CMD ERR")); 
@@ -4081,6 +4168,7 @@ void WaspWIFI::getStats()
 	delay(500); // at 9600 is slower
 	
 	// get answer
+	memset( answer, 0x00, sizeof(answer) );
 	i=0;
 	while(serialAvailable(_uartWIFI))
 	{
@@ -5040,6 +5128,7 @@ int8_t WaspWIFI::requestOTA()
 
 	// set to zero the buffer 'path'
 	memset(path, 0x00, sizeof(path));
+	memset(answer, 0x00, sizeof(answer));
 	
 	// set SD ON and delete actual OTA_ver_file
 	SD.ON();
@@ -5249,10 +5338,16 @@ int8_t WaspWIFI::requestOTA()
 	{
 		// check if size matches
 		SD.ON();
-		if( SD.getFileSize(aux_name) != aux_size )
+		// get file size
+		int32_t sd_file_size = SD.getFileSize(aux_name);
+		if( sd_file_size != aux_size )
 		{
 			#ifdef DEBUG_WIFI
 			USB.println(F("Size does not match"));
+			USB.print(F("sd_file_size:"));
+			USB.println(sd_file_size);
+			USB.print(F("UPGRADE.TXT size field:"));
+			USB.println(aux_size);			
 			#endif	
 			SD.OFF();
 			return -9;			

@@ -2289,22 +2289,29 @@ uint8_t WaspSX1272::getNodeAddress()
 	#endif
 
 	if( _modem == LORA )
-	{ // LoRa mode
+	{ 
+		// Nothing to read
+		// node address is stored in _nodeAddress attribute		
+		state = 0;
+	}	
+	else
+	{
+		// FSK mode
 		st0 = readRegister(REG_OP_MODE);	// Save the previous status
+		
 		// Allowing access to FSK registers while in LoRa standby mode
 		writeRegister(REG_OP_MODE, LORA_STANDBY_FSK_REGS_MODE);
+
+		// Read node address
+		_nodeAddress = readRegister(REG_NODE_ADRS);		
+		
+		// Getting back to previous status
+		writeRegister(REG_OP_MODE, st0);	
+		
+		// update state
+		state = 0;
 	}
-
-	// Saving node address
-	_nodeAddress = readRegister(REG_NODE_ADRS);
-	state = 1;
-
-	if( _modem == LORA )
-	{
-		writeRegister(REG_OP_MODE, st0);		// Getting back to previous status
-	}
-
-	state = 0;
+	
 	#if (SX1272_debug_mode > 1)
 		USB.print(F("## Node address configured is "));
 		USB.print(_nodeAddress, DEC);
@@ -2335,8 +2342,8 @@ int8_t WaspSX1272::setNodeAddress(uint8_t addr)
 		USB.println(F("Starting 'setNodeAddress'"));
 	#endif
 
-	//if( (addr == 0) | (addr == 1) | (addr > 255) )
-	if( (addr > 255) )
+	// check address value is within valid range
+	if( addr > 255 )
 	{
 		state = -1;
 		#if (SX1272_debug_mode > 1)
@@ -2350,39 +2357,45 @@ int8_t WaspSX1272::setNodeAddress(uint8_t addr)
 		_nodeAddress = addr;
 		st0 = readRegister(REG_OP_MODE);	  // Save the previous status
 
+		// in LoRa mode
+		state = 0;
+
 		if( _modem == LORA )
-		{ // Allowing access to FSK registers while in LoRa standby mode
-			writeRegister(REG_OP_MODE, LORA_STANDBY_FSK_REGS_MODE);
-		}
-		else
-		{ //Set FSK Standby mode to write in registers
-			writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);
-		}
-
-		// Storing node and broadcast address
-		writeRegister(REG_NODE_ADRS, addr);
-		writeRegister(REG_BROADCAST_ADRS, BROADCAST_0);
-
-		value = readRegister(REG_NODE_ADRS);
-		writeRegister(REG_OP_MODE, st0);		// Getting back to previous status
-
-		if( value == _nodeAddress )
-		{
+		{ 
+			// in LoRa mode, address is SW controlled
+			// set status to success
 			state = 0;
-			#if (SX1272_debug_mode > 1)
-				USB.print(F("## Node address "));
-				USB.print(_nodeAddress, DEC);
-				USB.println(F(" has been successfully set ##"));
-				USB.println();
-			#endif
 		}
-		else
-		{
-			state = 1;
-			#if (SX1272_debug_mode > 1)
-				USB.println(F("** There has been an error while setting address ##"));
-				USB.println();
-			#endif
+		else if( _modem == FSK )
+		{ 
+			//Set FSK Standby mode to write in registers
+			writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);		
+
+			// Storing node and broadcast address
+			writeRegister(REG_NODE_ADRS, addr);
+			writeRegister(REG_BROADCAST_ADRS, BROADCAST_0);
+
+			value = readRegister(REG_NODE_ADRS);
+			writeRegister(REG_OP_MODE, st0);		// Getting back to previous status
+
+			if( value == _nodeAddress )
+			{
+				state = 0;
+				#if (SX1272_debug_mode > 1)
+					USB.print(F("## Node address "));
+					USB.print(_nodeAddress, DEC);
+					USB.println(F(" has been successfully set ##"));
+					USB.println();
+				#endif
+			}
+			else
+			{
+				state = 1;
+				#if (SX1272_debug_mode > 1)
+					USB.println(F("** There has been an error while setting address ##"));
+					USB.println();
+				#endif
+			}
 		}
 	}
 	return state;

@@ -609,7 +609,7 @@ uint8_t WaspXBee868::sendXBeePriv(struct packetXBee* packet)
     error_TX=2;
     
     // clear TX variable where the frame is going to be filled
-	memset(TX,0x00,120);
+	memset(TX,0x00,sizeof(TX));
     
     // Create the XBee frame
     TX[0]=0x7E;
@@ -711,14 +711,15 @@ uint8_t WaspXBee868::sendXBeePriv(struct packetXBee* packet)
     // Generate the escaped API frame (it is necessary because AP=2)
     gen_frame_ap2(packet,TX,protegido,tipo);    
     
+    // switch MUX in case SOCKET1 is used
+	if( uart==SOCKET1 )
+	{
+		Utils.setMuxSocket1();
+	}
+	
     // send frame through correspondent UART
 	while(counter<(packet->data_length+tipo+protegido))
-	{	    
-		// switch MUX in case SOCKET1 is used
-		if( uart==SOCKET1 )
-		{
-			Utils.setMuxSocket1();
-		}
+	{	
 		// print byte through correspondent UART
 		printByte(TX[counter], uart); 
 		counter++;

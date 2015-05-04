@@ -168,6 +168,9 @@
 class WaspSensorEvent_v20
 {
 	private:
+	
+	bool _intEnabled;
+	
 
 	//! It reads from the sensirion
   	/*!
