@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -236,6 +236,20 @@ void WaspSPI::setSPISlave(uint8_t SELECTION)
 		digitalWrite(DUST_SENSOR_CS,HIGH);
 	}	
 	
+	if( WaspRegister & REG_WATER )
+	{
+		// Chip Select of the Smart Water ADC 
+		pinMode(DIGITAL4,OUTPUT);
+		digitalWrite(DIGITAL4,HIGH);
+	}
+	
+	if( WaspRegister & REG_WATER_IONS )
+	{
+		// Chip Select of the Smart Water ADC 
+		pinMode(DIGITAL1,OUTPUT);
+		digitalWrite(DIGITAL1,HIGH);
+	}
+	
 	switch(SELECTION)
 	{
 		case SD_SELECT:		 		digitalWrite(SD_SS,LOW);
@@ -250,6 +264,18 @@ void WaspSPI::setSPISlave(uint8_t SELECTION)
 										digitalWrite(DUST_SENSOR_CS,LOW);
 									}
 									break;
+		case SMART_WATER_SELECT:	if( WaspRegister & REG_WATER )
+									{
+										digitalWrite(DIGITAL4,LOW);
+									}
+									break;
+									
+		case SMART_IONS_SELECT:		if( WaspRegister & REG_WATER_IONS )
+									{
+										digitalWrite(DIGITAL1,LOW);
+									}
+									break;							
+									
 		case ALL_DESELECTED:		digitalWrite(SD_SS,HIGH);							 
 									digitalWrite(SOCKET0_SS,HIGH);
 									
@@ -257,6 +283,16 @@ void WaspSPI::setSPISlave(uint8_t SELECTION)
 									{
 										digitalWrite(DUST_SENSOR_CS,HIGH);
 									}	
+									
+									if( WaspRegister & REG_WATER )
+									{
+										digitalWrite(DIGITAL4,HIGH);
+									}
+									
+									if( WaspRegister & REG_WATER_IONS )
+									{
+										digitalWrite(DIGITAL1,HIGH);
+									}
 																		
 									break;
 		default:					break;		

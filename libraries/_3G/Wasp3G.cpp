@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.6
+ *  Version:		1.7
  *  Design:		David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -8185,9 +8185,9 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 			#endif
 			
 			//Waits the answer from the module
-			str_aux1[0] = ACK;
+			str_aux1[0] = XMODEM_ACK;
 			str_aux1[1] = '\0';
-			str_aux2[0] = NAK;
+			str_aux2[0] = XMODEM_NAK;
 			str_aux2[1] = '\0';
 			answer = waitForData(str_aux1, str_aux2, "C", 10000, millis(), 0);
 			
@@ -8231,7 +8231,7 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 		
 		SD.OFF();
 		
-		printByte(EOT, _socket);
+		printByte(XMODEM_EOT, _socket);
 		
 		if (answer != 1)
 		{

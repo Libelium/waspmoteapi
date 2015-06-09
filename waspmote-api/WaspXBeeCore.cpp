@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.7
+ *  Version:		1.8
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -270,6 +270,43 @@ uint8_t WaspXBeeCore::getOwnMacHigh()
    NA_L : Lower byte of Network Address (0x00-0xFF)
    Values: Stores in global "sourceNA[2]" variable the 16b address set by the user
  */
+uint8_t WaspXBeeCore::setOwnNetAddress(char* NA)
+{    
+	uint8_t networkAddress[2];	
+	Utils.str2hex( (char*)NA, (uint8_t*)networkAddress );
+	
+    return setOwnNetAddress( networkAddress[0], networkAddress[1]);
+}
+
+/*
+ Function: Set the 16b network address
+ Returns: Integer that determines if there has been any error 
+   error=2  --> The command has not been executed
+   error=1  --> There has been an error while executing the command
+   error=0  --> The command has been executed with no errors
+   error=-1 --> Forbidden command in this protocol
+ Parameters: 
+   NA_H : Higher byte of Network Address (0x00-0xFF)
+   NA_L : Lower byte of Network Address (0x00-0xFF)
+   Values: Stores in global "sourceNA[2]" variable the 16b address set by the user
+ */
+uint8_t WaspXBeeCore::setOwnNetAddress(uint8_t* NA)
+{    
+    return setOwnNetAddress( NA[0], NA[1] );
+}
+
+/*
+ Function: Set the 16b network address
+ Returns: Integer that determines if there has been any error 
+   error=2  --> The command has not been executed
+   error=1  --> There has been an error while executing the command
+   error=0  --> The command has been executed with no errors
+   error=-1 --> Forbidden command in this protocol
+ Parameters: 
+   NA_H : Higher byte of Network Address (0x00-0xFF)
+   NA_L : Lower byte of Network Address (0x00-0xFF)
+   Values: Stores in global "sourceNA[2]" variable the 16b address set by the user
+ */
 uint8_t WaspXBeeCore::setOwnNetAddress(uint8_t NA_H, uint8_t NA_L)
 {
     int8_t error=2;
@@ -300,7 +337,6 @@ uint8_t WaspXBeeCore::setOwnNetAddress(uint8_t NA_H, uint8_t NA_L)
     }
     return error;
 }
-
 /*
  * Function: Get the 16-bit network address
  * 
@@ -923,7 +959,7 @@ uint8_t WaspXBeeCore::scanNetwork(const char* node)
     uint16_t checksum = 0;   
     int index = 0;
     
-    // ini flag
+    // init flag
     error_AT = 2;
     totalScannedBrothers = 0;
    
@@ -1543,10 +1579,13 @@ uint8_t WaspXBeeCore::getPowerLevel()
 */
 uint8_t WaspXBeeCore::getRSSI()
 {
-    int8_t error=2;
+    int8_t error = 2;
     uint8_t ByteIN[40];
     uint8_t i=0;
     char buffer[20];
+    
+    //clear buffer
+    memset( ByteIN, 0x00, sizeof(ByteIN) );    
 
     if( (protocol == XBEE_802_15_4 ) || (protocol==ZIGBEE) )
     {
@@ -1557,23 +1596,24 @@ uint8_t WaspXBeeCore::getRSSI()
         if(buffer==NULL) return 1;
 
         gen_data(buffer);
-        error=gen_send(buffer);
+        error = gen_send(buffer);
     }
     else if( (protocol== DIGIMESH) || (protocol==XBEE_868) || (protocol==XBEE_900) )
     {
-		delay(2000);
+		delay(200);
+		flush();				
 		printString("+++", uart);
 		delay(2000);
-		serialFlush(uart);
+		flush();	
 		printString("atdb\r\n", uart);
 		delay(1000);
-		error_AT=2;
+		error_AT = 2;
 		while(serialAvailable(uart)>0)
 		{
 			ByteIN[i]=serialRead(uart);
-			error=0;
+			error = 0;
 			i++;
-			error_AT=0;
+			error_AT = 0;
 			if(i>=sizeof(ByteIN)-1)
 			{
 				break;
@@ -1592,12 +1632,13 @@ uint8_t WaspXBeeCore::getRSSI()
 		valueRSSI[0]=Utils.str2hex(ByteIN);
 
     }
-    if(error==0)
+    
+    if( error == 0 )
     {
         if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) )
         {
-            valueRSSI[0]=data[0];
-        }
+            valueRSSI[0] = data[0];
+        }    
     }
     return error;
 }
@@ -1654,6 +1695,9 @@ uint8_t WaspXBeeCore::getSoftVersion()
     {
         softVersion[0]=data[0];
         softVersion[1]=data[1];
+        softVersion[2]=data[2];
+        softVersion[3]=data[3];
+        
     } 
     return error;
 }
@@ -1804,7 +1848,7 @@ uint8_t WaspXBeeCore::setSleepOptions(uint8_t soption)
         
     if( (protocol==ZIGBEE) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) )
     {
-        error_AT=2;
+        error_AT = 2;
 
 		// set_sleep_options_xbee
         strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[41])));
@@ -1812,7 +1856,7 @@ uint8_t WaspXBeeCore::setSleepOptions(uint8_t soption)
 
         gen_data(buffer,soption);
         gen_checksum(buffer);
-        error=gen_send(buffer);
+        error = gen_send(buffer);
     }
     else
     {
@@ -1821,7 +1865,7 @@ uint8_t WaspXBeeCore::setSleepOptions(uint8_t soption)
     }
     if(!error)
     {
-        sleepOptions=soption;
+        sleepOptions = soption;
     }
     return error;
 }
@@ -1846,7 +1890,7 @@ uint8_t WaspXBeeCore::getSleepOptions()
         
     if( (protocol==ZIGBEE) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) )
     {
-        error_AT=2;
+        error_AT = 2;
         gen_data(buffer);
         error=gen_send(buffer);
     }
@@ -1857,7 +1901,7 @@ uint8_t WaspXBeeCore::getSleepOptions()
     }
     if(!error)
     {
-        sleepOptions=data[0]; 
+        sleepOptions = data[0]; 
     }
     return error;
 }
@@ -1998,7 +2042,16 @@ uint8_t WaspXBeeCore::getDestinationAddress(uint8_t* naD)
 			naD[4]=data[0]; 
 			naD[5]=data[1]; 
 			naD[6]=data[2]; 
-			naD[7]=data[3]; 	
+			naD[7]=data[3]; 
+			
+			// check for bad answer
+			if( (naD[4] == 0x00)	
+			||	(naD[5] == 0x00)
+			||	(naD[6] == 0xFF)
+			||	(naD[7] == 0xFF))
+			{
+				return 1;
+			}
 		}	
     }
     return error; 
@@ -2158,7 +2211,8 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
     begin(uart,XBEE_RATE);
 	setMode(XBEE_ON);
 
-    if( protocol== ZIGBEE) delay(500);
+    if( protocol == ZIGBEE) delay(500);
+    else if( protocol == DIGIMESH) delay(500);
     else delay(50);
     error=0;
     XBee_ON=1;
@@ -2352,7 +2406,7 @@ uint8_t WaspXBeeCore::wake()
 uint8_t WaspXBeeCore::sendXBee(struct packetXBee* packet)
 {
     Utils.setMuxSocket0();  
-    uint8_t maxPayload=0;
+    uint16_t maxPayload=0;
     int8_t error=2;
 
 	// set general counter to zero
@@ -2437,7 +2491,7 @@ uint8_t WaspXBeeCore::sendXBee(struct packetXBee* packet)
   
 
 	/// send the prepared packet using the virtual function sendXBeePriv
-	error=sendXBeePriv(packet);
+	error = sendXBeePriv(packet);
 	
 	return error;
 
@@ -3674,7 +3728,7 @@ uint8_t WaspXBeeCore::gen_send(const char* data)
 		printByte(TX[i], uart);	
 	}
 	
-    error_int=parse_message(command);
+    error_int = parse_message(command);
 
     return error_int;
 }
@@ -3722,132 +3776,50 @@ void WaspXBeeCore::gen_frame_ap2(	struct packetXBee* _packet,
 									uint8_t &protect, 
 									uint8_t type	)
 {
-    uint8_t a=1;
-    uint8_t final=0;
-    uint8_t unico=0;
-    uint16_t aux=0;
-    uint16_t aux2=0;
+	// define variables
+    uint16_t index = 1;
+    bool final = false;
+    uint16_t aux = 0;
+    uint16_t aux2 = 0;
 	
-    while(a<(_packet->data_length+type+protect))
+	// Enter while loop until all bytes are done escaping if necessary
+    while( index < ( _packet->data_length + type + protect) )
     {
-        if( (TX_array[a]==17) && (unico==0) )
+        if( ( TX_array[index] == 0x11)
+		||	( TX_array[index] == 0x13)
+		||	( TX_array[index] == 0x7E) 
+		||	( TX_array[index] == 0x7D) )
         {
-            TX_array[a]=49;
+            TX_array[index] =  TX_array[index] + 0x20;
             protect++;
-            aux=TX_array[a];
-            TX_array[a]=125;
-            uint16_t l=a-1;
-            while(final==0)
+            aux = TX_array[index];
+            TX_array[index] = 0x7D;  
+            uint16_t k = index - 1;
+            
+            // after including the escpaing indicator: 0x7D
+            // include the escaped value and copy the rest of the buffer 
+            while( final == false )
             {
-                aux2=TX_array[l+2];
-                TX_array[l+2]=aux;
-                if( ((l+3)>=(_packet->data_length+type+protect)) )
+                aux2 = TX_array[k+2];
+                TX_array[k+2] = aux;
+                if( ( k + 3 ) >= ( _packet->data_length + type + protect ) )
                 {
-                    final=1;
+                    final = true;
                     break;
                 }
-                aux=TX_array[l+3];
-                TX_array[l+3]=aux2;
-                if( ((l+4)>=(_packet->data_length+type+protect)) )
+                aux = TX_array[k+3];
+                TX_array[k+3] = aux2;
+                if( ((k+4)>=(_packet->data_length+type+protect)) )
                 {
-                    final=1;
+                    final = true;
                     break;
                 }
-                l++;
-                l++;
+                k++;
+                k++;
             }
-            final=0;
-            unico=1;
+            final = false;
         }
-        if( (TX_array[a]==19) && (unico==0) )
-        {
-            TX_array[a]=51;
-            protect++;
-            aux=TX_array[a];
-            TX_array[a]=125;
-            uint16_t l=a-1;
-            while(final==0)
-            {
-                aux2=TX_array[l+2];
-                TX_array[l+2]=aux;
-                if( ((l+3)>=(_packet->data_length+type+protect)) )
-                {
-                    final=1;
-                    break;
-                }
-                aux=TX_array[l+3];
-                TX_array[l+3]=aux2;
-                if( ((l+4)>=(_packet->data_length+type+protect)) )
-                {
-                    final=1;
-                    break;
-                }
-                l++;
-                l++;
-            }
-            final=0;  
-            unico=1;      
-        }
-        if( (TX_array[a]==126) && (unico==0) )
-        {
-            TX_array[a]=94;
-            protect++;
-            aux=TX_array[a];
-            TX_array[a]=125;
-            uint16_t l=a-1;
-            while(final==0)
-            {
-                aux2=TX_array[l+2];
-                TX_array[l+2]=aux;
-                if( ((l+3)>=(_packet->data_length+type+protect)) )
-                {
-                    final=1;
-                    break;
-                }
-                aux=TX_array[l+3];
-                TX_array[l+3]=aux2;
-                if( ((l+4)>=(_packet->data_length+type+protect)) )
-                {
-                    final=1;
-                    break;
-                }
-                l++;
-                l++;
-            }
-            final=0;
-            unico=1;      
-        }
-        if( (TX_array[a]==125) && (unico==0) )
-        {
-            TX_array[a]=93;
-            protect++;
-            aux=TX_array[a];
-            TX_array[a]=125;
-            uint16_t l=a-1;
-            while(final==0)
-            {
-                aux2=TX_array[l+2];
-                TX_array[l+2]=aux;
-                if( ((l+3)>=(_packet->data_length+type+protect)) )
-                {
-                    final=1;
-                    break;
-                }
-                aux=TX_array[l+3];
-                TX_array[l+3]=aux2;
-                if( ((l+4)>=(_packet->data_length+type+protect)) )
-                {
-                    final=1;
-                    break;
-                }
-                l++;
-                l++;
-            }
-            final=0;  
-            unico=1;      
-        }
-        a++;
-        unico=0;
+        index++;
     }
 }
 
@@ -3901,8 +3873,8 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
     if( frame[5]==0x45 && 
 		frame[6]==0x44 && 
 		protocol==XBEE_802_15_4 ) 
-	{
-		interval=3000;
+	{		
+		interval = 3000 + (uint32_t)(pow(2,frame[7]))*16*10;
 	}
 	
     // Check if a DN is performed
@@ -3921,6 +3893,12 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
             interval=14000;
         }
     }
+    
+    // Check if a DN is performed
+    if( frame[5]==0x44 && frame[6]==0x42 ) 
+    {
+		interval=500;
+	}
 	
     // get execution time instant
     uint8_t timeout1=0;
@@ -4527,7 +4505,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
     uint8_t status=0;
     uint16_t num_TX=0;
     uint8_t num_esc=0;
-    uint16_t interval=3000;
+    uint16_t interval=2000;
     uint8_t num_mes=0;
     uint16_t i=1;
     uint16_t length_mes=0;
@@ -4953,11 +4931,12 @@ uint8_t WaspXBeeCore::checkChecksum(uint8_t* data_in, uint16_t end, uint16_t sta
 uint8_t WaspXBeeCore::getChecksum(uint8_t* TX)
 {	
 	uint8_t checksum=0;
+	uint16_t length_field = (uint16_t)((TX[1]<<8)&0xFF00) + (uint16_t)(TX[2]&0x00FF);
 	
-    // calculate checksum
-    for( int i=3 ; i < (TX[2]+3);i++) 
+	 // calculate checksum
+    for( uint16_t i=0 ; i < length_field;i++) 
     {
-		checksum=checksum+TX[i];
+		checksum = (checksum + TX[i+3])&0xFF;	
 	}
 	
 	while( checksum > 255 )
@@ -5168,7 +5147,7 @@ uint8_t WaspXBeeCore::new_firmware_received()
 		}
 		
 		/// 868 or 900 Multicast or Unicast with new encryption key setting		
-		if( (packet_finished[pos-1]->data_length==63) && (protocol==XBEE_868 || protocol==XBEE_900) )
+		if( (packet_finished[pos-1]->data_length==63) && (protocol==XBEE_868 || protocol==XBEE_900))
 		{
 			// Copy 'Encryption key' from packet
 			for (it = 0; it < 16;it++) 
@@ -6892,6 +6871,7 @@ void WaspXBeeCore::gen_escaped_frame(	uint8_t* TX,
  * 	timeout : milliseconds to wait until time-out before a packet arrives
  * 
  * Returns: Integer that determines if there has been any error 
+ * 	'7' --> ERROR: Buffer full. not enough memory space
  * 	'6' --> ERROR: Error escaping character within payload bytes
  * 	'5' --> ERROR: Error escaping character in checksum byte
  * 	'4' --> ERROR: Checksum is not correct	
@@ -6907,13 +6887,14 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 	uint16_t start 	= 0;
 	uint16_t end 	= 0;
 	uint16_t length = 0;
+	bool restart = false;
 	bool doneStep1 = false;
 	bool doneStep2 = false;
 	bool doneStep3 = false;
 	bool pendingEscaped = false;
 	uint8_t c;	
 	uint8_t frameType = 0;	
-	uint8_t buffer[150] = {0};	
+	uint8_t buffer[MAX_DATA] = {0};	
 	uint8_t checksum = 0;
 
 	// clear packet structure
@@ -6926,20 +6907,34 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 	// Perform the different steps within a given timeout
 	while( (millis()-previous) < timeout )
 	{		
+		/// check the need to restart from the beginning
+		if( restart == true ) 
+		{
+			restart = false;
+			buffer[0] = 0x7E;
+			i = 1;
+			length = 0;
+			doneStep1 = true;
+			doneStep2 = false;
+			doneStep1 = false;
+			doneStep1 = false;			
+		}		
+		
 		/// STEP 1: search start delimiter 0x7E and drop any other byte
 		if( !doneStep1 )
 		{
 			int nBytes = available();
 			for (int k = 0; k < nBytes; k++)			
 			{
-				c = serialRead(uart);
+				c = serialRead(uart);	
+						
 				if( c == 0x7E )
 				{
 					i = 0;
 					memset( buffer, 0x00, sizeof(buffer) );
-					buffer[i] = c;
+					buffer[i] = c;			
 					i++;
-					doneStep1 = true;
+					doneStep1 = true;					
 					break;
 				}
 				else
@@ -6955,9 +6950,39 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 			if( available() >= 3 )
 			{
 				// get following bytes with frame length and frame type:
-				length += (uint16_t)((serialRead(uart)&0xFF) << 8);
-				length += (uint16_t)(serialRead(uart)&0xFF) ;			
-				frameType = serialRead(uart);		
+				c = serialRead(uart);
+			
+				// check for incoming new message
+				if( c == 0x7E )
+				{
+					restart = true;
+					continue;
+				}
+				
+				// sum to length field
+				length += (uint16_t)((c & 0x00FF) << 8);
+				
+				// read new byte from UART
+				c = serialRead(uart);
+			
+				// check for incoming new message
+				if( c == 0x7E )
+				{
+					restart = true;
+					continue;
+				}		
+				// sum to length field
+				length += (uint16_t)(c & 0x00FF);		
+				
+				// read new byte from UART
+				frameType = serialRead(uart);				
+				
+				// check for incoming new message
+				if( frameType == 0x7E )
+				{
+					restart = true;
+					continue;
+				}
 				
 				// check frame type
 				if( (frameType == 0x80) 
@@ -6971,12 +6996,19 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 					i++;		
 					buffer[i] = frameType;
 					i++;
-					doneStep2 = true;		
+					doneStep2 = true;							
 				}
 				else
 				{
 					// start searching again
 					doneStep1 = false;
+					
+					// init length field
+					length = 0;
+					
+					// clear buffer and index
+					memset( buffer, 0x00, sizeof(buffer) );
+					i = 0;
 				}	
 			}
 		}
@@ -6987,7 +7019,14 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 			int nBytes = available();
 			for (int k = 0; k < nBytes; k++)			
 			{
-				c = serialRead(uart);
+				c = serialRead(uart);		
+							
+				// check for incoming new message
+				if( c == 0x7E )
+				{
+					restart = true;
+					continue;
+				}
 					
 				// check if escaped char
 				if( c == 0x7D )
@@ -6995,10 +7034,15 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 					pendingEscaped = true;	
 					if( available() > 0 )
 					{
-						buffer[i] = serialRead(uart) xor 0x20;			
+						buffer[i] = serialRead(uart) xor 0x20;						
 						i++;
 						k++;
 						pendingEscaped = false;	
+						if( i >= sizeof(buffer) )
+						{
+							// ERROR: Not enough memory space				
+							return 7;
+						}
 					}			
 				}
 				else
@@ -7008,18 +7052,28 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 						buffer[i] = c xor 0x20;	
 						i++;
 						pendingEscaped = false;
+						if( i >= sizeof(buffer) )
+						{
+							// ERROR: Not enough memory space				
+							return 7;
+						}
 					}
 					else
 					{
 						buffer[i] = c;
 						i++;
 						pendingEscaped = false;
+						if( i >= sizeof(buffer) )
+						{
+							// ERROR: Not enough memory space				
+							return 7;
+						}
 					}	
-				}					
+				}	
 				
 				if( i >= (length+3) )
 				{
-					doneStep3 = true;					
+					doneStep3 = true;									
 					_length = i; // not including escaped chars		
 					break;
 				}	
@@ -7031,14 +7085,21 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 		{
 			if( available() )
 			{
-				c = serialRead(uart);
+				c = serialRead(uart);		
+				
+				// check for incoming new message
+				if( c == 0x7E )
+				{
+					restart = true;
+					continue;
+				}
 				
 				// check if escaped char
 				if( c == 0x7D )
 				{				
 					if( available() )
 					{
-						checksum = serialRead(uart) xor 0x20;					
+						checksum = serialRead(uart) xor 0x20;							
 					}
 					else
 					{
@@ -7082,6 +7143,12 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 				
 				// copy payload
 				memcpy( _payload, received->data, _length);
+				
+				// copy source mac address
+				memcpy( _srcMAC, received->macS, sizeof(_srcMAC));		
+
+				// get rssi level
+				_rssi = (int)received->rssi*(-1);		
 			}
 			else if (frameType == 0x81) 
 			{
@@ -7092,6 +7159,12 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 				
 				// copy payload
 				memcpy( _payload, received->data, _length);
+				
+				// copy source Network Address (MY)
+				memcpy( _srcNA, received->naS, sizeof(_srcNA));			
+
+				// get rssi level
+				_rssi = (int)received->rssi*(-1);		
 			}  
 			else if (frameType == 0x90) 
 			{
@@ -7101,7 +7174,10 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 				_length = _length - 15 ;
 				
 				// copy payload
-				memcpy( _payload, received->data, _length);
+				memcpy( _payload, received->data, _length);	
+				
+				// copy source mac address
+				memcpy( _srcMAC, received->macS, sizeof(_srcMAC));	
 			}  
 			else if (frameType == 0x91)
 			{
@@ -7112,6 +7188,9 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 				
 				// copy payload
 				memcpy( _payload, received->data, _length);
+				
+				// copy source mac address
+				memcpy( _srcMAC, received->macS, sizeof(_srcMAC));	
 			}
 			else
 			{
@@ -7322,6 +7401,44 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
  * 	'0' OK
  * 	'1' error
  */
+uint8_t WaspXBeeCore::send( uint8_t* macAddress, char* data )
+{		
+	return send( 	(uint8_t*)macAddress, 
+					(uint8_t*)data, 
+					(uint16_t)strlen(data) );
+}
+
+
+/*
+ * Function: Send a packet from one XBee to another XBee in API mode
+ * This function performs application-level retries.
+ * This function is only used for 64-bit addressing.
+ * 
+ * return:
+ * 	'0' OK
+ * 	'1' error
+ */
+uint8_t WaspXBeeCore::send( uint8_t* macAddress, uint8_t* pointer, uint16_t length )
+{	
+	// define buffer to translate from hex array to string
+	char macAddress_str[20]={};
+	
+	Utils.hex2str( (uint8_t*)macAddress, (char*)macAddress_str, 8);
+	
+	return send( macAddress_str, pointer, length );
+}
+
+
+
+/*
+ * Function: Send a packet from one XBee to another XBee in API mode
+ * This function performs application-level retries.
+ * This function is only used for 64-bit addressing.
+ * 
+ * return:
+ * 	'0' OK
+ * 	'1' error
+ */
 uint8_t WaspXBeeCore::send( char* macAddress, char* data )
 {	
 	return send( macAddress, (uint8_t*)data, (uint16_t)strlen(data) );
@@ -7341,7 +7458,7 @@ uint8_t WaspXBeeCore::send( char* macAddress, uint8_t* pointer, uint16_t length 
 {	
 	// counter for retries
 	uint8_t counter = 0;
-	const uint8_t RETRIES = 3;
+	const uint8_t MAX_RETRIES = _send_retries;
 	
 	// Pointer to an XBee packet structure 
 	packetXBee packet;
@@ -7352,12 +7469,21 @@ uint8_t WaspXBeeCore::send( char* macAddress, uint8_t* pointer, uint16_t length 
 	// Choose transmission mode: UNICAST or BROADCAST
 	packet.mode = UNICAST;
 
-	// Set destination XBee parameters to packet
-	setDestinationParams( &packet, macAddress, pointer, length);
+	if( strlen(macAddress) == 4 )
+	{
+		// XBee802 16-bit addressing
+		// Set destination XBee parameters to packet
+		setDestinationParams( &packet, macAddress, pointer, length, MY_TYPE);
+	}
+	else
+	{
+		// Set destination XBee parameters to packet
+		setDestinationParams( &packet, macAddress, pointer, length);
+	}
 	
 	// Send the packet until reach a successful transmision or reach
 	// the specified number of retries	
-	while( counter <= RETRIES )
+	while( counter <= MAX_RETRIES )
 	{
 		// Send XBee packet
 		sendXBee( &packet );
@@ -7369,10 +7495,10 @@ uint8_t WaspXBeeCore::send( char* macAddress, uint8_t* pointer, uint16_t length 
 			return 0;
 		}
 		else
-		{
+		{			
 			// Error transmitting the packet
-			// wait for random delay
-			delay( (unsigned long)rand()%700LU + 300LU );
+			// wait for a random delay between 100 and 500 ms
+			delay( (unsigned long)rand()%400LU + 100LU);
 		}
 		
 		// increment counter
@@ -7381,6 +7507,29 @@ uint8_t WaspXBeeCore::send( char* macAddress, uint8_t* pointer, uint16_t length 
 	
 	return 1;
 	
+}
+
+
+
+
+/*	
+ * setSendingRetries
+ * 
+ * Set the maximum number of Application-Level packet delivery attempts  
+ * 
+ * Parameters:
+ * 	_send_retries: number of retries ( From 0 to 10)
+*/
+void WaspXBeeCore::setSendingRetries(uint8_t num)
+{
+    if( num > 10 )
+    {
+        _send_retries = 10;
+    }
+    else
+    {
+        _send_retries = num;
+    }   
 }
 
 

@@ -1,7 +1,7 @@
 /*
  *  Library for managing the Bluetooth low energy BLE112
  * 
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -1545,7 +1545,7 @@ uint16_t WaspBLE::setScanningParameters(uint16_t scan_interv, uint16_t scan_win,
 {	
 	uint8_t payload [5];
 	
-	//limit ranges. minimum = 0x20, max = 0x4000
+	//limit ranges. minimum = 0x04, max = 0x4000
 	if(scan_interv < 0x04)
 	{
 		scan_interv = 0x04;
@@ -1554,9 +1554,9 @@ uint16_t WaspBLE::setScanningParameters(uint16_t scan_interv, uint16_t scan_win,
 	{
 		scan_interv = 0x4000;
 	}
-	if(scan_win < 0x40)
+	if(scan_win < 0x04)
 	{
-		scan_win = 0x40;
+		scan_win = 0x04;
 	}
 	else if (scan_win > 0x4000)
 	{

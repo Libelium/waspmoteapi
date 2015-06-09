@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -114,6 +114,12 @@ ensuring sufficient time for data signals to stabilize.
 /*! \def DUST_SENSOR_SELECT
     \brief select Particle sensor on SPI bus
  */
+/*! \def SMART_WATER
+    \brief select Smart Water Sensor Board on SPI bus
+ */
+/*! \def SMART_WATER_IONS
+    \brief select Smart Water Ions Sensor Board on SPI bus
+ */
 /*! \def ALL_DESELECTED
     \brief deselect all devides on SPI bus
  */
@@ -122,6 +128,8 @@ enum spi_selection {
 	SOCKET0_SELECT,
 	SOCKET1_SELECT,
 	DUST_SENSOR_SELECT,
+	SMART_WATER_SELECT,
+	SMART_IONS_SELECT,
 	ALL_DESELECTED,
 };
 

@@ -1,7 +1,7 @@
 /*! \file WaspACC.h
     \brief Library for managing the accelerometer LIS331DLH
     
-    Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
 
@@ -433,6 +433,20 @@ public:
      */ 
     uint8_t accInt;
     
+    //! Variable : Int1 threshold variable 
+    /*! Depending on the full scale selected, the reference value is different:
+     * 		Full scale		Reference mode LSB value (mg)
+     * 			2						16
+     * 			4						31
+     * 			8						63 		
+     */ 
+    uint8_t _int1_ths;
+    
+    //! Variable : Threshold set in mg units
+    /*! 
+     */ 
+    uint16_t _threshold;  
+    
     
     //! It opens I2C bus and powers the accelerometer
     /*!
@@ -623,7 +637,8 @@ public:
     \return 'flag' variable
     \sa unsetFF()
      */
-    uint8_t setFF(void);
+    uint8_t setFF( void );
+    uint8_t setFF( uint16_t ths );
     
     //! It unsets the Free Fall interrupt
     /*!
@@ -640,7 +655,8 @@ public:
     \return 'flag' variable
     \sa unsetIWU()
      */
-    uint8_t setIWU(void);
+    uint8_t setIWU( void );
+    uint8_t setIWU( uint16_t ths );
     
     //! It unsets the Inertial Wake-UP interrupt
     /*!
@@ -760,6 +776,13 @@ public:
     \return the contents of interrupt 1 duration reg
      */
     uint8_t getINT1DURATION();
+    
+	//! It calculates the attribute in order to set the interruption threshold
+    /*!
+    \param uint16_t ths: threshold to set in mg units
+    \return the value set in attribute
+     */
+    uint8_t calculateThreshold( uint16_t ths );
            
 };
 

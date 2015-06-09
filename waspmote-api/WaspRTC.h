@@ -21,7 +21,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	A. Bielsa, D. Cuartielles, M. Yarza, Y. Carmona
 
@@ -457,6 +457,19 @@ class WaspRTC
 	 */
 	unsigned long epoch;
 	
+	//! Variable : It stores the GMT
+    /*!    
+	 */
+	int8_t _gmt;
+		
+	//! Variable : It stores the alarm which generated the last RTC Alarm
+    /*! Possible values are:
+     * 	'1': Alarm1 triggered
+     * 	'2': Alarm2 triggered
+     * 	'3': Both alarms triggered
+	 */
+	uint8_t alarmTriggered;
+	
 
 	// RTC Internal Functions
 	//! It resets the variables used through the library
@@ -606,7 +619,7 @@ class WaspRTC
 	\sa setTime(uint8_t year, uint8_t month, uint8_t date, uint8_t day_week, 
 	uint8_t hour, uint8_t minute, uint8_t second), getTime()
 	 */
-	void setTime(const char* time);
+	uint8_t setTime(const char* time);
 	
 	//! It sets in the RTC the specified date and time
     /*!
@@ -617,10 +630,10 @@ class WaspRTC
 	\param uint8_t hour : the hours to set in the RTC
 	\param uint8_t minute : the minutes to set in the RTC
 	\param uint8_t second : the seconds to set in the RTC
-	\return void
+	\return '0' on succes, '1' otherwise
 	\sa setTime(const char* time), getTime()
 	 */
-	void setTime(	uint8_t year, 
+	uint8_t setTime(	uint8_t year, 
 					uint8_t month,
 					uint8_t date, 
 					uint8_t day_week, 
@@ -794,6 +807,32 @@ class WaspRTC
 	\return void
 	 */	
 	void breakTimeOffset(unsigned long timeInput, timestamp_t *tm);
+	
+	//! It sets the GMT
+    /*! This function set the GMT variable and check if the param given is a 
+     * valid GMT value, if gmt is not a valid value it will save set GMT 0
+	\param 	int8_t gmt: input gmt
+	\return 	uint8_t 1 if not valid GMT, 0 otherwise
+	 */	
+	uint8_t setGMT(int8_t gmt);
+
+	//! It gets GMT value
+    /*! This function get the GMT variable
+	\param 	void
+	\return 	int8_t _gmt
+	 */	
+	int8_t getGMT();
+	
+	//! It gets alarm triggered from the RTC
+    /*! This function gets the two last bit of the RTC status register and 
+     * returns the number of the alarm has been triggered
+	\param 	void
+	\return 	uint8_t 1 if alarm 1 has been triggered
+						2 if alarm 2 has been triggered
+						3 if both alarms have been triggered
+	 */
+	uint8_t getAlarmTriggered();
+	
 };
 
 extern WaspRTC RTC;

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.9
+ *  Version:		1.10
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -343,6 +343,13 @@ void WaspPWR::sleep(uint8_t option)
 	sleep_mode();
 	sleep_disable();
 	
+	if( intFlag & RTC_INT )
+	{
+		RTC.ON();
+		RTC.clearAlarmFlag();
+		RTC.OFF();
+	}
+	
 	//~ switchesON(option);
 }
 
@@ -410,7 +417,13 @@ void WaspPWR::sleep(uint8_t	timer, uint8_t option)
 	setWatchdog(WTD_ON,timer);
 	sleep_mode();
 	sleep_disable();
-	
+		
+	if( intFlag & RTC_INT )
+	{
+		RTC.ON();
+		RTC.clearAlarmFlag();
+		RTC.OFF();
+	}
 	//~ switchesON(option);
 	
 }

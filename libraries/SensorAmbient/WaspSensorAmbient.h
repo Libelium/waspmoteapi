@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova, Javier Siscart
      
@@ -50,7 +50,7 @@
 
 // Pin out definition
 #define SENS_AMBIENT_SENSIRION_PWR		15
-#define SENS_AMBIENT_SENSIRION_DATA	17
+#define SENS_AMBIENT_SENSIRION_DATA		17
 #define SENS_AMBIENT_LDR_OUT			ANALOG6
 #define SENS_AMBIENT_SENSIRION_CLK		DIGITAL2
 #define SENS_AMBIENT_LDR_PWR			DIGITAL4

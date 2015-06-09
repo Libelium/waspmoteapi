@@ -1,7 +1,7 @@
 /*! \file Wasp3G.h
     \brief Library for managing the SIM5218 module
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -39,16 +39,16 @@
 //#include <WaspWIFI.h>
 
 //!Module fuses
-#define GSM_FUSE	1		//Call and SMS related funtions and constants
-#define CAMERA_FUSE	0		//Camera related funtions and constants
-#define FTP_FUSE	1		//FTP related funtions and constants
+#define GSM_FUSE	1		//Call and SMS related functions and constants
+#define CAMERA_FUSE	0		//Camera related functions and constants
+#define FTP_FUSE	1		//FTP related functions and constants
 #define MAIL_FUSE	1		//SMTP and POP3 related functions and constants
-#define HTTP_FUSE	1		//HTTP and HTTPS related funtions and constants
-#define GPS_FUSE	1		//GPS related funtions and constants
-#define IP_FUSE		1		//TCP and UDP related funtions and constants
+#define HTTP_FUSE	1		//HTTP and HTTPS related functions and constants
+#define GPS_FUSE	1		//GPS related functions and constants
+#define IP_FUSE		1		//TCP and UDP related functions and constants
 #define TRANSMISSION_FUSE	1
 
-#define OTA_FUSE	1		//TCP and UDP related funtions and constants
+#define OTA_FUSE	1		//TCP and UDP related functions and constants
 
 #define _3G_debug_mode	0
 
@@ -69,12 +69,12 @@
 #define	 _3G_ON	1
 
 /*! \def _3G_FULL
-    \brief Working mode. Full funtionality in this case
+    \brief Working mode. Full functionality in this case
  */
 #define	 _3G_FULL	2
 
 /*! \def _3G_MINIMUM
-    \brief Working mode. Minimum funtionality (RF and SIM are OFF) in this case
+    \brief Working mode. Minimum functionality (RF and SIM are OFF) in this case
  */
 #define	 _3G_MINIMUM	3
 
@@ -207,11 +207,11 @@
 #define ERROR		"ERROR"
 
 //Xmodem constants
-#define ACK		0x06
-#define NAK		0x15
-#define SOH		0x01
-#define EOT		0x04
-#define CAN		0x18
+#define XMODEM_ACK		0x06
+#define XMODEM_NAK		0x15
+#define XMODEM_SOH		0x01
+#define XMODEM_EOT		0x04
+#define XMODEM_CAN		0x18
 
 
 

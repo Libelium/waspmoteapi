@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -91,11 +91,9 @@ void WaspXBee900::init(	uint8_t uart_used )
 	scanTime[1]=SCAN_TIME_DIGIMESH_L;
 	encryptMode=ENCRYPT_MODE_DIGIMESH;
 	timeRSSI=TIME_RSSI_DIGIMESH;
-
-	nextIndex1=0;
+	
 	frameNext=0;
-	replacementPolicy=XBEE_OUT;
-	indexNotModified=1;
+	replacementPolicy=XBEE_OUT;	
 	error_AT=2;
 	error_RX=2;
 	error_TX=2;

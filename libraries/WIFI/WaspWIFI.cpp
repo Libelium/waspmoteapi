@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.9
+ *  Version:		1.10
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -144,6 +144,7 @@ const char reboot_answer[]			PROGMEM	= "*Reboot*";			// 103
 const char aok_answer[]				PROGMEM	= "AOK";				// 104
 const char exit_answer[]			PROGMEM	= "EXIT";				// 105	
 const char ftp_error_answer[]		PROGMEM	= "FTP ERR";			// 106
+const char str_get_time_unix[]		PROGMEM	= "show t t\r";			// 107
 
 
 
@@ -258,6 +259,7 @@ const char* const table_WIFI[] PROGMEM=
 	aok_answer,				// 104
 	exit_answer,			// 105
 	ftp_error_answer,		// 106
+	str_get_time_unix,			// 107
 };
 
 
@@ -5371,6 +5373,107 @@ int8_t WaspWIFI::requestOTA()
 	return 0;
 }
 
+//! Set RTC date taken from WiFi module
+uint8_t WaspWIFI::setRTCfromWiFi()
+{
+	
+	char question[20];
+	uint16_t i=0;
+	uint32_t timelong;
+	timestamp_t date;
+	
+	
+	// Check if module did set the time
+	// If it fails 3 times will return error
+	uint8_t retries = 3;
+	while (retries > 0)
+	{
+		synchronizeTime();
+		// Wait for 100 ms so module set the time
+		delay(100);
+		
+		// Copy "show t t\r"
+		strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[107])));
+
+		// Sends the command.
+		serialFlush(_uartWIFI);
+		
+		printString(question,_uartWIFI);
+		
+		// Waits an answer.
+		i=strlen(question);
+		i=i+5;
+		
+		// Waits an answer from the UART
+		if(!waitForData(i))
+		{		
+			return 1;
+		}
+		i=0;
+		while(serialAvailable(_uartWIFI))
+		{
+			if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
+			{
+				i++;
+			}
+			delay(10);
+		}
+		answer[i]='\0'; 
+		retries--;
+		// Check if module did set the time
+		if ( findPattern((uint8_t*)answer, "NOT SET",i) == -1 )
+		{
+			retries = 0;
+		}
+		else if ((findPattern((uint8_t*)answer, "NOT SET",i)!=-1) && retries == 0)
+		{
+			return 1;
+		}
+	}
+	
+	// seek start of info in 'answer'
+	char* start = strstr(answer,"RTC");
+	char* end = strchr(start,'\r');
+	if( start!=NULL && end!=NULL )
+	{
+		start=strchr(start,'=');
+		
+		if (start!=NULL)
+		{
+			// calculate length
+			start ++;
+			uint8_t len = 0;
+			len = end-start;
+			
+			// check if epoch time will fix in time
+			char time[11];
+			if( len > sizeof(time)-1 )
+			{
+				return 1;
+			}
+			
+			// save epoch time in timelong
+			memset(time,'\0',sizeof(time));
+			memcpy(time,start,len);
+			sscanf(time,"%lu",&timelong);
+			int32_t aux = 3600*(int32_t)RTC.getGMT();
+			timelong += aux;
+
+			// set new time based on server WIFI epoch time
+			RTC.breakTimeAbsolute(timelong, &date);	
+			RTC.ON();
+			RTC.setTime(date.year,
+						date.month,
+						date.date,
+						date.day,
+						date.hour,
+						date.minute,
+						date.second);
+			return 0;
+		}
+	}
+	return 1;
+}
 
 // Preinstantiate Objects /////////////////////////////////////////////////////
 

@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.6
+ *  Version:		1.7
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -53,6 +53,7 @@ const char rtc_string_15[] 	PROGMEM = 	"[Minutes] -> ";
 const char rtc_string_16[] 	PROGMEM = 	"Once per minute";	
 const char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";
 const char rtc_string_18[] 	PROGMEM = 	"error";	
+const char rtc_string_19[]	PROGMEM =	"%02u%c%02u%c%02u%c%02u%c%02u%c%02u%c%02u";
 
 
 const char* const table_RTC[] PROGMEM = 	  
@@ -76,6 +77,7 @@ const char* const table_RTC[] PROGMEM =
 	rtc_string_16,		// 16
 	rtc_string_17,		// 17
 	rtc_string_18,		// 18
+	rtc_string_19,		// 19
 };
 
 
@@ -84,7 +86,8 @@ const char* const table_RTC[] PROGMEM =
 
 WaspRTC::WaspRTC()
 {
-  // nothing to do when constructing
+	// init gmt attribute
+	_gmt = 0;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -786,32 +789,113 @@ int WaspRTC::dow(int y, int m, int d)
  *
  * 'time' must be set in a specify format: YY:MM:DD:dow:hh:mm:ss
  */
-void WaspRTC::setTime(const char* time)
+uint8_t WaspRTC::setTime(const char* time)
 {
-	uint8_t aux=0, aux2=0;
+	uint16_t _year;
+	uint16_t _month;
+	uint16_t _date;
+	uint16_t _dow;
+	uint16_t _hour;
+	uint16_t _minute;
+	uint16_t _second;
+	char dots[7];
+	char aux[40];
 	
-	aux=(uint8_t) time[0] - 48;
-	aux2=(uint8_t) time[1] - 48;
-	year = RTC.BCD2byte(aux, aux2);
-	aux=(uint8_t) time[3] - 48;
-	aux2=(uint8_t) time[4] - 48;
-	month = RTC.BCD2byte(aux, aux2);
-	aux=(uint8_t) time[6] - 48;
-	aux2=(uint8_t) time[7] - 48;
-	date = RTC.BCD2byte(aux, aux2);
-	aux=(uint8_t) time[9] - 48;
-	aux2=(uint8_t) time[10] - 48;
-	day = RTC.BCD2byte(aux, aux2);
-	aux=(uint8_t) time[12] - 48;
-	aux2=(uint8_t) time[13] - 48;
-	hour = RTC.BCD2byte(aux, aux2);
-	aux=(uint8_t) time[15] - 48;
-	aux2=(uint8_t) time[16] - 48;
-	minute = RTC.BCD2byte(aux, aux2);
-	aux=(uint8_t) time[18] - 48;
-	aux2=(uint8_t) time[19] - 48;
-	second = RTC.BCD2byte(aux, aux2);
+	// clear
+	memset( dots, 0x00, sizeof(dots) );
+	
+	// "%02u%c%02u%c%02u%c%02u%c%02u%c%02u%c%02u"
+	strcpy_P(aux, (char*)pgm_read_word(&(table_RTC[19]))); 
+	
+	// Check len
+	if (strlen(time) != 20) return 1;
+	
+	// Split time
+	sscanf (time,aux,	&_year,dots,
+						&_month,dots+1,
+						&_date,dots+2,
+						&_dow,dots+3,
+						&_hour,dots+4,
+						&_minute,dots+5,
+						&_second);
+						
+	//Check time format					
+	char* aux2 = strstr(dots,"::::::");
+	if ( aux2 == NULL)
+	{
+		return 1;
+	}
+
+	// Check date
+	if( _year <= 99 )
+	{
+		year = _year;
+	} 
+	else return 1;
+	
+	if ( _month > 0 && _month <= 12 )
+	{
+		month = _month;
+		
+		// check correct maximum day depending on month
+		if(month==1||month==3||month==5||month==7||month==8||month==10||month==12)
+		{
+			// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
+			if(_date>31) return 1;
+		}
+		else if(month==4||month==6||month==9||month==11)
+		{
+			// 30-Day months: Apr, June, Sep and Nov
+			if( _date>30 ) return 1;
+		}
+		else if(month==2)
+		{
+			// Leap year condition for february
+			if( LEAP_YEAR(year) )
+			{
+				if( _date>29 ) return 1;
+			}
+			else
+			{
+				if( _date>28 ) return 1;
+			}
+		}		
+	}
+	else return 1;
+	
+	if ( _date > 0 && _date <= 31 )
+	{
+		date = _date;
+	}
+	else return 1;
+	
+	if ( _dow > 0 && _dow <= 7 )
+	{
+		day = _dow;
+	}
+	else return 1;
+	
+	if ( _hour <= 23 )
+	{
+		hour = _hour;
+	}
+	else return 1;
+	
+	if ( _minute <= 59 )
+	{
+		minute = _minute;
+	}
+	else return 1;
+	
+	if ( _second <= 59 )
+	{
+		second = _second;
+	}
+	else return 1;
+	
 	writeRTC();
+	
+	return 0;
 }
 
 /* setTime(_year,_month,_date,day_week,_hour,_minute,_second) - sets time and
@@ -824,7 +908,7 @@ void WaspRTC::setTime(const char* time)
  *
  * Each input corresponds to the relayed part of time and date.
  */
-void WaspRTC::setTime(	uint8_t _year, 
+uint8_t WaspRTC::setTime(	uint8_t _year, 
 						uint8_t _month, 
 						uint8_t _date,
 						uint8_t day_week, 
@@ -832,92 +916,77 @@ void WaspRTC::setTime(	uint8_t _year,
 						uint8_t _minute,
 						uint8_t _second	)
 {
-	uint8_t aux=0, aux2=0;
-	if(_year<10)
+
+	if( _year <= 99 )
 	{
-		aux=0;
-		aux2=_year;
-		year = RTC.BCD2byte(aux, aux2);
-	}
-	else 	if(_year>=10)
-			{
-				aux2=_year%10;
-				aux=_year/10;
-				year = RTC.BCD2byte(aux, aux2);
-			}
-	if(_month<10)
+		year = _year;
+	} 
+	else return 1;
+	
+	if ( _month > 0 && _month <= 12 )
 	{
-		aux=0;
-		aux2=_month;
-		month = RTC.BCD2byte(aux, aux2);
-	}
-	else 	if(_month>=10)
+		month = _month;
+		
+		// check correct maximum day depending on month
+		if(month==1||month==3||month==5||month==7||month==8||month==10||month==12)
+		{
+			// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
+			if(_date>31) return 1;
+		}
+		else if(month==4||month==6||month==9||month==11)
+		{
+			// 30-Day months: Apr, June, Sep and Nov
+			if( _date>30 ) return 1;
+		}
+		else if(month==2)
+		{
+			// Leap year condition for february
+			if( LEAP_YEAR(year) )
 			{
-				aux2=_month%10;
-				aux=_month/10;
-				month = RTC.BCD2byte(aux, aux2);
+				if( _date>29 ) return 1;
 			}
-	if(_date<10)
+			else
+			{
+				if( _date>28 ) return 1;
+			}
+		}
+	}
+	else return 1;
+	
+	if ( _date > 0 && _date <= 31 )
 	{
-		aux=0;
-		aux2=_date;
-		date = RTC.BCD2byte(aux, aux2);
+		date = _date;
 	}
-	else 	if(_date>=10)
-			{
-				aux2=_date%10;
-				aux=_date/10;
-				date = RTC.BCD2byte(aux, aux2);
-			}
-	if(day_week<10)
+	else return 1;
+	
+	if ( day_week > 0 && day_week <= 7 )
 	{
-		aux=0;
-		aux2=day_week;
-		day = RTC.BCD2byte(aux, aux2);
+		day = day_week;
 	}
-	else 	if(day_week>=10)
-			{
-				aux2=day_week%10;
-				aux=day_week/10;
-				day = RTC.BCD2byte(aux, aux2);
-			}
-	if(_hour<10)
+	else return 1;
+	
+	if ( _hour <= 23 )
 	{
-		aux=0;
-		aux2=_hour;
-		hour = RTC.BCD2byte(aux, aux2);
+		hour = _hour;
 	}
-	else 	if(_hour>=10)
-			{
-				aux2=_hour%10;
-				aux=_hour/10;
-				hour = RTC.BCD2byte(aux, aux2);
-			}
-	if(_minute<10)
+	else return 1;
+	
+	if ( _minute <= 59 )
 	{
-		aux=0;
-		aux2=_minute;
-		minute = RTC.BCD2byte(aux, aux2);
+		minute = _minute;
 	}
-	else 	if(_minute>=10)
-			{
-				aux2=_minute%10;
-				aux=_minute/10;
-				minute = RTC.BCD2byte(aux, aux2);
-			}
-	if(_second<10)
+	else return 1;
+	
+	if ( _second <= 59 )
 	{
-		aux=0;
-		aux2=_second;
-		second = RTC.BCD2byte(aux, aux2);
+		second = _second;
 	}
-	else 	if(_second>=10)
-			{
-				aux2=_second%10;
-				aux=_second/10;
-				second = RTC.BCD2byte(aux, aux2);
-			}
+	else return 1;
+	
 	writeRTC();
+	
+	return 0;
+	
 }
 
 
@@ -1671,7 +1740,13 @@ char* WaspRTC::getAlarm2()
  */
 void WaspRTC::clearAlarmFlag()
 {
-	// reset the alarm flags in RT
+	// get alarm which triggered last alarm
+	uint8_t trig = getAlarmTriggered();	
+	
+	// if a pending alarm is being generated then update attribute
+	if( trig != 0 ) alarmTriggered = trig;
+	
+	// reset the alarm flags in RTC
 	RTC.registersRTC[RTC_STATUS_ADDRESS] &= B11111100;  
 	RTC.writeRTCregister(RTC_STATUS_ADDRESS);
 }
@@ -1920,6 +1995,61 @@ void WaspRTC::breakTimeOffset(unsigned long timeInput, timestamp_t *tm)
 }
 
 
+/* 
+ * getAlarmTriggered()
+ * 
+ * This function reads registersRTC[RTC_STATUS_ADDRESS] flags and returns which 
+ * alarms have been triggered
+ * 
+ * returns		1 -> alarm1 triggered
+ * 				2 -> alarm2 triggered
+ * 				3 -> both alarms triggered
+ *  
+ */
+uint8_t WaspRTC::getAlarmTriggered()
+{
+	readRTCregister(RTC_STATUS_ADDRESS);
+	return registersRTC[RTC_STATUS_ADDRESS]&B00000011;
+}
+
+
+/* 
+ * setGMT()
+ * 
+ * This function sets GMT to add the offset to the epoch time
+ * 
+ * returns		0 -> correct GMT value
+ * 				1 -> wrong GMT value (set to '0')
+ */
+uint8_t WaspRTC::setGMT(int8_t gmt)
+{
+	if (gmt>-12 && gmt < 14)
+	{
+		_gmt = gmt;
+		return 0;
+	} 
+	else
+	{
+		USB.println("Invalid GMT value");
+		_gmt = 0;
+		return 1;
+	}
+}
+
+/* 
+ * getGMT()
+ * 
+ * This function get GMT value
+ * 
+ * returns		GMT value stored or default
+ */
+int8_t WaspRTC::getGMT()
+{
+	
+	return _gmt;
+	
+}
+
 
 /*******************************************************************************
  * utilities functions
@@ -1981,7 +2111,6 @@ void WaspRTC::detachInt(void)
 	// clear the Alarm signal
 	clearAlarmFlag();
 }
-
 
 // Private Methods /////////////////////////////////////////////////////////////
 

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
@@ -252,6 +252,18 @@ const char	str_OPC_pm2_5[]	PROGMEM = "PM2_5";	// 152
 const char	str_OPC_pm10[]	PROGMEM = "PM10";	// 153
 const char	str_OPC_part[]	PROGMEM = "PART";	// 154
 
+// Smart Water Ions
+const char	str_SWI_CA[]	PROGMEM = "SWICA";	// 155
+const char	str_SWI_FL[]	PROGMEM = "SWIFL";	// 156
+const char	str_SWI_FB[]	PROGMEM = "SWIFB";	// 157
+const char	str_SWI_NO[]	PROGMEM = "SWINO";	// 158
+const char	str_SWI_BR[]	PROGMEM = "SWIBR";	// 159
+const char	str_SWI_CL[]	PROGMEM = "SWICL";	// 160
+const char	str_SWI_CU[]	PROGMEM = "SWICU";	// 161
+const char	str_SWI_IO[]	PROGMEM = "SWIIO";	// 162
+const char	str_SWI_PB[]	PROGMEM = "SWIPB";	// 163
+const char	str_SWI_AG[]	PROGMEM = "SWIAG";	// 164
+const char	str_SWI_PH[]	PROGMEM = "SWIPH";	// 165
 
 
 
@@ -262,10 +274,10 @@ const char	str_OPC_part[]	PROGMEM = "PART";	// 154
  * defined in Flash memory
  ******************************************************************************/
 const char* const SENSOR_TABLE[] PROGMEM= 	  
-{   
+{
 	// Gases
 	str_CO,			// 0	
- 	str_CO2,		// 1
+ 	str_CO2,		// 1	
  	str_O2,			// 2	
  	str_CH4,		// 3	
  	str_LPG,		// 4	
@@ -470,6 +482,19 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_OPC_pm2_5,	// 152
 	str_OPC_pm10,	// 153
 	str_OPC_part,	// 154
+	
+	// Smart Water Ions
+	str_SWI_CA,	// 155
+	str_SWI_FL,	// 156
+	str_SWI_FB,	// 157
+	str_SWI_NO,	// 158
+	str_SWI_BR,	// 159
+	str_SWI_CL,	// 160
+	str_SWI_CU,	// 161
+	str_SWI_IO,	// 162
+	str_SWI_PB,	// 163
+	str_SWI_AG,	// 164
+	str_SWI_PH,	// 165
 };
 
 
@@ -699,6 +724,18 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2,	//str_OPC_pm10	// 153
 	2,	//str_OPC_part	// 154
 	
+	2,	//str_SWI_CA,	// 155
+	2, 	//str_SWI_FL,	// 156
+	2,	//str_SWI_FB,	// 157
+	2,	//str_SWI_NO,	// 158
+	2,	//str_SWI_BR,	// 159
+	2,	//str_SWI_CL,	// 160
+	2,	//str_SWI_CU,	// 161
+	2,	//str_SWI_IO,	// 162
+	2,	//str_SWI_PB,	// 163
+	2,	//str_SWI_AG,	// 164
+	2,	//str_SWI_PH,	// 165
+	
 };
 
 
@@ -921,6 +958,19 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1,	//str_OPC_pm2_5		// 152
 	1,	//str_OPC_pm10		// 153
 	2,	//str_OPC_part		// 154
+	
+	// Smart Water Ions
+	1,	//str_SWI_CA,	// 155
+	1, 	//str_SWI_FL,	// 156
+	1,	//str_SWI_FB,	// 157
+	1,	//str_SWI_NO,	// 158
+	1,	//str_SWI_BR,	// 159
+	1,	//str_SWI_CL,	// 160
+	1,	//str_SWI_CU,	// 161
+	1,	//str_SWI_IO,	// 162
+	1,	//str_SWI_PB,	// 163
+	1,	//str_SWI_AG,	// 164
+	1,	//str_SWI_PH,	// 165
 };
 
 
@@ -1133,7 +1183,7 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	2,	//str_GP_HUM		// 146
 	0,	//str_GP_PRES		// 147	
 	
-		// OPC_N2
+	// OPC_N2
 	2,	//str_OPC_tc		// 148
 	2,	//str_OPC_tf		// 149
 	0,	//str_OPC_p			// 150
@@ -1141,6 +1191,19 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	4,	//str_OPC_pm2_5		// 152
 	4,	//str_OPC_pm10		// 153
 	0,	//str_OPC_part		// 154
+	
+	// Smart Water Ions
+	3,	//str_SWI_CA,	// 155
+	3,	//str_SWI_FL,	// 156
+	3,	//str_SWI_FB,	// 157
+	3,	//str_SWI_NO,	// 158
+	3,	//str_SWI_BR,	// 159
+	3,	//str_SWI_CL,	// 160
+	3,	//str_SWI_CU,	// 161
+	3,	//str_SWI_IO,	// 162
+	3,	//str_SWI_PB,	// 163
+	3,	//str_SWI_AG,	// 164
+	3,	//str_SWI_PH,	// 165
 };
 
 #endif

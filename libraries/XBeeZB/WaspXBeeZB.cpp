@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -168,10 +168,8 @@ void	WaspXBeeZB::init( uint8_t uart_used	)
 	data_length=0;
 	it=0;
 	rxFrameType=0;
-	nextIndex1=0;
 	frameNext=0;
 	replacementPolicy=XBEE_OUT;
-	indexNotModified=1;
 	error_AT=2;
 	error_RX=2;
 	error_TX=2;

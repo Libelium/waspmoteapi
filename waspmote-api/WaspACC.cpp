@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2013 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
@@ -33,6 +33,13 @@ WaspACC::WaspACC()
 {
     // no interruption set at the beginning
     accInt=NO_INT;
+    
+    // init default Full Scale mode to +/- 2G
+    fsSelection = FS_2G;  
+    
+    // init threshold level
+    _int1_ths = INT1_THS_val;
+    _threshold = 448; // 448 mg as default threshold
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -48,7 +55,7 @@ WaspACC::WaspACC()
  */
 void WaspACC::ON(void)
 {	
-	ON(FS_2G);
+	ON(fsSelection);
 }
 
 /*
@@ -564,6 +571,15 @@ uint8_t WaspACC::unSetSleepToWake(void)
  */
 uint8_t WaspACC::setFF(void)
 {
+	// set Free-Fall interruption with the defined threshold margin
+	return setFF( _threshold );
+}
+
+/*
+ * setFF (void) - sets the Free Fall interrupt
+ */
+uint8_t WaspACC::setFF( uint16_t ths )
+{
 	// reboot ACC in order to clean the ACC Interruption 
 	// pin in the it has been locked to '1'
 	boot();
@@ -581,9 +597,9 @@ uint8_t WaspACC::setFF(void)
 	writeRegister(CTRL_REG2,0x00);
 	writeRegister(CTRL_REG3,0x04);		
   
-	// set Free-Fall threshold. Beware of the full scale selection!
-	uint8_t val=INT1_THS_val*2/fsSelection;
-	writeRegister(INT1_THS, val); 		
+	// set Free-Fall threshold
+	uint8_t threshold = calculateThreshold(ths);
+	writeRegister(INT1_THS, threshold); 		
 	 
 	// set minimum event duration	
 	writeRegister(INT1_DURATION, INT1_DURATION_val);	 
@@ -593,8 +609,7 @@ uint8_t WaspACC::setFF(void)
     
     // Free-Fall interruption set
 	accInt=FF_INT;	
-	
-    delay(100);
+
 	// attach the hardware interrupt to the pin
 	enableInterrupts(ACC_INT);
 
@@ -621,10 +636,23 @@ uint8_t WaspACC::unsetFF(void)
 	return flag;
 }
 
+
+
 /*
  * setIWU (void) - sets the Inertial Wake-UP interrupt
  */
 uint8_t WaspACC::setIWU(void)
+{
+	// set Inertial-Wake-Up interruption with a defined threshold margin
+	return setIWU( _threshold );
+}
+
+
+
+/*
+ * setIWU (void) - sets the Inertial Wake-UP interrupt
+ */
+uint8_t WaspACC::setIWU( uint16_t ths )
 {
 	// clear the FF interrupt if active
 	unsetIWU();
@@ -633,9 +661,12 @@ uint8_t WaspACC::setIWU(void)
 	// handle acceleration detection on the X, Y, or Z axis
 	writeRegister(CTRL_REG3,0x00);
   
-	writeRegister(INT1_THS,0x10);  
-	writeRegister(INT1_DURATION,0x00);  
-	writeRegister(INT1_CFG,0x0A); 
+	// setup register for IWU
+	uint8_t threshold = calculateThreshold(ths);
+	writeRegister(INT1_THS, threshold);	// set threshold value
+	writeRegister(INT1_DURATION,0x00);  // set duration value
+	writeRegister(CTRL_REG2, 0x04);		// enable highpass filter
+	writeRegister(INT1_CFG,0x2A);  		// X-Y-Z enabled
 	
 	// attach the hardware interrupt to the pin
 	enableInterrupts(ACC_INT);
@@ -757,6 +788,39 @@ uint8_t WaspACC::unset6DPosition(void)
 }
 
 
+/*
+ * calculateThreshold () - sets the threshold 'ths' specified in mg units
+ * Depending on the full scale mode, different conversions are needed
+ */
+uint8_t WaspACC::calculateThreshold( uint16_t ths )
+{
+	uint16_t aux = ths;
+	
+	switch( fsSelection )
+	{
+		case FS_2G:
+		{
+			aux = aux/16; // 16 mg for each LSB
+			break;
+		}
+		case FS_4G:
+		{
+			aux = aux/31; // 31 mg for each LSB
+			break;
+		}
+		case FS_8G:
+		{
+			aux = aux/63; // 63 mg for each LSB
+			break;
+		}
+		default: return _int1_ths;
+	}
+	
+	_int1_ths = (uint8_t) (aux&0x00FF);
+	_threshold = ths;
+	
+	return _int1_ths;
+}
 
 
 /*******************************************************************************

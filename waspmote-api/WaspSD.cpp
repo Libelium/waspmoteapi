@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.6
+ *  Version:		1.7
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -656,7 +656,7 @@ boolean WaspSD::mkdir(char *filepath)
 		return false;
 	}	
 	
-	// Makes a single directory or a heirarchy of directories.
+	// Makes a single directory or a hierarchy of directories.
 	// A rough equivalent to `mkdir -p`. */
 	return walkPath(filepath, currentDir, callback_makeDirPath, NULL);
 }

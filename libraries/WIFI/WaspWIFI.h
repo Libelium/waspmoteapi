@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.6
+    Version:		1.7
     Design:			David Gascón
     Implementation:	Joaquín Ruiz, Yuri Carmona
 
@@ -1004,6 +1004,14 @@ class WaspWIFI
       have not been received.
     */ 
     int8_t requestOTA();
+    
+    //! Set RTC date taken from WiFi module
+    /*!     
+      \return '1' on succes, '0' otherwise
+    */ 
+    uint8_t setRTCfromWiFi();
+    
+ 
 };
 
 extern WaspWIFI WIFI;

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -115,10 +115,8 @@ void WaspXBee802::init(	uint8_t uart_used	)
 	data_length=0;
 	it=0;		
 	rxFrameType=0;
-	nextIndex1=0;
 	frameNext=0;
-	replacementPolicy=XBEE_OUT;
-	indexNotModified=1;
+	replacementPolicy=XBEE_OUT;	
 	error_AT=2;
 	error_RX=2;
 	error_TX=2;

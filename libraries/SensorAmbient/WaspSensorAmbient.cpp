@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova, Javier Siscart
  * 
@@ -715,7 +715,7 @@ int8_t	WaspSensorAmbient::setSensorMode(uint8_t mode, uint16_t sensor)
  */
 float	WaspSensorAmbient::readValue(uint8_t sensor)
 {
-	uint16_t aux=0;
+	float aux=0;
 	switch( sensor )
 	{
 		case	SENS_AMBIENT_TEMPERATURE	:	aux = readSensirionTemperature();

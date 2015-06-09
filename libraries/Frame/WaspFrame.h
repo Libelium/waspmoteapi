@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.6
+    Version:		1.7
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -530,7 +530,39 @@
 /*! \def SENSOR_OPC_PART
     \brief Particle bin counter measurement type
  */
-
+/*! \def SENSOR_SWI_CA
+    \brief Calcium ion measurement type
+ */
+/*! \def SENSOR_SWI_FL
+    \brief Fluoride ion measurement type
+ */
+/*! \def SENSOR_SWI_BF
+    \brief Tetrafluoroborate ion measurement type
+ */
+/*! \def SENSOR_SWI_NO
+    \brief Nitrates ion measurement type
+ */
+/*! \def SENSOR_SWI_BR
+    \brief Bromide ion measurement type
+ */
+/*! \def SENSOR_SWI_CL
+    \brief Chlorideion measurement type
+ */
+/*! \def SENSOR_SWI_CU
+    \brief Cupric ion measurement type
+ */
+/*! \def SENSOR_SWI_IO
+    \brief Iodide ion measurement type
+ */
+/*! \def SENSOR_SWI_PB
+    \brief Lead ion measurement type
+ */
+/*! \def SENSOR_SWI_AG
+    \brief Silver ion measurement type
+ */
+/*! \def SENSOR_SWI_PH
+    \brief pH (for Smart Water Ions) measurement type
+ */
 
  
 // Gases
@@ -742,6 +774,19 @@
 #define SENSOR_OPC_PM2_5	152
 #define SENSOR_OPC_PM10		153
 #define SENSOR_OPC_PART		154
+
+// Smart Water Ions
+#define SENSOR_SWI_CA	155
+#define SENSOR_SWI_FL	156
+#define SENSOR_SWI_FB	157
+#define SENSOR_SWI_NO	158
+#define SENSOR_SWI_BR	159
+#define SENSOR_SWI_CL	160
+#define SENSOR_SWI_CU	161
+#define SENSOR_SWI_IO	162
+#define SENSOR_SWI_PB	163
+#define SENSOR_SWI_AG	164
+#define SENSOR_SWI_PH	165
 
 
 // define MACROS in order to manage bits inside Bytes

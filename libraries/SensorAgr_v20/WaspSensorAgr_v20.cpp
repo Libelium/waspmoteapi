@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
  */
@@ -1182,12 +1182,18 @@ float WaspSensorAgr_v20::conversion(byte data_input[3], uint8_t type)
 {
 	float pressure = 0;   
 	
-	pressure = (float(readValue) * 3300.0 / 1023.0)/0.6; //sensor output (mV)  
+	//  datasheet: Vout=Vs(0.009*P-0.95) --> P= (Vout+0.4845)/0.0459
+		
+	// sensor output (mV) . Range 200 - 4800mV
+	pressure = ((float(readValue) * 3300.0) / 1023.0) / 0.6;
 	 
-	pressure = (((pressure + 270) / 5000) + 0.095 ) / 0.0088; // kPa
+	// Obtain kPa. 
+	// 0.208 is an offset to fix a 5Kpa deviation. 
+	pressure = ((((pressure/1000)+0.208)+0.4845)/0.0459);
    
 	return(pressure);
 }
+
 
 
 /*	lwsConversion: converts the value read at the analog to digital	converter

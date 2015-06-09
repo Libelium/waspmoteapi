@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Yuri Carmona
 
@@ -72,7 +72,7 @@
 #define EXPLICIT_RX	3 // Explicit RX Indicator --> AO=1
 
 //Different Max Sizes Used in Libraries
-#define MAX_DATA			100
+#define MAX_DATA			300
 #define	MAX_PARSE			300
 #define	MAX_BROTHERS		5
 #define MAX_FINISH_PACKETS	5
@@ -636,7 +636,6 @@ struct rxPacket90_t
 	uint8_t 	start;
 	uint16_t 	length;
 	uint8_t 	frameType;	
-	uint8_t 	frameID;	
 	uint8_t 	macS[8];
 	uint8_t 	reserved[2];
 	uint8_t 	options;
@@ -699,17 +698,20 @@ private:
 	SdFile boot_file;
 
 public:
-	  
-	//! class constructor
-  	/*!
-	  It does nothing
+	
+	//! Class constructor
+	/*! Initializes buffers	 
 	  \param void
 	  \return void
-	 */
-    WaspXBeeCore(){};
+	 */ 
+	WaspXBeeCore()
+	{	
+		// set the default maximum number of retries to '3'
+		_send_retries = 3;
+	};
 	
-	
-	virtual void init(	uint8_t uart_used	);
+	//! It initalizes all necessary variables including its parent's variables
+	virtual void init(	uint8_t uart_used );
 	
 	//! It gets the own lower 32b MAC
   	/*!
@@ -738,7 +740,9 @@ public:
     \param uint8_t NA_L : lower Network Address byte (range [0x00-0xFF])
     \return '0' on success, '1' otherwise
      */
+    uint8_t setOwnNetAddress(uint8_t* NA);
     uint8_t setOwnNetAddress(uint8_t NA_H, uint8_t NA_L);
+    uint8_t setOwnNetAddress(char* NA);
 	   
 	//! It gets the 16b Network Address
   	/*!
@@ -1065,7 +1069,14 @@ public:
     \param uint16_t length  : length of the buffer
     \return '0' on success, '1' error
      */
-	uint8_t send( char* macAddress, uint8_t* pointer, uint16_t length );    
+	uint8_t send( char* macAddress, uint8_t* pointer, uint16_t length ); 
+	
+	//! It sends a packet from one XBee to another XBee in API mode
+	uint8_t send( uint8_t* macAddress, char* data );
+	uint8_t send( uint8_t* macAddress, uint8_t* pointer, uint16_t length );
+	
+	//! It sets the maximum number of application-level retries to be done
+	void setSendingRetries(uint8_t num);
 		
 	//! It treats the data from XBee UART
   	/*!
@@ -1497,7 +1508,7 @@ public:
 	//! Variable : 128b AES Link key
 	/*!    
 	 */
-	char linkKey[16];
+	char linkKey[17];
 	
 	//! Variable : encryption mode (ON/OFF) (0-1)
 	/*!    
@@ -1517,7 +1528,7 @@ public:
 	//! Variable : software Version
 	/*!    
 	 */
-	uint8_t softVersion[2];
+	uint8_t softVersion[4];
 	
 	//! Variable : hardware Version
 	/*!    
@@ -1583,6 +1594,26 @@ public:
   	/*!
 	 */
 	uint16_t 	_length;
+	
+	//! Variable : specifies the source MAC Adddress when a packet is received
+  	/*!
+	 */
+	uint8_t 	_srcMAC[8];
+	
+	//! Variable : specifies the source Network Adddress when a packet is received
+  	/*!
+	 */
+	uint8_t 	_srcNA[2];
+	
+	//! Variable : specifies the RSSI received in the last packet
+  	/*!
+	 */
+	int 	_rssi;
+	
+	//! Variable : specifies the maximum number of retries to be done	
+  	/*! If the sending process fails, up to _send_retries are done
+	 */
+	uint8_t _send_retries;
 
 protected:
 	
@@ -1908,23 +1939,12 @@ protected:
   	/*!
 	 */
 	uint8_t retries_sending;
-	
-	//! Variable : specifies the next index where storing the next received fragment
-  	/*!
-	 */
-	uint8_t nextIndex1;
-	
+		
 	//! Variable : flag to indicate if a frame was truncated
   	/*!
 	 */
 	uint8_t frameNext;
-	
-	//! Variable : flag to indicate if the variable 'nextIndex1' has been 
-	//! modified during the last execution of 'readXBee'
-  	/*!
-	 */
-	uint8_t indexNotModified;
-	
+		
 	//! Variable : specifies if APS encryption is enabled or disabled
   	/*!
 	 */

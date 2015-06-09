@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -42,7 +42,7 @@ const char	bt_string_06[]	PROGMEM = "SET CONTROL CONFIG LIST";   		// 6
 const char	bt_string_07[]	PROGMEM = "CONTROL CONFIG 0000 0101";   	// 7
 const char	bt_string_08[]	PROGMEM = "SET BT POWER 3 3 -2";   			// 8
 const char	bt_string_09[]	PROGMEM = "RESET";   						// 9
-const char	bt_string_10[]	PROGMEM = "Bluegiga";   					// 10
+const char	bt_string_10[]	PROGMEM = "THOR";   						// 10
 const char	bt_string_11[]	PROGMEM = "temp";   						// 11
 const char	bt_string_12[]	PROGMEM = "SET";   							// 12
 const char	bt_string_13[]	PROGMEM = "SET BT NAME %s_";   				// 13
@@ -1257,7 +1257,7 @@ uint8_t WaspBT_Pro::reset()
 	delay(2000);					// Reboot time
 	readCommandAnswer();
 	
-	// copy "Bluegiga" from flash memory	
+	// copy "THOR" from flash memory	
     strcpy_P(aux, (char*)pgm_read_word(&(table_BT[10])));  
 	if (lookForAnswer(commandAnswer,aux))
 	{	// Searches keyword on answer. 

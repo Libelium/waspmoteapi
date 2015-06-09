@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.1
+ *  Version:		2.2
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -3254,7 +3254,7 @@ int8_t	WaspGPRS_Pro_core::setInfoIncomingCall(){
 	return 1;
 }
 
-/* readCall(const char*) - set in 'tlfIN' variable the tlf number of the incoming call
+/* readCall(const char*) - set in 'buffer_GPRS' variable the tlf number of the incoming call
  *
  * This function sets in 'tlfIN' variable the tlf number of the incoming call
  *
@@ -3264,7 +3264,6 @@ int8_t	WaspGPRS_Pro_core::setInfoIncomingCall(){
  *
  * Returns '1' on success and '0' if error
 */
-//uint8_t	WaspGPRS_Pro_core::readCall(const char* data){
 uint8_t	WaspGPRS_Pro_core::readCall(){
 	uint8_t a = 0;
 	unsigned long previous;
@@ -3711,9 +3710,9 @@ uint8_t WaspGPRS_Pro_core::incomingSMS(){
 	
 }
 
-/* readSMS() - set in 'tlfIN' and 'sms' variables the tlf number and text of the incoming SMS
+/* readSMS() - set in 'tlfIN' and 'buffer_GPRS' variables the tlf number and text of the incoming SMS
  *
- * This function sets in 'tlfIN' and 'sms' variables the tlf number and text of the incoming SMS
+ * This function sets in 'tlfIN' and 'buffer_GPRS' variables the tlf number and text of the incoming SMS
  *
  * This function should be executed only inside 'manageIncomingData' function.
  *
