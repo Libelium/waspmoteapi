@@ -82,6 +82,9 @@
 #define	MAC_TYPE	1
 
 //Variable for debugging
+// Do not enable this if you are using uart0 ( socket0 ) for the XBee radio
+// becuase the USB prints are muxed with uart0 so you will miss data. Also
+// be careful using USB prints with anything attached to uart0.
 #define	DEBUG_XBEE	0
 
 // Replacement Policy

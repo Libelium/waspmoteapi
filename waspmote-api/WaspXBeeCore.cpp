@@ -3967,7 +3967,7 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
     i=1;  
     
 	#if DEBUG_XBEE > 1
-	USB.print(F("[debug] RX:"));
+	USB.print(F("[debug] 1 RX:"));
     for(uint16_t i = 0; i < num_data ; i++)
 	{
 		USB.printHex(memory[i]);
@@ -4389,7 +4389,7 @@ uint8_t WaspXBeeCore::txStatusResponse()
     counter3=0;
     
 	#if DEBUG_XBEE > 0
-	USB.print(F("[debug] RX:"));
+	USB.print(F("[debug] 2 RX:"));
     for(uint16_t i = 0; i < num_TX ; i++)
 	{
 		USB.printHex(ByteIN[i]);
@@ -4643,7 +4643,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
     counter3=0;
     
     #if DEBUG_XBEE > 0
-	USB.print(F("[debug] RX:"));
+	USB.print(F("[debug] 3 RX:"));
     for(uint16_t i = 0; i < num_TX ; i++)
 	{
 		USB.printHex(ByteIN[i]);
