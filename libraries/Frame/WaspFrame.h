@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.7
+    Version:		1.8
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -788,6 +788,13 @@
 #define SENSOR_SWI_AG	164
 #define SENSOR_SWI_PH	165
 
+// P&S Smart Water sensors depending on socket (Smart Water)
+#define SENSOR_PH_A		166
+#define SENSOR_PH_B		167
+#define SENSOR_PH_C		168
+#define SENSOR_ORP_A	169
+#define SENSOR_ORP_B	170
+#define SENSOR_ORP_C	171
 
 // define MACROS in order to manage bits inside Bytes
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)

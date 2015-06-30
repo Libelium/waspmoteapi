@@ -1,0 +1,27 @@
+# XBee802 Keywords #
+
+WaspXBee802	KEYWORD2
+init	KEYWORD2
+setRetries	KEYWORD2
+getRetries	KEYWORD2
+setDelaySlots	KEYWORD2
+getDelaySlots	KEYWORD2
+setMacMode	KEYWORD2
+getMacMode	KEYWORD2
+setEnergyThreshold	KEYWORD2
+getEnergyThreshold	KEYWORD2
+getCCAcounter	KEYWORD2
+resetCCAcounter	KEYWORD2
+getACKcounter	KEYWORD2
+resetACKcounter	KEYWORD2
+sendXBeePriv	KEYWORD2
+retries	KEYWORD2
+delaySlots	KEYWORD2
+macMode	KEYWORD2
+energyThreshold	KEYWORD2
+counterCCA	KEYWORD2
+counterACK	KEYWORD2
+_payload	KEYWORD2
+_length	KEYWORD2
+
+xbee802	KEYWORD3

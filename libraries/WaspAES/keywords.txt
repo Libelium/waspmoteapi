@@ -1,0 +1,41 @@
+# AES Keywords #
+
+AES_128	LITERAL1
+AES_192	LITERAL1
+AES_256	LITERAL1
+ECB	LITERAL1
+CBC	LITERAL1
+PKCS5	LITERAL1
+ZEROS	LITERAL1
+
+WaspAES	KEYWORD2
+seedGenerator	KEYWORD2
+printMatrix	KEYWORD2
+printMessage	KEYWORD2
+sizeOfBlocks	KEYWORD2
+encrypt	KEYWORD2
+
+AES	KEYWORD3
+
+#keyschedule#
+
+aes_init	KEYWORD2
+aes128_init	KEYWORD2
+aes192_init	KEYWORD2
+aes256_init	KEYWORD2
+
+#enc#
+aes_encrypt_core	KEYWORD2
+gmix_column	KEYWORD2
+aes256_enc	KEYWORD2
+aes192_enc	KEYWORD2
+aes128_enc	KEYWORD2
+
+#dec#
+
+aes_decrypt_core	KEYWORD2
+gned char gmul	KEYWORD2
+inv_mix_column	KEYWORD2
+aes256_dec	KEYWORD2
+aes192_dec	KEYWORD2
+aes128_dec	KEYWORD2

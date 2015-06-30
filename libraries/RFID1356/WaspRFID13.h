@@ -1,7 +1,7 @@
 /*! \file WaspRFDI.h
 
 	\brief Library for managing the accelerometer LIS3LV02DL
-	Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		1.0
+	Version:		1.1
 	Design:			David Gascón
 	Implementation:	Ahmad Saad, Javier Solobera
 */
@@ -92,6 +92,8 @@
 
 #include <inttypes.h>
 
+	typedef uint8_t ATQ [2]; 
+
 	typedef uint8_t UIdentifier [4]; 
 
 	typedef uint8_t KeyAccess[6]; 
@@ -116,49 +118,56 @@ public:
 	 /*!
 	\param uint8_t socket: The uart por used
 	 \return void  
-	*/ 	void ON(uint8_t socket);
+	*/ 	
+	void ON(uint8_t socket);
 
 	//! Switches OFF the module and closes the UART.
 	 /*!
 	\param void
 	 \return void  
-	*/void OFF(void);  
+	*/
+	void OFF(void);  
 	
 	//!The goal of this command is to detect as many targets (maximum MaxTg) as possible in passive mode. 
 	/*! 	
 	\param uint8_t UID: pointer to UID. A vector where stores the card identifier. 
 	\param uint8_t ATQ: pointer to ATQ. A vector where stores the answer to request.
 	\return Number of targets detected
-	*/	uint8_t init(uint8_t *UID , uint8_t *ATQ);
+	*/	
+	uint8_t init(uint8_t *UID , uint8_t *ATQ);
 
 	//!A block must be authenticated before read and write operations 
 	/*! 	
 	\param  uint8_t blockAddress: The block to be authenticated.
 	\param  uint8_t keyAcces: A vector pointer with the keyAcces needed to autenticate.
 	\return true on success, false otherwise.
-	*/	 uint8_t authenticate(	uint8_t *UID,
-								uint8_t blockAddress,
-								uint8_t *keyAccess); 
+	*/	 
+	uint8_t authenticate(	uint8_t *UID,
+							uint8_t blockAddress,
+							uint8_t *keyAccess); 
 	
 	//!The PN532 sends back the version of the embedded firmware.
 	//! It is needed to launch a simple command to sycnchronize
 	/*!
 	\param void.
 	\return true on success, false otherwise.
-	*/	bool getFirmware(void);   
+	*/	
+	bool getFirmware(void);   
 
 	//!Write 16 bytes in address .
 	/*! 	
 	\param  uint8_t address: the address where write  blockData. 
 	\param  uint8_t blockData: A vector pointer with the information to write.
 	\return true on success, false otherwise.
-	*/ 	uint8_t write(uint8_t address, uint8_t *blockData);
+	*/ 	
+	uint8_t write(uint8_t address, uint8_t *blockData);
  
 	//!Read 16 bytes from  address .
 	/*! 	
 	\param  uint8_t address: the address to read 
 	\return true on success, false otherwise.
-	*/ 	uint8_t read(uint8_t address, uint8_t *data); //!Reading 
+	*/ 	
+	uint8_t read(uint8_t address, uint8_t *data); //!Reading 
 
 	//!Authenticates one card's sector and reads one block.
 	/*! 	
@@ -167,7 +176,8 @@ public:
 	\param  uint8_t _data : a vector where stores the read data
 	\param  uint8_t address: the address to read.
 	\return true on success, false otherwise.
-	*/ uint8_t readWithAuth(uint8_t *UID ,
+	*/ 
+	uint8_t readWithAuth(uint8_t *UID ,
 							uint8_t *keyAccess ,
 							uint8_t *data ,
 							uint8_t address);
@@ -179,16 +189,18 @@ public:
 	\param  uint8_t _data : data to write.
 	\param  uint8_t address: the address where write  _data. 
 	\return true on success, false otherwise.
-	*/ uint8_t writeWithAuth(	uint8_t *UID ,
-								uint8_t *keyAccess ,
-								uint8_t *_data ,
-								uint8_t address);
+	*/ 
+	uint8_t writeWithAuth(	uint8_t *UID ,
+							uint8_t *keyAccess ,
+							uint8_t *_data ,
+							uint8_t address);
 	 
 	//!Writes one card's block and checks that.
 	/*! 
 	\param  uint8_t _data : data to write.
 	\param  uint8_t address: the address where write  _data. 
-	*/	uint8_t writeAndCheck(uint8_t *data,uint8_t address);	
+	*/	
+	uint8_t writeAndCheck(uint8_t *data,uint8_t address);	
 	
 	//!Authenticates one card's sector, writes one block and checks that.
 	/*! 	
@@ -196,51 +208,59 @@ public:
 	\param  uint8_t keyAcces: A vector pointer with the keyAcces needed to autenticate.
 	\param  uint8_t _data : data to write.
 	\param  uint8_t address: the address where write _data. 
-	*/	uint8_t writeAndCheckWithAuth(	uint8_t *UID,
-										uint8_t *keyAccess ,
-										uint8_t *data ,
-										uint8_t address);
+	*/	
+	uint8_t writeAndCheckWithAuth(	uint8_t *UID,
+									uint8_t *keyAccess ,
+									uint8_t *data ,
+									uint8_t address);
 	
 	//!Put the module into Power Down mode in order to save power consumption.
 	/*! 	
 	\return true on success, false otherwise.
-	*/ 	uint8_t powerDown(void);
+	*/ 	
+	uint8_t powerDown(void);
 
 	//!Wake up from power dowm mode.
 	/*! 	
 	\return true on success, false otherwise.
-	*/ 	void wakeUp(void);
+	*/ 	
+	void wakeUp(void);
 
 	//!Print data stored in vectors .
 	/*! 	
 	\param  uint8_t _data: data to print
 	\param  uint8_t length: length of the _data to print.
-	*/	void print(uint8_t *_data, uint8_t length);
+	*/	
+	void print(uint8_t *_data, uint8_t length);
 
 	//!It compares 2 UIDs
 	/*! 	
 	\param  uint8_t UID1
 	\param  uint8_t UID2
-	*/ uint8_t equalUIDs(uint8_t *UID1,uint8_t *UID2);
+	*/ 
+	uint8_t equalUIDs(uint8_t *UID1,uint8_t *UID2);
 	
 	//!Searches one UID inside one group of UIDs
 	/*! 	
 	\param  uint8_t vCards: a vector with several Card identifiers
 	\param  uint8_t UID: the Card identifier to search. 
 	\param  uint8_t nCards: number of Cards. 
-	*/ int searchUID(uint8_t *vCards,uint8_t  *UID,uint8_t nCards);
+	*/ 
+	int searchUID(uint8_t *vCards,uint8_t  *UID,uint8_t nCards);
 
 	//! Convert from a string to a pointer to uint8_t's
 	/*! 	
 	\param  char inp: the string we want to convert 
 	\param  uint8_t outp: the transformed pointer to unit8_t's 
-	*/	int string2vector(char *inp, uint8_t *outp);
+	*/	
+	int string2vector(char *inp, uint8_t *outp);
 	
 	//! Convert from a pointer to uint8_t's to an integer 
 	/*! 	
 	\param  char inp: the pointer to uint8_t's we want to convert
 	\return int : the converted integer.
-	*/	int vector2int(uint8_t *inp);
+	*/	
+	int vector2int(uint8_t *inp);
 	
 	//! Changes both keys and access conditions to one card's sector 
 	/*! 	
@@ -293,7 +313,8 @@ public:
 	/*! 	and then to configure its behavior regarding different cases.
 	\param void.
 	\return true on success, false otherwise.
-	*/   bool  configureSAM(void);  //! Configure the SAM 
+	*/  
+	bool  configureSAM(void);  //! Configure the SAM 
 	
 	//!Send data stored in dataTX
 	/*! 	

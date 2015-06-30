@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.8
+ *  Version:		1.9
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -4830,7 +4830,7 @@ int8_t WaspXBeeCore::rxData(uint8_t* data_in, uint16_t end, uint16_t start)
 void WaspXBeeCore::treatScan()
 {
     uint8_t cont2=0;
-    uint8_t length_NI=data_length-19;
+    uint8_t length_NI=0;
 		
 
     cont2=totalScannedBrothers-1;
@@ -4850,12 +4850,9 @@ void WaspXBeeCore::treatScan()
     scannedBrothers[cont2].SL[1]=data[7];
     scannedBrothers[cont2].SL[2]=data[8];
     scannedBrothers[cont2].SL[3]=data[9];   
-        
+
     // clean NI buffer
-    for(int i=0;i<20;i++)
-    {
-		scannedBrothers[cont2].NI[i]='\0';
-    }
+    memset(scannedBrothers[cont2].NI,0x00,sizeof(scannedBrothers[cont2].NI));
         
 	if(protocol==XBEE_802_15_4)
     {  	      
@@ -4865,34 +4862,41 @@ void WaspXBeeCore::treatScan()
 		// store NI 
 		if (data_length>12)
 		{
-			for(it=0;it<(data_length-12);it++)
+			length_NI = data_length-12;
+			if (length_NI>20)
 			{
-			scannedBrothers[cont2].NI[it]=char(data[it+11]);
-			}
+				length_NI = 20;	
+			}			
+			memcpy(scannedBrothers[cont2].NI, &data[11], length_NI);
 		}
 	}  
     else if( protocol == ZIGBEE 	|| 
 			 protocol == DIGIMESH 	|| 
 			 protocol == XBEE_900 	|| 
 			 protocol == XBEE_868	 )
-    { 
-		for(it=0 ; it<length_NI ; it++)
-        {
-            scannedBrothers[cont2].NI[it]=char(data[it+10]);
-        }   
-		     
-		// in the case the following protocols, store more available information
-		scannedBrothers[cont2].PMY[0]=data[length_NI+11];
-		scannedBrothers[cont2].PMY[1]=data[length_NI+12];
+    {
+		if (data_length>19)
+		{
+			length_NI = data_length-19;
+			if (length_NI>20)
+			{
+				length_NI = 20;	
+			}			
+			memcpy(scannedBrothers[cont2].NI, &data[10], length_NI);
+			
+			// in the case the following protocols, store more available information
+			scannedBrothers[cont2].PMY[0]=data[length_NI+11];
+			scannedBrothers[cont2].PMY[1]=data[length_NI+12];
 
-        scannedBrothers[cont2].DT=data[length_NI+13];
-        scannedBrothers[cont2].ST=data[length_NI+14];
-        
-        scannedBrothers[cont2].PID[0]=data[length_NI+15];
-        scannedBrothers[cont2].PID[1]=data[length_NI+16];
-      
-		scannedBrothers[cont2].MID[0]=data[length_NI+17];
-		scannedBrothers[cont2].MID[1]=data[length_NI+18];   
+			scannedBrothers[cont2].DT=data[length_NI+13];
+			scannedBrothers[cont2].ST=data[length_NI+14];
+			
+			scannedBrothers[cont2].PID[0]=data[length_NI+15];
+			scannedBrothers[cont2].PID[1]=data[length_NI+16];
+		  
+			scannedBrothers[cont2].MID[0]=data[length_NI+17];
+			scannedBrothers[cont2].MID[1]=data[length_NI+18];   
+		}
     }
 }
 

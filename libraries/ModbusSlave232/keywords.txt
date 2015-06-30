@@ -1,0 +1,5 @@
+# ModbusSlave232 keywords #
+
+configure	KEYWORD2
+update	KEYWORD2
+ModbusSlave232	KEYWORD2

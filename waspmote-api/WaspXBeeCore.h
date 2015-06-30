@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.4
+    Version:		1.5
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Yuri Carmona
 
@@ -234,7 +234,7 @@ struct Node
 	//! Structure Variable : Node Identifier
 	/*!    
 	 */
-	char NI[20];
+	char NI[21];
 	
 	//! Structure Variable : Parent 16b Network Address (ZigBee)
 	/*!    

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -92,6 +92,7 @@ Gas::Gas(int socket)
 		sensor_config.calibration[x][1] = 1;
 	}
 	
+	
 	pinMode(DIGITAL3, OUTPUT);
 	pinMode(DIGITAL4, OUTPUT);
 	pinMode(DIGITAL5, OUTPUT);
@@ -104,7 +105,8 @@ Gas::Gas(int socket)
 	pinMode(ANA3, OUTPUT);
 	pinMode(ANA2, OUTPUT);
 	pinMode(ANA1, OUTPUT);
-	
+	pinMode(ANA0, OUTPUT);
+
 	digitalWrite(DIGITAL3, HIGH);
 	digitalWrite(DIGITAL5, HIGH);
 	digitalWrite(DIGITAL7, HIGH);
@@ -116,7 +118,8 @@ Gas::Gas(int socket)
 	digitalWrite(DIGITAL8, LOW);
 	digitalWrite(ANA5, LOW);
 	digitalWrite(ANA3, LOW);
-	digitalWrite(ANA1, LOW);	
+	digitalWrite(ANA1, LOW);
+	digitalWrite(ANA0, LOW);
 	
 	pwrGasPRORegister = 0;
 }
@@ -452,6 +455,9 @@ int8_t Gas::ON()
  */
 int8_t Gas::ON(float R_gain)
 {	
+	int answer = 0;
+	uint8_t mask;
+	
 	#ifndef CALIBRATION_MODE
 	pinMode(ANA0, OUTPUT);
 	digitalWrite(ANA0, HIGH);	
@@ -499,8 +505,22 @@ int8_t Gas::ON(float R_gain)
 			USB.println(sensor_config.calibration[x][1]);
 		}		
 	#endif
+ 	delay(1000);
 	
-	return configureAFE(R_gain);
+	answer = configureAFE(R_gain);	
+	if (answer == 1)
+	{
+		// Set bit in pwrGasPRORegister
+		pwrGasPRORegister |= (1 << sensor_config.socket);
+	}
+	else
+	{
+		// Clear bit in pwrGasPRORegister
+		mask = ~(1 << sensor_config.socket);
+		pwrGasPRORegister &= mask;
+	}
+	
+	return answer;
 
 }
 
@@ -607,7 +627,7 @@ int8_t Gas::configureAFE(float R_gain)
 		}
 		else if (sensor_config.sensor_type == O2_SS)	// Basic gain for O2 sensor
 		{
-			gain_3E = LMP91000_TIAC_REG_REF_R_GAIN_120K;
+			gain_3E = LMP91000_TIAC_REG_REF_R_GAIN_2K75;
 		}
 		else											// Basic gain for others
 		{
@@ -710,13 +730,9 @@ int8_t Gas::configureAFE(float R_gain)
 			
 		case O2_SS:
 			LMP.setTIAConReg(gain_3E, LMP91000_TIAC_REG_REF_R_LOAD_50R);
-		/*	LMP.setRefConReg(	LMP91000_REFC_REG_REF_SOURCE_EXTERNAL_REF,
-								LMP91000_REFC_REG_REF_INT_Z_20,
-								LMP91000_REFC_REG_REF_BIAS_PERC_20,
-								LMP91000_REFC_REG_REF_POLARITY_NEGATIVE);*/
 			LMP.setRefConReg(	LMP91000_REFC_REG_REF_SOURCE_EXTERNAL_REF,
-								LMP91000_REFC_REG_REF_INT_Z_50,
-								LMP91000_REFC_REG_REF_BIAS_PERC_20,
+								LMP91000_REFC_REG_REF_INT_Z_67,
+								LMP91000_REFC_REG_REF_BIAS_PERC_24,
 								LMP91000_REFC_REG_REF_POLARITY_NEGATIVE);
 			break;
 			
@@ -915,7 +931,9 @@ float Gas::getConc(uint8_t resolution, uint8_t electrode)
  * Parameters:	resolution: resolution value for ADC (RES_12_BIT, RES_14_BIT, RES_16_BIT or RES_18_BIT)
  * 				temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
  * 				electrode: electrode to read (WORKING_ELECTRODE or AUXILIARY_ELECTRODE)   
- * Returns: 	The concetration value in ppm / %LEL, -1000 if error.
+ * Returns: 	The concetration value in ppm / %LEL
+ * 				-1 if the sensors is not initializated
+ * 				-1000 if error.
 */
 float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 {
@@ -927,6 +945,14 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 	int r_gain_LMP;
 	
 	float V_ref=0, R_gain;
+	
+	// Before to measure, check if the sensor is properly initializated
+	if ((pwrGasPRORegister & (1 << sensor_config.socket)) == 0)
+	{
+		// If not return -1
+		return -1;		
+	}
+	
 
 	
     //Enable communication with the AFE
@@ -1068,6 +1094,11 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 			conc = (V_conc - V_ref); 						// Vconc(mV) - Vzero(mV)			
 			
 			conc = (conc / R_gain) * 1000;					// V(mV) --> I(uA)
+			
+			if (conc < 0)
+			{
+				conc *= 1;
+			}
 			
 			conc =  ((conc + sensor_config.calibration[r_gain_LMP-1][0]) / (sensor_config.calibration[r_gain_LMP-1][1]));		// Adjust resistor
 						
@@ -1276,11 +1307,6 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 					USB.println(F(" uA"));
 				#endif	
 				//conc *= getSensitivityTempComp(temperature);	// Output current temperature compensation
-										
-				/*if (conc < 0)								// Changes negative currents to positive currents
-				{
-					conc *= -1;
-				}*/
 				
 				conc = (conc * 1000) / sensor_config.m_conc;	// I(uA) --> concentración(ppm)
 				
@@ -1353,11 +1379,6 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 				#endif	
 					
 				conc_aux -= getBaselineTempComp(temperature);			// Baseline temperature compensation
-				/*
-				if (conc_aux < 0)									// Changes negative currents to positive currents
-				{
-					conc_aux *= -1;
-				}*/
 							
 				//conc *= getSensitivityTempComp(temperature);		// Output current temperature compensation
 				
@@ -1379,6 +1400,11 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 			{
 				conc = conc - conc_aux;
 				
+			}
+			
+			if (conc < 0)
+			{
+				conc = 0;
 			}
 							
 			// Disable communication with AFE

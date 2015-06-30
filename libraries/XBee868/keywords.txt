@@ -1,0 +1,36 @@
+# XBee868 Keywords #
+
+WaspXBee868	KEYWORD2
+init	KEYWORD2
+getRFerrors	KEYWORD2
+getGoodPackets	KEYWORD2
+getChannelRSSI	KEYWORD2
+getTransmisionErrors	KEYWORD2
+getTemperature	KEYWORD2
+getSupplyVoltage	KEYWORD2
+getDeviceType	KEYWORD2
+getPayloadBytes	KEYWORD2
+setMultipleBroadcast	KEYWORD2
+getMultipleBroadcast	KEYWORD2
+setMacRetries	KEYWORD2
+getMacRetries	KEYWORD2
+getDutyCycle	KEYWORD2
+getResetReason	KEYWORD2
+getACKerrors	KEYWORD2
+sendXBeePriv	KEYWORD2
+ACKerrors	KEYWORD2
+errorsRF	KEYWORD2
+goodPackets	KEYWORD2
+channelRSSI	KEYWORD2
+transmisionErrors	KEYWORD2
+supplyVoltage	KEYWORD2
+maxPayloadBytes	KEYWORD2
+deviceType	KEYWORD2
+multipleBroadcast	KEYWORD2
+macRetries	KEYWORD2
+dutyCycle	KEYWORD2
+resetReason	KEYWORD2
+_payload	KEYWORD2
+_length	KEYWORD2
+
+xbee868	KEYWORD3

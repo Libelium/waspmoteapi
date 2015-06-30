@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.6
+    Version:		1.7
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
@@ -39,7 +39,7 @@
 /*! \def WASPMOTE_API_VERSION
     \brief Waspmote API version number
  */
-#define WASPMOTE_API_VERSION 14
+#define WASPMOTE_API_VERSION 17
  
  
  

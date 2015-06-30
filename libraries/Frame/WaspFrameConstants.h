@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
@@ -265,7 +265,13 @@ const char	str_SWI_PB[]	PROGMEM = "SWIPB";	// 163
 const char	str_SWI_AG[]	PROGMEM = "SWIAG";	// 164
 const char	str_SWI_PH[]	PROGMEM = "SWIPH";	// 165
 
-
+// P&S Smart Water sensors depending on socket (Smart Water)
+const char	str_PH_A[]		PROGMEM = "PH_A";	//	166
+const char	str_PH_B[]		PROGMEM = "PH_B";	//	167
+const char	str_PH_C[]		PROGMEM = "PH_C";	//	168
+const char	str_ORP_A[]		PROGMEM = "ORP_A";	//	169
+const char	str_ORP_B[]		PROGMEM = "ORP_B";	//	170
+const char	str_ORP_C[]		PROGMEM = "ORP_C";	//	171
 
 /******************************************************************************* 
  * SENSOR_TABLE - Sensor label table
@@ -495,6 +501,15 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_SWI_PB,	// 163
 	str_SWI_AG,	// 164
 	str_SWI_PH,	// 165
+	
+	// P&S Smart Water sensors depending on socket (Smart Water)
+	str_PH_A,	//	166
+	str_PH_B,	//	167
+	str_PH_C,	//	168
+	str_ORP_A,	//	169
+	str_ORP_B,	//	170
+	str_ORP_C,	//	171
+
 };
 
 
@@ -714,8 +729,8 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2,	//str_GP_TF			// 145
 	2,	//str_GP_HUM		// 146
 	2,	//str_GP_PRES		// 147
-	
-	
+
+	// OPCN2 Dust Sensor
 	2,	//str_OPC_tc	// 148
 	2,	//str_OPC_tf	// 149
 	2,	//str_OPC_p		// 150
@@ -724,6 +739,7 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2,	//str_OPC_pm10	// 153
 	2,	//str_OPC_part	// 154
 	
+	// Smart Water Ions
 	2,	//str_SWI_CA,	// 155
 	2, 	//str_SWI_FL,	// 156
 	2,	//str_SWI_FB,	// 157
@@ -735,6 +751,14 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2,	//str_SWI_PB,	// 163
 	2,	//str_SWI_AG,	// 164
 	2,	//str_SWI_PH,	// 165
+	
+	// P&S Smart Water sensors depending on socket (Smart Water)
+	2, // str_PH_A,		// 166
+	2, // str_PH_B,		// 167
+	2, // str_PH_C,		// 168
+	2, // str_ORP_A,	// 169
+	2, // str_ORP_B,	// 170
+	2, // str_ORP_C,	// 171
 	
 };
 
@@ -971,6 +995,14 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1,	//str_SWI_PB,	// 163
 	1,	//str_SWI_AG,	// 164
 	1,	//str_SWI_PH,	// 165
+	
+	// P&S Smart Water sensors depending on socket (Smart Water)
+	1, // str_PH_A,		// 166
+	1, // str_PH_B,		// 167
+	1, // str_PH_C,		// 168
+	1, // str_ORP_A,	// 169
+	1, // str_ORP_B,	// 170
+	1, // str_ORP_C,	// 171
 };
 
 
@@ -1204,6 +1236,14 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3,	//str_SWI_PB,	// 163
 	3,	//str_SWI_AG,	// 164
 	3,	//str_SWI_PH,	// 165
+	
+	// P&S Smart Water sensors depending on socket (Smart Water)
+	2, // str_PH_A,		// 166
+	2, // str_PH_B,		// 167
+	2, // str_PH_C,		// 168
+	3, // str_ORP_A,	// 169
+	3, // str_ORP_B,	// 170
+	3, // str_ORP_C,	// 171
 };
 
 #endif

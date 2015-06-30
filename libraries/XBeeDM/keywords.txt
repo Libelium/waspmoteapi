@@ -1,0 +1,25 @@
+# XBeeDM Keywords #
+
+WaspXBeeDM	KEYWORD2
+init	KEYWORD2
+getGoodPackets	KEYWORD2
+getTransmisionErrors	KEYWORD2
+setNetworkHops	KEYWORD2
+getNetworkHops	KEYWORD2
+setNetworkDelaySlots	KEYWORD2
+getNetworkDelaySlots	KEYWORD2
+setMeshNetworkRetries	KEYWORD2
+getMeshNetworkRetries	KEYWORD2
+setRetries	KEYWORD2
+getRetries	KEYWORD2
+sendXBeePriv	KEYWORD2
+goodPackets	KEYWORD2
+transmisionErrors	KEYWORD2
+networkHops	KEYWORD2
+netDelaySlots	KEYWORD2
+meshNetRetries	KEYWORD2
+retries	KEYWORD2
+_payload	KEYWORD2
+_length	KEYWORD2
+
+xbeeDM	KEYWORD3

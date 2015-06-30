@@ -1,0 +1,28 @@
+# RFID13 keywords #
+
+RFID13	KEYWORD3	RFID13
+UIdentifier	KEYWORD2
+init	KEYWORD2
+searchUID	KEYWORD2
+ATQ	KEYWORD2
+KeyAccess	KEYWORD2
+blockData	KEYWORD2
+authenticate	KEYWORD2
+getFirmware	KEYWORD2
+write	KEYWORD2
+read	KEYWORD2
+readWithAuth	KEYWORD2
+writeWithAuth	KEYWORD2
+writeAndCheck	KEYWORD2
+writeAndCheckWithAuth	KEYWORD2
+powerDown	KEYWORD2
+wakeUp	KEYWORD2
+print	KEYWORD2
+equalUIDs	KEYWORD2
+searchUID	KEYWORD2
+string2vector	KEYWORD2
+vector2int	KEYWORD2
+setKeys	KEYWORD2
+WaspRFID13	KEYWORD2
+
+

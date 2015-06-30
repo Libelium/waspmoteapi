@@ -1,0 +1,25 @@
+# XBee900 Keywords #
+
+WaspXBee900	KEYWORD2
+init	KEYWORD2
+getRFerrors	KEYWORD2
+getGoodPackets	KEYWORD2
+getChannelRSSI	KEYWORD2
+getTransmisionErrors	KEYWORD2
+getTemperature	KEYWORD2
+getSupplyVoltage	KEYWORD2
+restoreCompiled	KEYWORD2
+sendXBeePriv	KEYWORD2
+errorsRF	KEYWORD2
+goodPackets	KEYWORD2
+channelRSSI	KEYWORD2
+transmisionErrors	KEYWORD2
+networkHops	KEYWORD2
+netDelaySlots	KEYWORD2
+netRouteRequest	KEYWORD2
+meshNetRetries	KEYWORD2
+supplyVoltage	KEYWORD2
+_payload	KEYWORD2
+_length	KEYWORD2
+
+xbee900	KEYWORD3

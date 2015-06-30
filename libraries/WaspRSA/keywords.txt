@@ -1,0 +1,55 @@
+# RSA keywords #
+
+WaspRSA	KEYWORD2
+encrypt	KEYWORD2
+printMessage	KEYWORD2
+
+RSA	KEYWORD3
+
+#bignum#
+
+POLARSSL_ERR_MPI_FILE_IO_ERROR	LITERAL1
+POLARSSL_ERR_MPI_BAD_INPUT_DATA	LITERAL1
+POLARSSL_ERR_MPI_INVALID_CHARACTER	LITERAL1
+POLARSSL_ERR_MPI_BUFFER_TOO_SMALL	LITERAL1
+POLARSSL_ERR_MPI_NEGATIVE_VALUE	LITERAL1
+POLARSSL_ERR_MPI_DIVISION_BY_ZERO	LITERAL1
+POLARSSL_ERR_MPI_NOT_ACCEPTABLE	LITERAL1
+
+mpi_free	KEYWORD2
+mpi_grow	KEYWORD2
+mpi_copy	KEYWORD2
+mpi_swap	KEYWORD2
+mpi_lset	KEYWORD2
+mpi_lsb	KEYWORD2
+mpi_msb	KEYWORD2
+mpi_size	KEYWORD2
+mpi_read_string	KEYWORD2
+mpi_write_strin	KEYWORD2
+mpi_read_file	KEYWORD2
+mpi_write_file	KEYWORD2
+mpi_read_binary	KEYWORD2
+mpi_write_binar	KEYWORD2
+mpi_shift_l	KEYWORD2
+mpi_shift_r	KEYWORD2
+mpi_cmp_abs	KEYWORD2
+mpi_cmp_mpi	KEYWORD2
+mpi_cmp_int	KEYWORD2
+mpi_add_abs	KEYWORD2
+mpi_sub_abs	KEYWORD2
+mpi_add_mpi	KEYWORD2
+mpi_sub_mpi	KEYWORD2
+mpi_add_int	KEYWORD2
+mpi_sub_int	KEYWORD2
+mpi_mul_mpi	KEYWORD2
+mpi_mul_int	KEYWORD2
+mpi_div_mpi	KEYWORD2
+mpi_div_int	KEYWORD2
+mpi_mod_mpi	KEYWORD2
+mpi_mod_int	KEYWORD2
+mpi_exp_mod	KEYWORD2
+mpi_gcd	KEYWORD2
+mpi_inv_mod	KEYWORD2
+mpi_is_prime	KEYWORD2
+mpi_gen_prime	KEYWORD2
+mpi_self_test	KEYWORD2

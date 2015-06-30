@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -142,7 +142,7 @@
 #define NH3_SS			7	// OK
 #define NO_SS			8	// OK
 #define NO2_SS_CLE		9	// OK
-#define O2_SS			10	// OK
+#define O2_SS			10	// OK	Vbias: -600mV
 #define PH3_SS			11	// OK
 #define SO2_SS			12	// OK
 
@@ -157,7 +157,7 @@
 #define CALIBRATION_NDIR	251
 #define CALIBRATION_3E		252
 #define CALIBRATION_4E		253
-#define CALIBRATION_PEL		254
+#define CALIBRATION_PEL	254
 #define UNDEFINED_SENSOR	255
 
 
@@ -190,17 +190,17 @@
 const float table_baseline_temp_comp[][4] PROGMEM =
 {   
 	{0,0,-0.05,-0.3},		// CL2_SS
-	{0,0,0,0},				// CO_SS_SEC
+	{-0.3,0,0,-0.3},		// CO_SS_SEC
 	{-1,0,2.66,5},			// ETO_SS
-	{0,0,0,0},				// H2_SS_SEC
-	{0.1,0.1,0.2,0.25},		// H2S_SS_SEC
+	{-2,0,0,-2.5},			// H2_SS_SEC
+	{0,0,0,-0.04},			// H2S_SS_SEC
 	{0,0,4,15},				// HCL_SS
-	{0,0,-0.1,0.1},			// HCN_SS
+	{0,0,-0.1,0.1},		// HCN_SS
 	{-0.25,0,1.66,3},		// NH3_SS
 	{-0.6,0,4,9},			// NO_SS
 	{0.1,0,-0.5,-1.7},		// NO2_SS_CLE
 	{0,0,0,0},				// O2_SS
-	{0,0,0.15,0.4},			// PH3_SS
+	{0,0,0.15,0.4},		// PH3_SS
 	{0,0,0.2,0.6},			// SO2_SS
 	{0,0,0,0},				// LEL_AS
 	{0.01,0.025,0.12,0.25}	// O3_AS
@@ -211,16 +211,16 @@ const float table_baseline_temp_comp[][4] PROGMEM =
 const float table_sensitivity_temp_comp[][5] PROGMEM = 	  
 {   
 	{0.92,0.96,1,0.97,0.95},	// CL2_SS
-	{1,1,1,1,1},				// CO_SS_SEC
+	{0.7,0.9,1,1.09,1},		// CO_SS_SEC
 	{0.4,0.7,1,1.15,1.25},		// ETO_SS
-	{1,1,1,1,1},				// H2_SS_SEC
-	{1,1,1,1,1},				// H2S_SS_SEC
+	{0.2,0.5,1,2.1,2.8},		// H2_SS_SEC
+	{0.87,0.95,1,1,1},			// H2S_SS_SEC
 	{0.85,0.92,1,1,1},			// HCL_SS
 	{0.8,1,1,1.04,1.04},		// HCN_SS
 	{0.9,1,1,1,1},				// NH3_SS
 	{0.7,0.8,1,1.06,1.12},		// NO_SS
 	{0.8,0.8,1,1.1,1.25},		// NO2_SS_CLE
-	{1,1,1,1,1},				// O2_SS
+	{0.9,0.96,1,1.07,1.07},	// O2_SS
 	{0.8,0.9,1,1.05,1.05},		// PH3_SS
 	{0.9,1,1,1.05,1},			// SO2_SS
 	{1.055,1.035,1,1.015,1.0},	// LEL_AS

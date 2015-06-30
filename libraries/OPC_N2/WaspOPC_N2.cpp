@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Marcos Yarza, Alejandro Gállego
  */
@@ -91,21 +91,36 @@ uint8_t WaspOPC_N2::checkStatus()
 	uint8_t val = 0;
 	uint16_t times = 0;
 	
-	//delay(10000);
 	#ifdef OPC_N2_DEBUG
-		USB.println(F("OPC-N2: Check status"));
+		USB.print(F("OPC-N2: Check status..."));
 	#endif
 	
-	//SPI.setSPISlave(ALL_DESELECTED);
+	SPI.setSPISlave(ALL_DESELECTED);
 	SPI.setSPISlave(DUST_SENSOR_SELECT);
 	delayMicroseconds(2);
 	while((val != CHECK_STATUS_READY)&&(times<100))
 	{ 
 		val = SPI.transfer(CHECK_STATUS);
+		//USB.println(val, HEX);
 		times++;
 		delay(50);
 	}
-	if (times<99) error = 1;
+	if (times<99)
+	{
+		
+		error = 1;
+			#ifdef OPC_N2_DEBUG
+		USB.println(F("ready"));
+	#endif
+	}
+	else
+	{	
+		error = 0;
+		#ifdef OPC_N2_DEBUG
+		USB.println(F("not ready"));
+		#endif
+		
+	}
 	
 	SPI.setSPISlave(ALL_DESELECTED);
 	
@@ -154,7 +169,7 @@ uint8_t WaspOPC_N2::ON()
 	delay(1000);
 	
 	// update SPI flag
-	SPI.isDustSensor = true;
+	SPI.isDustSensor = true;	
 	
 	configSPI();
 	
@@ -162,7 +177,7 @@ uint8_t WaspOPC_N2::ON()
 		
 	if (error == 0)
 	{
-		OFF();	
+		OFF();
 		pwrGasPRORegister &= 0xFE;
 		isON = 0;
 	}
@@ -171,7 +186,7 @@ uint8_t WaspOPC_N2::ON()
 		pwrGasPRORegister |= 0x01;
 		isON = 1;
 	}
-	delay(1000);
+	delay(2000);
 	
 	return error;	
 
@@ -190,13 +205,14 @@ uint8_t WaspOPC_N2::OFF()
 		USB.print(F("OPC-N2: Turning off sensor,"));
 	#endif
 	// Stopping SPI port	
-	SPI.setSPISlave(ALL_DESELECTED);	
+	SPI.isDustSensor = false;
+	SPI.setSPISlave(ALL_DESELECTED);
+	pinMode(DUST_SENSOR_CS,INPUT);
 	SPI.close();
 	
 	digitalWrite(DUST_SENSOR_POWER,LOW);
-	SPI.isDustSensor = false;
 	
-	if ( pwrGasPRORegister == 0x01)
+	if (( pwrGasPRORegister == 0x01) || ( pwrGasPRORegister == 0x0))
 	{			
 		#ifdef OPC_N2_DEBUG			
 			USB.println(F("3V3 off"));
@@ -217,6 +233,8 @@ uint8_t WaspOPC_N2::OFF()
 		pwrGasPRORegister &= 0xFE;
 	}
 	isON = 0;
+		
+	
 	return error;
 }
 
@@ -251,6 +269,7 @@ int8_t WaspOPC_N2::getInfoString(char* buffer)
 	{
 		return -1;
 	}	
+	
 	// At least 1.7 ms between command byte and following byte
 	delay(2);
 	
@@ -272,6 +291,7 @@ int8_t WaspOPC_N2::getInfoString(char* buffer)
 		}
 		USB.println("");
 	#endif
+		
 	// Release the bus
 	SPI.setSPISlave(ALL_DESELECTED);
 	return error;
@@ -292,14 +312,28 @@ int8_t WaspOPC_N2::setDigitalPot(uint8_t mode)
 	#ifdef OPC_N2_DEBUG
 		USB.print(F("OPC-N2: Setting digital pot"));
 	#endif
+		
+	uint8_t command[2];
+	uint8_t command_answer[2];
+	
+	command[0] = SET_DIGITAL_POT;
+	command[1] = mode;
 	
 	delay(100);
 	SPI.setSPISlave(DUST_SENSOR_SELECT);
 	delayMicroseconds(2);
-	while((val != CHECK_STATUS_READY)&&(times<20))
+	
+	command_answer[0] = 0;
+	command_answer[1] = 0;
+	
+	while(	((command_answer[0] != CHECK_STATUS_READY) || 
+			(command_answer[1] != SET_DIGITAL_POT)) &&
+			(times<20))
 	{
-		val = SPI.transfer(SET_DIGITAL_POT); 
-		delayMicroseconds(10);
+		command_answer[0] = SPI.transfer(command[0]); 
+		delay(2);
+		command_answer[1] = SPI.transfer(command[1]); 
+		delay(10);
 		times++;
 	}
 	
@@ -308,45 +342,13 @@ int8_t WaspOPC_N2::setDigitalPot(uint8_t mode)
 		#ifdef OPC_N2_DEBUG
 			USB.println(F("...failed. Communication error."));
 		#endif
-		return -1;
-	}
-	
-	times = 0;
-	
-	#ifdef OPC_N2_DEBUG
-		if (mode == DIGITAL_POT_ON)
-		{
-			USB.print(F("...to on."));
-		}
-		else
-		{
-			USB.print(F("...to off."));
-		}
-	#endif
-
-	while((val != 0x03) && (times < 20))
-	{
-		val = SPI.transfer(mode);
-		delayMicroseconds(10);
-		times++;
-	}
-	
-	SPI.setSPISlave(ALL_DESELECTED);	
-	
-	if (val == 0x03)
-	{
-		#ifdef OPC_N2_DEBUG
-			USB.println(F(" Done."));
-		#endif
-		error = 1;
+		error = -1;
 	}
 	else
 	{
-		#ifdef OPC_N2_DEBUG
-			USB.println(F(" Failed"));
-		#endif
-		error = -2;
+		error = 1;
 	}
+
 	
 	return error;
 }
@@ -371,7 +373,7 @@ int8_t WaspOPC_N2::setDigitalPot(uint8_t mode)
 */
 int8_t WaspOPC_N2::getHistogramData()
 {
-	uint8_t error = 0;
+	uint8_t error = 1;
 	uint8_t val = 0;
 	uint16_t times = 0;
 	uint16_t crc = 0;
@@ -383,16 +385,24 @@ int8_t WaspOPC_N2::getHistogramData()
 	#ifdef OPC_N2_DEBUG
 		USB.print(F("OPC-N2: Getting histogram data"));
 	#endif
-	
+	error = 1;
 	delay(100);
-	SPI.setSPISlave(DUST_SENSOR_SELECT);
 
+	SPI.setSPISlave(DUST_SENSOR_SELECT);
 	// Read histogram data
 	while((val != CHECK_STATUS_READY) && (times < 100))
 	{ 
 		val = SPI.transfer(READ_HISTOGRAM);
+		delay(10);
 		times++;
-		delay(6);
+		if (val != CHECK_STATUS_READY)	
+		{
+			SPI.setSPISlave(ALL_DESELECTED);
+			delay(100);
+			SPI.setSPISlave(DUST_SENSOR_SELECT);
+			
+		}
+		
 	}
 	
 	if (times >= 100)
@@ -400,20 +410,21 @@ int8_t WaspOPC_N2::getHistogramData()
 		#ifdef OPC_N2_DEBUG
 			USB.println(F("...failed. Communication error."));
 		#endif
-		return -1;
+		error = -1;
 	}
+		
 	
-	error = 1;
+		
 	for(int i = 0; i < 62; i++)
 	{
 		delayMicroseconds(8);     
 		histogramString[i] = SPI.transfer(0x30);
 	}
-	
+
 	SPI.setSPISlave(ALL_DESELECTED);
-	
+			
 	crc = (histogramString[49] * 256) + histogramString[48];
-	
+	crc_bin=0;
 	for (int i = 0; i<16; i++)
 	{
 		_bin[i] = 0;
@@ -427,8 +438,13 @@ int8_t WaspOPC_N2::getHistogramData()
 	{		
 		#ifdef OPC_N2_DEBUG
 			USB.println(F("...CRC NOK"));
+			USB.print(F("CRC bin: "));
+			USB.print(crc_bin, DEC);
+			USB.print(F(" || CRC : "));
+			USB.println(crc, DEC);
 		#endif
-		return -2;
+			
+		error = -2;
 	}
 	
 	#ifdef OPC_N2_DEBUG
@@ -442,7 +458,7 @@ int8_t WaspOPC_N2::getHistogramData()
 	_bin7_MToF = histogramString[35];
 	
 	aux_val = *(uint32_t *)&histogramString[36];
-	_temp = aux_val/10.0;
+	_temp = aux_val / 10.0;
 	aux_val = *(uint32_t *)&histogramString[40];
 	_pressure = aux_val;
 	_periodCount = *(uint32_t *)&histogramString[44];
@@ -652,6 +668,8 @@ int8_t WaspOPC_N2::getPM(uint32_t timeSample)
 	_PM2_5 = 0.0;
 	_PM10 = 0.0;	 
 		
+	error = checkStatus();
+	
 	// Set digital pot ON
 	delay(100);
 	error = setDigitalPot(DIGITAL_POT_ON);
@@ -674,7 +692,19 @@ int8_t WaspOPC_N2::getPM(uint32_t timeSample)
 	// Read the histogram
 	error = getHistogramData();
 	if (error != 1)
-	{
+	{	
+		for (int i = 0; i < 15; i++)
+		{
+			_bin[i] = 0;
+		}
+		
+		_temp = 0.0;
+		_pressure = 0.0;
+		_periodCount = 0;
+		_PM1 = 0.0;
+		_PM2_5 = 0.0;
+		_PM10 = 0.0;
+		
 		return error - 4;
 	}
 	

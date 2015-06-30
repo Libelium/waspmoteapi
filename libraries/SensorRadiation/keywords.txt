@@ -1,0 +1,26 @@
+# Radiation keywords #
+
+TH1	LITERAL1
+TH2	LITERAL1
+TH3	LITERAL1
+TH4	LITERAL1
+TH5	LITERAL1
+CONV_FACTOR	LITERAL1
+
+WaspRadiationBoard	KEYWORD2
+radiationValue	KEYWORD2
+radiationValueCPM	KEYWORD2
+ledArray	KEYWORD2
+count	KEYWORD2
+timePrevious	KEYWORD2
+timePreviousMeassure	KEYWORD2
+ON	KEYWORD2
+OFF	KEYWORD2
+init	KEYWORD2
+getRadiation	KEYWORD2
+getRadiationInt	KEYWORD2
+getCPM	KEYWORD2
+ledBar	KEYWORD2
+WaspSensorRadiation	KEYWORD2
+
+RadiationBoard	KEYWORD3

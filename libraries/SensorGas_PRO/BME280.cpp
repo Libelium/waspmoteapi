@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -139,7 +139,10 @@ int8_t BME280::ON()
 {
 	if ((WaspRegister & REG_3V3) == 0)
 	{
-		PWR.setSensorPower(SENS_3V3, SENS_ON);
+		PWR.setSensorPower(SENS_3V3, SENS_ON);	
+		#ifdef BME280_DEBUG
+			USB.println(F("BME280. 3V3 ON "));
+		#endif
 	}
 	
 	delay(100);
@@ -161,12 +164,23 @@ int8_t BME280::ON()
 int8_t BME280::checkID()
 {
 	uint8_t valueID;
+	
+	
+	#ifdef BME280_DEBUG
+		USB.print(F("BME280.Checking ID..."));
+	#endif
 	Wire.readBytes(BME280_I2C_ADDRESS, BME280_CHIP_ID_REG, &valueID, 1);
 	if (valueID == BME280_CHIP_ID_REG_CHIP_ID)
 	{
+		#ifdef BME280_DEBUG
+			USB.println(F("OK"));
+		#endif
 		return 1;
 	}
 	
+	#ifdef BME280_DEBUG
+		USB.println(F("error"));
+	#endif
 	return 0;
 	
 }
@@ -177,6 +191,10 @@ int8_t BME280::checkID()
 void BME280::readCalibration()
 {
 	uint8_t buffer[4];
+	
+	#ifdef BME280_DEBUG
+		USB.println(F("BME280.Reading calibration regs..."));
+	#endif
 	
 	// dig_T1
 	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_T1_LSB_REG, buffer, 2);
