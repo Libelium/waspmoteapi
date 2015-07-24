@@ -3193,7 +3193,7 @@ int8_t WaspXBeeCore::readXBee(uint8_t* data)
     uint8_t finishIndex=0; 
        
 	#if DEBUG_XBEE > 1
-    USB.println(F("[debug] new packet"));
+    printString("[debug] new packet", DEBUG_UART);
 	#endif
 	
 	// increment "pos" packet counter
@@ -3709,12 +3709,14 @@ uint8_t WaspXBeeCore::gen_send(const char* data)
 	gen_escaped_frame(TX, command, &length);
 
 	#if DEBUG_XBEE > 1
-	USB.print(F("[debug] TX:"));
+	printString("[debug] TX:", DEBUG_UART);
 	for(int i = 0; i < length; i++)
 	{
-		USB.printHex(TX[i]);
+    if( TX[i] < 16 )
+      printString( "0", DEBUG_UART );
+    printHex(TX[i], DEBUG_UART);
 	}
-	USB.println();
+	printString( "\r\n", DEBUG_UART )
 	#endif
 
    	// switch MUX in case SOCKET1 is used
@@ -3967,12 +3969,14 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
     i=1;  
     
 	#if DEBUG_XBEE > 1
-	USB.print(F("[debug] 1 RX:"));
-    for(uint16_t i = 0; i < num_data ; i++)
+	printString("[debug] 1 RX:", DEBUG_UART);
+  for(uint16_t i = 0; i < num_data ; i++)
 	{
-		USB.printHex(memory[i]);
+    if( memory[i] < 16 )
+      printString( "0", DEBUG_UART );
+    printHex(memory[i],DEBUG_UART);
 	}
-	USB.println();
+	printString( "\r\n", DEBUG_UART );
 	#endif
 	
 	// If some corrupted frame has appeared we jump it
@@ -4389,12 +4393,14 @@ uint8_t WaspXBeeCore::txStatusResponse()
     counter3=0;
     
 	#if DEBUG_XBEE > 0
-	USB.print(F("[debug] 2 RX:"));
+	printString("[debug] 2 RX:", DEBUG_UART);
     for(uint16_t i = 0; i < num_TX ; i++)
 	{
-		USB.printHex(ByteIN[i]);
+    if( ByteIN[i] < 16 )
+      printString( "0", DEBUG_UART );
+    printHex(ByteIN[i], DEBUG_UART);
 	}
-	USB.println();
+  printString( "\r\n", DEBUG_UART );
 	#endif
 	
     // If some corrupted frame has appeared we jump it
@@ -4643,13 +4649,15 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
     counter3=0;
     
     #if DEBUG_XBEE > 0
-	USB.print(F("[debug] 3 RX:"));
+    printString("[debug] 3 RX:", DEBUG_UART);
     for(uint16_t i = 0; i < num_TX ; i++)
-	{
-		USB.printHex(ByteIN[i]);
-	}
-	USB.println();
-	#endif
+	  {
+		  if( ByteIN[i] < 16 )
+        printString( "0", DEBUG_UART );
+      printHex(ByteIN[i], DEBUG_UART);
+    }
+    printString( "\r\n", DEBUG_UART );
+	  #endif
 	
     // If some corrupted frame has appeared we jump it
     if( ByteIN[0]!=0x7E )     
