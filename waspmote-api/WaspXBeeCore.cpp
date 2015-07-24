@@ -4616,7 +4616,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
             if( (ByteIN[counter3-1]==0x7E) && (undesired==1) )
             {
             	numberBytes--;
-				undesired=numberBytes-7;
+				undesired=numberBytes-11;
             }
                     
             // if 'counter3' is the same as 'numberBytes' we finish
