@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.10
+ *  Version:		1.11
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -1165,6 +1165,10 @@ bool WaspWIFI::ON(uint8_t sock)
 		pinMode(DIGITAL6,OUTPUT);
 		digitalWrite(DIGITAL6,HIGH);	
 	}
+	
+	// update Waspmote Register
+	if(_uartWIFI == SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if(_uartWIFI == SOCKET1)	WaspRegister |= REG_SOCKET1;
 
 	// enter in command mode at 115200bps
 	if( commandMode() == 1 )
@@ -1209,7 +1213,11 @@ void WaspWIFI::OFF()
 		// power down
 		pinMode(DIGITAL6,OUTPUT);
 		digitalWrite(DIGITAL6,LOW);	
-	}		
+	}
+	
+	// update Waspmote Register
+	if(_uartWIFI == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if(_uartWIFI == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);		
 
 	delay(500);
 }

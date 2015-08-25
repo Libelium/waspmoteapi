@@ -16,7 +16,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 
@@ -100,15 +100,12 @@ private:
   	/*!    
 	 */
     uint8_t _uart;
-	
-	//! It prints a number in the specified base
-  	/*!
-	\param unsigned long n : the number to print
-	\param uint8_t base : the base for printing the number
-	\return void
-	 */
-    void printNumber(unsigned long n, uint8_t base);
-	
+    
+    //! backup register attributes
+    uint8_t _reg_ubrr0h;
+    uint8_t _reg_ubrr0l;
+    uint8_t _reg_ucsr0c;
+    uint8_t _reg_ucsr1c;
     
     
 public:
@@ -178,19 +175,19 @@ public:
 	 */
 	void print(uint8_t b);
 	
+	//! It prints an unsigned 16-bit integer
+  	/*!
+	\param uint16_t n : the number to print
+	\return void
+	 */
+	void print(uint16_t n);
+	
 	//! It prints an integer
   	/*!
 	\param int n : the number to print
 	\return void
 	 */
 	void print(int n);
-	
-	//! It prints an unsigned integer
-  	/*!
-	\param unsigned int n : the number to print
-	\return void
-	 */
-	void print(unsigned int n);
 	
 	//! It prints a long integer
   	/*!
@@ -262,6 +259,13 @@ public:
 	\return void
 	 */
 	void println(uint8_t b);
+	
+	//! It prints an unsigned 16-bit integer adding an EOL and a carriage return
+  	/*!
+	\param uint16_t n : the number to print
+	\return void
+	 */
+	void println(uint16_t n);
 	
 	//! It prints an integer adding an EOL and a carriage return
   	/*!
@@ -371,6 +375,12 @@ public:
 	\return void
 	 */
     void printHexln(uint8_t* pointer, uint16_t length);
+    
+    //! It prepares the UART0 for USB port securely
+    void secureBegin();
+    
+    //! It sets the UART0 to the previous settings before using USB port
+    void secureEnd();
     
 };
 

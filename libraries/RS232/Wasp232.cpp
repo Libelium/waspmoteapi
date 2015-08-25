@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Ahmad Saad
 
@@ -48,24 +48,38 @@
 //!*************************************************************
 void Wasp232::ON(char socket)
 {
-	delay(1);
-	
-	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX_USB_XBEE, OUTPUT);
-	digitalWrite(MUX_PW, HIGH);  
-	digitalWrite(MUX_USB_XBEE, HIGH);
-	delay(1); 
-
-	if (socket == 1) {
-		pinMode(DIGITAL6, OUTPUT);
-		digitalWrite(DIGITAL6, HIGH);
-		Utils.setMuxSocket1();
-		_uart = 1;
-	} else {
+	if (socket == SOCKET0) 
+	{
+		// set Mux
+		Utils.setMuxSocket0();
+		
+		// power on
 		pinMode(XBEE_PW,OUTPUT);
 		digitalWrite(XBEE_PW,HIGH);
-		_uart = 0;
+		
+		// update attribute
+		_uart = SOCKET0;
 	}
+	else if (socket == SOCKET1) 
+	{
+		// set Mux
+		Utils.setMuxSocket1();
+		
+		// power on
+		pinMode(DIGITAL6, OUTPUT);
+		digitalWrite(DIGITAL6, HIGH);
+		
+		// update attribute
+		_uart = SOCKET1;
+	}
+	
+	// update Waspmote Register
+	if(_uart == SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if(_uart == SOCKET1)	WaspRegister |= REG_SOCKET1;
+	
+	// wait stabilization time
+	delay(100);
+	
 }
 
 
@@ -78,6 +92,10 @@ void Wasp232::ON(char socket)
 void Wasp232::OFF(void)
 {
 	closeSerial(_uart);
+	
+	// update Waspmote Register
+	if(_uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if(_uart == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
 
 	if (_uart == 1) {
 		digitalWrite(DIGITAL6, LOW);
@@ -95,6 +113,7 @@ void Wasp232::OFF(void)
 //!*************************************************************
 void Wasp232::baudRateConfig(unsigned long speed)
 {
+	_baudrate = speed;
 	beginSerial(speed, _uart);
 }
 
@@ -108,6 +127,20 @@ void Wasp232::baudRateConfig(unsigned long speed)
 char Wasp232::read(void)
 {
 	return serialRead(_uart);
+}
+
+//!*************************************************************
+//!	Name: receive()
+//!	Description: Receives data through the UART
+//!	Param : void
+//!	Returns the number of received bytes	
+//!************************************************************* 
+uint16_t Wasp232::receive(void)
+{
+	uint16_t nBytes = 0;
+	nBytes = readBuffer(sizeof(_buffer));
+	
+	return nBytes;
 }
 
 
@@ -243,26 +276,50 @@ void Wasp232::flush(void)
 
 //!*************************************************************
 //!	Name: parityBit()
-//!	Description: Enables or disables the parity bit
-//!	Param : bool state, "ENABLED" or "DISABLED"
+//!	Description: Enables (EVEN or ODD) or disables the parity bit
+//!	Param : bool state: "EVEN", "ODD" or "DISABLED"
 //!	Returns: 						
 //!*************************************************************
-void Wasp232::parityBit(bool state)
+void Wasp232::parityBit(uint8_t state)
 {
-	if (_uart == 0) {
-		if (state == DISABLED) {
-			UCSR0C = (0<<UPM00)|(3<<UCSZ00);
-		} else {
-			UCSR0C = (3<<UPM00)|(3<<UCSZ00);
+	if (_uart == SOCKET0) 
+	{
+		if (state == DISABLED) 	
+		{
+			cbi(UCSR0C, UPM01);
+			cbi(UCSR0C, UPM00);
 		}
-	} else if (_uart ==1) {
-		if (state == DISABLED) {
-			UCSR1C = (0<<UPM10)|(3<<UCSZ10);
-		} else {
-			UCSR1C = (3<<UPM10)|(3<<UCSZ10);
+		if (state == EVEN)				
+		{
+			sbi(UCSR0C, UPM01);
+			cbi(UCSR0C, UPM00);
+		}
+		if (state == ODD)		
+		{
+			sbi(UCSR0C, UPM01);
+			sbi(UCSR0C, UPM00);
+		}
+	} 
+	else if (_uart == SOCKET1) 
+	{
+		if (state == DISABLED) 	
+		{
+			cbi(UCSR1C, UPM11);
+			cbi(UCSR1C, UPM10);
+		}
+		if (state == EVEN)				
+		{
+			sbi(UCSR1C, UPM11);
+			cbi(UCSR1C, UPM10);
+		}
+		if (state == ODD)		
+		{
+			sbi(UCSR1C, UPM11);
+			sbi(UCSR1C, UPM10);
 		}
 	}
 }
+
 
 
 //!*************************************************************
@@ -273,17 +330,26 @@ void Wasp232::parityBit(bool state)
 //!*************************************************************
 void Wasp232::stopBitConfig(uint8_t numStopBits)
 {
-	if (_uart == 0) {
-		if (numStopBits == 1) {
-			UCSR0C = (2<<USBS0)|(3<<UCSZ00);
-		} else {
-			UCSR0C = (1<<USBS0)|(3<<UCSZ00);
+	if (_uart == SOCKET0)
+	{
+		if (numStopBits == ONE_STOP_BIT)
+		{
+			cbi(UCSR0C, USBS0);
 		}
-	} else if (_uart == 1) {
-		if (numStopBits == 1) {
-			UCSR1C = (2<<USBS1)|(3<<UCSZ10);
-		} else {
-			UCSR1C = (1<<USBS1)|(3<<UCSZ10);
+		if (numStopBits == TWO_STOP_BITS)
+		{
+			sbi(UCSR0C, USBS0);
+		}
+	}
+	else if (_uart == SOCKET1) 
+	{
+		if (numStopBits == ONE_STOP_BIT)
+		{
+			cbi(UCSR1C, USBS1);
+		}
+		if (numStopBits == TWO_STOP_BITS)
+		{
+			sbi(UCSR1C, USBS1);
 		}
 	}
 }

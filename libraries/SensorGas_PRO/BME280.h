@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -36,8 +36,7 @@
  
 #include <inttypes.h>
 
-//#define BME280_DEBUG
-//#define BME280_I2C_DEBUG
+#define BME280_DEBUG 0
 
 //! Sensor specific I2C address
 #define BME280_I2C_ADDRESS1				0x76

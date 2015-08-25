@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -33,6 +33,7 @@
 BME280::BME280()
 {	
 }
+
 /// PRIVATE FUNCTIONS
 /// INTERNAL COMPENSATION FUNCTIONS
 /* Function: 	This function compensates the temperature with the calibration data
@@ -44,8 +45,11 @@ float BME280::compensateTemp(long uncompensated_temp)
 	
 	long var1, var2;
 	
-	#ifdef BME280_DEBUG
-		USB.print(F("Uncompensated temp: 0x"));
+	#if BME280_DEBUG>0
+		USB.println(F("BME280.Compensate temperature"));
+	#endif
+	#if BME280_DEBUG>1
+		USB.print(F("BME280.Uncompensated temp: 0x"));
 		USB.println(uncompensated_temp, HEX);
 	#endif
 	
@@ -67,8 +71,11 @@ float BME280::compensatePres(long uncompensated_pres)
 	
 	long long var1, var2, p;
 		
-	#ifdef BME280_DEBUG
-		USB.print(F("Uncompensated pres: 0x"));
+	#if BME280_DEBUG>0
+		USB.println(F("BME280.Compensate pressure"));
+	#endif
+	#if BME280_DEBUG>1
+		USB.print(F("BME280.Uncompensated pres: 0x"));
 		USB.println(uncompensated_pres, HEX);
 	#endif
 	
@@ -102,9 +109,12 @@ float BME280::compensateHum(long uncompensated_hum)
 {
 	
 	long v_x1_u32r;
-		
-	#ifdef BME280_DEBUG
-		USB.print(F("Uncompensated hum: 0x"));
+	
+	#if BME280_DEBUG>0
+		USB.println(F("BME280.Compensate humidity"));
+	#endif
+	#if BME280_DEBUG>1
+		USB.print(F("BME280.Uncompensated hum: 0x"));
 		USB.println(uncompensated_hum, HEX);
 	#endif
 	
@@ -140,8 +150,8 @@ int8_t BME280::ON()
 	if ((WaspRegister & REG_3V3) == 0)
 	{
 		PWR.setSensorPower(SENS_3V3, SENS_ON);	
-		#ifdef BME280_DEBUG
-			USB.println(F("BME280. 3V3 ON "));
+		#if BME280_DEBUG>0
+			USB.println(F("BME280.3V3 to ON "));
 		#endif
 	}
 	
@@ -166,19 +176,19 @@ int8_t BME280::checkID()
 	uint8_t valueID;
 	
 	
-	#ifdef BME280_DEBUG
+	#if BME280_DEBUG>0
 		USB.print(F("BME280.Checking ID..."));
 	#endif
 	Wire.readBytes(BME280_I2C_ADDRESS, BME280_CHIP_ID_REG, &valueID, 1);
 	if (valueID == BME280_CHIP_ID_REG_CHIP_ID)
 	{
-		#ifdef BME280_DEBUG
+		#if BME280_DEBUG>0
 			USB.println(F("OK"));
 		#endif
 		return 1;
 	}
 	
-	#ifdef BME280_DEBUG
+	#if BME280_DEBUG>0
 		USB.println(F("error"));
 	#endif
 	return 0;
@@ -192,7 +202,7 @@ void BME280::readCalibration()
 {
 	uint8_t buffer[4];
 	
-	#ifdef BME280_DEBUG
+	#if BME280_DEBUG>0
 		USB.println(F("BME280.Reading calibration regs..."));
 	#endif
 	
@@ -378,11 +388,17 @@ float BME280::getTemperature(uint8_t over_sample_value, uint8_t filter_value)
 	float temp;
 	float meassure_time, meassure_max_time;
 	
+	#if BME280_DEBUG>0
+		USB.println(F("BME280.Read temperature"));
+	#endif
+		
 	// Checks communication
 	if (checkID() != 1)
 	{
 		return -1000;
 	}
+	
+
 	
 	//************************************************************************
 	// Configuration of the sensor	
@@ -428,10 +444,10 @@ float BME280::getTemperature(uint8_t over_sample_value, uint8_t filter_value)
 	meassure_time = 1 + (2 * (1 << (over_sample_value - 1)));
 	meassure_max_time = 1.25 + (2.3 * (1 << (over_sample_value - 1)));
 	
-	#ifdef BME280_DEBUG
-		USB.print(F("meassure_time: "));
+	#if BME280_DEBUG>1
+		USB.print(F("BME280.meassure_time: "));
 		USB.println(meassure_time);
-		USB.print(F("meassure_max_time: "));
+		USB.print(F("BME280.meassure_max_time: "));
 		USB.println(meassure_max_time);
 	#endif
 		
@@ -490,6 +506,11 @@ float BME280::getPressure(uint8_t over_sample_value, uint8_t filter_value)
 	float pressure;
 	float meassure_time, meassure_max_time;
 		
+	
+	#if BME280_DEBUG>0
+		USB.println(F("BME280.Read pressure"));
+	#endif
+		
 	// Checks communication
 	if (checkID() != 1)
 	{
@@ -536,10 +557,10 @@ float BME280::getPressure(uint8_t over_sample_value, uint8_t filter_value)
 	meassure_time = 1 + (2 * (1 << (over_sample_value - 1))) + (2 * (1 << (over_sample_value - 1)) + 0.5);	
 	meassure_max_time = 1.25 + (2.3 * (1 << (over_sample_value - 1))) + (2.3 * (1 << (over_sample_value - 1)) + 0.575);
 	
-	#ifdef BME280_DEBUG
-		USB.print(F("meassure_time: "));
+	#if BME280_DEBUG>1
+		USB.print(F("BME280.meassure_time: "));
 		USB.println(meassure_time);
-		USB.print(F("meassure_max_time: "));
+		USB.print(F("BME280.meassure_max_time: "));
 		USB.println(meassure_max_time);
 	#endif
 	
@@ -595,6 +616,10 @@ float BME280::getHumidity(uint8_t over_sample_value)
 	float humidity;
 	float meassure_time, meassure_max_time;
 		
+	#if BME280_DEBUG>0
+		USB.println(F("BME280.Read humidity"));
+	#endif
+		
 	// Checks communication
 	if (checkID() != 1)
 	{
@@ -640,10 +665,10 @@ float BME280::getHumidity(uint8_t over_sample_value)
 	meassure_time = 1 + (2 * (1 << (over_sample_value - 1))) + (2 * (1 << (over_sample_value - 1)) + 0.5);
 	meassure_max_time = 1.25 + (2.3 * (1 << (over_sample_value - 1))) + (2.3 * (1 << (over_sample_value - 1)) + 0.575);
 	
-	#ifdef BME280_DEBUG
-		USB.print(F("meassure_time: "));
+	#if BME280_DEBUG>1
+		USB.print(F("BME280.meassure_time: "));
 		USB.println(meassure_time);
-		USB.print(F("meassure_max_time: "));
+		USB.print(F("BME280.meassure_max_time: "));
 		USB.println(meassure_max_time);
 	#endif
 	

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -757,6 +757,10 @@ void WaspBLE::OFF()
 {	
 	// close UART.
 	closeSerial(_uartBT);
+	
+	// update Waspmote Register
+	if(_uartBT == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if(_uartBT == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);
 	
 	// to disable wake up pin.
 	sleep();
@@ -2181,14 +2185,14 @@ void WaspBLE::sleep()
 uint8_t WaspBLE::wakeUp()
 {
 	if( _uartBT == SOCKET0 ) 
-	{	
+	{
 		Utils.setMuxSocket0();
 		beginSerial(_baudrateBT,_uartBT);	
 		serialFlush(_uartBT);
 
 		// set sleep pin high in SOCKET0, to enable UART interface
 		pinMode(BLE_SLEEP, OUTPUT);
-    	digitalWrite(BLE_SLEEP,HIGH); 	
+    	digitalWrite(BLE_SLEEP,HIGH);
     }
     else if( _uartBT == SOCKET1 )
     {
@@ -2200,6 +2204,10 @@ uint8_t WaspBLE::wakeUp()
 		pinMode(DIGITAL7, OUTPUT);
     	digitalWrite(DIGITAL7,HIGH); 		   
     }
+    
+   	// update Waspmote Register
+	if(_uartBT == SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if(_uartBT == SOCKET1)	WaspRegister |= REG_SOCKET1;
     
     uint8_t flag = waitEvent(1000);
     

@@ -197,6 +197,7 @@ void printByte(unsigned char c, uint8_t portNum)
 
 void printNewline(uint8_t portNum)
 {
+	printByte('\r', portNum);
 	printByte('\n', portNum);
 }
 

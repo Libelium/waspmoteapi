@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -43,8 +43,7 @@
 #include <LMP91000.h>
 #include <BME280.h>
 
-//#define GAS_DEBUG 1
-//#define I2C_GAS_DEBUG
+#define GAS_DEBUG 0
 //#define GAS_PRO_AUTOGAIN_DEBUG
 //#define CALIBRATION_MODE
 
@@ -151,7 +150,7 @@
 #define O3_AS			14	// 4 electrodos
 
 // SOLIDSENSE NDIR
-#define NDIR_CO2_SS		15	// CO2 NDIR
+#define NDIR_CO2_SS	15	// CO2 NDIR
 
 
 #define CALIBRATION_NDIR	251
@@ -190,7 +189,7 @@
 const float table_baseline_temp_comp[][4] PROGMEM =
 {   
 	{0,0,-0.05,-0.3},		// CL2_SS
-	{-0.3,0,0,-0.3},		// CO_SS_SEC
+	{-0.3,0,0,-0.3},		// CO_SS_CLE
 	{-1,0,2.66,5},			// ETO_SS
 	{-2,0,0,-2.5},			// H2_SS_SEC
 	{0,0,0,-0.04},			// H2S_SS_SEC
@@ -211,7 +210,7 @@ const float table_baseline_temp_comp[][4] PROGMEM =
 const float table_sensitivity_temp_comp[][5] PROGMEM = 	  
 {   
 	{0.92,0.96,1,0.97,0.95},	// CL2_SS
-	{0.7,0.9,1,1.09,1},		// CO_SS_SEC
+	{0.7,0.9,1,1.09,1},			// CO_SS_CLE
 	{0.4,0.7,1,1.15,1.25},		// ETO_SS
 	{0.2,0.5,1,2.1,2.8},		// H2_SS_SEC
 	{0.87,0.95,1,1,1},			// H2S_SS_SEC
@@ -220,11 +219,11 @@ const float table_sensitivity_temp_comp[][5] PROGMEM =
 	{0.9,1,1,1,1},				// NH3_SS
 	{0.7,0.8,1,1.06,1.12},		// NO_SS
 	{0.8,0.8,1,1.1,1.25},		// NO2_SS_CLE
-	{0.9,0.96,1,1.07,1.07},	// O2_SS
+	{0.9,0.96,1,1.07,1.07},		// O2_SS
 	{0.8,0.9,1,1.05,1.05},		// PH3_SS
 	{0.9,1,1,1.05,1},			// SO2_SS
 	{1.055,1.035,1,1.015,1.0},	// LEL_AS
-	{1,1,1,1,1}					// O3_AS
+	{0.7,0.92,1,1,0.92}					// O3_AS
 };
 
 

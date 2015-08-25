@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -36,13 +36,13 @@
  
 #include <inttypes.h>
 
-//#define LMP_DEBUG
+#define LMP_DEBUG 0
 
 
 #define LMP91000_ADDR 0x48
 
 // REGISTER TABLE
-#define LMP91000_STATUS_REG		0x00
+#define LMP91000_STATUS_REG	0x00
 #define LMP91000_LOCK_REG		0x01
 #define LMP91000_TIAC_REG		0x10
 #define LMP91000_REFC_REG		0x11
@@ -52,9 +52,9 @@
 #define LMP91000_STATUS_REG_STATUS__POS	0
 
 // LOCK REGISTER
-#define LMP91000_LOCK_REG_LOCK__POS			0
-#define LMP91000_LOCK_REG_UNLOCK	0
-#define LMP91000_LOCK_REG_LOCK		1
+#define LMP91000_LOCK_REG_LOCK__POS	0
+#define LMP91000_LOCK_REG_UNLOCK		0
+#define LMP91000_LOCK_REG_LOCK			1
 
 // TIA CONTROL REGISTER
 #define LMP91000_TIAC_REG_REF_R_GAIN__POS		2
@@ -100,7 +100,7 @@
 #define LMP91000_REFC_REG_REF_INT_Z_20			0
 #define LMP91000_REFC_REG_REF_INT_Z_50			1
 #define LMP91000_REFC_REG_REF_INT_Z_67			2
-#define LMP91000_REFC_REG_REF_INT_Z_BYPASSED	3
+#define LMP91000_REFC_REG_REF_INT_Z_BYPASSED		3
 
 
 #define LMP91000_REFC_REG_REF_POLARITY__POS		7

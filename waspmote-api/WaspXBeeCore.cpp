@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.9
+ *  Version:		2.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -2210,6 +2210,10 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
     
     begin(uart,XBEE_RATE);
 	setMode(XBEE_ON);
+	
+	// update Waspmote Register
+	if(uart_used==SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if(uart_used==SOCKET1)	WaspRegister |= REG_SOCKET1;
 
     if( protocol == ZIGBEE) delay(500);
     else if( protocol == DIGIMESH) delay(500);
@@ -2306,6 +2310,10 @@ uint8_t WaspXBeeCore::OFF()
 	
 	// switch XBee OFF
 	setMode(XBEE_OFF);
+	
+	// update Waspmote Register
+	if(uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if(uart == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
 	
     error=0;
     XBee_ON=0;
@@ -3790,7 +3798,7 @@ void WaspXBeeCore::gen_frame_ap2(	struct packetXBee* _packet,
 		||	( TX_array[index] == 0x7E) 
 		||	( TX_array[index] == 0x7D) )
         {
-            TX_array[index] =  TX_array[index] + 0x20;
+            TX_array[index] = TX_array[index] xor 0x20;
             protect++;
             aux = TX_array[index];
             TX_array[index] = 0x7D;  

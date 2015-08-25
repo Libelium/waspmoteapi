@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Ahmad Saad
 
@@ -29,21 +29,38 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
-#define ENABLE 1
-#define DISABLE 0
-#define ONE_STOP_BIT 1
-#define TWO_STOP_BITS 2
-#define _delay 2
-
 #ifndef inttypes_h
 	#include <inttypes.h>
-#endif 
+#endif
+#include <WaspUART.h>
+
+
+#define _delay 2
+
+
+//! Parity Modes
+enum ParityModes
+{
+	DISABLE 	= 0, // old definitions
+	ENABLE 		= 3, // old definitions
+	NONE 		= 0,
+	EVEN 		= 2,
+	ODD 		= 3,
+};
+
+
+//! Stop Bit Modes
+enum StopBitModes
+{
+	ONE_STOP_BIT 	= 1,			
+	TWO_STOP_BITS 	= 2,
+};
 
 /******************************************************************************
  * Class
  ******************************************************************************/
 
-class Wasp232
+class Wasp232 : public WaspUART
 {
 //**********************************************************************
 // Private functions
@@ -64,6 +81,9 @@ class Wasp232
 
 		//! Receives data through the UART.
 		char read(void);
+		
+		//! Receive data
+		uint16_t receive(void);
 
 		//!Sends data through the UART. It sends a char n.
 		void send (uint8_t n);
@@ -93,7 +113,7 @@ class Wasp232
 		void flush(void);
 
 		//! Enables or disables the parity bit.
-		void parityBit(bool state);	
+		void parityBit(uint8_t state);		
 
 		//! Selects the number of stop bits to be inserted by the Transmitter. The Receiver ignores this setting.
 		void stopBitConfig(uint8_t numStopBits);
@@ -105,11 +125,8 @@ class Wasp232
 //**********************************************************************
 // Private functions
 //**********************************************************************
-	 private: 
-	 
-		//!Internal variable with UART port used  
-		uint8_t _uart;
 
+	private: 
 		void print 	(char c, uint8_t uart);
 		void printNumber (unsigned long	n, uint8_t	base, uint8_t uart);
 };

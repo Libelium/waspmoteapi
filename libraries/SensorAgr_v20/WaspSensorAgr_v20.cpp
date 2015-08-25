@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
  */
@@ -316,7 +316,7 @@ float	WaspSensorAgr_v20::readValue(uint16_t sensor, uint8_t type)
 		case	SENS_AGR_PT1000		:	aux=readPT1000(); // º Celsius
 										break;
 		case	SENS_AGR_LEAF_WETNESS:	aux2=analogRead(ANALOG6);
-										aux= 100-(float(aux2)*100/1023);
+										aux=lwsConversion(aux2); // %Hum
 										break;
 		case	SENS_AGR_TEMPERATURE:	aux2=analogRead(ANALOG4);
 										aux=mcpConversion(aux2); // ºCelsius
@@ -1197,17 +1197,31 @@ float WaspSensorAgr_v20::conversion(byte data_input[3], uint8_t type)
 
 
 /*	lwsConversion: converts the value read at the analog to digital	converter
- * 				   input corresponding to the leaf wetness sensor into a voltage
+ * 				   input corresponding to the leaf wetness sensor into a percentage
  *	Parameters:	int readValue : value read from the analog-to-digital converter
- *  Return:		float value : voltage between 0 and 3.3V
+ *  Return:		float value : wetness measured by the sensor in %RH
  * 
  */
 float WaspSensorAgr_v20::lwsConversion(int readValue)
 {
 	float lws = 0;
    
-	lws = float(readValue) * 3.3 / 1023;
-   
+	//This sensor has a range between 1-3.3 V
+	//So that the ADC reads values between 310-1023
+	//The next formula can be extracted by linearizing with two points
+	// (x1 , y1) = (310, 100 %)
+	// (x2 , y2) = (1023, 0  %)
+	// (y-y1)/(y2-y1) = (x-x1)/(x2-x1)
+	
+	if (float (readValue)>310.0)
+	{
+		lws=(1023.0*100.0/713.0)-(100.0/713.0)*readValue;
+	} 
+	else
+	{
+		lws=100.0;
+	}
+	
 	return(lws);
    
 }

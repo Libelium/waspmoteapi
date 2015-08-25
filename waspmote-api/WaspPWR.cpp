@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.10
+ *  Version:		1.11
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -196,7 +196,11 @@ void WaspPWR::switchesOFF(uint8_t option)
 	digitalWrite(SD_SS, LOW);	
 	pinMode(MEM_PW,OUTPUT);
 	digitalWrite(MEM_PW,LOW);
-		
+	
+	// Set down SOCKET0 SPI SS pin
+	pinMode(SOCKET0_SS,OUTPUT);
+	digitalWrite(SOCKET0_SS,LOW);
+	
 	if( option & SENS_OFF )
 	{	
 		// switch OFF sensor boards
@@ -211,7 +215,10 @@ void WaspPWR::switchesOFF(uint8_t option)
 	{	
 		// set SOCKET0 power supply off
 		pinMode(XBEE_PW,OUTPUT);
-		digitalWrite(XBEE_PW,LOW);		
+		digitalWrite(XBEE_PW,LOW);
+		
+		// update Waspmote Register
+		WaspRegister &= ~(REG_SOCKET0);
 	}
 	
 	// close UART1
@@ -305,9 +312,6 @@ void WaspPWR::sleep(uint8_t option)
 	
 	// Switch off both multiplexers in UART_0 and UART_1
 	Utils.muxOFF();
-
-	// mandatory delay to wait for MUX_RX stabilization
-	delay(100);	
 	
 	// set the XBee monitorization pin to zero
 	pinMode(XBEE_MON,OUTPUT);
@@ -381,9 +385,6 @@ void WaspPWR::sleep(uint8_t	timer, uint8_t option)
 		
 	// Switch off both multiplexers in UART_0 and UART_1
 	Utils.muxOFF();
-
-	// mandatory delay to wait for MUX_RX stabilization
-	delay(100);	
 	
 	// set the XBee monitorization pin to zero
 	pinMode(XBEE_MON,OUTPUT);
@@ -395,6 +396,10 @@ void WaspPWR::sleep(uint8_t	timer, uint8_t option)
      
 	// switches off depending on the option selected       
 	switchesOFF(option);
+	
+	// mandatory delay to wait for MUX_RX stabilization 
+	// after switching off the sensor boards 
+	delay(100);	
 	
 	// make sure interruption pin is LOW before entering a low power state
 	// if not the interruption will never come
@@ -454,9 +459,6 @@ void WaspPWR::deepSleep(	const char* time2wake,
 	
 	// Switch off both multiplexers in UART_0 and UART_1
 	Utils.muxOFF();
-
-	// mandatory delay to wait for MUX_RX stabilization
-	delay(100);	
 	
 	// set the XBee monitorization pin to zero
 	pinMode(XBEE_MON,OUTPUT);

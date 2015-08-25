@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -45,8 +45,8 @@ bool LMP91000::check()
 	uint8_t status;	
 	int8_t answer;
 	
-	#ifdef LMP_DEBUG
-		USB.println(F("Checking status of LMP91000"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Checking status of LMP91000"));
 	#endif
 		
 	answer = Wire.readBit(	LMP91000_ADDR, 
@@ -79,8 +79,8 @@ int8_t LMP91000::lock_reg()
 {
 	int8_t answer;
 	
-	#ifdef LMP_DEBUG
-		USB.println(F("Locking registers"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Locking registers"));
 	#endif
 		
 	answer = Wire.writeBit(	LMP91000_ADDR, 
@@ -98,8 +98,8 @@ int8_t LMP91000::unlock_reg()
 {	
 	int8_t answer;
 	
-	#ifdef LMP_DEBUG
-		USB.println(F("Unlocking registers"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Unlocking registers"));
 	#endif
 	
 	answer = Wire.writeBit(	LMP91000_ADDR, 
@@ -126,8 +126,8 @@ int8_t LMP91000::getRgain()
 	uint8_t answer = 0;	
 	uint8_t r_gain;
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Reading r_gain"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Reading r_gain"));
 	#endif
 	answer = Wire.readBits(	LMP91000_ADDR,
 							LMP91000_TIAC_REG,
@@ -157,8 +157,8 @@ int8_t LMP91000::getRgain()
 int8_t LMP91000::setRgain(uint8_t R_gain)
 {
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Setting r_gain"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Setting r_gain"));
 	#endif
 	
 	return Wire.writeBits(	LMP91000_ADDR,
@@ -180,8 +180,8 @@ int8_t LMP91000::getInternalZero()
 	uint8_t answer = 0;	
 	uint8_t internal_zero;
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Reading internal_zero"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Reading internal_zero"));
 	#endif
 	
 	answer = Wire.readBits(	LMP91000_ADDR,
@@ -210,8 +210,8 @@ int8_t LMP91000::setInternalZero(uint8_t InternalZeroPercentaje)
 {
 	uint8_t REF_reg = 0;		
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Setting internal_zero"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Setting internal_zero"));
 	#endif
 		
 	return Wire.writeBits(	LMP91000_ADDR,
@@ -231,8 +231,8 @@ int8_t LMP91000::getRefSource()
 	uint8_t answer = 0;	
 	uint8_t ref_source;
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Reading ref_source"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Reading ref_source"));
 	#endif
 		
 	answer = Wire.readBit(	LMP91000_ADDR,
@@ -255,8 +255,8 @@ int8_t LMP91000::getRefSource()
 */
 int8_t LMP91000::setRefSource(uint8_t ReferenceSource)
 {
-	#ifdef LMP_DEBUG
-		USB.println(F("Setting ref_source"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Setting ref_source"));
 	#endif
 		
 	return Wire.writeBit(	LMP91000_ADDR,
@@ -274,8 +274,8 @@ uint8_t LMP91000::getTIAConReg()
 	uint8_t buffer = 0;	
 	uint8_t answer = 0;		
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Reading TIAConReg"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Reading TIAConReg"));
 	#endif
 		
 	answer = Wire.readBytes(	LMP91000_ADDR,
@@ -300,8 +300,8 @@ uint8_t LMP91000::getRefConReg()
 	uint8_t buffer = 0;	
 	uint8_t answer = 0;	
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Reading RefConReg"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Reading RefConReg"));
 	#endif
 	
 	answer = Wire.readBytes(	LMP91000_ADDR,
@@ -326,8 +326,8 @@ uint8_t LMP91000::getModeReg()
 	uint8_t buffer = 0;	
 	uint8_t answer = 0;	
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Reading ModeReg"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Reading ModeReg"));
 	#endif
 	
 	answer = Wire.readBytes(	LMP91000_ADDR,
@@ -368,8 +368,8 @@ int8_t LMP91000::setTIAConReg(uint8_t R_gain, uint8_t R_load)
 	
 	unlock_reg();
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Setting TIAConReg"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Setting TIAConReg"));
 	#endif
 		
 	Wire.writeBytes(	LMP91000_ADDR, 
@@ -417,8 +417,8 @@ int8_t LMP91000::setRefConReg(uint8_t ref_source, uint8_t int_zero, uint8_t BIAS
 		
 	unlock_reg();
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Setting RefConReg"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Setting RefConReg"));
 	#endif
 	
 	Wire.writeBytes(	LMP91000_ADDR,
@@ -451,8 +451,8 @@ int8_t LMP91000::setModeReg(uint8_t FET_short, uint8_t op_mode)
 	
 	unlock_reg();
 
-	#ifdef LMP_DEBUG
-		USB.println(F("Setting ModeReg"));
+	#if LMP_DEBUG>0
+		USB.println(F("LMP.Setting ModeReg"));
 	#endif
 	
 	Wire.writeBytes(	LMP91000_ADDR,

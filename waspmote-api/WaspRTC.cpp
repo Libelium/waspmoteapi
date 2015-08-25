@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.7
+ *  Version:		1.8
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -86,8 +86,9 @@ const char* const table_RTC[] PROGMEM =
 
 WaspRTC::WaspRTC()
 {
-	// init gmt attribute
+	// init attributes
 	_gmt = 0;
+	isON = 0;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////

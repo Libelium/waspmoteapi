@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:			1.1
+ *  Version:			1.2
  *  Design:				David Gascón
  *  Implementation:		Ahmad Saad, Javier Solobera
  */
@@ -68,6 +68,10 @@ void WaspRFID::ON(uint8_t socket)
 		pinMode(XBEE_PW,OUTPUT);
 		digitalWrite(XBEE_PW,HIGH);
 	}
+	
+	// update Waspmote Register
+	if(_uart == SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if(_uart == SOCKET1)	WaspRegister |= REG_SOCKET1;
 
 	serialFlush(_uart);
 	delay(100);
@@ -82,6 +86,10 @@ void WaspRFID::OFF(void)
 {
 	// close UART
 	closeSerial(_uart);
+	
+	// update Waspmote Register
+	if(_uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if(_uart == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
 	
 	// power off depending on the socket
 	if (_uart == 1) 

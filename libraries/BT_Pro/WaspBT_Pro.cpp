@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -1049,6 +1049,10 @@ int8_t WaspBT_Pro::ON(uint8_t UartMode)
 		digitalWrite(BT_PRO_PW_1,HIGH);		
 	}
 	
+	// update Waspmote Register
+	if(_uartBT == SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if(_uartBT == SOCKET1)	WaspRegister |= REG_SOCKET1;	
+	
 	//~ beginSerial(_baudrateBT,_uartBT);
 	serialFlush(_uartBT);
 	
@@ -1085,6 +1089,10 @@ void WaspBT_Pro::OFF()
 {
 	
 	closeSerial(_uartBT);
+	
+	// update Waspmote Register
+	if(_uartBT == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if(_uartBT == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
 
 	if(!_uartBT) 
 	{

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
@@ -123,12 +123,9 @@ void WaspUSB::flush()
  */
 void WaspUSB::print(char c)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	printByte(c,  _uart);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureEnd();
 }
 
 /*
@@ -137,12 +134,9 @@ void WaspUSB::print(char c)
  */
 void WaspUSB::print(const char c[])
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	printString(c,  _uart);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	printString(c,  _uart);	
+	secureEnd();
 }
 
 /*
@@ -151,12 +145,19 @@ void WaspUSB::print(const char c[])
  */
 void WaspUSB::print(uint8_t b)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	printByte(b,  _uart);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureEnd();
+}
+
+
+/*
+ * print() - prints an unsigned 16-bit integer
+ * 
+ */
+void WaspUSB::print(uint16_t n)
+{
+	print((uint32_t) n);
 }
 
 /*
@@ -165,27 +166,9 @@ void WaspUSB::print(uint8_t b)
  */
 void WaspUSB::print(int n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
 	print((long) n);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
 }
 
-/*
- * print( n ) - prints an unsigned integer
- * 
- */
-void WaspUSB::print(unsigned int n)
-{
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print((unsigned long) n);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
-}
 
 /*
  * print( n ) - prints a long integer
@@ -193,17 +176,14 @@ void WaspUSB::print(unsigned int n)
  */
 void WaspUSB::print(long n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	if (n < 0) 
 	{
-		print('-');
+		printByte('-',_uart);
 		n = -n;
-	}
-	printNumber(n, 10);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	}	
+	printIntegerInBase((uint32_t)n, 10,  _uart);
+	secureEnd();
 }
 
 /*
@@ -212,12 +192,9 @@ void WaspUSB::print(long n)
  */
 void WaspUSB::print(unsigned long n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	printNumber(n, 10);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	printIntegerInBase(n, 10, _uart);
+	secureEnd();
 }
 
 /*
@@ -226,17 +203,20 @@ void WaspUSB::print(unsigned long n)
  */
 void WaspUSB::print(long n, int base)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	if (base == 0)
-		print((char) n);
+	{		
+		printByte((char) n, _uart);
+	}
 	else if (base == 10)
-		print(n);
+	{
+		printInteger(n, _uart);
+	}
 	else
-		printNumber(n, base);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	{
+		printIntegerInBase(n, base,  _uart);
+	}
+	secureEnd();
 }
 
 /*
@@ -245,14 +225,9 @@ void WaspUSB::print(long n, int base)
  */
 void WaspUSB::printHex(char n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-
+	secureBegin();	
 	puthex((char)n,0);
-
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureEnd();
 }
 
 
@@ -261,13 +236,8 @@ void WaspUSB::printHex(char n)
  * 
  */
 void WaspUSB::print(double n)
-{
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	printFloat(n, 10);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+{	
+	printFloat(n, 10);	
 }
 
 /*
@@ -276,12 +246,9 @@ void WaspUSB::print(double n)
  */
 void WaspUSB::print(uint64_t n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	printInteger(n,0);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureEnd();
 }
 
 /*
@@ -290,13 +257,9 @@ void WaspUSB::print(uint64_t n)
  */
 void WaspUSB::println()
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print('\r');
-	print('\n');  
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	printNewline(_uart);
+	secureEnd();	
 }
 
 /*
@@ -305,13 +268,10 @@ void WaspUSB::println()
  */
 void WaspUSB::println(char c)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(c);
-	println();  
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	printByte(c, _uart);
+	printNewline(_uart);
+	secureEnd();
 }
 
 /*
@@ -320,13 +280,10 @@ void WaspUSB::println(char c)
  */
 void WaspUSB::println(const char c[])
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(c);
-	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();	
+	printString(c,  _uart);	
+	printNewline(_uart);
+	secureEnd();
 }
 
 /*
@@ -335,14 +292,26 @@ void WaspUSB::println(const char c[])
  */
 void WaspUSB::println(uint8_t b)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(b);
-	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();	
+	printByte(b,  _uart);
+	printNewline(_uart);
+	secureEnd();
 }
+
+
+/*
+ * print() - prints an unsigned 16-bit integer adding an EOL and a carriage return
+ * 
+ */
+void WaspUSB::println(uint16_t n)
+{
+	secureBegin();	
+	printIntegerInBase((uint32_t) n, 10, _uart);
+	printNewline(_uart);
+	secureEnd();
+}
+
+
 
 /*
  * print( n ) - prints an integer adding an EOL and a carriage return
@@ -350,13 +319,15 @@ void WaspUSB::println(uint8_t b)
  */
 void WaspUSB::println(int n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(n);
-	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	if (n < 0) 
+	{
+		printByte('-',_uart);
+		n = -n;
+	}	
+	printIntegerInBase((uint32_t) n, 10,  _uart);
+	printNewline(_uart);
+	secureEnd();
 }
 
 /*
@@ -365,13 +336,15 @@ void WaspUSB::println(int n)
  */
 void WaspUSB::println(long n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(n);
-	println();
-	delay(DELAY_TIME);  
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	if (n < 0) 
+	{
+		printByte('-',_uart);
+		n = -n;
+	}	
+	printIntegerInBase((uint32_t)n, 10,  _uart);
+	printNewline(_uart);
+	secureEnd();
 }
 
 /*
@@ -380,13 +353,10 @@ void WaspUSB::println(long n)
  */
 void WaspUSB::println(unsigned long n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(n);
-	println();  
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	printIntegerInBase((uint32_t)n, 10,  _uart);
+	printNewline(_uart);
+	secureEnd();
 }
 
 /*
@@ -396,13 +366,21 @@ void WaspUSB::println(unsigned long n)
  */
 void WaspUSB::println(long n, int base)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(n, base);
-	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	if (base == 0)
+	{		
+		printByte((char) n, _uart);
+	}
+	else if (base == 10)
+	{
+		printInteger(n, _uart);
+	}
+	else
+	{
+		printIntegerInBase(n, base,  _uart);
+	}
+	printNewline(_uart);
+	secureEnd();
 }
 
 /*
@@ -410,14 +388,9 @@ void WaspUSB::println(long n, int base)
  * 
  */
 void WaspUSB::println(double n)
-{
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(n);
+{	
+	printFloat(n, 10);
 	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
 }
 
 /*
@@ -426,30 +399,14 @@ void WaspUSB::println(double n)
  */
 void WaspUSB::println(uint64_t n)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	printInteger(n,0);
-	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	printNewline(_uart);
+	secureEnd();
 }
 
 /// Private Methods ////////////////////////////////////////////////////////////
 
-/*
- * print( n , base ) - prints a number in the specified base
- * 
- */
-void WaspUSB::printNumber(unsigned long n, uint8_t base)
-{
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	printIntegerInBase(n, base,  _uart);
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
-}
 
 /*
  * printFloat( number , digits ) - prints a 'float' number
@@ -460,13 +417,12 @@ void WaspUSB::printNumber(unsigned long n, uint8_t base)
  */
 void WaspUSB::printFloat(double number, uint8_t digits) 
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
+	
 	// Handle negative numbers
 	if (number < 0.0)
 	{
-		print('-');
+		printByte('-', _uart);
 		number = -number;
 	}
 
@@ -479,23 +435,22 @@ void WaspUSB::printFloat(double number, uint8_t digits)
 
 	// Extract the integer part of the number and print it
 	unsigned long int_part = (unsigned long)number;
-	double remainder = number - (double)int_part;
-	print(int_part);
+	double remainder = number - (double)int_part;	
+	printIntegerInBase(int_part, 10, _uart);
 
 	// Print the decimal point, but only if there are digits beyond
 	if (digits > 0)
-		print("."); 
+		printByte('.',_uart); 
 
 	// Extract digits from the remainder one at a time
 	while (digits-- > 0)
 	{
 		remainder *= 10.0;
 		int toPrint = int(remainder);
-		print(toPrint);
+		printIntegerInBase( (long) toPrint, 10,  _uart);
 		remainder -= toPrint; 
 	}
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureEnd();
 }
 
 /*
@@ -506,16 +461,19 @@ void WaspUSB::printFloat(double number, uint8_t digits)
  */
 uint32_t WaspUSB::print(const __FlashStringHelper *ifsh)
 {
-	beginSerial(USB_RATE, _uart);
+	unsigned char c;
+	
+	secureBegin();
 	const char * __attribute__((progmem)) p = (const char * ) ifsh;
 	uint32_t retries = 1000;
 	while( retries > 0 ) 
 	{
 		retries--;
-		unsigned char c = pgm_read_byte(p++);
+		c = pgm_read_byte(p++);
 		if (c == 0) break;		
-		print(c);
+		printByte(c,  _uart);
 	}
+	secureEnd();
 	return 0;
 }
 
@@ -527,8 +485,7 @@ uint32_t WaspUSB::print(const __FlashStringHelper *ifsh)
  */
 uint32_t WaspUSB::println(const __FlashStringHelper *ifsh)
 {
-	beginSerial(USB_RATE, _uart);
-	uint32_t n = print(ifsh);	
+	uint32_t n = print(ifsh);
 	println();
 	return n;
 }
@@ -559,14 +516,15 @@ uint32_t WaspUSB::println(const __FlashStringHelper *ifsh)
  */
 void  WaspUSB::printf(char *fmt, ... )
 {	
-	beginSerial(USB_RATE, _uart);
+	secureBegin();	
 	// resulting string limited to 128 chars
     char tmp[128]; 
     va_list args;
     va_start (args, fmt );
     vsnprintf(tmp, 128, fmt, args);
     va_end (args);
-    USB.print(tmp);
+    printString(tmp, _uart);
+    secureEnd();
 }
 
 
@@ -578,15 +536,12 @@ void  WaspUSB::printf(char *fmt, ... )
  */
 void WaspUSB::print(uint8_t* pointer, uint16_t length)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	for( uint16_t i = 0; i < length; i++ )
 	{
 		printByte( pointer[i], _uart);
 	}	
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureEnd();
 }
 
 
@@ -596,15 +551,12 @@ void WaspUSB::print(uint8_t* pointer, uint16_t length)
  */
 void WaspUSB::printHex(uint8_t* pointer, uint16_t length)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	secureBegin();
 	for( uint16_t i = 0; i < length; i++ )
 	{		
 		puthex((char)pointer[i], _uart);
 	}	
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureEnd();
 }
 
 
@@ -616,13 +568,13 @@ void WaspUSB::printHex(uint8_t* pointer, uint16_t length)
  */
 void WaspUSB::println(uint8_t* pointer, uint16_t length)
 {
-	beginSerial(USB_RATE, _uart);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	print(pointer, length);
-	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	secureBegin();
+	for( uint16_t i = 0; i < length; i++ )
+	{		
+		printByte((char)pointer[i], _uart);
+	}
+	printNewline(_uart);
+	secureEnd();
 }
 
 
@@ -634,13 +586,73 @@ void WaspUSB::println(uint8_t* pointer, uint16_t length)
  */
 void WaspUSB::printHexln(uint8_t* pointer, uint16_t length)
 {
+	secureBegin();
+	for( uint16_t i = 0; i < length; i++ )
+	{		
+		puthex((char)pointer[i], _uart);
+	}		
+	printNewline(_uart);
+	secureEnd();
+}
+
+
+
+/* 
+ * name: secureBegin 
+ * Inits UART0 securely taking account on what baudrate was previously set in 
+ * UART0 before using the USB port. This helps to avoid errors with different
+ * baudrate usage
+ * 		
+ */
+void WaspUSB::secureBegin()
+{
+	// store previous baudrate
+	_reg_ubrr0h = UBRR0H;
+	_reg_ubrr0l = UBRR0L;
+	_reg_ucsr0c = UCSR0C;
+	_reg_ucsr1c = UCSR1C;
+	
+	// No parity bit
+	cbi(UCSR0C, UPM01);
+	cbi(UCSR0C, UPM00);
+	
+	// 1 stop bit
+	cbi(UCSR0C, USBS0);
+	
+	// begin uart according the correct baudrate
 	beginSerial(USB_RATE, _uart);
+	
+	// switch on mux
 	digitalWrite(MUX_PW,HIGH);
 	digitalWrite(MUX_USB_XBEE,LOW);
-	printHex(pointer, length);
-	println();
-	delay(DELAY_TIME);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+}
+
+
+/* 
+ * name: secureEnd 
+ * Inits UART0 securely taking account on what baudrate was previously set in 
+ * UART0 before using the USB port. This helps to avoid errors with different
+ * baudrate usage
+ * 		
+ */
+void WaspUSB::secureEnd()
+{	
+	// switch back the mux to SOCKET0 if needed
+	if (WaspRegister & REG_SOCKET0)
+	{
+		delay(3);
+		digitalWrite(MUX_USB_XBEE,HIGH);
+	}
+	else
+	{
+		delay(2);
+	}
+	
+	// load previous stored registers
+	UBRR0H = _reg_ubrr0h;
+	UBRR0L = _reg_ubrr0l;
+	UCSR0C = _reg_ucsr0c;
+	UCSR1C = _reg_ucsr1c;
 }
 
 

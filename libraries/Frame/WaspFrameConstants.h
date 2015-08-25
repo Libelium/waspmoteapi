@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.4
+    Version:		1.5
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
@@ -575,7 +575,7 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_HUMB,		// 35
 	2, // str_SOILT,	// 36
 	2, // str_SOIL,		// 37
-	0, // str_LW,		// 38
+	2, // str_LW,		// 38
 	2, // str_PAR,		// 39	
 	2, // str_UV,		// 40		
 	2, // str_TD,		// 41		
@@ -646,12 +646,12 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	4,	//str_LUX		// 88
 	
 	//GPS
-	4,	//str_SPEED		// 89
-	4,	//str_COURSE	// 90
-	4,	//str_ALTITUDE	// 91
-	4,	//str_HDOP		// 92
-	4,	//str_VDOP		// 93
-	4,	//str_PDOP		// 94
+	2,	//str_SPEED		// 89
+	2,	//str_COURSE	// 90
+	2,	//str_ALTITUDE	// 91
+	2,	//str_HDOP		// 92
+	2,	//str_VDOP		// 93
+	2,	//str_PDOP		// 94
 	
 	// States Machine
 	0,	//str_FSM		// 95
@@ -1062,7 +1062,7 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	1, // str_HUMB,		// 35
 	2, // str_SOILT,	// 36
 	2, // str_SOIL,		// 37
-	0, // str_LW,		// 38	
+	3, // str_LW,		// 38	
 	2, // str_PAR,		// 39
 	2, // str_UV,		// 40	
 	3, // str_TD,		// 41		
