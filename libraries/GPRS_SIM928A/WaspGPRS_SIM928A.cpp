@@ -322,6 +322,7 @@ bool WaspGPRS_SIM928A::setRTCTimeFromGPS()
 	}
 	
 	//Get Date: char date[9]; date: 20130507
+/*
     year[0] = date[4];
     year[1] = date[5];
     year[2] = '\0';
@@ -330,7 +331,16 @@ bool WaspGPRS_SIM928A::setRTCTimeFromGPS()
     month[2] = '\0';
     day[0] = date[0];
     day[1] = date[1];
-	day[2] = '\0';
+    day[2] = '\0';*/
+    year[0]  = date[2];
+    year[1]  = date[3];
+    year[2]  = '\0';
+    month[0] = date[4];
+    month[1] = date[5];
+    month[2] = '\0';
+    day[0]   = date[6];
+    day[1]   = date[7];
+    day[2]   = '\0';
 
 	
 	// Calculate Day of week
@@ -340,7 +350,7 @@ bool WaspGPRS_SIM928A::setRTCTimeFromGPS()
 	int dow = RTC.dow(yearInt, monthInt, dayInt);
 	
 	// Get time from variable char UTC_time[11]; UTC_time: 151434.000
-	hours[0] = UTC_time[0];
+    hours[0] = UTC_time[0];
     hours[1] = UTC_time[1];
     hours[2] = '\0';
     minutes[0] = UTC_time[2];
