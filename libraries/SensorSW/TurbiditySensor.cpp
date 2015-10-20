@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-	Version:			1.1
+	Version:			1.2
 	Design:				David Gascón
 	Implementation:		Ahmad Saad
 */
@@ -38,7 +38,9 @@
  ***********************************************************************/
 turbiditySensorClass::turbiditySensorClass()
 {
-	ModbusMaster485 sensor(0);
+	// The sensor comes from factory with a default address
+	// This direction can be changed using the function configureSensorAddress
+	ModbusMaster485 sensor(DEFAULT_ADDRESS);
 }
 
 /***********************************************************************
@@ -54,15 +56,17 @@ turbiditySensorClass::turbiditySensorClass()
 char turbiditySensorClass::ON()
 {
 	char result = -1;
-	cont = 0;
 	
 	// Switch ON the power supply
 	PWR.setSensorPower(SENS_5V, SENS_ON);
 	// The sensor uses 9600 bps speed communication
 	sensor.begin(9600);
+	
+	// Important: Reset the registers of the sensor
 	resetSensor();
-	 // Configure the sensor address
-  result = configureSensorAddress(sensorAddress);
+	
+	// Configure the sensor address
+	result = configureSensorAddress(SENSOR_ADDRESS);
 
 #if DEBUG_MODE == 1
 	// Check that the address has been well configured
@@ -79,15 +83,17 @@ char turbiditySensorClass::ON()
 
 	// Clear the Modbus buffers
 	clearBuffer();
-
+	
+	// Configure the type measurement of the temperature sensor
 	typeMeasurementConfiguration(TEMP_TYPE_CON, 0x0003);
 	delay(20);
 	clearBuffer();
 
+	// Configue the type measurement of the turbidity sensor
 	typeMeasurementConfiguration(TURB_TYPE_CON, 0x0003);
 	delay(20);
-	
 	clearBuffer();
+	
 	// Configure the average measurement
 	average(25);
 	
@@ -125,7 +131,7 @@ uint8_t turbiditySensorClass::readTurbidity()
 	////////////////////////////////////////////////////////////////////
 	union 
 	{
-		int ints[2];   
+		int ints[2];
 		float toFloat;
 	} 
 	foo;
@@ -134,7 +140,8 @@ uint8_t turbiditySensorClass::readTurbidity()
 	delay(10);
 	
 	//writeCalibrationValue(0x005D, getTemperature());	
-	clearBuffer();	
+	clearBuffer();
+	delay(10);
 	startMeasurment(TURB_NEW_MEAS);
 
 	// This variable will store the result of the communication
@@ -143,10 +150,11 @@ uint8_t turbiditySensorClass::readTurbidity()
 	int result = -1;
 	int retries = 0;
 	
-	while ((result !=0) & (retries < 20)) 
+	while ((result !=0) && (retries < 20)) 
 	{
 		retries ++;
 		sensor.readHoldingRegisters(TURB_MEAS_STATUS, 1);
+		delay(1);
 		// MASK for getting only the status of the register
 		
 		result = sensor.getResponseBuffer(0);
@@ -164,7 +172,7 @@ uint8_t turbiditySensorClass::readTurbidity()
 			USB.print(result, BIN);
 			USB.print(F("\n"));
 		#endif
-		delay(10);    
+		delay(10);
 	}
 
 	delay(200);
@@ -179,7 +187,16 @@ uint8_t turbiditySensorClass::readTurbidity()
 		return -1;
 	} 
 	else {
-		result = sensor.readHoldingRegisters(TURB_VALUE_REG, 2);
+		
+		result = -1;
+		retries = 0;
+		
+		while ((result !=0) && (retries < 5)) {
+		
+			result = sensor.readHoldingRegisters(TURB_VALUE_REG, 2);
+			retries++;
+			delay(10);
+		}
 
 		if (result != 0) {
 			#if DEBUG_MODE == 1
@@ -216,17 +233,7 @@ float turbiditySensorClass::getTurbidity()
 	smoothData1 = digitalSmooth(rawData1, sensSmoothArray1);  
 
 	float turbidity = smoothData1/1000.0;
-	float correction = 0.0;  
-
-	correction = -0.12 * (turbidity - 0.4) + 0.2;
-	float value = turbidity - correction;
-	
-	if (value < 0.0) 
-		value = 0.0;    
-
-	delay(10);
-	
-	return value;
+	return turbidity;
 }
  
  
@@ -277,6 +284,7 @@ void turbiditySensorClass::typeMeasurementConfiguration(uint16_t address, uint16
 }
 
 /*
+ * // Not tested functions
 void temperatureSensorCalibration()
 {
 	//Variable to read data from the serial monitor. 
@@ -334,7 +342,7 @@ void temperatureSensorCalibration()
 void turbiditySensorClass::resetSensor()
 {
 	sensor.writeSingleRegister(RESET_REG, 0x000F);
-	delay(10);
+	delay(100);
 }
 
 
@@ -385,7 +393,7 @@ uint8_t turbiditySensorClass::readTemperature()
 	{
 		int ints[2];   
 		float toFloat;
-	} 
+	}
 	foo;
 	
 	clearBuffer();
@@ -445,13 +453,13 @@ uint8_t turbiditySensorClass::readTemperature()
 			
 			return -1;
 			delay(100);
-		} 
-		else { 
+		}
+		else {
 			// If all ok
 			foo.ints[0]= sensor.getResponseBuffer(1);
 			foo.ints[1]=sensor.getResponseBuffer(0);
 
-			temperature = foo.toFloat + 1.3;
+			temperature = foo.toFloat;
 			return 0;
 		}
 	}
@@ -465,7 +473,7 @@ uint8_t turbiditySensorClass::readTemperature()
 //!*************************************************************
 //!	Name:	average()											
 //!	Description: Configure the average value		
-//!	Param : void														
+//!	Param : void												
 //!	Returns: void					
 //!*************************************************************
 void turbiditySensorClass::average(uint8_t average)
@@ -492,9 +500,9 @@ void turbiditySensorClass::average(uint8_t average)
 // Configuring the sensor address
 //**********************************************************************
 //!*************************************************************
-//!	Name:	configureSensorAddress()									
+//!	Name:	configureSensorAddress()						
 //!	Description: Configure the address of the sensor		
-//!	Param : address: the address to configure						
+//!	Param : address: the address to configure				
 //!	Returns: void					
 //!*************************************************************
 int turbiditySensorClass::configureSensorAddress(uint8_t address)
@@ -522,7 +530,7 @@ int turbiditySensorClass::configureSensorAddress(uint8_t address)
 #endif
 
 	// Use the new address of the sensor 
-	sensor.setSlaveAddress(sensorAddress);
+	sensor.setSlaveAddress(SENSOR_ADDRESS);
 	// Check that the new address has been configured correctly
 	// Read again the address
 	// Read one integer from 0x00A3 register
@@ -539,7 +547,6 @@ int turbiditySensorClass::configureSensorAddress(uint8_t address)
 }
 
 
-
 //!*************************************************************
 //!	Name:	clearBuffer()									
 //!	Description: Flushes the buffers.		
@@ -552,12 +559,11 @@ void turbiditySensorClass::clearBuffer()
 	sensor.clearResponseBuffer();
 	sensor.clearTransmitBuffer();
 	delay(10);
-
 }
-
 
 //**********************************************************************
 // Frame 60 in the documentation for Temperature
+// Not tested functions
 //**********************************************************************
 void turbiditySensorClass::readCompensationTemperature(uint16_t _register)
 {
@@ -599,58 +605,63 @@ void turbiditySensorClass::readCompensationTemperature(uint16_t _register)
 #endif
 }
 
-
-
-
+//!*************************************************************
+//!	Name:	digitalSmooth()									
+//!	Description: Digital smooth filter		
+//!	Param : int rawIn: Value to be filtered
+//!			int *sensSmoothArray: array of previous values		
+//!	Returns: long: filtered value					
+//!*************************************************************
 long turbiditySensorClass::digitalSmooth(int rawIn, int *sensSmoothArray)
 {
-	 // "int *sensSmoothArray" passes an array to the function - the asterisk indicates the array name is a pointer
-  long j, k, temp, top, bottom;
-  long total;
-  static int i;
-  // static int raw[filterSamples];
-  static int sorted[filterSamples];
-  boolean done;
+	// "int *sensSmoothArray" passes an array to the function - the asterisk indicates the array name is a pointer
+	long j, k, temp, top, bottom;
+	long total;
+	static int i;
+	// static int raw[filterSamples];
+	static int sorted[filterSamples];
+	boolean done;
+	
+	// Increment counter and roll over if necc. -  % (modulo operator) rolls over variable
+	i = (i + 1) % filterSamples;
+	// Input new data into the oldest slot
+	sensSmoothArray[i] = rawIn;
 
-  i = (i + 1) % filterSamples;    // increment counter and roll over if necc. -  % (modulo operator) rolls over variable
-  sensSmoothArray[i] = rawIn;                 // input new data into the oldest slot
+	// Transfer data array into anther array for sorting and averaging
+	for (j=0; j<filterSamples; j++){
+		sorted[j] = sensSmoothArray[j];
+	}
 
-  // Serial.print("raw = ");
+	// flag to know when we're done sorting
+	done = 0;
+	// simple swap sort, sorts numbers from lowest to highest
+	while(done != 1){
+		done = 1;
+		for (j = 0; j < (filterSamples - 1); j++){
+			// numbers are out of order - swap
+			if (sorted[j] > sorted[j + 1]){
+				temp = sorted[j + 1];
+				sorted [j+1] =  sorted[j] ;
+				sorted [j] = temp;
+				done = 0;
+			}
+		}
+	}
 
-  for (j=0; j<filterSamples; j++){     // transfer data array into anther array for sorting and averaging
-    sorted[j] = sensSmoothArray[j];
-  }
+	// Throw out top and bottom 15% of samples - limit to throw out at least one from top and bottom
+	bottom = max(((filterSamples * 15)  / 100), 1);
+	// the + 1 is to make up for asymmetry caused by integer rounding
+	top = min((((filterSamples * 85) / 100) + 1  ), (filterSamples - 1));   
+	k = 0;
+	total = 0;
+	
+	for ( j = bottom; j< top; j++){
+		total += sorted[j];  // total remaining indices
+		k++; 
+	}
 
-  done = 0;                // flag to know when we're done sorting              
-  while(done != 1){        // simple swap sort, sorts numbers from lowest to highest
-    done = 1;
-    for (j = 0; j < (filterSamples - 1); j++){
-      if (sorted[j] > sorted[j + 1]){     // numbers are out of order - swap
-        temp = sorted[j + 1];
-        sorted [j+1] =  sorted[j] ;
-        sorted [j] = temp;
-        done = 0;
-      }
-    }
-  }
-
-
-  // throw out top and bottom 15% of samples - limit to throw out at least one from top and bottom
-  bottom = max(((filterSamples * 15)  / 100), 1); 
-  top = min((((filterSamples * 85) / 100) + 1  ), (filterSamples - 1));   // the + 1 is to make up for asymmetry caused by integer rounding
-  k = 0;
-  total = 0;
-  for ( j = bottom; j< top; j++){
-    total += sorted[j];  // total remaining indices
-    k++; 
-    // Serial.print(sorted[j]); 
-    // Serial.print("   "); 
-  }
-
-  //  Serial.println();
-  //  Serial.print("average = ");
-  //  Serial.println(total/k);
-  return total / k;    // divide by number of samples
+	// Divide by number of samples
+	return total / k;
 }
 
 

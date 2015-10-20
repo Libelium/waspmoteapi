@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.7
+    Version:		1.8
     Design:			David Gascón
     Implementation:	Joaquín Ruiz, Yuri Carmona
 
@@ -230,6 +230,9 @@ class WaspWIFI
 						char* ans3, 
 						char* ans4, 
 						uint32_t timeout);
+	
+	//! It inserts a delay depending on baudrate			
+	void latencyDelay();
 						
 	//! It seeks 'pattern' inside the 'buffer' array
 	bool find( uint8_t* buffer, uint16_t length, char* pattern);	
@@ -650,6 +653,11 @@ class WaspWIFI
     uint8_t setTCPclient(	ipAddr ip_remote, 
 							uint16_t port_remote, 
 							uint16_t port_local);
+							
+	uint8_t setTCPclient(	uint8_t opt, 
+							char*	host,
+							uint16_t port_remote,
+							uint16_t port_local);
     
     //! Sets the configuration and opens a TCP server connection.
     /*!
@@ -670,6 +678,11 @@ class WaspWIFI
       \return '1' on success, '0' otherwise.
       */
     uint8_t setUDPclient(	ipAddr ip_remote, 
+							uint16_t port_remote, 
+							uint16_t port_local);
+							
+    uint8_t setUDPclient(	uint8_t opt,
+							char* host, 
 							uint16_t port_remote, 
 							uint16_t port_local);
     

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.1
+ *  Version:		2.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -78,8 +78,7 @@ const char scan_network	[] 		PROGMEM = 	"7E000408524E4413";		// AT+ND
 const char set_duration_energy[] PROGMEM = 	"7E0005085245440000"; 	// AT+ED
 const char set_duration_energy_ZB[] PROGMEM="7E0005085253440000"; 	// AT+SD
 const char get_low_dest_address[] PROGMEM =	"7E00040852444C15"; 	// AT+DL
-const char timestamp_packet[] 	PROGMEM =	"%2u%2u%2u%2u%2u%2u%2u";
-const char timestamp_rtc[] 		PROGMEM =	"%02u:%02u:%02u:%02u:%02u:%02u:%02u";
+const char timestamp_packet[] 	PROGMEM =	"%2u%2u%2u%2u%2u%2u%2u%c%2u%2u";
 
 const char* const table_CORE[] PROGMEM= 	  
 {   
@@ -131,7 +130,6 @@ const char* const table_CORE[] PROGMEM=
 	set_duration_energy_ZB,	// 45  
 	get_low_dest_address,	// 46
 	timestamp_packet,		// 47
-	timestamp_rtc,			// 48
 };
 
 
@@ -7245,14 +7243,18 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 {
 	uint16_t length = 0;
 	bool status = false;
+	uint8_t error = 0;
+	int result;
 	char buffer[100];
-	char timestamp[30];
-	int year, yearH;
-	int month; 
-	int date;
-	int hour;
-	int minute;
-	int second;
+	uint16_t year, yearH;
+	uint16_t month; 
+	uint16_t date;
+	uint16_t hour;
+	uint16_t minute;
+	uint16_t second;
+	char sign;
+	uint16_t	gmtHour;
+	uint16_t	gmtMinute;
 	packetXBee packet; 
 	int retries;
   
@@ -7262,7 +7264,6 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 	
 	// clear buffers
 	memset( buffer, 0x00, sizeof(buffer) );
-	memset( timestamp, 0x00, sizeof(timestamp) );
 	memset( &packet, 0x00, sizeof(packet) );
 
 	// Create frame to send
@@ -7298,7 +7299,7 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 		}
 
 		/// RECEIVE ///////////////////////////////////////////////
-	  
+	
 		if( status == true )
 		{		
 			// wait for response
@@ -7322,27 +7323,35 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 			}
 			
 			/// PARSE RESPONSE IF SUCCESS //////////////////////////////
-		  
+  
 			// check rx status
 			if( status == true )
 			{
 				char question[100];
 				
-				// "%2u%2u%2u%2u%2u%2u%2u"
+				// "%2u%2u%2u%2u%2u%2u%2u%c%2u%2u"
 				strcpy_P(question, (char*)pgm_read_word(&(table_CORE[47]))); 
 				if( question == NULL ) return 1;
+			
+				// get all data fields: "YYYYMMDDHHMMSS+0000"
+				result = sscanf(buffer, 
+								question, 
+								&yearH, 
+								&year, 
+								&month, 
+								&date, 
+								&hour, 
+								&minute, 
+								&second, 
+								&sign,
+								&gmtHour, 
+								&gmtMinute );
+								
+				if (result != 10)
+				{
+					return 1;
+				}
 				
-				// get all data fields: "YYYYMMDDHHMMSS"
-				sscanf( buffer, 
-						question, 
-						&yearH, 
-						&year, 
-						&month, 
-						&date, 
-						&hour, 
-						&minute, 
-						&second );
-
 				// check if valid date and time:
 				if( (year > 0) 	&&
 					(month > 0) &&
@@ -7365,25 +7374,18 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 				
 				if( status == true)
 				{
-					// "%02u:%02u:%02u:%02u:%02u:%02u:%02u"
-					strcpy_P(question, (char*)pgm_read_word(&(table_CORE[48]))); 
-					if( question == NULL ) return 1;
-					
-					// create sentence to set Time
-					snprintf( timestamp, 
-							sizeof(timestamp), 
-							question, 
-							year, 
-							month, 
-							date,
-							RTC.dow(year, month, date), 
-							hour, 
-							minute,
-							second );
-			
 					// set new timestamp
-					RTC.ON();
-					RTC.setTime(timestamp);
+					RTC.ON();					
+					error = RTC.setTime(year, 
+										month, 
+										date,
+										RTC.dow(year, month, date), 
+										hour, 
+										minute,
+										second	);
+										
+					if (error == 0) status = true;
+					else status = false;
 				}
 			}
 		}
@@ -7394,9 +7396,14 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 			retries--;
 			delay(1000);	
 		}	
-	}
-	
+	}	
 
+
+	if( status == false )
+	{	
+		return 1;
+	}	
+	
 	return 0;
 }
 

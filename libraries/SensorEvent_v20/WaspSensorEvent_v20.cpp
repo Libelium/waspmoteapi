@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -134,6 +134,7 @@ int8_t	WaspSensorEvent_v20::setBoardMode(uint8_t mode)
  */
 int8_t	WaspSensorEvent_v20::setThreshold(uint8_t sensor, float threshold) 
 {
+	
 	if( ( threshold < 0 ) || ( threshold > 3.3 ) )
 	{
 		return -2;
@@ -141,17 +142,17 @@ int8_t	WaspSensorEvent_v20::setThreshold(uint8_t sensor, float threshold)
 	
 	switch( sensor )
 	{
-		case	SENS_SOCKET1	:	setDigipot1(B0101000,threshold);
+		case	SENS_SOCKET1	:	setDigipot1(I2C_ADDRESS_EVENTS_DIGIPOT1,threshold);
 									break;
-		case	SENS_SOCKET2	:	setDigipot0(B0101000,threshold);
+		case	SENS_SOCKET2	:	setDigipot0(I2C_ADDRESS_EVENTS_DIGIPOT1,threshold);
 									break;
-		case	SENS_SOCKET3	:	setDigipot0(B0101100,threshold);
+		case	SENS_SOCKET3	:	setDigipot0(I2C_ADDRESS_EVENTS_DIGIPOT2,threshold);
 									break;
-		case	SENS_SOCKET4	:	setDigipot1(B0101100,threshold);
+		case	SENS_SOCKET4	:	setDigipot1(I2C_ADDRESS_EVENTS_DIGIPOT2,threshold);
 									break;
-		case	SENS_SOCKET5	:	setDigipot0(B0101010,threshold);
+		case	SENS_SOCKET5	:	setDigipot0(I2C_ADDRESS_EVENTS_DIGIPOT3,threshold);
 									break;
-		case	SENS_SOCKET6	:	setDigipot1(B0101010,threshold);
+		case	SENS_SOCKET6	:	setDigipot1(I2C_ADDRESS_EVENTS_DIGIPOT3,threshold);
 									break;
 		default					:	return -1;
 	}
@@ -638,7 +639,6 @@ float WaspSensorEvent_v20::readSensirion(uint8_t parameter)
  */
 void WaspSensorEvent_v20::setDigipot1(uint8_t address, float value)
 {
-
 	float thres=0.0;
 	uint8_t threshold=0;
 		

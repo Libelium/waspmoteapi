@@ -1,7 +1,7 @@
 /*! \file TurbiditySensor.h
 	\brief Library for managing the Smart Water Turbidity Sensor Board
 
-	Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
  
 	This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		1.0
+	Version:		1.2
 	Design:		David Gascón
 	Implementation:	Ahmad Saad
 */
@@ -69,28 +69,30 @@
 #define TEMP_25				0x0002
 
 // This address will be configured as a first step 
-#define sensorAddress		0x0001
+#define SENSOR_ADDRESS		0x0001
+#define DEFAULT_ADDRESS 	0x0000
 
 // Debug mode define
 #define DEBUG_MODE 0
 
 // FilterSamples should  be an odd number, no smaller than 3
-#define filterSamples   11             
+#define filterSamples   11
 
 
 /******************************************************************************
  * Class
  ******************************************************************************/
  
- //! WaspSensorSW Class
+//! Turbidity Sensor Class
 /*!
-	WaspSensorSW Class defines all the variables and functions used for
-	managing the Smart Water Sensor Board
+	This Class defines all the variables and functions used for
+	managing the Turbidity Sensor
  */
 class turbiditySensorClass
 {
 	public: 
 		
+		// Public functions
 		turbiditySensorClass();
 		char ON();
 		void OFF();
@@ -98,6 +100,8 @@ class turbiditySensorClass
 		float getTurbidity();
 
 	private:
+	
+		// Sensor management functions
 		uint8_t readTemperature();
 		void readCompensationTemperature(uint16_t _register);
 		void startMeasurment(uint8_t parameter);
@@ -109,15 +113,18 @@ class turbiditySensorClass
 		void writeCalibrationValue(uint16_t address, float value);
 		float getTemperature();
 
+		// For Mdobus management
 		ModbusMaster485 sensor;
-		
+		// Sensor variables
 		float temperature;
 		float turbidity;
-		int cont;		
+		
+		// Filter function
 		long digitalSmooth(int rawIn, int *sensSmoothArray);
-	
-		int sensSmoothArray1 [filterSamples];   // array for holding raw sensor values for sensor1
-		int rawData1, smoothData1;  // variables for sensor1 data
+		// array for holding raw sensor values for sensor1
+		int sensSmoothArray1 [filterSamples];   
+		// Variables for sensor1 data
+		int rawData1, smoothData1;  
 
 };
 

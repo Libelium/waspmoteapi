@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.7
+ *  Version:		1.8
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -2336,7 +2336,67 @@ void WaspFrame::decrementSequence(void)
 	storeSequence(aux_sequence);
 }
 
+/*
+ * addTimestamp () - add time stamp to the frame from RTC
+ *
+ * 
+ * Return:
+ *  '1' : if new sensor value does not fit in the frame
+ *  '0' : if new sensor value fits in the frame
+ * 
+ */
 
+int8_t WaspFrame::addTimestamp()
+{	
+	//ensure RTC is ON
+	RTC.ON();
+	unsigned long epochTime = RTC.getEpochTime();
+	
+	if (_mode == ASCII)
+	{
+		return addSensor(SENSOR_TST, epochTime);
+	}
+	else
+	{
+		// check if new sensor value fits /1+4/
+		if(!checkLength(5))
+		{
+			return -1;
+		}		
+		
+		// look for the separator
+		uint8_t* pointer;
+		pointer = (uint8_t*) memchr(&buffer[9],'#', length-5-9);
+		
+		if (pointer == NULL)
+		{
+			return -1;
+		}
+		
+		// increment index to reach beginning of first payload byte
+		pointer++;
+		pointer++;
+		
+		// calculate total buffer size to move
+		uint32_t size = length - 5 - (pointer-&buffer[0]);
+		
+		// move data to make room for timestamp
+		memmove(pointer+5, pointer, size);
+		
+		// copy timestamp to buffer
+		char type = SENSOR_TST;
+		memcpy(pointer,&type,1);
+		memcpy(pointer+1,&epochTime,4);
+		
+		// increment sensor fields counter 
+		numFields++;
+		// update number of bytes field
+		buffer[4] = frame.length-5;		
+
+		return length;
+	}
+
+}
 
 /// Preinstantiate Objects /////////////////////////////////////////////////////
 

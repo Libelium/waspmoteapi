@@ -18,5 +18,5 @@ available	KEYWORD2
 flush	KEYWORD2
 parityBit	KEYWORD2
 stopBitConfig	KEYWORD2
-error	KEYWORD2
+
 W232	KEYWORD3

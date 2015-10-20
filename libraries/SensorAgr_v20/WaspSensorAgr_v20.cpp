@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.5
+ *  Version:		1.6
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
  */
@@ -509,14 +509,14 @@ float WaspSensorAgr_v20::readDendrometer(void)
 	if( !Wire.I2C_ON ) Wire.begin();
 	delay(300);
   
-	Wire.beginTransmission(B0010110);
+	Wire.beginTransmission(I2C_ADDRESS_AGR_DENDROMETER);
 	Wire.send(dendro_channel);
 	Wire.send(B01010101);
 	Wire.endTransmission();
 
 	delay(300);
   
-	Wire.requestFrom(B0010110, 3);
+	Wire.requestFrom(I2C_ADDRESS_AGR_DENDROMETER, 3);
   
 	int i=0;
 	while(Wire.available())
@@ -607,14 +607,14 @@ float WaspSensorAgr_v20::readPT1000(void)
 	if( !Wire.I2C_ON ) Wire.begin();
 	delay(300);
 
-	Wire.beginTransmission(B0010110);
+	Wire.beginTransmission(I2C_ADDRESS_AGR_PT1000);
 	Wire.send(pt1000_channel);
 	Wire.send(B01010101);
 	Wire.endTransmission();
   
 	delay(300);
   
-	Wire.requestFrom(B0010110, 3);
+	Wire.requestFrom(I2C_ADDRESS_AGR_PT1000, 3);
 
 	int k=0;
 	while(Wire.available())
@@ -642,12 +642,12 @@ float WaspSensorAgr_v20::readRadiation(void)
 	byte data_apogee[2] = {0,0};
 	long val = 0;
 	float val_def = 0;
-	
+
 	if( !Wire.I2C_ON ) Wire.begin();
   
 	delay(150);
 
-	Wire.requestFrom(B0010100, 2);
+	Wire.requestFrom(I2C_ADDRESS_AGR_RADIATION, 2);
   
 	int i = 0;
 	while(Wire.available())

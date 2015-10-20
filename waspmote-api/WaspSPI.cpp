@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -65,9 +65,13 @@ void WaspSPI::close()
 	// Close SPI COM only when all modules are off
 	// if one of them is still on, then do not proceed with
 	// the closing process
-	if( (SPI.isSD == false) && (SPI.isSX == false) && (SPI.isDustSensor == false) )
+	if( (SPI.isSD == false) 
+		&& (SPI.isSX == false) 
+		&& (SPI.isDustSensor == false) 
+		&& (SPI.isSmartWater == false) 
+		&& (SPI.isSmartWaterIons == false) )
 	{
-		// define SPI pins as INPUTs (high impedance)	
+		// define SPI pins as INPUTs (high impedance)
 		pinMode(SD_SCK, INPUT);
 		pinMode(SD_MOSI, INPUT);
 		pinMode(SD_MISO, INPUT);

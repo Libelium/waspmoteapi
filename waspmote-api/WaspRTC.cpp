@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.8
+ *  Version:		1.9
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -114,6 +114,10 @@ void WaspRTC::ON(void)
   
 	// read all registers related to the Time and Date and Alarms 
 	readRTC(RTC_ALARM2_ADDRESS);
+	
+	// set the interruption line down
+	pinMode(MUX_RX, OUTPUT);
+	digitalWrite(MUX_RX, LOW);
 }
 
 
@@ -273,13 +277,13 @@ void WaspRTC::readRTC(uint8_t endAddress)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
 	// transmit to device #104 (0x68)
-	Wire.beginTransmission(RTC_ADDRESS);
+	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC);
   
 	Wire.send(RTC_START_ADDRESS);  // start from address zero
 	Wire.endTransmission();
   
 	// START READING
-	Wire.requestFrom(RTC_ADDRESS, RTC_DATA_SIZE);  
+	Wire.requestFrom(I2C_ADDRESS_WASP_RTC, RTC_DATA_SIZE);  
 
 	// slave may send less than requested
 	while((timecount <= endAddress) && (timeout < 10))   
@@ -345,7 +349,7 @@ void WaspRTC::writeRTC()
 	// Inits I2C bus
 	if( !Wire.I2C_ON ) Wire.begin();
 	
-	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
+	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
 	Wire.send(RTC_START_ADDRESS);  // start from address zero
@@ -380,7 +384,7 @@ void WaspRTC::writeRTCalarm1()
 	// Inits I2C bus
 	if( !Wire.I2C_ON ) Wire.begin();
 	
-	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
+	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
 	Wire.send(RTC_ALM1_START_ADDRESS);
@@ -412,7 +416,7 @@ void WaspRTC::writeRTCalarm2()
 	// Inits I2C bus
 	if( !Wire.I2C_ON ) Wire.begin();
 	
-	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x4A)
+	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104
 	Wire.send(RTC_ALM2_START_ADDRESS);
@@ -702,7 +706,7 @@ void WaspRTC::writeRTCregister(uint8_t theAddress)
 	if( !Wire.I2C_ON ) Wire.begin();
 	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
-	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
+	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
 	Wire.send(theAddress);  // start from address theAddress
@@ -728,14 +732,14 @@ void WaspRTC::readRTCregister(uint8_t theAddress)
 	if( !Wire.I2C_ON ) Wire.begin();
 	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
-	Wire.beginTransmission(RTC_ADDRESS); // transmit to device #104 (0x68)
+	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
 	Wire.send(theAddress);  // start from address theAddress
 	Wire.endTransmission();
   
 	// START READING
-	Wire.requestFrom(RTC_ADDRESS, 0x01); // transmit to device #104 (0x68)
+	Wire.requestFrom(I2C_ADDRESS_WASP_RTC, 0x01); // transmit to device #104 (0x68)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
 	while(!Wire.available() && (timeout < 10))

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			Ahmad Saad
  */
 
@@ -90,7 +90,10 @@ void WaspSensorSWIons::OFF(void)
 	pinMode(DIGITAL5, INPUT);
 	pinMode(DIGITAL4, INPUT);
 	pinMode(DIGITAL3, INPUT);
-	pinMode(DIGITAL1, INPUT);
+	pinMode(DIGITAL1, INPUT); 
+	
+	// Disable SPI flag
+	SPI.isSmartWaterIons = false;
 	SPI.end();
 }
 
@@ -214,6 +217,34 @@ void ionSensorClass::setCalibrationPoints(const float calVoltages[],const float 
 	intersection = SUMy_avg - (slope * SUMLogx_avg);
 }
 
+
+//!*************************************************************************************
+//!	Name:	pointToPointCalibration()
+//!	Description: Calibration using point to point method
+//!	Param : calVoltages[]: Calibration Voltages measured
+//!			calConcentrations[]: The correspondig concentrations
+//!	Returns: int: 0, If all success
+//!				 -1, If error
+//!*************************************************************************************
+int ionSensorClass::pointToPointCalibration(float calVoltages[], 
+											float calConcentrations[],
+											uint8_t numPoints_)
+{
+	if (numPoints_ <= MAX_POINTS)
+		numPoints = numPoints_;
+	else 
+		return -1;
+	
+	// Store the calibration values
+	for (int i = 0; i < numPoints; i++)
+	{
+		voltages[i] = calVoltages[i]; 
+		concentrations[i] = calConcentrations[i];
+	}
+	
+	return 0;
+}
+
 //!*************************************************************************************
 //!	Name:	calculateConcentration()										
 //!	Description: calculates the concentration in ppm's from the voltage value measured		
@@ -226,6 +257,62 @@ float ionSensorClass::calculateConcentration(float input)
 	// The calibration process in a non-linear regression
 	// y = a * log10(x) + b => x = 10 ^ ((y - b) / a)
 	return  pow(10, ((input - intersection) / slope));
+}
+
+//!*************************************************************************************
+//!	Name:	calculateConcentrationP2P()									
+//!	Description: calculates the concentration in ppm's from the voltage value measured.
+//!				 This function uses point to point method for calibrating.
+//!	Param : input: the voltage measured									
+//!	Returns: float: the value of the concentration in ppm's				
+//!*************************************************************************************
+float ionSensorClass::calculateConcentrationP2P(float input)
+{
+	bool inRange = false; 
+	int i = 0;
+	
+	// This loop is to find the range where the input is located
+	while ((!inRange) && (i < (numPoints-1))) {
+		
+		if ((input > voltages[i]) && (input <= voltages[i + 1]))
+			inRange = true;
+		else if ((input <= voltages[i]) && (input > voltages[i+1]))
+			inRange = true;
+		else
+			i++;
+	}
+	
+	float temp_slope = 0.0;
+	float temp_intersection = 0.0;
+	
+	// If the voltage input is in a range, we calculate in the slope 
+	// and the intersection of the logaritmic function
+	if (inRange ) {
+		// Slope of the logarithmic function 
+		temp_slope = (voltages[i] - voltages[i+1]) / (log10(concentrations[i]) - log10(concentrations[i+1]));
+		// Intersection of the logarithmic function
+		temp_intersection = voltages[i] - temp_slope * log10(concentrations[i]);
+		// Return the value of teh concetration
+		return pow(10, ((input - temp_intersection) / temp_slope));
+	// Else, we calculate the logarithmic function with the nearest point
+	} else {
+		
+		if (fabs(input - voltages[0]) < fabs(input - voltages[numPoints-1])) {
+			// Slope of the logarithmic function
+			temp_slope = (voltages[1] - voltages[0]) / (log10(concentrations[1]) - log10(concentrations[0]));
+			// Intersection of the logarithmic function
+			temp_intersection = voltages[0] - temp_slope * log10(concentrations[0]);
+			// Return the value of teh concetration
+			return pow(10, ((input - temp_intersection) / temp_slope));
+		} else {
+			// Slope of the logarithmic function
+			temp_slope = (voltages[numPoints-1] - voltages[numPoints-2]) / (log10(concentrations[numPoints-1]) - log10(concentrations[numPoints-2]));
+			// Intersection of the logarithmic function
+			temp_intersection = voltages[numPoints-1] - temp_slope * log10(concentrations[numPoints-1]);
+			// Return the value of the concetration
+			return pow(10, ((input - temp_intersection) / temp_slope));
+		}
+	}	
 }
 
 //!*************************************************************************************

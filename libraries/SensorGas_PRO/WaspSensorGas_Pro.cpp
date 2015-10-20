@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -304,11 +304,11 @@ void Gas::setAmplifier(bool electrode, float resistor)
 	if (electrode == AUXILIARY_ELECTRODE)
 	{
 		value = 128 - value;
-		Wire.writeBytes( MCP4146_ADDR, VOL_WIPER_0_REG | WRITE_COMMAND, &value, 1);	
+		Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_0_REG | WRITE_COMMAND, &value, 1);	
 	}
 	else
 	{
-		Wire.writeBytes( MCP4146_ADDR, VOL_WIPER_1_REG | WRITE_COMMAND, &value, 1);		
+		Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_1_REG | WRITE_COMMAND, &value, 1);		
 	}	
 	
 }
@@ -325,11 +325,11 @@ float Gas::getAmplifier(bool electrode)
 	
 	if (electrode == AUXILIARY_ELECTRODE)
 	{
-		Wire.readBytes(MCP4146_ADDR, VOL_WIPER_0_REG | READ_COMMAND, aux, 2);
+		Wire.readBytes(I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_0_REG | READ_COMMAND, aux, 2);
 	}
 	else
 	{
-		Wire.readBytes(MCP4146_ADDR, VOL_WIPER_1_REG | READ_COMMAND, aux, 2);
+		Wire.readBytes(I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_1_REG | READ_COMMAND, aux, 2);
 	}
 	
 	wiper = (aux[0] * 256) + aux[1];
@@ -365,8 +365,8 @@ void Gas::readSensorInfo()
 	
 	// First read the board version and sensor type
 	// This parameters are common for all sensors
-	Wire.readBytes(E2PROM_ADDR, VER_BOARD_REG, &sensor_config.sensor_type, 1);	
-	Wire.readBytes(E2PROM_ADDR, SENSOR_TYPE_REG, &sensor_config.sensor_type, 1);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, VER_BOARD_REG, &sensor_config.sensor_type, 1);	
+	Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSOR_TYPE_REG, &sensor_config.sensor_type, 1);
 	
 	// Then read the calibration values according the sensor type
 	// Each kind of sensor has different calibration patterns
@@ -378,15 +378,15 @@ void Gas::readSensorInfo()
 		case NDIR_CO2_SS:
 		case CALIBRATION_NDIR:			
 			
-			Wire.readBytes(E2PROM_ADDR, SENSITIVITY_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSITIVITY_REG, buffer, 4);
 			memcpy(&sensor_config.m_conc, buffer, 4);
-			Wire.readBytes(E2PROM_ADDR, OFFSET_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_REG, buffer, 4);
 			memcpy(&sensor_config.baseline, buffer, 4);
 			// Stores calibration value 1
-			Wire.readBytes(E2PROM_ADDR, CAL_1_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_1_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[0][0], buffer, 4);
 			// Stores calibration value 2
-			Wire.readBytes(E2PROM_ADDR, CAL_2_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_2_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[0][1], buffer, 4);
 			
 			break;
@@ -407,17 +407,17 @@ void Gas::readSensorInfo()
 		case SO2_SS:
 		case CALIBRATION_3E:
 			
-			Wire.readBytes(E2PROM_ADDR, SENSITIVITY_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSITIVITY_REG, buffer, 4);
 			memcpy(&sensor_config.m_conc, buffer, 4);
-			Wire.readBytes(E2PROM_ADDR, OFFSET_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_REG, buffer, 4);
 			memcpy(&sensor_config.baseline, buffer, 4);
 			
 			// Reads calibration values
 			for (int x = 0; x < 7; x++)
 			{
-				Wire.readBytes(E2PROM_ADDR, CAL_REG + (x * 8), buffer, 4);
+				Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_REG + (x * 8), buffer, 4);
 				memcpy(&sensor_config.calibration[x][0], buffer, 4);
-				Wire.readBytes(E2PROM_ADDR, CAL_REG + (x * 8) + 4, buffer, 4);
+				Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_REG + (x * 8) + 4, buffer, 4);
 				memcpy(&sensor_config.calibration[x][1], buffer, 4);
 			}
 			break;
@@ -426,23 +426,23 @@ void Gas::readSensorInfo()
 		case O3_AS:
 		case CALIBRATION_4E:
 			
-			Wire.readBytes(E2PROM_ADDR, SENSITIVITY_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSITIVITY_REG, buffer, 4);
 			memcpy(&sensor_config.m_conc, buffer, 4);
-			Wire.readBytes(E2PROM_ADDR, OFFSET_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_REG, buffer, 4);
 			memcpy(&sensor_config.baseline, buffer, 4);
-			Wire.readBytes(E2PROM_ADDR, SENS_AE_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENS_AE_REG, buffer, 4);
 			memcpy(&sensor_config.val_aux, buffer, 4);
 			
 			// Reads calibration values for working electrode
-			Wire.readBytes(E2PROM_ADDR, CAL_WE_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_WE_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[0][0], buffer, 4);
-			Wire.readBytes(E2PROM_ADDR, CAL_WE_REG + 4, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_WE_REG + 4, buffer, 4);
 			memcpy(&sensor_config.calibration[0][1], buffer, 4);
 			
 			// Reads calibration values for working electrode
-			Wire.readBytes(E2PROM_ADDR, CAL_AE_REG, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_AE_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[1][0], buffer, 4);
-			Wire.readBytes(E2PROM_ADDR, CAL_AE_REG + 4, buffer, 4);
+			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_AE_REG + 4, buffer, 4);
 			memcpy(&sensor_config.calibration[1][1], buffer, 4);
 			
 			break;
@@ -2137,7 +2137,7 @@ void Gas::showSensorInfo()
 	digitalWrite(sensor_config.I2C_pin, HIGH);
 	
 	memset(sensor_no, '\0', sizeof(sensor_no));
-	Wire.readBytes(E2PROM_ADDR, SENSOR_NO_REG, (uint8_t*)sensor_no, 16);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSOR_NO_REG, (uint8_t*)sensor_no, 16);
 			
 	//Disable communication with the AFE
 	digitalWrite(sensor_config.I2C_pin, LOW);

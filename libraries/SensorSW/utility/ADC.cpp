@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			Ahmad Saad
  */
 
@@ -53,11 +53,14 @@ adcClass::adcClass() {}
 //!*************************************************************************************
 void adcClass::begin(void)
 {
+	// Activate the correspondig flag
+	SPI.isSmartWater = true;
+	
 	SPI.begin();
 
 	// Initialization of the SPI bus
 	pinMode(DIGITAL4, OUTPUT);
-	//ADC chips select input			
+	//ADC chips select input
 	digitalWrite(DIGITAL4, HIGH);
 	
 	SPI.setBitOrder(MSBFIRST);
@@ -90,16 +93,21 @@ float adcClass::readADC(uint8_t channel)
 		en_byte = en_byte | channel;
 	}
 
+	SPI.setSPISlave(ALL_DESELECTED);
+	// Select SW slave
+
 	// selection of the ADC channel 
 	SPI.transfer(en_byte);
-	delay(1);
+	delay(1);	
 
 	// A new conversion is started through a pulse in the chip selection pin and initiating
 	// a transfer
-	digitalWrite(DIGITAL4, LOW);
+	//digitalWrite(DIGITAL4, LOW);
+	SPI.setSPISlave(SMART_WATER_SELECT);
 	delay(2);
 	SPI.transfer(0x00);
-	digitalWrite(DIGITAL4, HIGH);
+	
+	SPI.setSPISlave(ALL_DESELECTED);
 
 	// Waiting for the conversion time (max 163.36ms)
 	delay(175);
@@ -113,7 +121,7 @@ float adcClass::readADC(uint8_t channel)
 	// The remaining 4 bits are sub LSBs beyond the 24-bit level (eliminated dividing by 16)
 
 	
-	digitalWrite(DIGITAL4, LOW);
+	SPI.setSPISlave(SMART_WATER_SELECT);
 	delay(1);
 	// Read 4 times to get 4*8 = 32 bits 
 	val[0] = SPI.transfer(0x00);
@@ -121,7 +129,8 @@ float adcClass::readADC(uint8_t channel)
 	val[2] = SPI.transfer(0x00);
 	val[3] = SPI.transfer(0x00);
 	delay(1);
-	digitalWrite(DIGITAL4, HIGH);
+	
+	SPI.setSPISlave(ALL_DESELECTED);
 
 // 			ADC bits sequency
 //   __________________________________________________________

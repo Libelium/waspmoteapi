@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -49,7 +49,7 @@ bool LMP91000::check()
 		USB.println(F("LMP.Checking status of LMP91000"));
 	#endif
 		
-	answer = Wire.readBit(	LMP91000_ADDR, 
+	answer = Wire.readBit(	I2C_ADDRESS_GASPRO_LMP91000, 
 							LMP91000_STATUS_REG, 
 							&status, 
 							LMP91000_STATUS_REG_STATUS__POS);
@@ -83,7 +83,7 @@ int8_t LMP91000::lock_reg()
 		USB.println(F("LMP.Locking registers"));
 	#endif
 		
-	answer = Wire.writeBit(	LMP91000_ADDR, 
+	answer = Wire.writeBit(	I2C_ADDRESS_GASPRO_LMP91000, 
 							LMP91000_LOCK_REG, 
 							LMP91000_LOCK_REG_LOCK, 
 							LMP91000_LOCK_REG_LOCK__POS);
@@ -102,7 +102,7 @@ int8_t LMP91000::unlock_reg()
 		USB.println(F("LMP.Unlocking registers"));
 	#endif
 	
-	answer = Wire.writeBit(	LMP91000_ADDR, 
+	answer = Wire.writeBit(	I2C_ADDRESS_GASPRO_LMP91000, 
 							LMP91000_LOCK_REG, 
 							LMP91000_LOCK_REG_UNLOCK, 
 							LMP91000_LOCK_REG_LOCK__POS);
@@ -129,7 +129,7 @@ int8_t LMP91000::getRgain()
 	#if LMP_DEBUG>0
 		USB.println(F("LMP.Reading r_gain"));
 	#endif
-	answer = Wire.readBits(	LMP91000_ADDR,
+	answer = Wire.readBits(	I2C_ADDRESS_GASPRO_LMP91000,
 							LMP91000_TIAC_REG,
 							&r_gain,
 							LMP91000_TIAC_REG_REF_R_GAIN__POS,
@@ -161,7 +161,7 @@ int8_t LMP91000::setRgain(uint8_t R_gain)
 		USB.println(F("LMP.Setting r_gain"));
 	#endif
 	
-	return Wire.writeBits(	LMP91000_ADDR,
+	return Wire.writeBits(	I2C_ADDRESS_GASPRO_LMP91000,
 							LMP91000_TIAC_REG,
 							R_gain,
 							LMP91000_TIAC_REG_REF_R_GAIN__POS,
@@ -184,7 +184,7 @@ int8_t LMP91000::getInternalZero()
 		USB.println(F("LMP.Reading internal_zero"));
 	#endif
 	
-	answer = Wire.readBits(	LMP91000_ADDR,
+	answer = Wire.readBits(	I2C_ADDRESS_GASPRO_LMP91000,
 							LMP91000_REFC_REG,
 							&internal_zero,
 							LMP91000_REFC_REG_REF_INT_Z__POS,
@@ -214,7 +214,7 @@ int8_t LMP91000::setInternalZero(uint8_t InternalZeroPercentaje)
 		USB.println(F("LMP.Setting internal_zero"));
 	#endif
 		
-	return Wire.writeBits(	LMP91000_ADDR,
+	return Wire.writeBits(	I2C_ADDRESS_GASPRO_LMP91000,
 							LMP91000_REFC_REG,
 							InternalZeroPercentaje,
 							LMP91000_REFC_REG_REF_INT_Z__POS,
@@ -235,7 +235,7 @@ int8_t LMP91000::getRefSource()
 		USB.println(F("LMP.Reading ref_source"));
 	#endif
 		
-	answer = Wire.readBit(	LMP91000_ADDR,
+	answer = Wire.readBit(	I2C_ADDRESS_GASPRO_LMP91000,
 							LMP91000_REFC_REG,
 							&ref_source,
 							LMP91000_REFC_REG_REF_SOURCE__POS);
@@ -259,7 +259,7 @@ int8_t LMP91000::setRefSource(uint8_t ReferenceSource)
 		USB.println(F("LMP.Setting ref_source"));
 	#endif
 		
-	return Wire.writeBit(	LMP91000_ADDR,
+	return Wire.writeBit(	I2C_ADDRESS_GASPRO_LMP91000,
 							LMP91000_REFC_REG,
 							ReferenceSource,
 							LMP91000_REFC_REG_REF_SOURCE__POS);
@@ -278,7 +278,7 @@ uint8_t LMP91000::getTIAConReg()
 		USB.println(F("LMP.Reading TIAConReg"));
 	#endif
 		
-	answer = Wire.readBytes(	LMP91000_ADDR,
+	answer = Wire.readBytes(	I2C_ADDRESS_GASPRO_LMP91000,
 								LMP91000_TIAC_REG, 
 								&buffer, 
 								1);
@@ -304,7 +304,7 @@ uint8_t LMP91000::getRefConReg()
 		USB.println(F("LMP.Reading RefConReg"));
 	#endif
 	
-	answer = Wire.readBytes(	LMP91000_ADDR,
+	answer = Wire.readBytes(	I2C_ADDRESS_GASPRO_LMP91000,
 								LMP91000_REFC_REG,
 								&buffer,
 								1);
@@ -330,7 +330,7 @@ uint8_t LMP91000::getModeReg()
 		USB.println(F("LMP.Reading ModeReg"));
 	#endif
 	
-	answer = Wire.readBytes(	LMP91000_ADDR,
+	answer = Wire.readBytes(	I2C_ADDRESS_GASPRO_LMP91000,
 								LMP91000_MODEC_REG,
 								&buffer,
 								1);
@@ -372,7 +372,7 @@ int8_t LMP91000::setTIAConReg(uint8_t R_gain, uint8_t R_load)
 		USB.println(F("LMP.Setting TIAConReg"));
 	#endif
 		
-	Wire.writeBytes(	LMP91000_ADDR, 
+	Wire.writeBytes(	I2C_ADDRESS_GASPRO_LMP91000, 
 						LMP91000_TIAC_REG,
 						&TIA_con,
 						1);
@@ -421,7 +421,7 @@ int8_t LMP91000::setRefConReg(uint8_t ref_source, uint8_t int_zero, uint8_t BIAS
 		USB.println(F("LMP.Setting RefConReg"));
 	#endif
 	
-	Wire.writeBytes(	LMP91000_ADDR,
+	Wire.writeBytes(	I2C_ADDRESS_GASPRO_LMP91000,
 						LMP91000_REFC_REG,
 						&ref_con,
 						1);
@@ -455,7 +455,7 @@ int8_t LMP91000::setModeReg(uint8_t FET_short, uint8_t op_mode)
 		USB.println(F("LMP.Setting ModeReg"));
 	#endif
 	
-	Wire.writeBytes(	LMP91000_ADDR,
+	Wire.writeBytes(	I2C_ADDRESS_GASPRO_LMP91000,
 						LMP91000_MODEC_REG,
 						&mode_con,
 						1);

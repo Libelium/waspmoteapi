@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.11
+ *  Version:		1.12
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -275,6 +275,9 @@ void WaspPWR::switchesOFF(uint8_t option)
 		digitalWrite(ANA0, LOW);
 	}
 	
+	// set the interruption line down
+	pinMode(MUX_RX, INPUT);
+	digitalWrite(MUX_RX, LOW);	
 }
 
 
@@ -464,6 +467,27 @@ void WaspPWR::deepSleep(	const char* time2wake,
 	pinMode(XBEE_MON,OUTPUT);
 	digitalWrite(XBEE_MON,LOW);
 	
+	// switches off depending on the option selected  
+	switchesOFF(option);
+	
+	// mandatory delay to wait for MUX_RX stabilization 
+	// after switching off the sensor boards 
+	delay(100);	
+	
+	// make sure interruption pin is LOW before entering a low power state
+	// if not the interruption will never come
+	while(digitalRead(MUX_RX)==HIGH)
+	{	
+		// clear all detected interruption signals
+		delay(1);
+		PWR.clearInterruptionPin();
+		retries++;
+		if(retries>10)
+		{
+			return (void)0;
+		}
+	}
+	
 	// RTC ON
 	RTC.ON();
 	// set Alarm
@@ -481,30 +505,11 @@ void WaspPWR::deepSleep(	const char* time2wake,
 	||	( minute_aux != RTC.minute_alarm1 )
 	||	( second_aux != RTC.second_alarm1 ) )
 	{
+		RTC.disableAlarm1();
+		RTC.OFF();
 		return (void)0;
 	}
-    RTC.OFF();    
-    	
-	// switches off depending on the option selected  
-	switchesOFF(option);
-		
-	// mandatory delay to wait for MUX_RX stabilization 
-	// after switching off the sensor boards 
-	delay(100);	
-	
-	// make sure interruption pin is LOW before entering a low power state
-	// if not the interruption will never come
-	while(digitalRead(MUX_RX)==HIGH)
-	{
-		// clear all detected interruption signals
-		delay(1);
-		PWR.clearInterruptionPin();
-		retries++;
-		if(retries>10)
-		{
-			return (void)0;
-		}
-	}
+    RTC.OFF();	
 	
 	// set sleep mode
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -852,7 +857,11 @@ void WaspPWR::clearInterruptionPin()
 			default: 		// do nothing
 							break;				
 		}										
-	}	 
+	}
+	
+	// set the interruption line down
+	pinMode(MUX_RX, INPUT);
+	digitalWrite(MUX_RX, LOW);
 }
 
 

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -38,8 +38,6 @@
 
 #define LMP_DEBUG 0
 
-
-#define LMP91000_ADDR 0x48
 
 // REGISTER TABLE
 #define LMP91000_STATUS_REG	0x00

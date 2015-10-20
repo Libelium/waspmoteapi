@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -192,7 +192,22 @@ public:
    	*/
 	boolean 	isSD;
 	
+	//! Variable : indicates when Dust Sensor is being powered on
+  	/*! true: ON; false: OFF
+   	*/
 	boolean		isDustSensor;
+	
+	//! Variable : indicates when Smart Water is being powered on
+  	/*! true: ON; false: OFF
+   	*/
+	boolean		isSmartWater;
+	
+	//! Variable : indicates when Smart Water Ions is being powered on
+  	/*! true: ON; false: OFF
+   	*/
+	boolean		isSmartWaterIons;
+
+	
 };
 
 extern WaspSPI SPI;

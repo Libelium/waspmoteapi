@@ -1,6 +1,8 @@
-/*
- *  Modified for Waspmote by Libelium, 2009-2015
+/*!
+ *  @file 		Wire.h 
+ *  @version	1.1
  *
+ *  Modified for Waspmote by Libelium, 2009-2015
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -28,6 +30,36 @@
 //#define I2C_DEBUG
 //#define I2C_DEBUG_FULL
 #define I2C_TIMEOUT		250			// timeout for I2C reads in milliseconds
+
+//I2c addresses
+#define I2C_ADDRESS_WASP_ACC			0x19
+#define I2C_ADDRESS_WASP_RTC			0x68
+#define I2C_ADDRESS_EVENTS_DIGIPOT1		0x28
+#define I2C_ADDRESS_EVENTS_DIGIPOT2		0x2C
+#define I2C_ADDRESS_EVENTS_DIGIPOT3		0x2A
+#define I2C_ADDRESS_AGR_DENDROMETER		0x16
+#define I2C_ADDRESS_AGR_PT1000			0x16
+#define I2C_ADDRESS_AGR_RADIATION		0x14
+#define I2C_ADDRESS_GASES_SOCKET_1A_1B	0x28
+#define I2C_ADDRESS_GASES_SOCKET_4		0x2A
+#define I2C_ADDRESS_GASES_SOCKET_2A_2B	0x2C
+#define I2C_ADDRESS_GASES_SOCKET_3_3B	0x2E
+#define I2C_ADDRESS_SENS_CITIES_DUST	0X2A
+#define I2C_ADDRESS_CITIES_LD			0X28
+#define I2C_ADDRESS_CITIES_AUDIO		0X2A
+#define I2C_ADDRESS_CITIES_AUDIO_GAIN	0X2E
+#define I2C_ADDRESS_CITIES_HUMIDITY		0X2F
+#define I2C_ADDRESS_CITIES_TEMPERATURE	0X2C
+#define I2C_ADDRESS_CITIES_ULTRA_5V		0X2F
+#define I2C_ADDRESS_CITIES_ULTRA_3V3	0X2C
+#define I2C_ADDRESS_CITIES_LDR			0X2C
+#define I2C_ADDRESS_CITIES_CD			0X2C
+#define I2C_ADDRESS_CITIES_CP			0X2C
+#define I2C_ADDRESS_GASPRO_BME280		0x77
+#define I2C_ADDRESS_GASPRO_LMP91000 	0x48
+#define I2C_ADDRESS_GASPRO_MCP3421		0x69
+#define I2C_ADDRESS_GASPRO_E2PROM		0x50
+#define I2C_ADDRESS_GASPRO_MCP4146		0x2A
 
 class TwoWire
 {

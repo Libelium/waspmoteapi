@@ -21,7 +21,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.4
+    Version:		1.5
     Design:			David Gascón
     Implementation:	A. Bielsa, D. Cuartielles, M. Yarza, Y. Carmona
 
@@ -130,14 +130,10 @@
 /*! \def RTC_START_ADDRESS
     \brief RTC Addresses constants. Start address
  */
-/*! \def RTC_ADDRESS
-    \brief RTC Addresses constants. I2C RTC Address
- */
 /*! \def RTC_DATA_SIZE
     \brief RTC Addresses constants. Number of Timekeeping Registers within RTC
  */
 #define	RTC_START_ADDRESS		0x00
-#define RTC_ADDRESS 			0x68
 #define RTC_DATA_SIZE 			0x13
 
 

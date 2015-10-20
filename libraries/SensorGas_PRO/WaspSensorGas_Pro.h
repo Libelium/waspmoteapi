@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -67,8 +67,6 @@
 //!***************************************************************************
 //!	EEPROM defines
 //!***************************************************************************
-//! I2C address
-#define E2PROM_ADDR		0x50
 
 //! EEPROM memory address
 // Common
@@ -95,7 +93,6 @@
 //!***************************************************************************
 //!	MCP4146 defines
 //!***************************************************************************
-#define MCP4146_ADDR		0x2A
 
 #define VOL_WIPER_0_REG		0x00
 #define VOL_WIPER_1_REG		0x10

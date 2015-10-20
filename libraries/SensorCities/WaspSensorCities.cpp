@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation: Manuel Calahorra
  */
@@ -148,7 +148,7 @@ void WaspSensorCities::setAudioGain(uint8_t value1, float value2)
 
 	if( !Wire.I2C_ON ) Wire.begin();
 	delay(100);
-	Wire.beginTransmission(B0101110);
+	Wire.beginTransmission(I2C_ADDRESS_CITIES_AUDIO_GAIN);
 	Wire.send(B00000000);
 	Wire.send(ampli);
 	Wire.endTransmission();	
@@ -163,7 +163,7 @@ void WaspSensorCities::setAudioGain(uint8_t value1, float value2)
 
 	ampli=(uint8_t) 128-(128/100)*auxiliar;
 
-	Wire.beginTransmission(B0101110);
+	Wire.beginTransmission(I2C_ADDRESS_CITIES_AUDIO_GAIN);
 	Wire.send(B00010000);
 	Wire.send(ampli);
 	Wire.endTransmission();
@@ -200,27 +200,27 @@ int8_t	WaspSensorCities::setThreshold(uint16_t sensor, float threshold)
 	
 	switch( sensor )
 	{
-		case	SENS_CITIES_DUST			:	setDigipot0(B0101010,threshold);
-												break;
-		case	SENS_CITIES_LD				:	setDigipot1(B0101000,threshold);
-												break;
-		case	SENS_CITIES_AUDIO			:	setDigipot1(B0101010,threshold);
-												break;
-		case	SENS_CITIES_HUMIDITY		:	setDigipot0(B0101111,threshold);
-												break;
-		case	SENS_CITIES_TEMPERATURE		:	setDigipot1(B0101100,threshold);
-												break;
-		case	SENS_CITIES_ULTRASOUND_5V	:	setDigipot0(B0101111,threshold);
-												break;
-		case	SENS_CITIES_ULTRASOUND_3V3	:	setDigipot1(B0101100,threshold);
-												break;
-		case	SENS_CITIES_LDR				:	setDigipot0(B0101100,threshold);
-												break;
-		case	SENS_CITIES_CD				:	setDigipot0(B0101100,threshold);
-												break;
-		case	SENS_CITIES_CP				:	setDigipot0(B0101100,threshold);
-												break;
-		default								:	return -1;
+		case SENS_CITIES_DUST			:	setDigipot0(I2C_ADDRESS_SENS_CITIES_DUST,threshold);
+			 								break;
+		case SENS_CITIES_LD				:	setDigipot1(I2C_ADDRESS_CITIES_LD,threshold);
+			 								break;
+		case SENS_CITIES_AUDIO			:	setDigipot1(I2C_ADDRESS_CITIES_AUDIO,threshold);
+			 								break;
+		case SENS_CITIES_HUMIDITY		:	setDigipot0(I2C_ADDRESS_CITIES_HUMIDITY,threshold);
+			 								break;
+		case SENS_CITIES_TEMPERATURE	:	setDigipot1(I2C_ADDRESS_CITIES_TEMPERATURE,threshold);
+			 								break;
+		case SENS_CITIES_ULTRASOUND_5V	:	setDigipot0(I2C_ADDRESS_CITIES_ULTRA_5V,threshold);
+			 								break;
+		case SENS_CITIES_ULTRASOUND_3V3	:	setDigipot1(I2C_ADDRESS_CITIES_ULTRA_3V3,threshold);
+			 								break;
+		case SENS_CITIES_LDR			:	setDigipot0(I2C_ADDRESS_CITIES_LDR,threshold);
+			 								break;
+		case SENS_CITIES_CD				:	setDigipot0(I2C_ADDRESS_CITIES_CD,threshold);
+			 								break;
+		case SENS_CITIES_CP				:	setDigipot0(I2C_ADDRESS_CITIES_CP,threshold);
+											break;
+		default						:	return -1;
 	}
 	
 	return 1;

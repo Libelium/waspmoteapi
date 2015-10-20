@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			Ahmad Saad
  */
 
@@ -52,7 +52,8 @@ adcClass::adcClass() {}
 //!*************************************************************************************
 void adcClass::begin(void)
 {	
-	
+	// Activate the flag
+	SPI.isSmartWaterIons = true;
 	// Initialization of the SPI bus
 	SPI.begin();
 	SPI.setBitOrder(MSBFIRST);

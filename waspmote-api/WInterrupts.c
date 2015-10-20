@@ -3,7 +3,7 @@
  *
  *  Copyright (c) 2004-05 Hernando Barragan
  *  Modified 24 November 2006 by David A. Mellis
- * 	Revised for Waspmote by Libelium, 2014
+ * 	Revised for Waspmote by Libelium, 2015
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -18,7 +18,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, David A. Mellis, Hernando Barragan, Manuel Calahorra
  */
@@ -76,28 +76,34 @@ void attachInterrupt(uint8_t interruptNum, void (*userFunc)(void), int mode)
 					// change, rising edge, or falling edge).  The mode constants 
 					// were chosen to correspond to the configuration bits in the 
 					// hardware register, so we simply shift the mode into place.
+					EIMSK &= ~(1 << INT0);
 					EICRA = (EICRA & ~((1 << ISC00) | (1 << ISC01))) | (mode << ISC00);
-      
-					// Enable the interrupt.
+					EIFR  |= (1 << INT0);
 					EIMSK |= (1 << INT0);
 					break;
 			
 			case 1:	// INT1 connects to I2C_SDA (not used as interrupt pin in Waspmote)
+					EIMSK &= ~(1 << INT1);
 					EICRA = (EICRA & ~((1 << ISC10) | (1 << ISC11))) | (mode << ISC10);
+					EIFR  |= (1 << INT1);
 					EIMSK |= (1 << INT1);
 					break;
 			
 			case 2:	// INT2 is assigned to MUX_RX
 					// This means the interruption pin is shared with the UART1
 					// RX pin
+					EIMSK &= ~(1 << INT2);					
 					EICRA = (EICRA & ~((1 << ISC20) | (1 << ISC21))) | (mode << ISC20);
+					EIFR  |= (1 << INT2);
 					EIMSK |= (1 << INT2);
 					break;
         
 			case 3:	// INT3 is assigned to MUX_TX
 					// This means the interruption pin is shared with the UART1
 					// TX pin
+					EIMSK &= ~(1 << INT3);	
 					EICRA = (EICRA & ~((1 << ISC30) | (1 << ISC31))) | (mode << ISC30);
+					EIFR  |= (1 << INT3);
 					EIMSK |= (1 << INT3);
 					break;
         
@@ -107,7 +113,9 @@ void attachInterrupt(uint8_t interruptNum, void (*userFunc)(void), int mode)
 					// the inner subroutine sets this pin to high level to 
 					// indicate this interrption arrived and this is the way to
 					// distinguish this interruption from others.
+					EIMSK &= ~(1 << INT4);	
 					EICRB = (EICRB & ~((1 << ISC40) | (1 << ISC41))) | (mode << ISC40);
+					EIFR  |= (1 << INT4);
 					EIMSK |= (1 << INT4);
 					break;
         

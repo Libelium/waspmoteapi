@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
 
@@ -55,11 +55,6 @@
     \brief Full-scale selecion +-8g
  */
 #define FS_8G 8
-
-/*! \def i2cID
-    \brief sensor's address on the I2C port
- */
-#define i2cID 0x19
 
 /*! \def cbi
     \brief Function definition to set a register bit to '0'

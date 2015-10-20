@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -38,10 +38,6 @@
 
 #define BME280_DEBUG 0
 
-//! Sensor specific I2C address
-#define BME280_I2C_ADDRESS1				0x76
-#define BME280_I2C_ADDRESS2				0x77
-#define BME280_I2C_ADDRESS				BME280_I2C_ADDRESS2
 
 //! Sensor Specific constants
 #define BME280_SLEEP_MODE				0x00

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -38,10 +38,6 @@
 
 
 #define MCP3421_I2C_READ_TIMEOUT	100
-
-// MCP3421 I2C address
-//#define MCP3421_ADDR	0x68
-#define MCP3421_ADDR	0x69
 
 // resolution value for ADC conversion
 #define MCP3421_RES_12_BIT		0

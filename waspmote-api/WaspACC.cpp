@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
@@ -95,6 +95,10 @@ void WaspACC::ON(uint8_t FS_OPTION)
 			break;
 		}
 	}
+	
+	// set the interruption line down
+	pinMode(MUX_RX, OUTPUT);
+	digitalWrite(MUX_RX, LOW);
 }
 
 
@@ -859,11 +863,11 @@ int16_t WaspACC::readRegister(uint8_t regNum)
 	flag &= ~(ACC_ERROR_READING);
 
 	uint8_t aux = 0;
-	Wire.beginTransmission(i2cID);
+	Wire.beginTransmission(I2C_ADDRESS_WASP_ACC);
 	Wire.send(regNum);
 	Wire.endTransmission();
 
-	Wire.requestFrom(i2cID, 1);
+	Wire.requestFrom(I2C_ADDRESS_WASP_ACC, 1);
 	if(Wire.available())
 	{
 		aux = Wire.receive();
@@ -883,7 +887,7 @@ uint8_t WaspACC::writeRegister(uint8_t address, uint8_t val)
 	// reset the flag
 	flag &= ~(ACC_ERROR_WRITING);
 
-	Wire.beginTransmission(i2cID);
+	Wire.beginTransmission(I2C_ADDRESS_WASP_ACC);
 	Wire.send(address); 
 	Wire.send(val);
 	Wire.endTransmission();

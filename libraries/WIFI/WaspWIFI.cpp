@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.11
+ *  Version:		1.12
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -486,7 +486,7 @@ uint8_t WaspWIFI::checkAnswer(char* pattern)
 		if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 		{			
 			i++;
-			if( baud_rate == 9600) delay(10);
+			latencyDelay();
 		}
     }
 	answer[i]='\0'; 
@@ -542,7 +542,7 @@ uint8_t WaspWIFI::readData(uint8_t len)
 			{
 				i++; 
 			}
-			delay(10);
+			latencyDelay();
 		}
 	} 
 	answer[i]='\0';
@@ -655,7 +655,7 @@ uint8_t WaspWIFI::sendCommand(char* comm, char* pattern, unsigned long timeout)
 			if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 			{			
 				i++;
-				if( baud_rate == 9600) delay(10);
+				latencyDelay();
 			}
 		}
 			
@@ -725,8 +725,7 @@ uint8_t WaspWIFI::sendCommand(	char* comm,
 		{
 			if (((answer[i]=serialRead(_uartWIFI))!='\0')&&(i<(sizeof(answer)-1)))
 			{			
-				i++;
-				if( baud_rate == 9600) delay(10);
+				i++;				
 			}
 		}
 			
@@ -848,6 +847,43 @@ uint8_t  WaspWIFI::sendCommand(	char* command,
 }
 
 
+
+/*
+ * 
+ * name: latencyDelay
+ * This function waits for specific time depending on the baudrate used.
+ * 
+ * Latency time for ensure there is no more data is calculated suposing the 
+ * worst condition: 1start+8data+1parity+2stop = 12 bits per byte
+ * 
+ */
+void WaspWIFI::latencyDelay()
+{
+	// In the case there are not any bytes left in the incoming uart
+	// wait for the time one byte needs for tranmission regarding the baudrate
+	if (serialAvailable(_uartWIFI) == 0)
+	{
+		switch (baud_rate)
+		{
+			case 115200:	delayMicroseconds(105); 	break;
+			case 57600:		delayMicroseconds(209); 	break;
+			case 38400:		delayMicroseconds(313); 	break;
+			case 19200:		delayMicroseconds(625); 	break;
+			case 9600:		delay(1); 	break;
+			case 4800:		delay(3); 	break;
+			case 2400:		delay(5); 	break;
+			case 1800:		delay(7); 	break;
+			case 1200:		delay(10); 	break;
+			case 600:		delay(20); 	break;
+			case 300:		delay(40); 	break;
+			default:					break;			
+		}
+	}
+}
+
+
+
+
 /*
  * 
  * name: find
@@ -914,7 +950,7 @@ uint8_t WaspWIFI::saveReboot()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';
     
@@ -974,7 +1010,7 @@ uint8_t WaspWIFI::open()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';
   
@@ -1020,7 +1056,7 @@ uint8_t WaspWIFI::openHTTP()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';
   
@@ -1166,13 +1202,12 @@ bool WaspWIFI::ON(uint8_t sock)
 		digitalWrite(DIGITAL6,HIGH);	
 	}
 	
-	// update Waspmote Register
-	if(_uartWIFI == SOCKET0)	WaspRegister |= REG_SOCKET0;
-	if(_uartWIFI == SOCKET1)	WaspRegister |= REG_SOCKET1;
-
 	// enter in command mode at 115200bps
 	if( commandMode() == 1 )
 	{
+		// update Waspmote Register
+		if(_uartWIFI == SOCKET0)	WaspRegister |= REG_SOCKET0;
+		if(_uartWIFI == SOCKET1)	WaspRegister |= REG_SOCKET1;
 		return 1;
 	}
 	else
@@ -1370,7 +1405,7 @@ void WaspWIFI::scan()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	answer[511]='\0'; 
@@ -1579,7 +1614,7 @@ void WaspWIFI::sendPing(ipAddr ip)
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	// Shows the result of the ping.
 	answer[i]='\0'; 
@@ -2541,7 +2576,8 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 					{
 						i++;
 					}
-					delay(10);					
+					// wait
+					delay(10);		
 				}
 			}
 			answer[i]='\0';					
@@ -2746,6 +2782,7 @@ uint8_t WaspWIFI::uploadFile(	char* filename,
 					{
 						i++;
 					}
+					// wait
 					delay(10);
 				
 					if( (millis()-previous)>FTP_TIMEOUT )
@@ -3462,38 +3499,68 @@ uint8_t WaspWIFI::setTCPclient(	ipAddr ip_remote,
 								uint16_t port_remote,
 								uint16_t port_local)
 {
+	return setTCPclient(IP, (char*)ip_remote, port_remote, port_local);
+}
+
+
+//! Sets the configuration and opens a TCP client connection.
+uint8_t WaspWIFI::setTCPclient(	uint8_t opt, 
+								char*	host,
+								uint16_t port_remote,
+								uint16_t port_local)
+{
 	char question[128];
 	char buffer[20];
-	uint8_t u1,u2,u3,u4;  
+	uint8_t u1,u2,u3,u4,u5;  
 	
-	// Configures TCP connection:
-	
-	// set ip host address
-	// Copy "set i h "
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
-	snprintf(question, sizeof(question),"%s%s\r", buffer, ip_remote);
-	u1=sendCommand(question);
+	// If the address is given by a IP address.
+	if ( opt == IP )
+	{						
+		// Copy "set i h "
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
+		u1 = sendCommand(question);
+		u2 = 1;
+	}
+	// If the address is given by a URL address.
+	else if( opt == DNS )
+	{		
+		// Turn on DNS. set ip host 0. 			
+		// Copy "set i h 0\r"
+		strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[54])));
+		u1 = sendCommand(question);	
+		
+		// Set the web server name			
+		// Copy "set d n "
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[41])));		
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
+		u2 = sendCommand(question);
+	}
+	else
+	{
+		return 0;
+	}
   
 	// set the remote host port number
 	// Copy "set i r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));
 	snprintf(question, sizeof(question),"%s%u\r", buffer, port_remote);
-	u2=sendCommand(question);
+	u3=sendCommand(question);
 	
 	// set the local port number
 	// Copy "set i l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
 	snprintf(question, sizeof(question), "%s%u\r", buffer, port_local);
-	u3=sendCommand(question);
+	u4=sendCommand(question);
 	
 	// set com remote
 	// Copy "set c r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));
 	snprintf(question, sizeof(question),"%s0\r", buffer);
-	u4 = sendCommand(question);
+	u5 = sendCommand(question);
 	
 	// Checks if everything is Ok, even if It's correctly connected.
-	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(isConnected()))
+	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(u5==1)&&(isConnected()))
 	{ 
 		// Opens the Connection, and lets it open until calling close().
 		return open();
@@ -3513,6 +3580,8 @@ uint8_t WaspWIFI::setTCPclient(	ipAddr ip_remote,
 	
 	return 0;
 }
+	
+
 	
 //! Sets the configuration and opens a TCP server connection.
 uint8_t WaspWIFI::setTCPserver(uint16_t port_local)
@@ -3535,41 +3604,76 @@ uint8_t WaspWIFI::setTCPserver(uint16_t port_local)
 	}
 	return 0;
 }
+
+
 	
 //! Sets the configuration and opens a UDP client connection.
 uint8_t WaspWIFI::setUDPclient(	ipAddr ip_remote, 
 								uint16_t port_remote, 
 								uint16_t port_local)
 {
+	return setUDPclient(IP, (char*)ip_remote, port_remote, port_local);
+}
+
+	
+//! Sets the configuration and opens a UDP client connection.
+uint8_t WaspWIFI::setUDPclient(	uint8_t opt,
+								char*	host, 
+								uint16_t port_remote, 
+								uint16_t port_local)
+{
 	char question[128];
 	char buffer[20];
-	uint8_t u1,u2,u3,u4;
+	uint8_t u1,u2,u3,u4,u5;
   
 	// Configures UDP host and ports.
 	
-	// Copy "set i h "
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
-	snprintf(question, sizeof(question),"%s%s\r", buffer, ip_remote);
-	u1=sendCommand(question);
+		// If the address is given by a IP address.
+	if ( opt == IP )
+	{						
+		// Copy "set i h "
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[32])));
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
+		u1 = sendCommand(question);
+		u2 = 1;
+	}
+	// If the address is given by a URL address.
+	else if( opt == DNS )
+	{		
+		// Turn on DNS. set ip host 0. 			
+		// Copy "set i h 0\r"
+		strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[54])));
+		u1 = sendCommand(question);	
+		
+		// Set the web server name			
+		// Copy "set d n "
+		strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[41])));		
+		snprintf(question, sizeof(question),"%s%s\r", buffer, host);
+		u2 = sendCommand(question);
+	}
+	else
+	{
+		return 0;
+	}
 	
 	// Copy "set i r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[33])));	
 	snprintf(question, sizeof(question),"%s%u\r", buffer, port_remote);
-	u2=sendCommand(question);
+	u3=sendCommand(question);
 		
 	// Copy "set i l "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[34])));
 	snprintf(question, sizeof(question), "%s%u\r", buffer, port_local);
-	u3=sendCommand(question);	
+	u4=sendCommand(question);	
 		
 	// set com remote
 	// Copy "set c r "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[56])));
 	snprintf(question, sizeof(question),"%s0\r", buffer);
-	u4 = sendCommand(question);
+	u5 = sendCommand(question);
 	
 	// Checks if everything is Ok, even if It's correctly connected.
-	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(isConnected()))
+	if ((u1==1)&&(u2==1)&&(u3==1)&&(u4==1)&&(u5==1)&&(isConnected()))
 	{ 
 		// Exits from command mode, and then the UDP messages 
 		// can be sent and received.
@@ -3644,7 +3748,7 @@ int WaspWIFI::read(uint8_t blo, unsigned long time)
 		{
 			length++; 
 		}
-		delay(10);
+		latencyDelay();
     }
     answer[length]='\0'; 
   
@@ -3795,7 +3899,7 @@ void WaspWIFI::reset()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';
 	
@@ -3869,7 +3973,7 @@ int WaspWIFI::resolve(char* name)
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';  
 	
@@ -3983,7 +4087,7 @@ void WaspWIFI::getConnectionInfo()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';	
 	
@@ -4058,7 +4162,7 @@ void WaspWIFI::getAPstatus()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4106,7 +4210,7 @@ void WaspWIFI::getRSSI()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';	
 	
@@ -4347,7 +4451,7 @@ void WaspWIFI::getUpTime()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4394,7 +4498,7 @@ void WaspWIFI::getAdhocSettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4441,7 +4545,7 @@ void WaspWIFI::getBroadcastSettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4488,7 +4592,7 @@ void WaspWIFI::getComSettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 
@@ -4535,7 +4639,7 @@ void WaspWIFI::getDNSsettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4582,7 +4686,7 @@ void WaspWIFI::getFTPsettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4633,7 +4737,7 @@ void WaspWIFI::getIP()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4682,7 +4786,7 @@ void WaspWIFI::getMAC()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4729,7 +4833,7 @@ void WaspWIFI::getOptionSettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4776,7 +4880,7 @@ void WaspWIFI::getSystemSettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4824,7 +4928,7 @@ void WaspWIFI::getTime()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4871,7 +4975,7 @@ void WaspWIFI::getWLANsettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4918,7 +5022,7 @@ void WaspWIFI::getUARTsettings()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0'; 
 	
@@ -4965,7 +5069,7 @@ void WaspWIFI::getVersion()
 		{
 			i++;
 		}
-		delay(10);
+		latencyDelay();
 	}
 	answer[i]='\0';
 	
@@ -5424,7 +5528,7 @@ uint8_t WaspWIFI::setRTCfromWiFi()
 			{
 				i++;
 			}
-			delay(10);
+			latencyDelay();
 		}
 		answer[i]='\0'; 
 		retries--;

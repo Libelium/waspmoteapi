@@ -22,6 +22,7 @@ addSensor	KEYWORD2
 checkFields	KEYWORD2
 setID	KEYWORD2
 getID	KEYWORD2
+addTimestamp	KEYWORD2
 decrementSequence	KEYWORD2
 frame	KEYWORD3
 

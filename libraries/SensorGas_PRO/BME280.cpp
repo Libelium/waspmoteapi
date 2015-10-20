@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -179,7 +179,7 @@ int8_t BME280::checkID()
 	#if BME280_DEBUG>0
 		USB.print(F("BME280.Checking ID..."));
 	#endif
-	Wire.readBytes(BME280_I2C_ADDRESS, BME280_CHIP_ID_REG, &valueID, 1);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_BME280, BME280_CHIP_ID_REG, &valueID, 1);
 	if (valueID == BME280_CHIP_ID_REG_CHIP_ID)
 	{
 		#if BME280_DEBUG>0
@@ -207,72 +207,72 @@ void BME280::readCalibration()
 	#endif
 	
 	// dig_T1
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_T1_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_T1_LSB_REG, buffer, 2);
 	dig_T1 = (uint16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_T2
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_T2_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_T2_LSB_REG, buffer, 2);
 	dig_T2 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_T3
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_T3_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_T3_LSB_REG, buffer, 2);
 	dig_T3 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P1
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P1_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P1_LSB_REG, buffer, 2);
 	dig_P1 = (uint16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P2
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P2_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P2_LSB_REG, buffer, 2);
 	dig_P2 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P3
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P3_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P3_LSB_REG, buffer, 2);
 	dig_P3 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P4
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P4_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P4_LSB_REG, buffer, 2);
 	dig_P4 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P5
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P5_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P5_LSB_REG, buffer, 2);
 	dig_P5 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P6
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P6_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P6_LSB_REG, buffer, 2);
 	dig_P6 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P7
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P7_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P7_LSB_REG, buffer, 2);
 	dig_P7 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P8
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P8_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P8_LSB_REG, buffer, 2);
 	dig_P8 = (int16_t(buffer[1]) << 8) + buffer[0];
 	
 	// dig_P9
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_P9_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_P9_LSB_REG, buffer, 2);
 	dig_P9 = (int16_t(buffer[1]) << 8) + buffer[0];
 
 	// dig_H1
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_H1_REG, &dig_H1, 1);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_H1_REG, &dig_H1, 1);
 	
 	// dig_H2
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_H2_LSB_REG, buffer, 2);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_H2_LSB_REG, buffer, 2);
 	dig_H2 = (int16_t(buffer[1]) << 8) + buffer[0];
 
 	// dig_H3
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_H3_REG, &dig_H3, 1);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_H3_REG, &dig_H3, 1);
 	
 	// dig_H4 and dig_H5
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_H4_MSB_REG, buffer, 3);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_H4_MSB_REG, buffer, 3);
 	dig_H4 = (int16_t(buffer[0]) << 4) + (buffer[1] & 0x0F);
 	
 	dig_H5 = (int16_t(buffer[1] & 0xF0) << 4) + buffer[2];
 	dig_H5 &= 0x0FFF;
 
 	// dig_H6
-	Wire.readBytes( BME280_I2C_ADDRESS, BME280_DIG_H6_REG,  buffer, 1);
+	Wire.readBytes( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_H6_REG,  buffer, 1);
 	dig_H6 = buffer[0];
 	
 }
@@ -403,21 +403,21 @@ float BME280::getTemperature(uint8_t over_sample_value, uint8_t filter_value)
 	//************************************************************************
 	// Configuration of the sensor	
 	// Unselect humidity meassure
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_HUMIDITY_REG,
 				BME280_OVERSAMP_SKIPPED,
 				BME280_CTRL_HUMIDITY_REG_OVERSAM_HUMIDITY__POS,
 				BME280_CTRL_HUMIDITY_REG_OVERSAM_HUMIDITY__LEN);
 	
 	// Unselect pressure meassure
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_MEAS_REG,
 				BME280_OVERSAMP_SKIPPED,
 				BME280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__POS,
 				BME280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__LEN);
 	
 	// Select temperature meassure
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_MEAS_REG,
 				over_sample_value,
 				BME280_CTRL_MEAS_REG_OVERSAMP_TEMPERATURE__POS,
@@ -425,7 +425,7 @@ float BME280::getTemperature(uint8_t over_sample_value, uint8_t filter_value)
     
 	
 	// Configure IIR filter	
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CONFIG_REG,
 				BME280_FILTER_COEFF_OFF,
 				BME280_CONFIG_REG_FILTER__POS,
@@ -435,7 +435,7 @@ float BME280::getTemperature(uint8_t over_sample_value, uint8_t filter_value)
 	//************************************************************************
 	// Meassuring	
 	// Selects forced mode
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_MEAS_REG,
 				BME280_FORCED_MODE,
 				BME280_CTRL_MEAS_REG_POWER_MODE__POS,
@@ -454,13 +454,13 @@ float BME280::getTemperature(uint8_t over_sample_value, uint8_t filter_value)
 	delay(int(meassure_time) + 1);
 	
 	// Check if the meassure is completed
-	Wire.readBit(BME280_I2C_ADDRESS, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
+	Wire.readBit(I2C_ADDRESS_GASPRO_BME280, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
 	if (buffer[0] == 1)
 	{
 		// Wait up to meassure_max_time
 		delay(int(meassure_max_time - meassure_time) + 1);
 		// Check if the meassure is completed
-		Wire.readBit(BME280_I2C_ADDRESS, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
+		Wire.readBit(I2C_ADDRESS_GASPRO_BME280, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
 		if (buffer[0] == 1)
 		{
 			return -1001;
@@ -471,7 +471,7 @@ float BME280::getTemperature(uint8_t over_sample_value, uint8_t filter_value)
 	//************************************************************************
 	// Read data and compensate it
 	
-	Wire.readBytes(BME280_I2C_ADDRESS, BME280_TEMPERATURE_MSB_REG, buffer, 3);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_BME280, BME280_TEMPERATURE_MSB_REG, buffer, 3);
 	uncompensated_temp = (long(buffer[0]) << 16) + (long(buffer[1]) << 8) + long(buffer[2]);
 	uncompensated_temp >>= 4;
 	temp = compensateTemp(uncompensated_temp);
@@ -518,21 +518,21 @@ float BME280::getPressure(uint8_t over_sample_value, uint8_t filter_value)
 	}
 	
 	// Unselect humidity meassure
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_HUMIDITY_REG,
 				BME280_OVERSAMP_SKIPPED,
 				BME280_CTRL_HUMIDITY_REG_OVERSAM_HUMIDITY__POS,
 				BME280_CTRL_HUMIDITY_REG_OVERSAM_HUMIDITY__LEN);
 	
 	// Select pressure meassure
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_MEAS_REG,
 				over_sample_value,
 				BME280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__POS,
 				BME280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__LEN);
 	
 	// Select temperature meassure 
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_MEAS_REG,
 				over_sample_value,
 				BME280_CTRL_MEAS_REG_OVERSAMP_TEMPERATURE__POS,
@@ -540,14 +540,14 @@ float BME280::getPressure(uint8_t over_sample_value, uint8_t filter_value)
     
 	
 	// Configure IIR filter	
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CONFIG_REG,
 				BME280_FILTER_COEFF_OFF,
 				BME280_CONFIG_REG_FILTER__POS,
 				BME280_CONFIG_REG_FILTER__LEN);
 	
 	// Select forced mode
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 				BME280_CTRL_MEAS_REG,
 				BME280_FORCED_MODE,
 				BME280_CTRL_MEAS_REG_POWER_MODE__POS,
@@ -567,25 +567,25 @@ float BME280::getPressure(uint8_t over_sample_value, uint8_t filter_value)
 	delay(int(meassure_time) + 1);
 	
 	// Check if the meassure is completed
-	Wire.readBit(BME280_I2C_ADDRESS, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
+	Wire.readBit(I2C_ADDRESS_GASPRO_BME280, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
 	if (buffer[0] == 1)
 	{
 		// Wait up to meassure_max_time
 		delay(int(meassure_max_time - meassure_time) + 1);
 		// Check if the meassure is completed
-		Wire.readBit(BME280_I2C_ADDRESS, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
+		Wire.readBit(I2C_ADDRESS_GASPRO_BME280, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
 		if (buffer[0] == 1)
 		{
 			return -1001;
 		}
 	}
 	
-	Wire.readBytes(BME280_I2C_ADDRESS, BME280_TEMPERATURE_MSB_REG, buffer, 3);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_BME280, BME280_TEMPERATURE_MSB_REG, buffer, 3);
 	uncompensated_temp = (long(buffer[0]) << 16) + (long(buffer[1]) << 8) + long(buffer[2]);
 	uncompensated_temp >>= 4;
 	compensateTemp( uncompensated_temp);
 	
-	Wire.readBytes(BME280_I2C_ADDRESS, BME280_PRESSURE_MSB_REG, buffer, 3);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_BME280, BME280_PRESSURE_MSB_REG, buffer, 3);
 	uncompensated_pres = (long(buffer[0]) << 16) + (long(buffer[1]) << 8) + long(buffer[2]);
 	uncompensated_pres >>= 4;
 	pressure = compensatePres(uncompensated_pres);
@@ -627,21 +627,21 @@ float BME280::getHumidity(uint8_t over_sample_value)
 	}
 	
 	// Select humidity meassure
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 					BME280_CTRL_HUMIDITY_REG,
 					over_sample_value,
 					BME280_CTRL_HUMIDITY_REG_OVERSAM_HUMIDITY__POS,
 					BME280_CTRL_HUMIDITY_REG_OVERSAM_HUMIDITY__LEN);
 	
 	// Unselect pressure meassure
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 					BME280_CTRL_MEAS_REG,
 					BME280_OVERSAMP_SKIPPED,
 					BME280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__POS,
 					BME280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__LEN);
 	
 	// Select temperature meassure 
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 					BME280_CTRL_MEAS_REG,
 					over_sample_value,
 					BME280_CTRL_MEAS_REG_OVERSAMP_TEMPERATURE__POS,
@@ -649,14 +649,14 @@ float BME280::getHumidity(uint8_t over_sample_value)
     
 	
 	// Configure IIR filter	
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 					BME280_CONFIG_REG,
 					BME280_FILTER_COEFF_OFF,
 					BME280_CONFIG_REG_FILTER__POS,
 					BME280_CONFIG_REG_FILTER__LEN);
 	
 	// Select forced mode
-	Wire.writeBits(	BME280_I2C_ADDRESS, 
+	Wire.writeBits(	I2C_ADDRESS_GASPRO_BME280, 
 					BME280_CTRL_MEAS_REG,
 					BME280_FORCED_MODE,
 					BME280_CTRL_MEAS_REG_POWER_MODE__POS,
@@ -675,25 +675,25 @@ float BME280::getHumidity(uint8_t over_sample_value)
 	delay(int(meassure_time) + 1);
 	
 	// Check if the meassure is completed
-	Wire.readBit(BME280_I2C_ADDRESS, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
+	Wire.readBit(I2C_ADDRESS_GASPRO_BME280, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
 	if (buffer[0] == 1)
 	{
 		// Wait up to meassure_max_time
 		delay(int(meassure_max_time - meassure_time) + 1);
 		// Check if the meassure is completed
-		Wire.readBit(BME280_I2C_ADDRESS, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
+		Wire.readBit(I2C_ADDRESS_GASPRO_BME280, BME280_STAT_REG, buffer, BME280_STAT_REG_MEASURING__POS);
 		if (buffer[0] == 1)
 		{
 			return -1001;
 		}
 	}
 	
-	Wire.readBytes(BME280_I2C_ADDRESS, BME280_TEMPERATURE_MSB_REG, buffer, 3);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_BME280, BME280_TEMPERATURE_MSB_REG, buffer, 3);
 	uncompensated_temp = (long(buffer[0]) << 16) + (long(buffer[1]) << 8) + long(buffer[2]);
 	uncompensated_temp >>= 4;
 	compensateTemp(uncompensated_temp);
 	
-	Wire.readBytes(BME280_I2C_ADDRESS, BME280_HUMIDITY_MSB_REG, buffer, 2);
+	Wire.readBytes(I2C_ADDRESS_GASPRO_BME280, BME280_HUMIDITY_MSB_REG, buffer, 2);
 	uncompensated_hum = (long(buffer[0]) << 8) + long(buffer[1]);
 	humidity = compensateHum(uncompensated_hum);
 	

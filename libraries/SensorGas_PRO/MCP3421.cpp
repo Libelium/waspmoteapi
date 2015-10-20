@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -61,7 +61,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 	if( !Wire.I2C_ON ) Wire.begin();
 
 	// Primero se manda la orden de conversion
-	Wire.beginTransmission(MCP3421_ADDR);   
+	Wire.beginTransmission(I2C_ADDRESS_GASPRO_MCP3421);   
 	
 	config_reg = 128 + (resolution * 4) + gain;
 	Wire.send(config_reg);  // start from address theAddress
@@ -74,7 +74,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_12_BIT:
 			delay(6);
 			//Leer 3 bytes ( 2 de datos + configuracion)
-			Wire.requestFrom(MCP3421_ADDR, 0x03);
+			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x03);
 			tempo = millis();
 			while((Wire.available() < 3) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{
@@ -104,7 +104,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_14_BIT:
 			delay(18);
 			//Leer 3 bytes ( 2 de datos + configuracion)
-			Wire.requestFrom(MCP3421_ADDR, 0x03);			
+			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x03);			
 			tempo = millis();
 			while((Wire.available() < 3) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{
@@ -135,7 +135,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_16_BIT:
 			delay(68);
 			//Leer 3 bytes ( 2 de datos + configuracion)
-			Wire.requestFrom(MCP3421_ADDR, 0x03);		
+			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x03);		
 			tempo = millis();
 			while((Wire.available() < 3) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{
@@ -166,7 +166,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_18_BIT:
 			delay(300);
 			//Leer 3 bytes ( 3 de datos + configuracion)
-			Wire.requestFrom(MCP3421_ADDR, 0x04);				
+			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x04);				
 			tempo = millis();
 			while((Wire.available() < 4) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.8
+    Version:		1.9
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -1085,6 +1085,7 @@ public:
      */ 
     uint16_t length;
     
+    int8_t addTimestamp(void);
 };
 
 extern WaspFrame frame;

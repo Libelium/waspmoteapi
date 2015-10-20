@@ -39,7 +39,7 @@
 /*! \def WASPMOTE_API_VERSION
     \brief Waspmote API version number
  */
-#define WASPMOTE_API_VERSION 18
+#define WASPMOTE_API_VERSION 19
  
  
  

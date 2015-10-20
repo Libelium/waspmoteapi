@@ -41,20 +41,13 @@
 //! Parity Modes
 enum ParityModes
 {
-	DISABLE 	= 0, // old definitions
-	ENABLE 		= 3, // old definitions
 	NONE 		= 0,
 	EVEN 		= 2,
 	ODD 		= 3,
 };
 
-
-//! Stop Bit Modes
-enum StopBitModes
-{
-	ONE_STOP_BIT 	= 1,			
-	TWO_STOP_BITS 	= 2,
-};
+#define ONE_STOP_BIT 1
+#define TWO_STOP_BITS 2
 
 /******************************************************************************
  * Class

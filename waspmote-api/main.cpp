@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.1
+ *  Version:		2.2
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -47,6 +47,12 @@ int main(void)
 		// clear eeprom flag
 		eeprom_write_byte((unsigned char *) 0x01, 0x00);
 	}
+	
+	// disable both RTC alarms
+	RTC.ON();
+	RTC.disableAlarm1();
+	RTC.disableAlarm2();
+	RTC.OFF();
 	
 	delay(3);	
 	if( WaspRegister & REG_SX )

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:		David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra
  */
@@ -533,11 +533,11 @@ void WaspSensorGas_v20::configureResistor(uint8_t ampli, float resistor)
 {
 	switch( ampli )
 	{
-		case	SENS_R1	:	setResistor(B0101100,resistor);
+		case	SENS_R1	:	setResistor(I2C_ADDRESS_GASES_SOCKET_2A_2B,resistor);
 							break;
-		case	SENS_R2	:	setResistor(B0101110,resistor);
+		case	SENS_R2	:	setResistor(I2C_ADDRESS_GASES_SOCKET_3_3B,resistor);
 							break;
-		case	SENS_R3	:	setResistor(B0101010,resistor);
+		case	SENS_R3	:	setResistor(I2C_ADDRESS_GASES_SOCKET_4,resistor);
 							break;
 		default			:	;
 	}
@@ -582,13 +582,13 @@ void WaspSensorGas_v20::configureAmplifier(uint8_t ampli, uint8_t gain)
 {
 	switch( ampli )
 	{
-		case	SENS_AMPLI1	:	setAmplifier(B0101000,gain);
+		case	SENS_AMPLI1	:	setAmplifier(I2C_ADDRESS_GASES_SOCKET_1A_1B,gain);
 								break;
-		case	SENS_AMPLI2	:	setAmplifier(B0101100,gain);
+		case	SENS_AMPLI2	:	setAmplifier(I2C_ADDRESS_GASES_SOCKET_2A_2B,gain);
 								break;
-		case	SENS_AMPLI3	:	setAmplifier(B0101110,gain);
+		case	SENS_AMPLI3	:	setAmplifier(I2C_ADDRESS_GASES_SOCKET_3_3B,gain);
 								break;
-		case	SENS_AMPLI4	:	setAmplifier(B0101010,gain);
+		case	SENS_AMPLI4	:	setAmplifier(I2C_ADDRESS_GASES_SOCKET_4,gain);
 								break;
 		default				:	;
 	}

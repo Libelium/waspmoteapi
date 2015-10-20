@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.2
+ *  Version:		2.3
  *  Design:			Ahmad Saad
  */
  
@@ -48,7 +48,7 @@ WaspSensorSW::WaspSensorSW()
 //!	Param : void														
 //!	Returns: void							
 //!*************************************************************************************
-void	WaspSensorSW::ON(void)
+void WaspSensorSW::ON(void)
 {
 	// pH sensor control pin
 	pinMode(DIGITAL8, OUTPUT);
@@ -80,13 +80,17 @@ void	WaspSensorSW::ON(void)
 //!	Param : void														
 //!	Returns: void							
 //!*************************************************************************************
-void	WaspSensorSW::OFF(void)
+void WaspSensorSW::OFF(void)
 {
+		// disable Semtech SPI flag
+	SPI.isSmartWater = false;
+	// close SPI bus if it is posible
+	SPI.close();
+	
 	// Turn off the power switches in Waspmote
 	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);	
-	// Disable the SPI bus
-	//SPI.end();
+	
 }
 
 //!*************************************************************************************

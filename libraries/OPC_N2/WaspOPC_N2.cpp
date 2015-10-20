@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		1.2
  *  Design:			David Gascón
  *  Implementation:	Marcos Yarza, Alejandro Gállego
  */
@@ -134,11 +134,13 @@ uint8_t WaspOPC_N2::checkStatus()
 void WaspOPC_N2::configSPI()
 {	
 	// Starting SPI port
-	SPI.begin();
+	SPI.begin();	
 	SPI.setBitOrder(MSBFIRST);
 	SPI.setClockDivider(SPI_CLOCK_DIV32);
 	SPI.setDataMode(SPI_MODE1);
 	SPI.setSPISlave(ALL_DESELECTED);
+	
+	
 }
 
 /******************************************************************************
@@ -156,8 +158,10 @@ uint8_t WaspOPC_N2::ON()
 	uint8_t error = 0;
 	
 	pinMode(DUST_SENSOR_CS,OUTPUT);
-	digitalWrite(DUST_SENSOR_CS,HIGH);	
-		
+	digitalWrite(DUST_SENSOR_CS,HIGH);
+	delay(1000);	
+
+	
 	pinMode(DUST_SENSOR_POWER,OUTPUT);
 	digitalWrite(DUST_SENSOR_POWER,LOW);
 	delay(1000);
@@ -165,13 +169,14 @@ uint8_t WaspOPC_N2::ON()
 	digitalWrite(DUST_SENSOR_POWER,HIGH);
 	delay(1000);
 	
-	PWR.setSensorPower(SENS_3V3, SENS_ON);	
-	delay(1000);
-	
 	// update SPI flag
 	SPI.isDustSensor = true;	
 	
 	configSPI();
+	
+	delay(1000);
+	PWR.setSensorPower(SENS_3V3, SENS_ON);	
+	delay(1000);
 	
 	error = checkStatus();
 		

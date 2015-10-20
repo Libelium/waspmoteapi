@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			Ahmad Saad
  */
 
@@ -41,7 +41,8 @@
 #define SOCKET1 		1
 #define SOCKET2			2
 #define SOCKET3 		3
-#define SOCKET4			4 
+#define SOCKET4			4
+#define MAX_POINTS		20
  
 //**************************************************************************************************
 //  Smart Water Board Class 
@@ -98,6 +99,13 @@ class ionSensorClass
 		// Returns the ion concentration in ppm's
 		float calculateConcentration(float input);
 		
+		int pointToPointCalibration(float calVoltages[],
+									float calConcentrations[],  
+									uint8_t numPoints_);
+									
+		float calculateConcentrationP2P(float input);
+
+		
 		// These are specific functions for pH sensor
 		// The pH sensor can be connected in any SOCKET
 		float pHConversion(float input, float temp);
@@ -121,7 +129,12 @@ class ionSensorClass
 		float calibration_temperature;
 		
 		// Socket used by the class
-		uint8_t _mySocket;				
+		uint8_t _mySocket;
+		
+		// Arrays for point to point calibration
+		float voltages[MAX_POINTS]; 
+		float concentrations[MAX_POINTS];
+		uint8_t numPoints;
 };
 	
 #endif
