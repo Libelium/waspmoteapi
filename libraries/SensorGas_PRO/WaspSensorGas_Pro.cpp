@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -92,8 +92,12 @@ Gas::Gas(int socket)
 		sensor_config.calibration[x][1] = 1;
 	}
 	
+	pinMode(sensor_config.power_pin, OUTPUT);
+	pinMode(sensor_config.I2C_pin, OUTPUT);
+	digitalWrite(sensor_config.power_pin, HIGH);
+	digitalWrite(sensor_config.I2C_pin, LOW);
 	
-	pinMode(DIGITAL3, OUTPUT);
+	/*pinMode(DIGITAL3, OUTPUT);
 	pinMode(DIGITAL4, OUTPUT);
 	pinMode(DIGITAL5, OUTPUT);
 	pinMode(DIGITAL6, OUTPUT);
@@ -119,7 +123,7 @@ Gas::Gas(int socket)
 	digitalWrite(ANA5, LOW);
 	digitalWrite(ANA3, LOW);
 	digitalWrite(ANA1, LOW);
-	digitalWrite(ANA0, LOW);
+	digitalWrite(ANA0, LOW);*/
 	
 	pwrGasPRORegister = 0;
 }
@@ -529,6 +533,7 @@ int8_t Gas::ON(float R_gain)
 	{
 		// Set bit in pwrGasPRORegister
 		pwrGasPRORegister |= (1 << sensor_config.socket);
+		sensor_config.tempo = millis();
 	}
 	else
 	{
@@ -659,7 +664,7 @@ int8_t Gas::configureAFE(float R_gain)
 		}
 		else if (sensor_config.sensor_type == O2_SS)	// Basic gain for O2 sensor
 		{
-			gain_3E = LMP91000_TIAC_REG_REF_R_GAIN_2K75;
+			gain_3E = LMP91000_TIAC_REG_REF_R_GAIN_3K5;
 		}
 		else											// Basic gain for others
 		{
@@ -762,10 +767,14 @@ int8_t Gas::configureAFE(float R_gain)
 			
 		case O2_SS:
 			LMP.setTIAConReg(gain_3E, LMP91000_TIAC_REG_REF_R_LOAD_50R);
-			LMP.setRefConReg(	LMP91000_REFC_REG_REF_SOURCE_EXTERNAL_REF,
+			LMP.setRefConReg(	LMP91000_REFC_REG_REF_SOURCE_INTERNAL_REF,
+								LMP91000_REFC_REG_REF_INT_Z_50,
+								LMP91000_REFC_REG_REF_BIAS_PERC_18,
+								LMP91000_REFC_REG_REF_POLARITY_NEGATIVE);
+		/*	LMP.setRefConReg(	LMP91000_REFC_REG_REF_SOURCE_EXTERNAL_REF,
 								LMP91000_REFC_REG_REF_INT_Z_67,
 								LMP91000_REFC_REG_REF_BIAS_PERC_24,
-								LMP91000_REFC_REG_REF_POLARITY_NEGATIVE);
+								LMP91000_REFC_REG_REF_POLARITY_NEGATIVE);*/
 			break;
 			
 		case PH3_SS:
@@ -1020,7 +1029,10 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 		case CALIBRATION_3E:		
 			
 			#if GAS_DEBUG>0
-				USB.println(F("GP.Reading 3E sensor"));
+				USB.print(F("GP.Reading 3E sensor "));
+				USB.print(sensor_config.sensor_type, DEC);
+				USB.print(F("; t: "));
+				USB.println(millis() - sensor_config.tempo, DEC);
 			#endif
 			// Selects amperiometric mode
 			LMP.setModeReg(	LMP91000_MODEC_REG_FET_NOT_SHORTED, 
@@ -1134,23 +1146,25 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 				USB.println(F(" nA"));		
 			#endif
 			
-			conc = (V_conc - V_ref); 						// Vconc(mV) - Vzero(mV)			
+			conc = (V_conc - V_ref); 						// Vconc(mV) - Vzero(mV)
 			
-			conc = (conc / R_gain) * 1000;					// V(mV) --> I(uA)
-			
-			if (conc < 0)
-			{
-				conc *= -1;
-			}
+			conc = (conc / R_gain) * 1000;					// V(mV) --> I(uA)			
 			
 			conc =  ((conc + sensor_config.calibration[r_gain_LMP-1][0]) / (sensor_config.calibration[r_gain_LMP-1][1]));		// Adjust resistor
-						
+			
+			
 			#if GAS_DEBUG>0
 				USB.print(F("GP.I: "));
 				USB.print(conc);
 				USB.println(F(" uA"));
-			#endif		
-			
+			#endif
+			if ((sensor_config.sensor_type == CL2_SS) ||
+				(sensor_config.sensor_type == NO2_SS_CLE) ||
+				(sensor_config.sensor_type == O2_SS))
+			{
+				conc *= -1;				
+			}
+					
 			conc -= (sensor_config.baseline / 1000);		// Subtracts baseline current			
 			
 			conc *= getSensitivityTempComp(temperature);	// Output current temperature compensation			
@@ -1174,7 +1188,8 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 		case CALIBRATION_PEL:
 			
 			#if GAS_DEBUG>0
-				USB.println(F("GP.Reading pellistor sensor"));
+				USB.print(F("GP.Reading pellistor sensor; t:"));
+				USB.println(millis() - sensor_config.tempo, DEC);
 			#endif
 				
 			V_conc = 0;    
@@ -1233,7 +1248,8 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 		case CALIBRATION_NDIR:
 			
 			#if GAS_DEBUG>0
-				USB.println(F("GP.Reading NDIR sensor"));
+				USB.print(F("GP.Reading NDIR sensor; t: "));
+				USB.println(millis() - sensor_config.tempo, DEC);
 			#endif
 			
 			V_conc = 0;    
@@ -1293,7 +1309,8 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 		case O3_AS:
 		case CALIBRATION_4E:
 			#if GAS_DEBUG>0
-				USB.println(F("GP.Reading 4E sensor"));
+				USB.print(F("GP.Reading 4E sensor; t: "));
+				USB.println(millis() - sensor_config.tempo, DEC);
 			#endif
 			// Selects amperiometric mode
 			LMP.setModeReg(	LMP91000_MODEC_REG_FET_NOT_SHORTED, 
@@ -1313,10 +1330,11 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 				setAmplifier(AUXILIARY_ELECTRODE, 0);
 					
 				V_conc = 0;    
-				for ( int i = 0; i < 4; i++)
+				for ( int i = 0; i < 8; i++)
 				{
 					// Reads the ADC
 					
+					delay(100);
 					digitalWrite(sensor_config.I2C_pin, HIGH);
 					
 					aux_val = (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));   
@@ -1324,7 +1342,7 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 					#if GAS_DEBUG>1
 						USB.print(F("Measure "));
 						USB.print(i+1, DEC);
-						USB.print(F("/4 from ADC: "));
+						USB.print(F("/8 from ADC: "));
 						USB.print(aux_val);
 						USB.println(F(" mV"));
 					#endif
@@ -1332,7 +1350,7 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 					V_conc += aux_val;     
 				}			
 		
-				V_conc /=4;  		
+				V_conc /=8;  		
 				
 				setAmplifier(AUXILIARY_ELECTRODE, aux_resistor);
 				
@@ -1363,22 +1381,28 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 				conc = (V_conc / (R_gain)) * 1000;			// V(mV) --> I(uA)
 				
 				conc =  ((conc + sensor_config.calibration[0][0]) / (sensor_config.calibration[0][1]));
-			
+							
 				conc *= -1;
-				
-				conc -= (sensor_config.baseline / 1000);	// Subtracts baseline current	
-				
-				conc -= getBaselineTempComp(temperature);		// Baseline temperature compensation
-				
+
 				#if GAS_DEBUG>0
 					USB.print(F("GP.Iwe: "));
 					USB.print(conc);
 					USB.println(F(" uA"));
 				#endif	
+					
+				conc -= (sensor_config.baseline / 1000);	// Subtracts baseline current
+						
+				conc -= getBaselineTempComp(temperature);		// Baseline temperature compensation
+				
 				//conc *= getSensitivityTempComp(temperature);	// Output current temperature compensation
 				
 				conc = (conc * 1000) / sensor_config.m_conc;	// I(uA) --> concentración(ppm)
 				
+				#if GAS_DEBUG>0
+					USB.print(F("GP.conc: "));
+					USB.print(conc);
+					USB.println(F(" ppm"));
+				#endif	
 				
 				if (conc < 0)
 				{
@@ -1397,10 +1421,10 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 				setAmplifier(WORKING_ELECTRODE, 0);
 					
 				V_conc = 0;    
-				for ( int i = 0; i < 4; i++)
+				for ( int i = 0; i < 8; i++)
 				{
 					// Reads the ADC
-					
+					delay(100);
 					digitalWrite(sensor_config.I2C_pin, HIGH);
 					
 					aux_val = (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));   
@@ -1408,7 +1432,7 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 					#if GAS_DEBUG>1
 						USB.print(F("GP.Measure "));
 						USB.print(i+1, DEC);
-						USB.print(F("/4 from ADC: "));
+						USB.print(F("/8 from ADC: "));
 						USB.print(aux_val);
 						USB.println(F(" mV"));
 					#endif
@@ -1416,7 +1440,7 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 					V_conc += aux_val;     
 				}			
 		
-				V_conc /=4;  
+				V_conc /=8;  
 				
 				setAmplifier(WORKING_ELECTRODE, aux_resistor);
 				
@@ -1446,27 +1470,24 @@ float Gas::getConc(uint8_t resolution, float temperature, uint8_t electrode)
 				conc_aux = (V_conc / (R_gain)) * 1000;				// V(mV) --> I(uA)
 
 				conc_aux =  ((conc_aux + sensor_config.calibration[1][0]) / (sensor_config.calibration[1][1]));
-				
-				#if GAS_DEBUG>0
-					USB.print(F("GP.Iae0: "));
-					USB.print(conc_aux);
-					USB.println(F(" uA"));
-				#endif	
-					
-				conc -= (sensor_config.baseline / 1000);	// Subtracts baseline current	
-				
 				#if GAS_DEBUG>0
 					USB.print(F("GP.Iae: "));
 					USB.print(conc_aux);
 					USB.println(F(" uA"));
 				#endif	
-					
-				conc_aux -= getBaselineTempComp(temperature);			// Baseline temperature compensation
-							
+				conc_aux -= (sensor_config.baseline / 1000);	// Subtracts baseline current
+									
+				//conc_aux -= getBaselineTempComp(temperature);			// Baseline temperature compensation
+						
 				//conc *= getSensitivityTempComp(temperature);		// Output current temperature compensation
 				
 				conc_aux = (conc_aux * 1000) / sensor_config.val_aux;	// I(uA) --> concentración(ppm)
 				
+				#if GAS_DEBUG>0
+					USB.print(F("GP.conc_aux: "));
+					USB.print(conc_aux);
+					USB.println(F(" ppm"));
+				#endif	
 				if (conc_aux < 0)
 				{
 					conc_aux = 0;
@@ -2122,7 +2143,7 @@ float Gas::ppm2perc(float ppm_conc)
 */
 float Gas::Celsius2Fahrenheit(float temp)
 {
-	return ((1.8 / temp) + 32);	
+	return ((1.8 * temp) + 32);	
 }
 
 //! MISCELANEUS	

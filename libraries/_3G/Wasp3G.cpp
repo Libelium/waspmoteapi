@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.7
- *  Design:		David Gascón
+ *  Version:		1.8
+ *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
   
@@ -4197,7 +4197,7 @@ int8_t Wasp3G::downloadFile(const char* origin_path, uint8_t destination, unsign
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[7])));		//FTP_GET_FILE_RES
 	do{
 		delay(10000);
-		answer = sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, max_time, SEND_ONCE);
+		answer = sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, max_time*1000, SEND_ONCE);
 		count--;
 	}while ((answer != 1) && (count > 0));
 	

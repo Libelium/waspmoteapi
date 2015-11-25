@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -62,6 +62,7 @@
 #define SOCKET_A	4
 #define SOCKET_B	5
 #define SOCKET_C	1
+#define SOCKET_D	6
 #define SOCKET_F	3
 
 //!***************************************************************************
@@ -243,14 +244,15 @@ class Gas
 	//! This struct includes all the data necessary to manage the AFE modules for each sensor 
 	struct sensor_conf
 	{
-		uint8_t socket;				// Board socket
+		uint8_t socket;			// Board socket
 		uint8_t sensor_type;		// Gas sensor number
 		int power_pin;				// GPIO asociated to the power pin
 		int I2C_pin;				// GPIO asociated to the I2C pin
 		float m_conc;				// nA/ppm or mV/% 
 		float val_aux;				// extra variable. nA/ppm, only for 4 electrode sensors (O3)
-		float baseline;				// nA or mV
-		float calibration[7][2];	//compensation values for AFE modules
+		float baseline;			// nA or mV
+		float calibration[7][2];	// compensation values for AFE modules
+		uint32_t tempo;			// timer
 	} sensor_config;
 
 	

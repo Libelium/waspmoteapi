@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.2
+ *  Version:		2.3
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -46,6 +46,39 @@ int main(void)
 		
 		// clear eeprom flag
 		eeprom_write_byte((unsigned char *) 0x01, 0x00);
+	}
+	
+	// validate Hibernate interruption when both RTC interruption 
+	// signal and hibernate EEPROM flag are active
+	if( digitalRead(RTC_INT_PIN_MON) && (Utils.readEEPROM(HIB_ADDR)==HIB_VALUE) )
+	{
+		// get RTC time and last almarm setting
+		RTC.ON();
+		RTC.getAlarm1();
+		RTC.getTime();	
+		
+		// when the interruption and startup has been produced within 3 seconds
+		// then we validate the Hibernate interruption. If not, maybe the 
+		// Waspmote startup conditions may show the hibernate startup conditions 
+		// when it is not true	
+		int total_diff = RTC.second - RTC.second_alarm1;	
+				
+		// check seconds zero crossing
+		if( RTC.minute - RTC.minute_alarm1 > 0 )
+		{
+			total_diff = total_diff + (RTC.minute - RTC.minute_alarm1)*60;
+		}
+		
+		// check minute zero crossing
+		if( RTC.minute - RTC.minute_alarm1 < 0 )	
+		{
+			total_diff = total_diff + (RTC.minute-RTC.minute_alarm1+60)*60;
+		}	
+		
+		if( (total_diff < 3) && (total_diff >= 0) )	
+		{
+			intFlag |= HIB_INT;
+		}
 	}
 	
 	// disable both RTC alarms
