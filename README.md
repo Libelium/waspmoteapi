@@ -6,5 +6,5 @@ Download the last version of the Community code of the open source sensor platfo
 * https://github.com/Libelium/waspmoteapi
 * http://www.libelium.com/development/waspmote
 
-Read more about the commit and approval code process at:
+Read more about the commit and approval code process at: 
 * http://www.libelium.com/development/developers/
