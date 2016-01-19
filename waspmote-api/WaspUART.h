@@ -1,7 +1,7 @@
 /*! \file WaspUART.h
     \brief Library for managing UART bus
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Yuri Carmona
 
@@ -234,6 +234,26 @@ public:
 	
 	//! It waits depending on the baudrate used
 	void latencyDelay();
+
+protected:
+	
+	//! It parses the contents of _buffer and copies the string to the pointer
+	uint8_t parseString(char* str, uint16_t size, char* delimiters);
+	
+	//! It parses the contents of _buffer and converts it to a float type
+	uint8_t parseFloat(float* value, char* delimiters);
+	
+	//! It parses the contents of _buffer and converts it to a uint32_t type
+	uint8_t parseUint32(uint32_t* value, char* delimiters);
+
+	//! It parses the contents of _buffer and converts it to a int type
+	uint8_t parseInt(int* value, char* delimiters);
+	
+	//! It parses the contents of _buffer and converts it to a uint16_t type
+	uint8_t parseUint8(uint8_t* value, char* delimiters);
+	
+	//! It parses the contents of _buffer and converts it to a uint16_t type
+	uint8_t parseHex(uint8_t* value, char* delimiters);
 };
 
 

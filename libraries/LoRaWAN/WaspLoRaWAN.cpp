@@ -1,7 +1,7 @@
 /*
  *  Library for managing managing the LoRaWAN module
  * 
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.1
+ *  Version:		0.2
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -106,6 +106,8 @@
  const char command_73[]	PROGMEM	= 	"mac get upctr\r\n";
  const char command_74[]	PROGMEM	= 	"mac set dnctr %lu\r\n";
  const char command_75[]	PROGMEM	= 	"mac get dnctr\r\n";
+ const char command_76[]	PROGMEM	= 	"mac join otaa\r\n";
+ const char command_77[]	PROGMEM	= 	"mac set linkchk %u\r\n";
 
 
 const char* const table_LoRaWAN_COMMANDS[] PROGMEM= 	  
@@ -186,6 +188,8 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
 	command_73,
 	command_74,
 	command_75,
+	command_76,
+	command_77
 };
 
 /******************************************************************************
@@ -194,7 +198,7 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
  const char answer_00[]	PROGMEM	=	"ok";
  const char answer_01[]	PROGMEM	=	"invalid_param";
  const char answer_02[]	PROGMEM	=	"channel_busy";
- const char answer_03[]	PROGMEM	=	"mac_rx %u";
+ const char answer_03[]	PROGMEM	=	"mac_rx";
  const char answer_04[]	PROGMEM	=	"radio_tx_ok";
  const char answer_05[]	PROGMEM	=	"RN2483";
  const char answer_06[]	PROGMEM	=	"accepted";
@@ -208,6 +212,8 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
  const char answer_14[]	PROGMEM	=	"4294967245";
  const char answer_15[]	PROGMEM	=	"mac_err";
  const char answer_16[]	PROGMEM	=	"invalid_data_len";
+ const char answer_17[]	PROGMEM	=	"keys_not_init";
+ const char answer_18[]	PROGMEM	=	"not_joined";
  
 
 
@@ -230,6 +236,8 @@ const char* const table_LoRaWAN_ANSWERS[] PROGMEM=
 	answer_14,
 	answer_15,
 	answer_16,
+	answer_17,
+	answer_18,
 };
 
 
@@ -267,7 +275,7 @@ uint8_t WaspLoRaWAN::ON(uint8_t socket)
 		
 		// Set multiplexer
 		Utils.setMuxSocket0(); 
-		
+
 		// Open UART
 		beginUART();
 		
@@ -1404,16 +1412,19 @@ uint8_t WaspLoRaWAN::saveConfig()
  * 	@arg	'0' if OK
  * 	@arg	'1' if error 
  * 	@arg	'2' if no answer 
+ * 	@arg	'3' if keys were not initiated
  */
 uint8_t WaspLoRaWAN::joinABP()
 {
 	uint8_t status;
 	char ans1[15];
 	char ans2[15];
+	char ans3[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
+	memset(ans3,0x00,sizeof(ans3));
 	
 	// create "mac join abp" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[7])));
@@ -1421,9 +1432,11 @@ uint8_t WaspLoRaWAN::joinABP()
 	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
 	// create "invalid_param" answer
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "keys_not_init" answer
+	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[17])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,500);
+	status = sendCommand(_command,ans1,ans2,ans3,500);
 
 	if (status == 1)
 	{
@@ -1440,6 +1453,78 @@ uint8_t WaspLoRaWAN::joinABP()
 		{
 			return LORAWAN_ANSWER_ERROR;
 		}
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else if (status == 3)
+	{
+		return LORAWAN_INIT_ERROR;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*! 
+ * @brief	This function joins module to a network
+ * 
+ * @return		 
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ *	@arg	'3' if keys were not initiated
+ */
+uint8_t WaspLoRaWAN::joinOTAA()
+{
+	uint8_t status;
+	char ans1[15];
+	char ans2[15];
+	char ans3[15];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	memset(ans3,0x00,sizeof(ans3));
+	
+	// create "mac join otaa" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[76])));
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "keys_not_init" answer
+	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[17])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,ans3,500);
+
+	if (status == 1)
+	{
+		memset(ans1,0x00,sizeof(ans1));
+		// create "accepted" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[6])));
+		
+		//wait for response
+		if (waitFor(ans1,20000) == 1)
+		{
+			return LORAWAN_ANSWER_OK;
+		}
+		else 
+		{
+			return LORAWAN_ANSWER_ERROR;
+		}
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else if (status == 3)
+	{
+		return LORAWAN_INIT_ERROR;
 	}
 	else 
 	{
@@ -1464,6 +1549,7 @@ uint8_t WaspLoRaWAN::joinABP()
  * 	@arg	'0' if OK
  * 	@arg	'1' if error 
  * 	@arg	'2' if no answer 
+ * 	@arg	'4' if there is data from server
  */
 uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 {
@@ -1473,10 +1559,14 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 	char ans3[20];
 	char ans4[20];
 	
+	// clear data received flag
+	_dataReceived = false;
+	
 	// clear buffers
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
+	memset(ans3,0x00,sizeof(ans3));
 	
 	// create "mac tx cnf <port> <data>" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[5])),port,payload);
@@ -1484,9 +1574,11 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
 	// create "invalid_param" answer
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "not_joined" answer
+	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,1000);
+	status = sendCommand(_command,ans1,ans2,ans3,1000);
 	
 	if (status == 1)
 	{
@@ -1496,8 +1588,8 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 		memset(ans3,0x00,sizeof(ans3));
 		memset(ans4,0x00,sizeof(ans4));
 		
-		// mac_rx <port>
-		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])),port);
+		// mac_rx
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])));
 		// mac_tx_ok
 		strcpy_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
 		// mac_err
@@ -1508,21 +1600,59 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 		//wait for response
 		status = waitFor(ans1, ans2, ans3, ans4, 20000);
 		
-		if ((status == 1)||(status == 2))
+		if (status == 1)
+		{
+			waitFor("/r/n",500);
+			if (_length > 0)
+			{
+				char* pch = strtok((char*) _buffer," \r\n");
+				_port = atoi(pch);
+				
+				pch = strtok(NULL," \r\n");
+								
+				memset(_data,0x00,sizeof(_data));
+				strncpy(_data, pch, sizeof(_data)-1);
+			
+				saveConfig();
+				_dataReceived = true;
+				return LORAWAN_ANSWER_OK;
+			}
+			else
+			{
+				saveConfig();
+				return LORAWAN_ANSWER_OK;
+			}
+		}
+		else if (status == 2)
 		{
 			saveConfig();
 			return LORAWAN_ANSWER_OK;
 		}
-		else if ((status == 3)||(status == 4))
+		else if (status == 3)
 		{
 			saveConfig();
-			return LORAWAN_ANSWER_ERROR;
+			return LORAWAN_SENDING_ERROR;
+		}
+		else if (status == 4)
+		{
+			saveConfig();
+			return LORAWAN_LENGTH_ERROR;
 		}
 		else
 		{
 			saveConfig();
 			return LORAWAN_NO_ANSWER;
 		}
+	}
+	else if (status == 2)
+	{
+		saveConfig();
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else if (status == 3)
+	{
+		saveConfig();
+		return LORAWAN_NOT_JOINED;
 	}
 	else
 	{
@@ -1559,9 +1689,13 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 	char ans3[20];
 	char ans4[20];
 	
+	// clear data received flag
+	_dataReceived = false;
+	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
+	memset(ans3,0x00,sizeof(ans3));
 	
 	// create "mac tx uncnf <port> <data>" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[6])),port,payload);
@@ -1569,10 +1703,12 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
 	// create "invalid_param" answer
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "not_joined" answer
+	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,500);
-	
+	status = sendCommand(_command,ans1,ans2,ans3,500);
+
 	if (status == 1)
 	{
 		// clear buffer
@@ -1582,7 +1718,7 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 		memset(ans4,0x00,sizeof(ans4));
 			
 		// mac_rx <port>
-		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])),port);
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])));
 		// mac_tx_ok
 		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
 		// mac_err
@@ -1591,17 +1727,46 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 		sprintf_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 		
 		//wait for response
-		status = waitFor(ans1, ans2, ans3, ans4, 10000);
+		status = waitFor(ans1, ans2, ans3, ans4, 20000);
 		
-		if ((status == 1)||(status == 2))
+		if (status == 1)
+		{
+			waitFor("/r/n",500);
+			
+			if (_length > 0)
+			{
+				char* pch = strtok((char*) _buffer," \r\n");
+				_port = atoi(pch);
+				
+				pch = strtok(NULL," \r\n");
+								
+				memset(_data,0x00,sizeof(_data));
+				strncpy(_data, pch, sizeof(_data)-1);
+			
+				saveConfig();
+				_dataReceived = true;
+				return LORAWAN_ANSWER_OK;
+			}
+			else
+			{
+				saveConfig();
+				return LORAWAN_ANSWER_OK;
+			}
+		}
+		else if (status == 2)
 		{
 			saveConfig();
 			return LORAWAN_ANSWER_OK;
 		}
-		else if ((status == 3)||(status == 4))
+		else if (status == 3)
 		{
 			saveConfig();
-			return LORAWAN_ANSWER_ERROR;
+			return LORAWAN_SENDING_ERROR;
+		}
+		else if (status == 4)
+		{
+			saveConfig();
+			return LORAWAN_LENGTH_ERROR;
 		}
 		else
 		{
@@ -1609,7 +1774,17 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 			return LORAWAN_NO_ANSWER;
 		}
 	}
-	else 
+	else if (status == 2)
+	{
+		saveConfig();
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else if (status == 3)
+	{
+		saveConfig();
+		return LORAWAN_NOT_JOINED;
+	}
+	else
 	{
 		saveConfig();
 		return LORAWAN_NO_ANSWER;
@@ -2580,6 +2755,47 @@ uint8_t WaspLoRaWAN::setDownCounter(uint32_t counter)
 	{
 		_downCounter = counter;
 		saveConfig();
+		return LORAWAN_ANSWER_OK;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+/*!
+ * @brief	This function sets the time interval for the link check 
+ * 			process to be triggered periodically
+ * 
+ * @param	uint8_t counter: 
+ * 	
+ * @return		
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ */
+uint8_t WaspLoRaWAN::setLinkCheck(uint16_t time)
+{
+	uint8_t status;	
+	char ans1[15];
+	char ans2[15];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	// create "mac set dnctr" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[77])),time);
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,500);
+	
+	if (status == 1)
+	{
 		return LORAWAN_ANSWER_OK;
 	}
 	else 
@@ -4039,7 +4255,7 @@ uint32_t WaspLoRaWAN::parseValue(uint8_t base)
 	pch = strtok((char*) _buffer," \r\n");
 	if (pch != NULL)
 	{
-		return strtoul((char*)_buffer,NULL, base);
+		return strtoul(pch,NULL, base);
 	}
 	return 0;
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.2
+ *  Version:		2.3
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -2459,7 +2459,7 @@ int WaspGPRS_Pro_core::sendHTTP(uint8_t n_conf, uint8_t method)
 		i++;
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
-	}while ((str_aux1[i-1] != 'r') && ((millis()-previous) < 10000));	
+	}while ((str_aux1[i-1] != '\r') && ((millis()-previous) < 10000));	
 	
 	str_aux1[i-1] = '\0';
 	HTTP_total_data = atoi(str_aux1);

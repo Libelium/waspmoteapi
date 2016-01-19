@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		1.1
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -646,5 +646,146 @@ void WaspUART::latencyDelay()
 		}
 	}
 }
+
+
+
+
+
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<response>\r\n"
+ * 			Then you can call: parseString(data, sizeof(data),"\r\n")
+ * 
+ * @param	char* str: pointer to the buffer where parsed data is stored
+ * @param	uint16_t size: size of input 'str' buffer
+ * @param	char* delimiters: string containing the delimiter characters
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseString(char* str, uint16_t size, char* delimiters)
+{
+	// define the pointer to seek for token
+	char* pch;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	if (pch != NULL)
+	{
+		memset(str,0x00, size);
+		strncpy(str, pch, size);
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<value>\r\n"
+ * 			Then you can call: parseFloat(&variable, "\r\n")
+ * 
+ * @param	float* value: pointer to the variable where parsed data is stored
+ * @param	char* delimiters: string containing the delimiter characters
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseFloat(float* value, char* delimiters)
+{
+	// define the pointer to seek for token
+	char* pch;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	if (pch != NULL)
+	{
+		*value = atof(pch);
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+
+
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<value>\r\n"
+ * 			Then you can call: parseUint32(&variable, "\r\n")
+ * 
+ * @param	uint32_t* value: pointer to the variable where parsed data is stored
+ * @param	char* delimiters: string containing the delimiter characters
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseUint32(uint32_t* value, char* delimiters)
+{
+	// define the pointer to seek for token
+	char* pch;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	if (pch != NULL)
+	{
+		*value = strtoul( pch, NULL, 10);
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<value>\r\n"
+ * 			Then you can call: parseUint32(&variable, "\r\n")
+ * 
+ * @param	uint16_t* value: pointer to the variable where parsed data is stored
+ * @param	char* delimiters: string containing the delimiter characters
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseInt(int* value, char* delimiters)
+{
+	// define the pointer to seek for token
+	char* pch;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	if (pch != NULL)
+	{
+		*value = atoi(pch);
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+
+
 
 

@@ -1,7 +1,7 @@
 /*! \file 	WaspLoRaWAN.h
     \brief 	Library for managing the LoRaWAN module
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.1
+    Version:		0.2
     Design:			David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -44,6 +44,10 @@ enum AnswerTypesLoRaWAN
 	LORAWAN_ANSWER_OK = 0,
 	LORAWAN_ANSWER_ERROR = 1,
 	LORAWAN_NO_ANSWER = 2,
+	LORAWAN_INIT_ERROR = 3,
+	LORAWAN_LENGTH_ERROR = 4,
+	LORAWAN_SENDING_ERROR = 5,
+	LORAWAN_NOT_JOINED = 6
 };
 
 /******************************************************************************
@@ -94,6 +98,9 @@ class WaspLoRaWAN : public WaspUART
 		uint16_t _supplyPower;
 		uint32_t _upCounter;
 		uint32_t _downCounter;
+		uint8_t _port;
+		char _data[101];
+		bool _dataReceived;
 		
 		// constructor
 		WaspLoRaWAN() {};
@@ -128,6 +135,7 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getDataRate();
 		uint8_t saveConfig();
 		uint8_t joinABP();
+		uint8_t joinOTAA();
 		uint8_t sendConfirmed(uint8_t port, char* payload);
 		uint8_t sendUnconfirmed(uint8_t port, char* payload);
 		uint8_t setADR(char* state);
@@ -184,6 +192,7 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getRadioWDT();
 		uint8_t setRadioBW(uint16_t bandwidth);
 		uint8_t getRadioBW();
+		uint8_t setLinkCheck(uint16_t counter);
 		
 	private:		
 		// Utils
