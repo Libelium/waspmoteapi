@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.8
+ *  Version:		1.9
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -720,9 +720,7 @@ void WaspFrame::setFrameType(uint8_t type)
  */
 void WaspFrame::showFrame(void)
 {
-	beginSerial( USB_RATE, 0);
-	digitalWrite( MUX_PW, HIGH);
-	digitalWrite( MUX_USB_XBEE, LOW);
+	USB.secureBegin();
 	
 	for(int i = 0; i <31 ; i++)
 	{
@@ -783,8 +781,8 @@ void WaspFrame::showFrame(void)
 
 	printByte( '\r',  0);
 	printByte( '\n',  0);
-	delay(3);
-	digitalWrite(MUX_USB_XBEE,HIGH);	
+	
+	USB.secureEnd();	
 }
 
 

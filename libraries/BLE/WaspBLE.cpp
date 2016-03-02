@@ -1,7 +1,7 @@
 /*
  *  Library for managing the Bluetooth low energy BLE112
  * 
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -2641,14 +2641,17 @@ uint16_t WaspBLE::writeLocalAttribute(uint16_t handle, uint8_t * data, uint8_t l
 uint16_t WaspBLE::writeLocalAttribute(uint16_t handle, uint8_t indicate, uint8_t * data, uint8_t length)
 {	
 	// maximum writtable data is 54 bytes length
-	uint8_t payload[54];
 	
-	uint8_t flag = 0;
-
 	if (length > 54)
 	{
 		length = 54;
 	}
+	
+	uint8_t payload[length+4];
+	
+	uint8_t flag = 0;
+
+	
 
 	payload[0] = (uint8_t)(handle & 0x00FF);
 	payload[1] = (uint8_t)((handle & 0xFF00) >> 8);
@@ -2808,7 +2811,7 @@ uint16_t WaspBLE::attributeWrite(uint8_t connection, uint16_t atthandle, char * 
 uint16_t WaspBLE::attributeWrite(uint8_t connection, uint16_t atthandle, uint8_t * data, uint8_t length)
 {
 	
-	uint8_t payload[length];
+	uint8_t payload[length+4];
 	
 	payload[0] = connection;
 	payload[1] = (uint8_t)(atthandle & 0x00FF);

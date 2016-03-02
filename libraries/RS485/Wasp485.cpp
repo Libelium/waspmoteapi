@@ -1,7 +1,7 @@
 /*! \file Wasp485.cpp
     \brief Library for managing RS-485 module.
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0    
+    Version:		1.1  
     Design:			David Gascón
     Implementation:	Ahmad Saad
  */
@@ -36,7 +36,10 @@
  * Class contructors
  ***********************************************************************/
 
-	Wasp485::Wasp485()	{}
+Wasp485::Wasp485()	
+{	
+	WaspRegister |= REG_RS485;
+}
 
 /***********************************************************************
  * Methods of the Class
@@ -53,6 +56,7 @@ uint8_t Wasp485::ON()
 	// Configure the SS pin and the switch as outputs
 	pinMode(XBEE_PW, OUTPUT);
 	pinMode(MAX_SS, OUTPUT);
+	SPI.isRS485 = true;
 
 	// Deselect the MAX chip
 	digitalWrite(MAX_SS, HIGH);
@@ -61,7 +65,9 @@ uint8_t Wasp485::ON()
 	digitalWrite(XBEE_PW,HIGH);
 	delay(100);
 	//Configure the MISO, MOSI, CS, SPCR.
-	SPI.begin(); 
+	SPI.secureBegin();
+	SPI.begin();
+	 
 	//Set Most significant bit first
 	SPI.setBitOrder(MSBFIRST);
 	//Divide the clock frequency 
@@ -90,7 +96,9 @@ uint8_t Wasp485::ON()
 //!*************************************************************
 void Wasp485::OFF(void)
 {
-	digitalWrite(XBEE_PW,LOW);
+	digitalWrite(XBEE_PW,LOW);	
+	SPI.isSX = false;
+	SPI.secureEnd();
 }
 
 
@@ -445,10 +453,16 @@ void Wasp485::reception(bool state)
 //!************************************************************* 
 void Wasp485::maxWrite(char address, char data)
 {	
-	digitalWrite(MAX_SS,LOW);
+	// Disable all SPI slaves
+	SPI.setSPISlave(ALL_DESELECTED);
+	// Select SX slave
+	SPI.setSPISlave(SOCKET0_SELECT);
+	
 	SPI.transfer(0x80 | address);
-	SPI.transfer(data);    
-	digitalWrite(MAX_SS,HIGH);
+	SPI.transfer(data);
+	
+	// Disable all SPI slaves
+	SPI.setSPISlave(ALL_DESELECTED);
 }
 
 
@@ -460,10 +474,16 @@ void Wasp485::maxWrite(char address, char data)
 //!*************************************************************
 uint8_t Wasp485::maxRead(char address) 
 {
-	digitalWrite(MAX_SS,LOW);
+	// Disable all SPI slaves
+	SPI.setSPISlave(ALL_DESELECTED);
+	// Select SX slave
+	SPI.setSPISlave(SOCKET0_SELECT);
+
 	SPI.transfer(address);
-	uint8_t data = SPI.transfer(0x00);    
-	digitalWrite(MAX_SS,HIGH);
+	uint8_t data = SPI.transfer(0x00);
+	
+	// Disable all SPI slaves
+	SPI.setSPISlave(ALL_DESELECTED);
 	return data;
 }
 

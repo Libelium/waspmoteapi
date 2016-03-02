@@ -1,7 +1,7 @@
 /*! \file WaspSX1272.cpp
  *  \brief Library for managing Semtech modules
  *
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Covadonga Albiñana, Yuri Carmona
  */
@@ -5040,9 +5040,7 @@ void WaspSX1272::showFramefromPacket()
 	uint8_t length = 0;
 
 	// begin UART0
-	beginSerial(USB_RATE, 0);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	USB.secureBegin();
 	
 	for(int i = 0; i < 30; i++)
 	{
@@ -5092,8 +5090,7 @@ void WaspSX1272::showFramefromPacket()
 	printByte('\r',  0);
 	printByte('\n',  0);
 
-	delay(3);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	USB.secureEnd();
 
 }
 /*
@@ -5111,9 +5108,7 @@ void WaspSX1272::showReceivedPacket()
 	length = packet_received.length - OFFSET_PAYLOADLENGTH;
 
 	// begin UART0
-	beginSerial(USB_RATE, 0);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	USB.secureBegin();
 	
 	for(int i = 0; i < 30; i++)
 	{
@@ -5153,8 +5148,7 @@ void WaspSX1272::showReceivedPacket()
 	printByte('\r',  0);
 	printByte('\n',  0);
 
-	delay(3);
-	digitalWrite(MUX_USB_XBEE,HIGH);
+	USB.secureEnd();
 }
 /*
  Function: It prints the registers related to RX

@@ -1,7 +1,7 @@
 /*
  *  Library for managing the Particle sensor OPC-N2 from Alphasense
  * 
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		1.3
  *  Design:			David Gascón
  *  Implementation:	Marcos Yarza, Alejandro Gállego
  */
@@ -91,7 +91,7 @@ uint8_t WaspOPC_N2::checkStatus()
 	uint8_t val = 0;
 	uint16_t times = 0;
 	
-	#ifdef OPC_N2_DEBUG
+	#if OPC_N2_DEBUG>0
 		USB.print(F("OPC-N2: Check status..."));
 	#endif
 	
@@ -101,7 +101,6 @@ uint8_t WaspOPC_N2::checkStatus()
 	while((val != CHECK_STATUS_READY)&&(times<100))
 	{ 
 		val = SPI.transfer(CHECK_STATUS);
-		//USB.println(val, HEX);
 		times++;
 		delay(50);
 	}
@@ -109,14 +108,14 @@ uint8_t WaspOPC_N2::checkStatus()
 	{
 		
 		error = 1;
-			#ifdef OPC_N2_DEBUG
+			#if OPC_N2_DEBUG>0
 		USB.println(F("ready"));
 	#endif
 	}
 	else
 	{	
 		error = 0;
-		#ifdef OPC_N2_DEBUG
+		#if OPC_N2_DEBUG>0
 		USB.println(F("not ready"));
 		#endif
 		
@@ -175,7 +174,13 @@ uint8_t WaspOPC_N2::ON()
 	configSPI();
 	
 	delay(1000);
-	PWR.setSensorPower(SENS_3V3, SENS_ON);	
+	if ((WaspRegister & REG_3V3) == 0)
+	{
+		#if OPC_N2_DEBUG>0
+			USB.println(F("OPC-N2.3V3 to ON"));
+		#endif
+		PWR.setSensorPower(SENS_3V3, SENS_ON);
+	}
 	delay(1000);
 	
 	error = checkStatus();
@@ -206,8 +211,8 @@ uint8_t WaspOPC_N2::OFF()
 {	
 	
 	uint8_t error = 0;
-	#ifdef OPC_N2_DEBUG
-		USB.print(F("OPC-N2: Turning off sensor,"));
+	#if OPC_N2_DEBUG>0
+		USB.print(F("OPC-N2.Turning off sensor,"));
 	#endif
 	// Stopping SPI port	
 	SPI.isDustSensor = false;
@@ -219,12 +224,12 @@ uint8_t WaspOPC_N2::OFF()
 	
 	if (( pwrGasPRORegister == 0x01) || ( pwrGasPRORegister == 0x0))
 	{			
-		#ifdef OPC_N2_DEBUG			
+		#if OPC_N2_DEBUG>0			
 			USB.println(F("3V3 off"));
 		#endif
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);		
 	}
-	#ifdef OPC_N2_DEBUG		
+	#if OPC_N2_DEBUG>0		
 	else
 	{
 		USB.println(F("3V3 NOT off"));
@@ -257,8 +262,8 @@ int8_t WaspOPC_N2::getInfoString(char* buffer)
 	uint16_t times = 0;
 	
 	
-	#ifdef OPC_N2_DEBUG
-		USB.println(F("OPC-N2: Reading information string"));
+	#if OPC_N2_DEBUG>0
+		USB.println(F("OPC-N2.Reading information string"));
 	#endif
 	
 	SPI.setSPISlave(DUST_SENSOR_SELECT);
@@ -289,10 +294,11 @@ int8_t WaspOPC_N2::getInfoString(char* buffer)
 	
 	error = 1;
 	
-	#ifdef OPC_N2_DEBUG
+	#if OPC_N2_DEBUG>0
 		for(int i = 0; i < 58; i++)
 		{
-			USB.print(buffer[i]);
+			USB.print(buffer[i],HEX);
+			USB.print(" ");
 		}
 		USB.println("");
 	#endif
@@ -314,8 +320,8 @@ int8_t WaspOPC_N2::setDigitalPot(uint8_t mode)
 	uint8_t val = 0;
 	uint16_t times = 0;
 	
-	#ifdef OPC_N2_DEBUG
-		USB.print(F("OPC-N2: Setting digital pot"));
+	#if OPC_N2_DEBUG>0
+		USB.print(F("OPC-N2.Setting digital pot"));
 	#endif
 		
 	uint8_t command[2];
@@ -344,13 +350,16 @@ int8_t WaspOPC_N2::setDigitalPot(uint8_t mode)
 	
 	if (times >= 20 )
 	{
-		#ifdef OPC_N2_DEBUG
+		#if OPC_N2_DEBUG>0
 			USB.println(F("...failed. Communication error."));
 		#endif
 		error = -1;
 	}
 	else
 	{
+		#if OPC_N2_DEBUG>0
+			USB.println(F("...done."));
+		#endif
 		error = 1;
 	}
 
@@ -387,8 +396,8 @@ int8_t WaspOPC_N2::getHistogramData()
 	uint32_t aux_val;
 	byte histogramString[62];	
 	
-	#ifdef OPC_N2_DEBUG
-		USB.print(F("OPC-N2: Getting histogram data"));
+	#if OPC_N2_DEBUG>0
+		USB.print(F("OPC-N2.Getting histogram data"));
 	#endif
 	error = 1;
 	delay(100);
@@ -412,7 +421,7 @@ int8_t WaspOPC_N2::getHistogramData()
 	
 	if (times >= 100)
 	{
-		#ifdef OPC_N2_DEBUG
+		#if OPC_N2_DEBUG>0
 			USB.println(F("...failed. Communication error."));
 		#endif
 		error = -1;
@@ -441,7 +450,7 @@ int8_t WaspOPC_N2::getHistogramData()
 	
 	if (crc_bin != crc)
 	{		
-		#ifdef OPC_N2_DEBUG
+		#if OPC_N2_DEBUG>0
 			USB.println(F("...CRC NOK"));
 			USB.print(F("CRC bin: "));
 			USB.print(crc_bin, DEC);
@@ -452,7 +461,7 @@ int8_t WaspOPC_N2::getHistogramData()
 		error = -2;
 	}
 	
-	#ifdef OPC_N2_DEBUG
+	#if OPC_N2_DEBUG>0
 		USB.println(F("...Done"));
 	#endif
 	
@@ -501,8 +510,8 @@ int8_t WaspOPC_N2::getConfigVar()
 	
 	
 	
-	#ifdef OPC_N2_DEBUG
-		USB.print(F("OPC-N2: Getting config variables"));
+	#if OPC_N2_DEBUG>0
+		USB.print(F("OPC-N2.Getting config variables"));
 	#endif
 	
 	delay(100);
@@ -518,7 +527,7 @@ int8_t WaspOPC_N2::getConfigVar()
 	
 	if (times >= 100)
 	{
-		#ifdef OPC_N2_DEBUG
+		#if OPC_N2_DEBUG>0
 			USB.println(F("...failed. Communication error."));
 		#endif
 		return -1;
@@ -622,7 +631,7 @@ int8_t WaspOPC_N2::getConfigVar()
 	
 	SPI.setSPISlave(ALL_DESELECTED);
 	
-	#ifdef OPC_N2_DEBUG
+	#if OPC_N2_DEBUG>0
 		USB.println(F("...Done"));
 	#endif
 		
@@ -655,10 +664,43 @@ int8_t WaspOPC_N2::getConfigVar()
 */
 int8_t WaspOPC_N2::getPM(uint32_t timeSample)
 {
+	
+
+	return getPM(0, timeSample);
+	
+}
+
+/* Function: 	This function gets PM values (PM1, PM2_5 and PM10)
+ * The next variables will be updated:
+ * 				_bin[16]
+ * 				_temp
+ * 				_pressure
+ * 				_periodCount
+ * 				_bin1_MToF
+ * 				_bin3_MToF
+ * 				_bin5_MToF
+ * 				_bin7_MToF
+ * 				_PM1
+ * 				_PM2_5
+ * 				_PM10
+ * Parameters:	waitSample: waiting time before to sample in milliseconds
+ * 				timeSample: desired time to sample in milliseconds
+ * Returns: 	1 if OK
+ * 				-1 if error sending the command digital pot on
+ *				-2 if error receiving data
+ * 				-3 if error sending the command read histogram
+ *				-4 if error receiving data
+ * 				-5 if error sending the command read histogram
+ *				-6 if error receiving data
+ * 				-7 if error sending the command digital pot off
+ *				-8 if error receiving data
+*/
+int8_t WaspOPC_N2::getPM(uint32_t waitSample, uint32_t timeSample)
+{
 	uint8_t error = 0;
 	
-	#ifdef OPC_N2_DEBUG
-		USB.println(F("OPC-N2: Getting PM with fan on"));
+	#if OPC_N2_DEBUG>0
+		USB.println(F("OPC-N2.Getting PM with fan on"));
 	#endif
 	
 	for (int i = 0; i < 15; i++)
@@ -672,7 +714,7 @@ int8_t WaspOPC_N2::getPM(uint32_t timeSample)
 	_PM1 = 0.0;
 	_PM2_5 = 0.0;
 	_PM10 = 0.0;	 
-		
+		configSPI();
 	error = checkStatus();
 	
 	// Set digital pot ON
@@ -684,7 +726,7 @@ int8_t WaspOPC_N2::getPM(uint32_t timeSample)
 	}
 		
 	// Reset the histogram
-	delay(100);
+	delay(waitSample + 500);
 	error = getHistogramData();
 	if (error != 1)
 	{

@@ -148,6 +148,9 @@ public:
 		isSD = false;
 		isSX = false;
 		isDustSensor = false;
+		isSmartWater = false;
+		isSmartWaterIons = false;
+		isRS485 = false;
 	};
  
 	static byte transfer(uint8_t _data);
@@ -206,6 +209,11 @@ public:
   	/*! true: ON; false: OFF
    	*/
 	boolean		isSmartWaterIons;
+	
+	//! Variable : indicates when RS-485 board is being powered on
+  	/*! true: ON; false: OFF
+   	*/
+	boolean		isRS485;
 
 	
 };

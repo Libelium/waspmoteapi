@@ -1,7 +1,7 @@
 /*! \file OPC_N2.h
     \brief Library for managing the OPC_N2
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Marcos Yarza, Alejandro Gállego
 
@@ -45,7 +45,7 @@
 #define DUST_SENSOR_CS DIGITAL2
 #define DUST_SENSOR_POWER DIGITAL1
 
-//#define OPC_N2_DEBUG
+#define OPC_N2_DEBUG 0
 
 /// Sensor commands /////////////////////////////////////////////////////////////////
 // COMMAND: Set digital pot
@@ -335,6 +335,35 @@ class WaspOPC_N2
 				-8 if error receiving data
 	*/
 	int8_t getPM(uint32_t timeSample);
+	
+		/*! This function gets PM values (PM1, PM2_5 and PM10)
+	 * Next variables will be updated: 
+	 * 				_bin[16]
+	 * 				_temp
+	 * 				_pressure
+	 * 				_periodCount
+	 * 				_bin1_MToF
+	 * 				_bin3_MToF
+	 * 				_bin5_MToF
+	 * 				_bin7_MToF
+	 * 				_PM1
+	 * 				_PM2_5
+	 * 				_PM10
+	 */
+	/*!
+	\param	uint32_t waitSample: time with the fan on without sampling the air in milliseconds
+	\param	uint32_t timeSample: time sampling the air in milliseconds
+	\return		1 if OK
+				-1 if error sending the command digital pot on
+				-2 if error receiving data
+				-3 if error sending the command read histogram
+				-4 if error receiving data
+				-5 if error sending the command read histogram
+				-6 if error receiving data
+				-7 if error sending the command digital pot off
+				-8 if error receiving data
+	*/
+	int8_t getPM(uint32_t waitSample, uint32_t timeSample);
 
 };
 

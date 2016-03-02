@@ -371,6 +371,7 @@
 #define	REG_SX				131072	// bit 17
 #define	REG_DUST_GASES_PRO	262144	// bit 18
 #define	REG_WATER_IONS		524288	// bit 19
+#define REG_RS485			1048576	// bit 20
 
 
 /*******************************************************************************
