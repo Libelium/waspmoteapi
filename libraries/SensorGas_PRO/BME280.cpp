@@ -23,10 +23,10 @@
  */
 
 #ifndef __WPROGRAM_H__
-  #include "WaspClasses.h"
+  #include <WaspClasses.h>
 #endif
 
-#include <BME280.h>
+#include "BME280.h"
 
 
 // Constructors ////////////////////////////////////////////////////////////////

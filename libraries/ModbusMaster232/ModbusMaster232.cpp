@@ -24,13 +24,13 @@
 
 
 #ifndef __WPROGRAM_H__
-	#include "WaspClasses.h"
+	#include <WaspClasses.h>
 #endif
 
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
 
-#include <../RS232/Wasp232.h>
+#include "../RS232/Wasp232.h"
 
 
 /* _____PUBLIC FUNCTIONS_____________________________________________________ */

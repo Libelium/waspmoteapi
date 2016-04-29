@@ -28,10 +28,10 @@
 */
 
 #ifndef __WPROGRAM_H__
-	#include "WaspClasses.h"
+	#include <WaspClasses.h>
 #endif
 
-#include <../RS232/Wasp232.h>
+#include "../RS232/Wasp232.h""
 
 
 #ifndef ModbusSlave232_h

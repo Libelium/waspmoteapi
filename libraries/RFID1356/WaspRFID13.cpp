@@ -18,12 +18,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Version:			1.2
- *  Design:				David Gascón
+ *  Design:				David Gascï¿½n
  *  Implementation:		Ahmad Saad, Javier Solobera
  */
 
 #ifndef __WPROGRAM_H__
-	#include "WaspClasses.h"
+	#include <WaspClasses.h>
 #endif
 
 #include "WaspRFID13.h"
