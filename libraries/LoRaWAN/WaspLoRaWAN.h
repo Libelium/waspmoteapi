@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.2
+    Version:		0.3
     Design:			David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -47,7 +47,18 @@ enum AnswerTypesLoRaWAN
 	LORAWAN_INIT_ERROR = 3,
 	LORAWAN_LENGTH_ERROR = 4,
 	LORAWAN_SENDING_ERROR = 5,
-	LORAWAN_NOT_JOINED = 6
+	LORAWAN_NOT_JOINED = 6,
+	LORAWAN_INPUT_ERROR = 7,
+	LORAWAN_VERSION_ERROR = 8
+};
+
+/*! @enum ModuleTypersLoRaWAN
+ * API module types
+ */
+enum ModuleTypersLoRaWAN
+{
+	RN2483_MODULE = 1,
+	RN2903_MODULE = 2,
 };
 
 /******************************************************************************
@@ -79,28 +90,33 @@ class WaspLoRaWAN : public WaspUART
 		uint32_t _radioFreqDev;
 		uint16_t _preambleLength;
 		uint16_t _dCycle[16];
-		uint8_t _drrMin[16];
-		uint8_t _drrMax[16];
+		uint8_t _drrMin[72];
+		uint8_t _drrMax[72];
 		uint8_t _dCyclePS;
 		char _radioMode[5];
 		bool _crcStatus;
 		uint8_t _powerIndex;
 		uint8_t _dataRate;
-		uint16_t _radioPower;
+		int8_t _radioPower;
 		char _radioSF[5];
 		float _radioRxBW;
-		uint16_t _radioBitRate;
+		uint32_t _radioBitRate;
 		char _radioCR[4];
 		uint32_t _radioWDT;
 		uint16_t _radioBW;
 		int8_t _radioSNR;
-		bool _status[16];
+		bool _status[72];
 		uint16_t _supplyPower;
 		uint32_t _upCounter;
 		uint32_t _downCounter;
 		uint8_t _port;
 		char _data[101];
 		bool _dataReceived;
+		uint8_t _rx2DataRate;
+		uint32_t _rx2Frequency;
+		uint16_t _rx1Delay;
+		uint8_t _version;
+		
 		
 		// constructor
 		WaspLoRaWAN() {};
@@ -160,7 +176,8 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getUpCounter();		
 		uint8_t setDownCounter(uint32_t counter);
 		uint8_t getDownCounter();
-		
+		uint8_t setRX2Parameters(uint8_t datarate, uint32_t frequency);
+		uint8_t setRX1Delay(uint16_t delay);
 		
 		// Radio functions
 		uint8_t sendRadio(char * buff);
@@ -170,7 +187,7 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getRadioSNR();
 		uint8_t setRadioSF(char* sprfact);
 		uint8_t getRadioSF();
-		uint8_t setRadioPower(uint8_t pwr);
+		uint8_t setRadioPower(int8_t pwr);
 		uint8_t getRadioPower();
 		uint8_t setRadioFreq(uint32_t freq);
 		uint8_t getRadioFreq();
@@ -178,9 +195,9 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getRadioMode();
 		uint8_t setRadioReceivingBW(float bandwidth);
 		uint8_t getRadioReceivingBW();
-		uint8_t setRadioBitRateFSK(uint16_t bitrate);
+		uint8_t setRadioBitRateFSK(uint32_t bitrate);
 		uint8_t getRadioBitRateFSK();
-		uint8_t setRadioFreqDeviation(uint16_t freqdeviation);
+		uint8_t setRadioFreqDeviation(uint32_t freqdeviation);
 		uint8_t getRadioFreqDeviation();
 		uint8_t setRadioCRC(char* state);
 		uint8_t getRadioCRC();
