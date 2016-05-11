@@ -22,10 +22,10 @@
   
 
 #ifndef __WPROGRAM_H__
-  #include "WaspClasses.h"
+  #include <WaspClasses.h>
 #endif
 
-#include <Wasp3G.h>
+#include "Wasp3G.h"
 
 //Power constants
 const char POWER_FULL[]			PROGMEM	= "+CFUN=1";		//0

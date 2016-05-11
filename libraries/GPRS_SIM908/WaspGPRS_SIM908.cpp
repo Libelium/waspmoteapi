@@ -22,7 +22,7 @@
   
 
 #ifndef __WPROGRAM_H__
-  #include "WaspClasses.h"
+  #include <WaspClasses.h>
 #endif
 
 

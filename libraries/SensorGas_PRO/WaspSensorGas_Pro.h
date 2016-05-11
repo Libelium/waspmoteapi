@@ -39,9 +39,9 @@
 #include <avr/pgmspace.h>
 
 #include <WaspConstants.h>
-#include <MCP3421.h>
-#include <LMP91000.h>
-#include <BME280.h>
+#include "MCP3421.h"
+#include "LMP91000.h"
+#include "BME280.h"
 
 #define GAS_DEBUG 0
 //#define GAS_PRO_AUTOGAIN_DEBUG

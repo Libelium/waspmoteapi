@@ -23,14 +23,14 @@
  */
 
 #ifndef __WPROGRAM_H__
-  #include "WaspClasses.h"
+  #include <WaspClasses.h>
 #endif
 
-#include <WaspSensorGas_Pro.h>
+#include "WaspSensorGas_Pro.h"
 #include <WaspConstants.h>
-#include <BME280.h>
-#include <LMP91000.h>
-#include <MCP3421.h>
+#include "BME280.h"
+#include "LMP91000.h"
+#include "MCP3421.h"
 
 
 //! Constructors /////////////////////////////////////////////////////////////

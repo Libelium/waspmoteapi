@@ -24,10 +24,10 @@
   
 
 #ifndef __WPROGRAM_H__
-  #include "WaspClasses.h"
+  #include <WaspClasses.h>
 #endif
 
-#include <LMP91000.h>
+#include "LMP91000.h"
 
 // Constructor ///////////////////////////////////////////////////////////////
 

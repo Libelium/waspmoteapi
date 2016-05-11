@@ -32,10 +32,10 @@
 */
 
 #ifndef __WPROGRAM_H__
-	#include "WaspClasses.h"
+	#include <WaspClasses.h>
 #endif
 
-#include <../RS485/Wasp485.h>
+#include "../RS485/Wasp485.h"
 
 
 #ifndef ModbusSlave485_h

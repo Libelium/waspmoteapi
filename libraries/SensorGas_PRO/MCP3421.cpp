@@ -23,11 +23,11 @@
  */
 
 #ifndef __WPROGRAM_H__
-  #include "WaspClasses.h"
+  #include <WaspClasses.h>
 #endif
 
 
-#include <MCP3421.h>
+#include "MCP3421.h"
 
 // Constructors ////////////////////////////////////////////////////////////////
 MCP3421::MCP3421(){

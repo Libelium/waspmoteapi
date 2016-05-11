@@ -27,8 +27,8 @@
  * Includes
  ******************************************************************************/
 #include <inttypes.h>
-#include <utility/ADC.h>
-#include <utility/filter.h>
+#include "utility/ADC.h"
+#include "utility/filter.h"
 
 /******************************************************************************
  * Definitions & Declarations
