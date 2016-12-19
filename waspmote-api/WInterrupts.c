@@ -3,7 +3,7 @@
  *
  *  Copyright (c) 2004-05 Hernando Barragan
  *  Modified 24 November 2006 by David A. Mellis
- * 	Revised for Waspmote by Libelium, 2015
+ * 	Revised for Waspmote by Libelium, 2016
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -18,7 +18,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, David A. Mellis, Hernando Barragan, Manuel Calahorra
  */
@@ -40,6 +40,7 @@
 // definition of interrupt vectors
 volatile static voidFuncPtr intFunc[EXTERNAL_NUM_INTERRUPTS];
 volatile static voidFuncPtr twiIntFunc;
+extern volatile uint8_t _boot_version;
 
 
 #if defined(__AVR_ATmega168__)
@@ -220,6 +221,7 @@ ISR(INT1_vect)
 
 ISR(INT2_vect) 
 {
+	sleep_disable();
   if(intFunc[EXTERNAL_INT_2])
     intFunc[EXTERNAL_INT_2]();
 }
@@ -227,6 +229,7 @@ ISR(INT2_vect)
 
 ISR(INT3_vect) 
 {
+	sleep_disable();
   if(intFunc[EXTERNAL_INT_3])
     intFunc[EXTERNAL_INT_3]();
 }
@@ -337,12 +340,25 @@ void onHAIwakeUP(void)
 	
 	if( intConf & PLV_INT )
 	{
-		// check monitorization pin
-		if( !(digitalRead(PLV_INT_PIN_MON)))
+		if (_boot_version >= 'G')
+		{		
+			// check monitorization pin
+			if( !(digitalRead(PLV_INT_PIN_MON_V30)))
+			{				
+				intCounter++;
+				intFlag |= PLV_INT;
+				intArray[PLV_POS]++;					
+			}
+		}
+		else
 		{
-			intCounter++;
-			intFlag |= PLV_INT;
-			intArray[PLV_POS]++;					
+			if( !(digitalRead(PLV_INT_PIN_MON)))
+			{				
+				intCounter++;
+				intFlag |= PLV_INT;
+				intArray[PLV_POS]++;					
+			}
+			
 		}
 	}
 	
@@ -454,6 +470,7 @@ void enableInterrupts(uint32_t conf)
 	{
 		pinMode(RAD_INT_PIN_MON,INPUT);
         pinMode(MUX_TX, INPUT);
+		digitalWrite(MUX_TX, HIGH);	
         attachInterrupt(TXD1_PIN, onLAIwakeUP, FALLING);
 	}
 	

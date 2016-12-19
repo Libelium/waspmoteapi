@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.3
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -780,7 +780,7 @@ uint8_t WaspGPRS_Pro_core::sendCommand1(const char* theText,
 	int answer= waitForData( expectedAnswer, max_timeout, timeout, 0);	
 	
 	#if GPRS_debug_mode>0
-		USB.print(F("Answer: "));
+		USB.print(F("Answer received: "));
 		USB.println(answer, DEC);
 	#endif
 	
@@ -856,7 +856,7 @@ uint8_t WaspGPRS_Pro_core::sendCommand2(	const char* theText,
     int answer= waitForData( expectedAnswer1, expectedAnswer2, max_timeout, timeout, 0, 2);
     
 	#if GPRS_debug_mode>0
-		USB.print(F("Answer: "));
+		USB.print(F("Answer received: "));
 		USB.println(answer, DEC);
 	#endif
 	
@@ -917,9 +917,9 @@ uint8_t WaspGPRS_Pro_core::waitForData(	const char* expectedAnswer1,
 	
 	
 	#if GPRS_debug_mode>1
-		USB.print(F("Answer 1: "));
+		USB.print(F("Excepted answer 1: "));
 		USB.println(expectedAnswer1);
-		USB.print(F("Answer 2: "));
+		USB.print(F("Excepted answer 2: "));
 		USB.println(expectedAnswer2);
 	#endif
 	// Gets the maximum length and the minimum length of the 2 strings
@@ -2691,7 +2691,7 @@ void WaspGPRS_Pro_core::begin(){
 */
 void WaspGPRS_Pro_core::close(){
 	closeSerial(_socket);
-	Utils.setMux(MUX_TO_LOW, MUX_TO_LOW);
+	Utils.setMux(LOW, LOW);
 }
 
 /* OFF(void) - closes UART1 and powers off the SIM900 module
@@ -2818,22 +2818,21 @@ int8_t WaspGPRS_Pro_core::setMode(uint8_t pwrMode){
 			if (global_counter > 0)
 			{
 				// All versions
-				
 				// Enables numeric error codes: AT+CMEE=1
 				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[32])));	//NUMERIC_ERROR
-				sendCommand1(str_aux1,OK_RESPONSE);
+				sendCommand2(str_aux1,OK_RESPONSE, ERROR, 500, 1);
 				
 				// Disables command echoes: ATE0
 				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[33])));	//NO_ECHO
-				sendCommand1(str_aux1,OK_RESPONSE);
+				sendCommand2(str_aux1,OK_RESPONSE, ERROR, 500, 1);
 				
 				// Disable slow clock: AT+CSCLK=0
 				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[3])));	//POWER_NO_SLEEP
-				answer=sendCommand1(str_aux1, OK_RESPONSE);
+				answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR, 500, 1);
 				
 				// Set Phone to Full Functionality: AT+CFUN=1
 				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[0])));	//POWER_FULL
-				answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR_CME);
+				answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR_CME, 500, 1);
 				
 				if (battery_level < 30)
 				{	
@@ -4555,8 +4554,7 @@ int8_t WaspGPRS_Pro_core::downloadFile(	const char* file,
 {
 	
 	unsigned long previous=0;
-	int8_t answer=0;
-	uint8_t i=0;
+	int8_t answer=0;	
 	uint8_t count=10;
 	long ftp_size=0;
 	uint8_t ftp_retries;

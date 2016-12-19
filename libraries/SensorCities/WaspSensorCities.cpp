@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation: Manuel Calahorra
  */
@@ -64,7 +64,7 @@ WaspSensorCities::WaspSensorCities()
 	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_CITIES_V15;
+	WaspRegisterSensor |= REG_CITIES_V15;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -146,7 +146,10 @@ void WaspSensorCities::setAudioGain(uint8_t value1, float value2)
 	value1--;
 	ampli=(uint8_t) 128-(128/100)*value1;
 
-	if( !Wire.I2C_ON ) Wire.begin();
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.beginTransmission(I2C_ADDRESS_CITIES_AUDIO_GAIN);
 	Wire.send(B00000000);
@@ -168,7 +171,8 @@ void WaspSensorCities::setAudioGain(uint8_t value1, float value2)
 	Wire.send(ampli);
 	Wire.endTransmission();
 
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
@@ -371,7 +375,7 @@ float	WaspSensorCities::readValue(uint16_t sensor, uint8_t type)
 													delay(1);
 												}
 												value = value / 1000;  
-												value = audioConversion(value);
+												//value = audioConversion(value);
 												break;
 		case	SENS_CITIES_HUMIDITY		:	aux = analogRead(ANALOG3);
 												value = humidityConversion(aux);
@@ -536,13 +540,18 @@ void WaspSensorCities::setDigipot1(uint8_t address, float value)
 	thres *=128;
 	thres /=3.3;
 	threshold = (uint8_t) thres;
-	if( !Wire.I2C_ON ) Wire.begin();
+	
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.beginTransmission(address);
 	Wire.send(B00010000);
 	Wire.send(threshold);
 	Wire.endTransmission();
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
@@ -564,13 +573,19 @@ void WaspSensorCities::setDigipot0(uint8_t address, float value)
 	thres *=128;
 	thres /=3.3;
 	threshold = (uint8_t) thres;
-	if( !Wire.I2C_ON ) Wire.begin();
+	
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.beginTransmission(address);
 	Wire.send(B00000000);
 	Wire.send(threshold);
 	Wire.endTransmission();
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
@@ -669,11 +684,9 @@ float WaspSensorCities::ldrConversion(int readValue)
  */
 float WaspSensorCities::temperatureConversion(int readValue)
 {
-	float temperature = 0;
-   
+	float temperature = 0.0;
 	temperature = float(readValue) * 3300 / 1023;
-   
-	temperature = (temperature - 500) / 10;
+   	temperature = (temperature - 500) / 10;
    
 	return(temperature);   
 }

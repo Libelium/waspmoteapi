@@ -1,7 +1,7 @@
 /*! \file Wasp3G.h
     \brief Library for managing the SIM5218 module
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.4
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -52,7 +52,7 @@
 
 #define _3G_debug_mode	0
 
-#define BUFFER_SIZE 512
+#define _3G_BUFFER_SIZE 512
 
 #define	_3G_APN "apn"
 #define	_3G_LOGIN "login"		//comment this line if you don't need login
@@ -288,7 +288,7 @@ class Wasp3G
 		int8_t sendHTTPrequest(	const char* url,
 								uint16_t port,
 								uint8_t* data,
-								int length,
+								uint16_t length,
 								uint8_t method );
 		
 		//! It reads the response from the server
@@ -500,7 +500,7 @@ class Wasp3G
     uint16_t CME_CMS_code;
 	
 	//! Variable : 
-    char buffer_3G[BUFFER_SIZE];
+    char buffer_3G[_3G_BUFFER_SIZE];
 	
 	//!Variables for GPS
 	#if GPS_FUSE
@@ -1339,31 +1339,21 @@ class Wasp3G
 	*/
 	int16_t readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse);
 	
-	//! Sets the time of Waspmote's RTC getting the time from an url
+	//! Sets the time of Waspmote's RTC getting the time from an HTP server
 	/*!
 	\return '1' on success
 		'0' if no connection
-		'-1' if error setting APN, username and password
-		'-2' if error opening a HTTP session
-		'-3' if error receiving data or timeout waiting data
-		'-4' if error changing the baudrate (data received is OK)
-		'-5' if unknown error for HTTP
-		'-6' if HTTP task is busy
-		'-7' if fail to resolve server address
-		'-8' if HTTP timeout
-		'-9' if fail to transfer data
-		'-10' if memory error
-		'-11' if invalid parameter
-		'-12' if network error
+		'-1' if error setting APN, username and password,
+		'-2' if error checking the connection
+		'-3' if error adding the HTP server
+		'-4' if error reading the time from 3G's RTC
+		'-5' HTP Unknown error
+		'-6' HTP Wrong parameter
+		'-7' HTP Wrong date and time calculated
+		'-8' HTP Network error
 		'-15' if error setting APN, username and password with CME_error code available
-		'-16' if error opening a HTTP session with CME_error code available	
-		'-17' if url response its not OK (HTTP code 200)
-		'-18' if content-length field not found
-		'-19' if data field not found
-		'-20' if error checking the connection
-		'-21' if fail setting the time of the internal RTC of the 3G module
 	*/
-	int16_t setTimebyURL();
+	int16_t setTimebyURL(const char* htp_server, uint16_t htp_port);
 	
 	//! Sets the time of Waspmote's RTC getting the time from Meshlium
 	/*!	

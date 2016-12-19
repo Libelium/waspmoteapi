@@ -1,6 +1,6 @@
 /* Arduino Sd2Card Library
  * Copyright (C) 2012 by William Greiman
- * Modified in 2014 for Waspmote, by Y. Carmona 
+ * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino Sd2Card Library
  *
@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino Sd2Card Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
 #include "Sd2Card.h"
 #include "../WaspSPI.h"
@@ -265,7 +268,7 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 	m_chipSelectPin = chipSelectPin;
  
 	// 16-bit init start time allows over a minute
-	uint16_t t0 = (uint16_t)millis();
+	uint32_t t0 = millis();
 	uint32_t arg;
 	int retries = 512;
 
@@ -283,12 +286,12 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 	// command to go idle in SPI mode
 	while (cardCommand(CMD0, 0) != R1_IDLE_STATE) 
 	{
-		if (((uint16_t)millis() - t0) > SD_INIT_TIMEOUT) 
+		if ((millis() - t0) > SD_INIT_TIMEOUT) 
 		{
 			error(SD_CARD_ERROR_CMD0);
 			goto fail;
 		}
-		if(t0>millis()) t0 = (uint16_t)millis();
+		if(t0>millis()) t0 = millis();
 	}
 	
 	#if USE_SD_CRC
@@ -300,7 +303,7 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 	#endif  // USE_SD_CRC
 	
 	// check SD version
-	
+	// do not need a timeout because there is a counter
 	while( retries > 0) 
 	{
 		retries--;
@@ -316,12 +319,12 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 			type(SD_CARD_TYPE_SD2);
 			break;
 		}
-		if (((uint16_t)millis() - t0) > SD_INIT_TIMEOUT) 
+		if ((millis() - t0) > SD_INIT_TIMEOUT) 
 		{
 			error(SD_CARD_ERROR_CMD8);
 			goto fail;
 		}
-		if(t0>millis()) t0 = (uint16_t)millis();
+		if(t0>millis()) t0 = millis();
 	}
   
 	// initialize card and send host supports SDHC if SD2
@@ -330,12 +333,12 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 	while (cardAcmd(ACMD41, arg) != R1_READY_STATE) 
 	{
 		// check for timeout
-		if (((uint16_t)millis() - t0) > SD_INIT_TIMEOUT) 
+		if ((millis() - t0) > SD_INIT_TIMEOUT) 
 		{
 			error(SD_CARD_ERROR_ACMD41);
 			goto fail;
 		}
-		if(t0>millis()) t0 = (uint16_t)millis();
+		if(t0>millis()) t0 = millis();
 	}
   // if SD2 read OCR register to check for SDHC card
   if (type() == SD_CARD_TYPE_SD2) 
@@ -401,15 +404,15 @@ bool Sd2Card::readData(uint8_t* dst, size_t count) {
 #endif  // USE_SD_CRC
   
 	// wait for start block token
-	uint16_t t0 = millis();
+	uint32_t t0 = millis();
 	while ((m_status = SPI.receive()) == 0XFF) 
 	{
-		if (((uint16_t)millis() - t0) > SD_READ_TIMEOUT) 
+		if ((millis() - t0) > SD_READ_TIMEOUT) 
 		{
 			error(SD_CARD_ERROR_READ_TIMEOUT);
 			goto fail;
 		}
-		if(t0>millis()) t0 = (uint16_t)millis();
+		if(t0>millis()) t0 = millis();
 	}
   if (m_status != DATA_START_BLOCK) {
     error(SD_CARD_ERROR_READ);
@@ -500,13 +503,13 @@ bool Sd2Card::readStop() {
 }
 //------------------------------------------------------------------------------
 // wait for card to go not busy
-bool Sd2Card::waitNotBusy(uint16_t timeoutMillis) 
+bool Sd2Card::waitNotBusy(uint32_t timeoutMillis) 
 {
-	uint16_t t0 = millis();
+	uint32_t t0 = millis();
 	while (SPI.receive() != 0XFF) 
 	{
-		if (((uint16_t)millis() - t0) >= timeoutMillis) goto fail;
-		if(t0>millis()) t0 = (uint16_t)millis();
+		if ((millis() - t0) >= timeoutMillis) goto fail;
+		if(t0>millis()) t0 = millis();
 	}
 	return true;
 

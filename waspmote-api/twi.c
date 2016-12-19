@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
- *  Revised for Waspmote by Libelium, 2014-2015
+ *  Revised for Waspmote by Libelium, 2014-2016
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- *  Version:		1.2
+ *  Version:		3.0
  *  Implementation:	N. Zambetti, A. Bielsa, Y. Carmona
  */
  
@@ -387,9 +387,9 @@ void twi_close()
 	cbi(TWCR,TWSTA);
 	cbi(TWCR,TWWC);
 	// switch off TWI depending on wether a sensor board is plugged or not
-	if(		(WaspRegister & REG_GASES) 
-		||	(WaspRegister & REG_CITIES_V14) 
-		||	(WaspRegister & REG_PROTOTYPING) )
+	if(		(WaspRegisterSensor & REG_GASES) 
+		||	(WaspRegisterSensor & REG_CITIES_V14) 
+		||	(WaspRegisterSensor & REG_PROTOTYPING) )
 	{
 		cbi(TWCR,TWEN);
 	}

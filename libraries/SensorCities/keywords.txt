@@ -31,4 +31,4 @@ attachInt	KEYWORD2
 detachInt	KEYWORD2
 loadInt	KEYWORD2
 
-SensorCities	KEYWORD3
+SensorCities	KEYWORD1

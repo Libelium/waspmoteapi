@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -87,13 +87,6 @@ void WaspXBee868::init(	uint8_t uart_used )
 	// set protocol and socket used for XBee module	
 	protocol=XBEE_868;
 	uart=uart_used;
-	
-	// in the case the XBee is plugged to SOCKET0 it is necessary to make sure
-	// that the multiplexor is selecting the XBee module
-	if(uart_used==SOCKET0)
-	{
-		Utils.setMuxSocket0();
-	}
 	
 	pos=0;
 	discoveryOptions=0x00;
@@ -596,7 +589,6 @@ uint8_t WaspXBee868::sendXBeePriv(struct packetXBee* packet)
 	// Local variables
 	uint8_t TX[120];
     uint8_t counter=0;
-    uint16_t aux=0;
     uint8_t protegido=0;
     uint8_t tipo=0;
     int8_t error=2; 
@@ -622,9 +614,7 @@ uint8_t WaspXBee868::sendXBeePriv(struct packetXBee* packet)
     if( (packet->mode==BROADCAST) || (packet->mode==UNICAST) )
     {		
 		// set packet length
-		TX[2]=14+packet->data_length;      
-        
-        aux=0;
+		TX[2]=14+packet->data_length; 
         
         // set Frame Type 
         TX[3]=0x10; 

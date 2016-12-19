@@ -1,6 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
- * Modified in 2014 for Waspmote, by Y. Carmona 
+ * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino SdFat Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
 #ifndef SdFat_h
 #define SdFat_h

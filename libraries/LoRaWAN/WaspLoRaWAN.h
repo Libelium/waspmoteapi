@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		0.3
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -74,6 +74,7 @@ class WaspLoRaWAN : public WaspUART
     public:
     
 		bool _adr;
+		bool _ar;
 		char _eui[17];
 		char _devEUI[17];
 		char _appEUI[17];
@@ -115,8 +116,10 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t _rx2DataRate;
 		uint32_t _rx2Frequency;
 		uint16_t _rx1Delay;
+		uint16_t _rx2Delay;
 		uint8_t _version;
-		
+		uint32_t _macStatus;
+		uint8_t _maxPayload;
 		
 		// constructor
 		WaspLoRaWAN() {};
@@ -178,7 +181,9 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getDownCounter();
 		uint8_t setRX2Parameters(uint8_t datarate, uint32_t frequency);
 		uint8_t setRX1Delay(uint16_t delay);
-		
+		uint8_t getMACStatus();
+		uint8_t showMACStatus();
+				
 		// Radio functions
 		uint8_t sendRadio(char * buff);
 		uint8_t receiveRadio(uint32_t timeout);
@@ -210,7 +215,20 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t setRadioBW(uint16_t bandwidth);
 		uint8_t getRadioBW();
 		uint8_t setLinkCheck(uint16_t counter);
-		
+		void convertString(char* string2convert, char* outputString);
+		void convertString(uint8_t* string2convert, char* outputString);
+		uint8_t sendConfirmed(uint8_t port, uint8_t* payload, uint16_t length);
+		uint8_t sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t length);
+		uint8_t sleep();
+		uint8_t sleep(uint32_t time);
+		uint8_t wakeUp();
+		uint8_t setAR(char* state);
+		uint8_t getAR();
+		uint8_t getRX1Delay();
+		uint8_t getRX2Delay();
+		uint8_t getRX2Parameters(char* band);
+		uint8_t getMaxPayload();
+
 	private:		
 		// Utils
 		uint32_t parseValue(uint8_t base);

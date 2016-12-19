@@ -54,7 +54,13 @@ encryptOptions	KEYWORD2
 networkKey	KEYWORD2
 powerMode	KEYWORD2
 supplyVoltage	KEYWORD2
+setScanningChannels	KEYWORD2
+setCoordinator	KEYWORD2
+getCoordinator	KEYWORD2
+setPAN	KEYWORD2
 _payload	KEYWORD2
 _length	KEYWORD2
+error_AT	KEYWORD2
+coordinatorEnable	KEYWORD2
 
-xbeeZB	KEYWORD3
+xbeeZB	KEYWORD1

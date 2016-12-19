@@ -33,4 +33,4 @@ resetReason	KEYWORD2
 _payload	KEYWORD2
 _length	KEYWORD2
 
-xbee868	KEYWORD3
+xbee868	KEYWORD1

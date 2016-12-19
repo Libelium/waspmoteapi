@@ -1,0 +1,8 @@
+# ModbusSlave keywords #
+
+configure	KEYWORD2
+update		KEYWORD2
+ModbusSlave	KEYWORD2
+
+RS232_COM	LITERAL1
+RS485_COM	LITERAL1

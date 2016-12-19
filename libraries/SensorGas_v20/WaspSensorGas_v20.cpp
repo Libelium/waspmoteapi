@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
- *  Design:		David Gascón
+ *  Version:		3.0
+ *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra
  */
  
@@ -55,7 +55,7 @@ WaspSensorGas_v20::WaspSensorGas_v20()
 	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_GASES;
+	WaspRegisterSensor |= REG_GASES;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -559,13 +559,18 @@ void WaspSensorGas_v20::setResistor(uint8_t address, float value)
 	auxiliar = auxiliar/100;
 	resist = (uint8_t) 128-auxiliar;
 
-	if( !Wire.I2C_ON ) Wire.begin();
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.beginTransmission(address);
 	Wire.send(B00000000);
 	Wire.send(resist);
 	Wire.endTransmission();
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
@@ -607,13 +612,18 @@ void WaspSensorGas_v20::setAmplifier(uint8_t address, uint8_t value)
 
 	ampli= uint8_t(128-((128*(value-1))/100));
 
-	if( !Wire.I2C_ON ) Wire.begin();
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.beginTransmission(address);
 	Wire.send(B00010000);
 	Wire.send(ampli);
 	Wire.endTransmission();
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}

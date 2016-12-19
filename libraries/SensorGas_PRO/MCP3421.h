@@ -1,7 +1,7 @@
 /*! \file MCP3421.h
     \brief Library for managing the MCP3421 ADC
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -46,9 +46,9 @@
 #define MCP3421_RES_18_BIT		3
 
 #define MCP3421_LOW_RES			0
-#define MCP3421_MEDIUM_RES		1
-#define MCP3421_HIGH_RES		2
-#define MCP3421_ULTRA_HIGH_RES	3
+#define MCP3421_MEDIUM_RES			1
+#define MCP3421_HIGH_RES			2
+#define MCP3421_ULTRA_HIGH_RES		3
 
 // gain setting for ADC
 #define MCP3421_GAIN_1			0
@@ -57,7 +57,7 @@
 #define MCP3421_GAIN_8			3
 
 // conversion 
-#define MCP3421_RAW				0
+#define MCP3421_RAW			0
 #define MCP3421_VOLTS			1
 
 /******************************************************************************
@@ -70,9 +70,9 @@
  */
 class MCP3421
 {
-	private:	
+	private:
 	
-	public:		
+	public:
 	
 	MCP3421();
 
@@ -93,6 +93,25 @@ class MCP3421
 	\return		measure in milliVolts or raw
 	*/
 	float readADC(uint8_t resolution, uint8_t gain, uint8_t conversion);
+	
+	/*!
+	\param uint8_t ADC_addr: I2C address for the ADC
+	\param uint8_t resolution: resolution value for ADC conversion
+						MCP3421_RES_12_BIT or MCP3421_LOW_RES
+						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t gain: gain setting for ADC
+						MCP3421_GAIN_1
+						MCP3421_GAIN_2
+						MCP3421_GAIN_4
+						MCP3421_GAIN_8
+	\param uint8_t conversion: returns the raw value or converted to millivolts
+						MCP3421_RAW
+						MCP3421_VOLTS
+	\return		measure in milliVolts or raw
+	*/
+	float readADC(uint8_t ADC_addr, uint8_t resolution, uint8_t gain, uint8_t conversion);
 	
 };
 

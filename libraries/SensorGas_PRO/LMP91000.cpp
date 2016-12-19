@@ -1,7 +1,7 @@
 /*
  *  Library for managing the LMP91000 AFE 
  * 
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -54,7 +54,7 @@ bool LMP91000::check()
 							&status, 
 							LMP91000_STATUS_REG_STATUS__POS);
 	
-	if ((answer != 1) || (status == 0))
+	if ((answer != 0) || (status == 0))
 	{
 		return 0;
 	}
@@ -127,18 +127,23 @@ int8_t LMP91000::getRgain()
 	uint8_t r_gain;
 
 	#if LMP_DEBUG>0
-		USB.println(F("LMP.Reading r_gain"));
+		USB.print(F("LMP.Reading r_gain..."));
 	#endif
 	answer = Wire.readBits(	I2C_ADDRESS_GASPRO_LMP91000,
 							LMP91000_TIAC_REG,
 							&r_gain,
 							LMP91000_TIAC_REG_REF_R_GAIN__POS,
 							LMP91000_TIAC_REG_REF_R_GAIN__LEN);
-	if (answer == 1)
-	{
+	if (answer == 0)
+	{	
+		#if LMP_DEBUG>0
+			USB.println(r_gain, DEC);
+		#endif
 		return r_gain;
 	}
-	
+		#if LMP_DEBUG>0
+		USB.println(F("error"));
+	#endif
 	return answer;
 }
 
@@ -189,7 +194,7 @@ int8_t LMP91000::getInternalZero()
 							&internal_zero,
 							LMP91000_REFC_REG_REF_INT_Z__POS,
 							LMP91000_REFC_REG_REF_INT_Z__LEN);
-	if (answer == 1)
+	if (answer == 0)
 	{
 		return internal_zero;
 	}
@@ -239,7 +244,7 @@ int8_t LMP91000::getRefSource()
 							LMP91000_REFC_REG,
 							&ref_source,
 							LMP91000_REFC_REG_REF_SOURCE__POS);
-	if (answer == 1)
+	if (answer == 0)
 	{
 		return ref_source;
 	}
@@ -283,7 +288,7 @@ uint8_t LMP91000::getTIAConReg()
 								&buffer, 
 								1);
 	
-	if (answer == 1)
+	if (answer == 0)
 	{	
 		return buffer;
 	}
@@ -309,7 +314,7 @@ uint8_t LMP91000::getRefConReg()
 								&buffer,
 								1);
 	
-	if (answer == 1)
+	if (answer == 0)
 	{	
 		return buffer;
 	}
@@ -335,7 +340,7 @@ uint8_t LMP91000::getModeReg()
 								&buffer,
 								1);
 	
-	if (answer == 1)
+	if (answer == 0)
 	{	
 		return buffer;
 	}

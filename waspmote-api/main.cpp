@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.3
- *  Design:			David Gascón
+ *  Version:		3.0
+ *  Design:			David Gascon
  *  Implementation:	Yuri Carmona
  */
   
@@ -24,22 +24,42 @@
 #include <Waspmote.h>
 
 //define global variable for Waspmote serial id
-volatile unsigned long _serial_id;
+volatile uint8_t _serial_id[8];
+
+//define global variable for Waspmote bootloader version
+volatile uint8_t _boot_version;
 
 int main(void)
 {
 	init();
 
+	// switch on main power supply
+	pinMode(POWER_3V3, OUTPUT);
+	digitalWrite(POWER_3V3,HIGH);	
+
+	// get bootloader version
+	_boot_version = Utils.getBootVersion();
+	
 	// proceed depending on the bootloader version
-	if( Utils.getBootVersion() >= 'E')
+	if (_boot_version >= 'E')
 	{
 		pinMode(RTC_SLEEP, OUTPUT);
 		digitalWrite(RTC_SLEEP, HIGH);
 	}
 	
+	uint8_t rtc_hibernate_triggered = digitalRead(RTC_INT_PIN_MON);
+	
+	// proceed depending on the bootloader version
+	if (_boot_version >= 'G')
+	{
+		RTC.ON();
+		RTC.disableSQW();
+		RTC.OFF();
+	}
+	
 	// Check OTA EEPROM flag and mark flag in Waspmote 
 	// Control Register if corresponds to
-	if( Utils.readEEPROM(0x01) == 0x01 )
+	if (Utils.readEEPROM(0x01) == 0x01)
 	{
 		// set register flag
 		WaspRegister |= REG_OTA;
@@ -50,8 +70,8 @@ int main(void)
 	
 	// validate Hibernate interruption when both RTC interruption 
 	// signal and hibernate EEPROM flag are active
-	if( digitalRead(RTC_INT_PIN_MON) && (Utils.readEEPROM(HIB_ADDR)==HIB_VALUE) )
-	{
+	if (rtc_hibernate_triggered && (Utils.readEEPROM(HIB_ADDR)==HIB_VALUE))
+	{		
 		// get RTC time and last almarm setting
 		RTC.ON();
 		RTC.getAlarm1();
@@ -64,18 +84,18 @@ int main(void)
 		int total_diff = RTC.second - RTC.second_alarm1;	
 				
 		// check seconds zero crossing
-		if( RTC.minute - RTC.minute_alarm1 > 0 )
+		if (RTC.minute - RTC.minute_alarm1 > 0)
 		{
 			total_diff = total_diff + (RTC.minute - RTC.minute_alarm1)*60;
 		}
 		
 		// check minute zero crossing
-		if( RTC.minute - RTC.minute_alarm1 < 0 )	
+		if (RTC.minute - RTC.minute_alarm1 < 0)
 		{
 			total_diff = total_diff + (RTC.minute-RTC.minute_alarm1+60)*60;
 		}	
 		
-		if( (total_diff < 3) && (total_diff >= 0) )	
+		if ((total_diff < 3) && (total_diff >= 0))
 		{
 			intFlag |= HIB_INT;
 		}
@@ -87,14 +107,16 @@ int main(void)
 	RTC.disableAlarm2();
 	RTC.OFF();
 	
+	// Improve consumption if there is an XBee in SOCKET0 and 
+	// also a SPI sensor board is connected
+	pinMode(SOCKET0_SS, INPUT);
+	
 	delay(3);	
-	if( WaspRegister & REG_SX )
+	if (WaspRegister & REG_SX)
 	{	
 		delay(3);	
 		// Powering the module
-		pinMode(XBEE_PW,OUTPUT);
-		delay(3);
-		digitalWrite(XBEE_PW,HIGH);
+		PWR.powerSocket(SOCKET0, HIGH);
 		delay(3);
 		//Configure the MISO, MOSI, CS, SPCR.
 		SPI.begin();
@@ -115,17 +137,31 @@ int main(void)
 		SPI.setSPISlave(ALL_DESELECTED);	
 		delay(3);
 		// Powering the module
-		pinMode(XBEE_PW,OUTPUT);
-		digitalWrite(XBEE_PW,LOW);	
+		PWR.powerSocket(SOCKET0, LOW);	
 		delay(3);
-	}	
+	}
+	delay(3);
 	
-	delay(3);	
 	// get serial id
-	_serial_id = Utils.readSerialID();
+	Utils.readSerialID();
 	
 	// set random seed
-	srand(_serial_id);
+	unsigned int seed = 0;
+	seed += _serial_id[6] * 0x100;
+	seed += _serial_id[7];
+	srand(seed);
+	
+	// check for XBee modules in SOCKET0
+	//PWR.checkPeripherals();
+	
+	// close UART
+	closeSerial(0);
+		
+	// switch off mux on uart0
+	if (_boot_version >= 'G')
+	{		
+		Utils.muxOFF0();
+	}
 	
 	setup();
     

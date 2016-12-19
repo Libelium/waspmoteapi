@@ -1,7 +1,7 @@
 /*! \file WaspVariables.h
     \brief General variables used through the libraries
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -56,7 +56,8 @@ volatile 	uint8_t	intArray[8];
     \brief Bitmap used for managing the different modules and power supplies 
     by different libraries
  */
-volatile unsigned long WaspRegister;
+volatile uint16_t WaspRegister;
+volatile uint16_t WaspRegisterSensor;
 
 /*! \def pwrGasRegister
     \brief Bitmap used for managing the power supply for Gases PRO board	
@@ -69,5 +70,7 @@ volatile unsigned long WaspRegister;
 	6: gas sensor on socket 6
  */
 volatile uint8_t	pwrGasPRORegister;
+
+volatile uint8_t	pwrCitiesPRORegister;
 
 

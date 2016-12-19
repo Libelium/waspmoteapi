@@ -19,4 +19,4 @@ isEmpty	KEYWORD2
 getStoredFrames	KEYWORD2
 getMaxFrames	KEYWORD2
 
-stack	KEYWORD3
+stack	KEYWORD1

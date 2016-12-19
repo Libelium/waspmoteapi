@@ -1,6 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
- * Modified in 2014 for Waspmote, by Y. Carmona 
+ * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino SdFat Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
  
 #include "SdFat.h"
@@ -276,26 +279,34 @@ bool SdBaseFile::exists(const char* name) {
  * \return For success fgets() returns the length of the string in \a str.
  * If no data is read, fgets() returns zero for EOF or -1 if an error occurred.
  **/
-int16_t SdBaseFile::fgets(char* str, int16_t num, char* delim) {
-  char ch;
-  int16_t n = 0;
-  int16_t r = -1;
-  while ((n + 1) < num && (r = read(&ch, 1)) == 1) {
-    // delete CR
-    if (ch == '\r') continue;
-    str[n++] = ch;
-    if (!delim) {
-      if (ch == '\n') break;
-    } else {
-      if (strchr(delim, ch)) break;
-    }
-  }
-  if (r < 0) {
-    // read error
-    return -1;
-  }
-  str[n] = '\0';
-  return n;
+int16_t SdBaseFile::fgets(char* str, int16_t num, char* delim) 
+{
+	char ch;
+	int16_t n = 0;
+	int16_t r = -1;
+	
+	// do not need a timeout because there is a counter
+	while ((n + 1) < num && (r = read(&ch, 1)) == 1) 
+	{
+		// delete CR
+		if (ch == '\r') continue;
+		str[n++] = ch;
+		if (!delim) 
+		{
+			if (ch == '\n') break;
+		} 
+		else 
+		{
+			if (strchr(delim, ch)) break;
+		}
+	}
+	if (r < 0) 
+	{
+		// read error
+		return -1;
+	}
+	str[n] = '\0';
+	return n;
 }
 //------------------------------------------------------------------------------
 /** Get a file's name
@@ -442,6 +453,7 @@ bool SdBaseFile::mkdir(SdBaseFile* parent, const char* path, bool pFlag)
 		}
 	}
 	
+	// do not need a timeout because there is a counter
 	while( retries > 0 ) 
 	{
 		retries--; 
@@ -449,7 +461,7 @@ bool SdBaseFile::mkdir(SdBaseFile* parent, const char* path, bool pFlag)
 		if (!make83Name(path, dname, &path)) 
 		{
 			DBG_FAIL_MACRO;
-			USB.println(F("Invalid filename"));
+			USB.println(F("[SD] Invalid filename"));
 			goto fail;
 		}
     
@@ -646,6 +658,7 @@ bool SdBaseFile::open(SdBaseFile* dirFile, const char* path, uint8_t oflag)
 		}
 	}
   
+	// do not need a timeout because there is a counter
 	while( retries > 0) 
 	{
 		retries--; 
@@ -659,7 +672,7 @@ bool SdBaseFile::open(SdBaseFile* dirFile, const char* path, uint8_t oflag)
 			}
 			else
 			{
-				USB.println(F("Invalid filename"));	
+				USB.println(F("[SD] Invalid filename"));	
 				DBG_FAIL_MACRO;			
 				goto fail;
 			}
@@ -697,13 +710,14 @@ bool SdBaseFile::open(	SdBaseFile* dirFile,
 	bool fileFound = false;
 	uint8_t index;
 	dir_t* p;
+	uint32_t previous = millis();
 
 	m_vol = dirFile->m_vol;
 	dirFile->rewind();
 	
 	// search for file
 	while (dirFile->m_curPosition < dirFile->m_fileSize) 
-	{
+	{		
 		// Cache directory block.
 		if (dirFile->read() < 0) 
 		{
@@ -739,6 +753,15 @@ bool SdBaseFile::open(	SdBaseFile* dirFile,
 				goto done;
 			}
 		}
+		
+		if (millis()-previous > 60000)
+		{
+			DBG_FAIL_MACRO;
+			goto fail;			
+		}			
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < previous) previous = millis();
 	}
  done:
 
@@ -973,6 +996,7 @@ bool SdBaseFile::openNext(SdBaseFile* dirFile, uint8_t oflag)
 	}
 	m_vol = dirFile->m_vol;
 
+	// do not need a timeout because there is a counter
 	while( retries > 0 ) 
 	{
 		retries--;
@@ -1018,79 +1042,103 @@ bool SdBaseFile::openNext(SdBaseFile* dirFile, uint8_t oflag)
  * \return The value one, true, is returned for success and
  * the value zero, false, is returned for failure.
  */
-bool SdBaseFile::openParent(SdBaseFile* dir) {
-  dir_t entry;
-  dir_t* p;
-  SdBaseFile file;
-  uint32_t c;
-  uint32_t cluster;
-  uint32_t lbn;
-  cache_t* pc;
-  // error if already open or dir is root or dir is not a directory
-  if (isOpen() || !dir || dir->isRoot() || !dir->isDir()) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  m_vol = dir->m_vol;
-  // position to '..'
-  if (!dir->seekSet(32)) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  // read '..' entry
-  if (dir->read(&entry, sizeof(entry)) != 32) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  // verify it is '..'
-  if (entry.name[0] != '.' || entry.name[1] != '.') {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  // start cluster for '..'
-  cluster = entry.firstClusterLow;
-  cluster |= (uint32_t)entry.firstClusterHigh << 16;
-  if (cluster == 0) return openRoot(m_vol);
-  // start block for '..'
-  lbn = m_vol->clusterStartBlock(cluster);
-  // first block of parent dir
+bool SdBaseFile::openParent(SdBaseFile* dir) 
+{
+	dir_t entry;
+	dir_t* p;
+	SdBaseFile file;
+	uint32_t c;
+	uint32_t cluster;
+	uint32_t lbn;
+	cache_t* pc;
+  
+	// error if already open or dir is root or dir is not a directory
+	if (isOpen() || !dir || dir->isRoot() || !dir->isDir()) 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	m_vol = dir->m_vol;
+	// position to '..'
+	if (!dir->seekSet(32)) 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	// read '..' entry
+	if (dir->read(&entry, sizeof(entry)) != 32) 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	
+	// verify it is '..'
+	if (entry.name[0] != '.' || entry.name[1] != '.') 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	
+	// start cluster for '..'
+	cluster = entry.firstClusterLow;
+	cluster |= (uint32_t)entry.firstClusterHigh << 16;
+	if (cluster == 0) return openRoot(m_vol);
+  
+	// start block for '..'
+	lbn = m_vol->clusterStartBlock(cluster);
+	
+	// first block of parent dir
     pc = m_vol->cacheFetch(lbn, SdVolume::CACHE_FOR_READ);
-    if (!pc) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  p = &pc->dir[1];
-  // verify name for '../..'
-  if (p->name[0] != '.' || p->name[1] != '.') {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  // '..' is pointer to first cluster of parent. open '../..' to find parent
-  if (p->firstClusterHigh == 0 && p->firstClusterLow == 0) {
-    if (!file.openRoot(dir->volume())) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-  } else {
-    if (!file.openCachedEntry(1, O_READ)) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-  }
-  // search for parent in '../..'
-  do {
-    if (file.readDir(&entry) != 32) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-    c = entry.firstClusterLow;
-    c |= (uint32_t)entry.firstClusterHigh << 16;
-  } while (c != cluster);
-  // open parent
-  return open(&file, file.curPosition()/32 - 1, O_READ);
+    if (!pc) 
+    {
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	p = &pc->dir[1];
+  
+	// verify name for '../..'
+	if (p->name[0] != '.' || p->name[1] != '.') 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	
+	// '..' is pointer to first cluster of parent. open '../..' to find parent
+	if (p->firstClusterHigh == 0 && p->firstClusterLow == 0) 
+	{
+		if (!file.openRoot(dir->volume())) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+	} 
+	else 
+	{
+		if (!file.openCachedEntry(1, O_READ)) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+	}
+	
+	// search for parent in '../..'
+	do 
+	{
+		if (file.readDir(&entry) != 32) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+		c = entry.firstClusterLow;
+		c |= (uint32_t)entry.firstClusterHigh << 16;
+		
+	} while (c != cluster);
+	
+	// open parent
+	return open(&file, file.curPosition()/32 - 1, O_READ);
 
  fail:
-  return false;
+	return false;
 }
 //------------------------------------------------------------------------------
 /** Open a volume's root directory.

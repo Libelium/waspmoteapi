@@ -1,0 +1,9 @@
+# UltrasoundSensor Keywords #
+
+MB7040_MB1202_I2C_READ_TIMEOUT	LITERAL1
+MB7040_MB1202_RANGE_READING	LITERAL1
+
+getDistance	KEYWORD2
+
+UltrasoundSensor	KEYWORD2
+Ultrasound	KEYWORD1

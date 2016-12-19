@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.3
+ *  Version:		3.0
  *  Design:			Ahmad Saad
  */
  
@@ -38,7 +38,7 @@
 WaspSensorSW::WaspSensorSW()
 {
 	// Update Waspmote Control Register
-	WaspRegister |= REG_WATER;
+	WaspRegisterSensor |= REG_WATER;
 }
 
 
@@ -73,6 +73,13 @@ void WaspSensorSW::ON(void)
 	delay(10);
 	// Configure the ADC
 	myADC.begin();
+	
+	#if DEBUG_WATER > 1
+		PRINTLN_WATER(F("Smart Water Sensor Board Switched ON"));
+	#endif
+	
+	// Enable SPI flag
+	//SPI.isSmartWater = true;
 }
 //!*************************************************************************************
 //!	Name:	OFF()										
@@ -82,14 +89,18 @@ void WaspSensorSW::ON(void)
 //!*************************************************************************************
 void WaspSensorSW::OFF(void)
 {
-		// disable Semtech SPI flag
-	SPI.isSmartWater = false;
+	// Enable SPI flag
+	//SPI.isSmartWater = false;
 	// close SPI bus if it is posible
-	SPI.close();
+	//SPI.close();
 	
 	// Turn off the power switches in Waspmote
 	PWR.setSensorPower(SENS_5V, SENS_OFF);
-	PWR.setSensorPower(SENS_3V3, SENS_OFF);	
+	PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	
+	#if DEBUG_WATER > 1
+		PRINTLN_WATER(F("Smart Water Sensor Board Switched OFF"));
+	#endif
 	
 }
 
@@ -210,20 +221,12 @@ pHClass::pHClass()
 pHClass::pHClass(uint8_t channel)
 {
 	// The pH sensor can be used in the DI and in the ORP sockets
-	if ((channel == DI_SOCKET) || (channel == ORP_SOCKET))
+	if ((channel == ORP_SOCKET) || (channel == SOCKET_E))
 	{
-		if (channel == DI_SOCKET)
-		{
-			// Configuring the pH sensor to be used in the DI socket
-			pHChannel = DI_CHANNEL;
-			pHSwitch = ANA3;
-		}
-		else
-		{
-			// Configuring the pH sensor to be used in the ORP socket
-			pHChannel = ORP_CHANNEL;
-			pHSwitch = ANA1;
-		}
+		// Configuring the pH sensor to be used in the ORP socket
+		pHChannel = ORP_CHANNEL;
+		pHSwitch = ANA1;
+		
 	} else
 	{
 		// Else, default configuration
@@ -240,7 +243,18 @@ pHClass::pHClass(uint8_t channel)
 //!*************************************************************************************
 float pHClass::readpH()
 {
-	return SensorSW.getMeasure(pHChannel, pHSwitch);
+	#if DEBUG_WATER > 1
+		if (pHChannel == PH_CHANNEL) 
+		{
+			PRINTLN_WATER(F("Reading pH sensor in default SOCKET (Plug&Sense -> SOCKETA)"));
+		}
+		else 
+		{
+			PRINTLN_WATER(F("Reading pH sensor from ORP SOCKET (Plug&Sense -> SOCKETD)"));
+		}
+	#endif
+	
+	return Water.getMeasure(pHChannel, pHSwitch);
 }
 
 //!*************************************************************************************
@@ -341,7 +355,7 @@ conductivityClass::conductivityClass(){}
 float conductivityClass::readConductivity(void)
 {
 	// Converts the voltage value into a resistance value
-	return resistanceConversion(SensorSW.getMeasure(COND_CHANNEL, DIGITAL7));
+	return resistanceConversion(Water.getMeasure(COND_CHANNEL, DIGITAL7));
 }
 
 //!*************************************************************************************
@@ -473,21 +487,13 @@ ORPClass::ORPClass()
 ORPClass::ORPClass(uint8_t channel)
 {
 	// The ORP sensor can be used in the DI and in the pH sockets
-	if ((channel == DI_SOCKET) || (channel == pH_SOCKET))
+	if ((channel == pH_SOCKET) || (channel == SOCKET_A))
 	{
-		if (channel == DI_SOCKET)
-		{
-			// Configuring the ORP sensor to be used in the DI socket
-			ORPChannel = DI_CHANNEL;
-			ORPSwitch = ANA3;
-		}
-		else
-		{
-			// Configuring the ORP sensor to be used in the pH socket
-			ORPChannel = PH_CHANNEL;
-			ORPSwitch = DIGITAL8;
-		}
-	} else
+		// Configuring the ORP sensor to be used in the pH socket
+		ORPChannel = PH_CHANNEL;
+		ORPSwitch = DIGITAL8;
+	} 
+	else
 	{
 		// Else, default configuration
 		ORPChannel = ORP_CHANNEL;
@@ -503,7 +509,18 @@ ORPClass::ORPClass(uint8_t channel)
 //!*************************************************************************************
 float ORPClass::readORP()
 {
-	return SensorSW.getMeasure(ORPChannel, ORPSwitch) - 2.048;
+	#if DEBUG_WATER > 1
+		if (ORPChannel == ORP_CHANNEL) 
+		{
+			PRINTLN_WATER(F("Reading ORP sensor in default SOCKET (Plug&Sense -> SOCKETD)"));
+		}
+		else 
+		{
+			PRINTLN_WATER(F("Reading ORP sensor from pH SOCKET (Plug&Sense -> SOCKETA)"));
+		}
+	#endif
+	
+	return Water.getMeasure(ORPChannel, ORPSwitch) - 2.048;
 }
 
 //**************************************************************************************************
@@ -517,7 +534,7 @@ float ORPClass::readORP()
 //!*************************************************************************************
 float DOClass::readDO()
 {
-	return SensorSW.getMeasure(DO_CHANNEL, ANA2);
+	return Water.getMeasure(DO_CHANNEL, ANA2);
 }
 
 //!*************************************************************************************
@@ -601,7 +618,7 @@ DIClass::DIClass(uint8_t channel)
 //!*************************************************************************************
 float DIClass::readDI()
 {
-	return SensorSW.getMeasure(DIChannel, DISwitch);
+	return Water.getMeasure(DIChannel, DISwitch);
 }
 
 
@@ -654,12 +671,12 @@ void DIClass::setCalibrationPoints(float calibrationValues[])
 	// Intersection of the logarithmic function
 	intersection = SUMy_avg - (slope * SUMLogx_avg);
 
-	#if DEBUG_MODE == 1
-		USB.print("Slope: "); 
-		USB.println(slope);
+	#if DEBUG_WATER >1
+		PRINT_WATER(F("Slope: ")); 
+		PRINT_WATER_VAL(slope);
 
-		USB.print("Intersection: "); 
-		USB.println(intersection);
+		PRINT_WATER(" | Intersection: "); 
+		PRINTLN_WATER_VAL(intersection);
 	#endif
 }
 
@@ -727,12 +744,12 @@ void DIClass::setCalibrationPoints(float calVoltages[], float calConcentrations[
 	// Intersection of the logarithmic function
 	intersection = SUMy_avg - (slope * SUMLogx_avg);
 
-	#if DEBUG_MODE == 1
-		USB.print("Slope: "); 
-		USB.println(slope);
+	#if DEBUG_WATER > 1
+		PRINT_WATER(F("Slope: ")); 
+		PRINT_WATER_VAL(slope);
 
-		USB.print("Intersection: "); 
-		USB.println(intersection);
+		PRINT_WATER(" | Intersection: "); 
+		PRINTLN_WATER_VAL(intersection);
 	#endif
 }
 
@@ -752,4 +769,4 @@ float DIClass::calculateConcentration(float input)
 //!*************************************************************************************
 //! Smart Water Object
 //!*************************************************************************************
-WaspSensorSW SensorSW=WaspSensorSW();
+WaspSensorSW Water = WaspSensorSW();

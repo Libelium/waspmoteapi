@@ -1,7 +1,7 @@
 /*! \file WaspSensorGas_Pro.h
     \brief Library for managing the Gas Pro Sensor Board
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,13 +17,13 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.4
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
 */
 
-/*! \def OPC_N2_h
+/*! \def WaspSensorGas_Pro_h
     \brief The library flag
     
  */
@@ -44,26 +44,12 @@
 #include <BME280.h>
 
 #define GAS_DEBUG 0
+// #define GAS_DEBUG 1
+// #define GAS_DEBUG 2
 //#define GAS_PRO_AUTOGAIN_DEBUG
-//#define CALIBRATION_MODE
+// #define CALIBRATION_MODE
 
-//!***************************************************************************
-//!	SOCKET defines
-//!***************************************************************************
-//! OEM 
-#define SOCKET_1	1
-#define SOCKET_2	2
-#define SOCKET_3	3
-#define SOCKET_4	4
-#define SOCKET_5	5
-#define SOCKET_6	6
-
-//! P&S! 
-#define SOCKET_A	4
-#define SOCKET_B	5
-#define SOCKET_C	1
-#define SOCKET_D	6
-#define SOCKET_F	3
+// #define I_DEBUG 1
 
 //!***************************************************************************
 //!	EEPROM defines
@@ -73,18 +59,23 @@
 // Common
 #define VER_BOARD_REG		0x00	// 1 Byte
 #define SENSOR_TYPE_REG		0x01	// 1 Byte
-#define SENSITIVITY_REG		0x02	// 4 Bytes
-#define OFFSET_REG			0x08	// 4 Bytes
+#define SENSOR_CHECKSUM		0x06	// 1 Byte
 #define SENSOR_NO_REG		0x70	// 16 Bytes
 
 // 3 electrode board
-#define CAL_REG				0x10	// 56 Bytes
+#define SENSITIVITY_REG		0x02	// 4 Bytes
+#define OFFSET_REG			0x08	// 4 Bytes
+#define CAL_REG				0x10	// 64 Bytes
 
 // 4 electrode board
 #define SENS_WE_REG			0x02	// 4 Bytes
+#define WE_OFFSET_REG		0x08	// 4 Bytes
 #define SENS_AE_REG			0x0C	// 4 Bytes
-#define CAL_WE_REG			0x10	// 40 Bytes
-#define CAL_AE_REG			0x18	// 40 Bytes
+#define CAL_WE_REG			0x10	// 16 Bytes
+#define CAL_AE_REG			0x18	// 16 Bytes
+#define CAL_WE_EXT_REG		0x20	// 16 Bytes
+#define CAL_AE_EXT_REG		0x28	// 16 Bytes
+#define AE_OFFSET_REG		0x30	// 4 Bytes
 
 // pellistor/CO2 board
 #define CAL_1_REG			0x10	// 4 Bytes
@@ -123,6 +114,8 @@
 #define MCP_GAIN_3		60000
 #define MCP_GAIN_4		80000
 #define MCP_GAIN_5		100000
+#define MCP_GAIN_6		1000000
+
 
 
 //!***************************************************************************
@@ -145,7 +138,11 @@
 
 // ALPHASENSE gas sensors
 #define LEL_AS			13	// Pellistor
-#define O3_AS			14	// 4 electrodos
+#define O3_AS			14	// 4 electrode Vbias: 0V
+#define NO2_AS			16	// 4 electrode Vbias: 0V
+#define NO_AS			17	// 4 electrode Vbias: +200mV
+#define SO2_AS			18	// 4 electrode Vbias: 0V
+#define CO_AS			19	// 4 electrode Vbias: 0V
 
 // SOLIDSENSE NDIR
 #define NDIR_CO2_SS	15	// CO2 NDIR
@@ -154,7 +151,7 @@
 #define CALIBRATION_NDIR	251
 #define CALIBRATION_3E		252
 #define CALIBRATION_4E		253
-#define CALIBRATION_PEL	254
+#define CALIBRATION_PEL		254
 #define UNDEFINED_SENSOR	255
 
 
@@ -186,21 +183,26 @@
 //-20 ºC	20ºC	40ºC	50ºC
 const float table_baseline_temp_comp[][4] PROGMEM =
 {   
-	{0,0,-0.05,-0.3},		// CL2_SS
-	{-0.3,0,0,-0.3},		// CO_SS_CLE
-	{-1,0,2.66,5},			// ETO_SS
-	{-2,0,0,-2.5},			// H2_SS_SEC
-	{0,0,0,-0.04},			// H2S_SS_SEC
-	{0,0,4,15},				// HCL_SS
-	{0,0,-0.1,0.1},		// HCN_SS
-	{-0.25,0,1.66,3},		// NH3_SS
-	{-0.6,0,4,9},			// NO_SS
-	{0.1,0,-0.5,-1.7},		// NO2_SS_CLE
-	{0,0,0,0},				// O2_SS
-	{0,0,0.15,0.4},		// PH3_SS
-	{0,0,0.2,0.6},			// SO2_SS
-	{0,0,0,0},				// LEL_AS
-	{0.01,0.025,0.12,0.25}	// O3_AS
+	{0,0,-0.05,-0.3},			// CL2_SS
+	{-0.3,0,0,-0.3},			// CO_SS_CLE
+	{-1,0,2.66,5},				// ETO_SS
+	{-2,0,0,-2.5},				// H2_SS_SEC
+	{0,0,0,-0.04},				// H2S_SS_SEC
+	{0,0,4,15},					// HCL_SS
+	{0,0,-0.1,0.1},				// HCN_SS
+	{-0.25,0,1.66,3},			// NH3_SS
+	{-0.6,0,4,9},				// NO_SS
+	{0.1,0,-0.5,-1.7},			// NO2_SS_CLE
+	{0,0,0,0},					// O2_SS
+	{0,0,0.15,0.4},				// PH3_SS
+	{0,0,0.2,0.6},				// SO2_SS
+	{0,0,0,0},					// LEL_AS
+	{0.01,0.025,0.12,0.25},		// O3_AS
+	{0,0,0,0},					// NDIR_CO2_SS
+	{0.013,0.016,0.047,0.130},	// NO2_AS
+	{0.015,0.040,0.150,0.325},	// NO_AS
+	{0.,0.01,0.1,0.225},		// SO2_AS
+	{0,-0.025,-0.075,-0.150}	// CO_AS
 };
 
 //!Compensation values for sensitivity
@@ -221,12 +223,45 @@ const float table_sensitivity_temp_comp[][5] PROGMEM =
 	{0.8,0.9,1,1.05,1.05},		// PH3_SS
 	{0.9,1,1,1.05,1},			// SO2_SS
 	{1.055,1.035,1,1.015,1.0},	// LEL_AS
-	{0.7,0.92,1,1,0.92}					// O3_AS
+	{0.7,0.92,1,1,0.92},		// O3_AS
+	{1,1,1,1,1},				// NDIR_CO2_SS
+	{0.7,0.77,1,1.1,1.13},		// NO2_AS
+	{0.4,0.8,1,1.2,1.3},		// NO_AS	
+	{0.83,0.95,1,0.99,0.96},	// SO2_AS
+	{0.52,0.8,1,1.12,1.18}		// CO_AS
+};
+
+//!Compensation values for sensitivity
+//-20 ºC	0ºC		20ºC	40ºC	50ºC
+const float table_ppm2ugm3[] PROGMEM = 	  
+{   
+	2900,	// CL2_SS
+	1230,	// CO_SS_CLE
+	1984,	// ETO_SS
+	88.9,	// H2_SS_SEC
+	1500,	// H2S_SS_SEC
+	1605,	// HCL_SS
+	1189,	// HCN_SS
+	750,	// NH3_SS
+	1320,	// NO_SS
+	2030,	// NO2_SS_CLE
+	1410,	// O2_SS
+	772,	// PH3_SS
+	2820,	// SO2_SS
+	1,		// LEL_AS
+	2115,	// O3_AS
+	1940,	// NDIR_CO2_SS
+	2030,	// NO2_AS
+	1320,	// NO_AS
+	2820,	// SO2_AS
+	1230	// CO_AS
 };
 
 
-
 extern volatile uint8_t	pwrGasPRORegister;
+
+#define I2C_MAIN_EN	ANA0
+
 
 /******************************************************************************
  * Class
@@ -249,10 +284,12 @@ class Gas
 		int power_pin;				// GPIO asociated to the power pin
 		int I2C_pin;				// GPIO asociated to the I2C pin
 		float m_conc;				// nA/ppm or mV/% 
-		float val_aux;				// extra variable. nA/ppm, only for 4 electrode sensors (O3)
 		float baseline;			// nA or mV
-		float calibration[7][2];	// compensation values for AFE modules
+		float aux_baseline;		// nA, offset for auxiliary electrode
+		float OX_NO2_sens;			// nA/ppm
+		float calibration[8][2];	// compensation values for AFE modules
 		uint32_t tempo;			// timer
+		uint8_t AFE_ver;			// AFE board version
 	} sensor_config;
 
 	
@@ -290,11 +327,72 @@ class Gas
 	*/
 	float getAmplifier(bool electrode);
 	
+	//! Specific function to read 3 electrode sensors
+	/*!
+	\param uint8_t resolution: resolution value for ADC 
+						MCP3421_RES_12_BIT or MCP3421_LOW_RES
+						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
+	\return		The concetration value in ppm
+	*/
+	float read3ElectrodeSensor(uint8_t resolution, float temperature);
+	
+	//! Specific function to read pellistor sensors
+	/*!
+	\param uint8_t resolution: resolution value for ADC 
+						MCP3421_RES_12_BIT or MCP3421_LOW_RES
+						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
+	\return		The concetration value %LEL
+	*/
+	float readPellistorSensor(uint8_t resolution, float temperature);
+	
+	//! Specific function to read NDIR sensors
+	/*!
+	\param uint8_t resolution: resolution value for ADC 
+						MCP3421_RES_12_BIT or MCP3421_LOW_RES
+						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
+	\return		The concetration value in ppm
+	*/
+	float readNDIR(uint8_t resolution, float temperature);
+	
+	//! Specific function to read O3 sensors (v12 sensors)
+	/*!
+	\param uint8_t resolution: resolution value for ADC 
+						MCP3421_RES_12_BIT or MCP3421_LOW_RES
+						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
+	\return		The concetration value in ppm
+	*/
+	float read4ElectrodeSensorv100(uint8_t resolution, float temperature);
+	
+	//! Specific function to read 4 electrode sensors
+	/*!
+	\param uint8_t resolution: resolution value for ADC 
+						MCP3421_RES_12_BIT or MCP3421_LOW_RES
+						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
+	\param float NO2_conc: NO2 concentration in ppm to compensate the cross-sensitivity. Only for O3 sensor, for other sensors use 0.0 value
+	\return		The concetration value in ppm
+	*/
+	float read4ElectrodeSensorv301(uint8_t resolution, float temperature, float NO2_conc);
+	
 	//! This function reads the sensor information from EEPROM
 	/*!
 	\return		nothing
 	*/
-	void readSensorInfo();
+	uint8_t readSensorInfo();
 	
 	
 	public:
@@ -424,12 +522,10 @@ class Gas
 						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
 						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
 						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
-	\param uint8_t electrode: electrode to read
-						WORKING_ELECTRODE
-						AUXILIARY_ELECTRODE
+	\param float NO2_conc: NO2 concentration in ppm to compensate the cross-sensitivity. Only for O3 sensor
 	\return		The concetration value in ppm / %LEL, -1000 if error.
 	*/
-	float getConc(uint8_t resolution, uint8_t electrode);
+	float getConc(uint8_t resolution, float NO2_conc);
 	
 	//! This function reads concentration value
 	/*!
@@ -439,12 +535,10 @@ class Gas
 						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
 						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
-	\param uint8_t electrode: electrode to read
-						WORKING_ELECTRODE
-						AUXILIARY_ELECTRODE
+	\param float NO2_conc: NO2 concentration in ppm to compensate the cross-sensitivity. Only for O3 sensor
 	\return		The concetration value in ppm / %LEL, -1000 if error.
 	*/
-	float getConc(uint8_t resolution, float temperature, uint8_t electrode);
+	float getConc(uint8_t resolution, float temperature, float NO2_conc);
 	
 	//! This function changes the gain and the Vref of the AFE module
 	/*!
@@ -460,6 +554,13 @@ class Gas
 	*/	
 	float ppm2perc(float ppm_conc);
 	
+	//! This function converts concentration in ppm to ugm3
+	/*!
+	\param float ppm_conc: concentration in ppm
+	\return		The concetration value in ugm3
+	*/	
+	float ppm2ugm3(float ppm_conc);
+	
 	//! This function converts temperature in Celsius degrees to Fahrenheit degrees
 	/*!
 	\param temp: concentration in Celsius degrees
@@ -473,7 +574,27 @@ class Gas
 	/*!
 	\return		nothing
 	*/
-	void showSensorInfo();	
+	void showSensorInfo();
+
+
+	//! ONlY FOR MANUFACTURER
+	//! This function reads the value for working electrode
+	/*!
+	\return		Value from working electrode
+	*/
+	float readWorkingElectrode3E();
+	
+	//! This function reads the value for working electrode
+	/*!
+	\return		Value from working electrode
+	*/
+	float readWorkingElectrode4E();
+	
+	//! This function reads the value for auxiliary electrode
+	/*!
+	\return		Value from auxiliary electrode
+	*/
+	float readAuxiliaryElectrode4E();
 	
 	
 }; 

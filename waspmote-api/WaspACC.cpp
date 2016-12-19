@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
@@ -33,6 +33,8 @@ WaspACC::WaspACC()
 {
     // no interruption set at the beginning
     accInt=NO_INT;
+    // init attribute
+    isON = 0;
     
     // init default Full Scale mode to +/- 2G
     fsSelection = FS_2G;  
@@ -66,10 +68,10 @@ void WaspACC::ON(void)
 void WaspACC::ON(uint8_t FS_OPTION)
 {	
 	// join i2c bus (address optional for master)
-    if( !Wire.I2C_ON )
-    {
+	if (!Wire.isON)
+	{
 		Wire.begin();
-    }
+	}
     
     accMode = ACC_ON;
 	setMode(ACC_ON);
@@ -130,11 +132,13 @@ void WaspACC::boot(void)
  */
 void WaspACC::OFF(void)
 {
-	setMode(ACC_POWER_DOWN);	
-	if( Wire.I2C_ON && RTC.isON!=1)
+	setMode(ACC_POWER_DOWN);
+	
+	// close I2C
+	if (Wire.isON && RTC.isON!=1)
 	{
-		 PWR.closeI2C();
-		 RTC.setMode(RTC_OFF, RTC_I2C_MODE);
+		PWR.closeI2C();
+		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
 }
 
@@ -473,6 +477,7 @@ uint8_t WaspACC::getMode()
  */
 uint8_t WaspACC::setMode(uint8_t mode)
 {
+	uint8_t result = 0;
 	accMode = mode;
 	
 	switch (mode)
@@ -482,52 +487,54 @@ uint8_t WaspACC::setMode(uint8_t mode)
 					// Normal mode is selected (PM2=0; PM1=0; PM0=1)
 					// ODR is set to 50 Hz (DR1=0; DR0=0)
 					// X-Y-Z axis are enabled
-					writeRegister(CTRL_REG1, B00100111); 
-					isON = 1;			
+					result = writeRegister(CTRL_REG1, B00100111); 
+					isON = 1;
+					// Ton (Turn-on time)= 1/ODR+1ms
+					delay(21);
 					break;
 			
 		case ACC_POWER_DOWN:	
 					// turn power off 
-					writeRegister(CTRL_REG1,B00000000); 
+					result = writeRegister(CTRL_REG1,B00000000); 
 					isON = 0;
 					break;
 			
 		case ACC_LOW_POWER_1:		
 					// turn lo power mode. ODR=0.5 Hz
-					writeRegister(CTRL_REG1, B01000111);
+					result = writeRegister(CTRL_REG1, B01000111);
 					isON = 1;		
 					break;
 			
 		case ACC_LOW_POWER_2:
 					// turn lo power mode. ODR=1 Hz
-					writeRegister(CTRL_REG1, B01100111);
+					result = writeRegister(CTRL_REG1, B01100111);
 					isON = 1;
 					break;
 			
 		case ACC_LOW_POWER_3:
 					// turn lo power mode. ODR=2 Hz
-					writeRegister(CTRL_REG1, B10000111);
+					result = writeRegister(CTRL_REG1, B10000111);
 					isON = 1;
 					break;
 			
 		case ACC_LOW_POWER_4:
 					// turn lo power mode. ODR=5 Hz
-					writeRegister(CTRL_REG1, B10100111);
+					result = writeRegister(CTRL_REG1, B10100111);
 					isON = 1;
 					break;
 			
 		case ACC_LOW_POWER_5:
 					// turn lo power mode. ODR=10 Hz
-					writeRegister(CTRL_REG1, B11000111);
+					result = writeRegister(CTRL_REG1, B11000111);
 					isON = 1;		
 					break;
 		
-		default:	return 0;
+		default:		
+					break;
 			
 	}	
 		
-	// go out with no error, leaves room to implement an error function
-	return 1;
+	return result;
 }
 
 /*

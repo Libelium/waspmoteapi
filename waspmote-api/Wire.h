@@ -1,8 +1,8 @@
 /*!
  *  @file 		Wire.h 
- *  @version	1.1
+ *  @version	3.1
  *
- *  Modified for Waspmote by Libelium, 2009-2015
+ *  Modified for Waspmote by Libelium, 2009-2016
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -27,8 +27,20 @@
 
 #define BUFFER_LENGTH 32
 
-//#define I2C_DEBUG
-//#define I2C_DEBUG_FULL
+//! DEBUG MODE
+/*! 0: No debug mode enabled
+ * 	1: debug mode enabled
+ * 	2: verbose debug mode enabled
+ */
+#define DEBUG_I2C 0
+// #define DEBUG_I2C 1
+// #define DEBUG_I2C 2
+
+
+// define print MACRO
+#define PRINT_I2C(str)		USB.print(F("[I2C] ")); USB.print(str);
+
+
 #define I2C_TIMEOUT		250			// timeout for I2C reads in milliseconds
 
 //I2c addresses
@@ -40,10 +52,9 @@
 #define I2C_ADDRESS_AGR_DENDROMETER		0x16
 #define I2C_ADDRESS_AGR_PT1000			0x16
 #define I2C_ADDRESS_AGR_RADIATION		0x14
-#define I2C_ADDRESS_GASES_SOCKET_1A_1B	0x28
-#define I2C_ADDRESS_GASES_SOCKET_4		0x2A
-#define I2C_ADDRESS_GASES_SOCKET_2A_2B	0x2C
-#define I2C_ADDRESS_GASES_SOCKET_3_3B	0x2E
+#define I2C_ADDRESS_GASES_DIGIPOT1		0x2C
+#define I2C_ADDRESS_GASES_DIGIPOT2		0x28
+#define I2C_ADDRESS_GASES_DIGIPOT3		0x2E
 #define I2C_ADDRESS_SENS_CITIES_DUST	0X2A
 #define I2C_ADDRESS_CITIES_LD			0X28
 #define I2C_ADDRESS_CITIES_AUDIO		0X2A
@@ -57,9 +68,18 @@
 #define I2C_ADDRESS_CITIES_CP			0X2C
 #define I2C_ADDRESS_GASPRO_BME280		0x77
 #define I2C_ADDRESS_GASPRO_LMP91000 	0x48
-#define I2C_ADDRESS_GASPRO_MCP3421		0x69
+#define I2C_ADDRESS_GASPRO_MCP3421_A1	0x69
+#define I2C_ADDRESS_GASPRO_MCP3421_A2	0x6A
 #define I2C_ADDRESS_GASPRO_E2PROM		0x50
 #define I2C_ADDRESS_GASPRO_MCP4146		0x2A
+#define I2C_ADDRESS_EEPROM				0x55
+#define I2C_ADDRESS_EEPROM_DEFAULT 		0x50
+#define I2C_ADDRESS_TSL2561	 			0x39
+#define I2C_ADDRESS_MB7040_MB1202		0x70
+#define I2C_ADDRESS_GASES_SOCKET_1A_1B	0x28
+#define I2C_ADDRESS_GASES_SOCKET_4		0x2A
+#define I2C_ADDRESS_GASES_SOCKET_2A_2B	0x2C
+#define I2C_ADDRESS_GASES_SOCKET_3_3B	0x2E
 
 class TwoWire
 {
@@ -87,8 +107,14 @@ class TwoWire
   public:
     TwoWire();
     
-    uint8_t I2C_ON;
+    //! Variable : indicates when I2C bus is ON (1) or OFF (0)
+    uint8_t isON;
     
+    //! Variable : indicates when Sensor Board is being powered on
+  	/*! true: ON; false: OFF
+   	*/
+	bool isBoard;
+	
     void begin();
     void begin(uint8_t);
     void begin(int);
@@ -106,11 +132,7 @@ class TwoWire
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
     void close();
-    
-    //! Variable : indicates when Sensor Board is being powered on
-  	/*! true: ON; false: OFF
-   	*/
-	bool isBoard;
+
 	
     void secureBegin();
     void secureEnd();
@@ -122,10 +144,14 @@ class TwoWire
 	\param uint8_t regAddr: I2C register
 	\param uint8_t data: data to send
 	\param uint8_t pos: position of the bit to write [7|6|5|4|3|2|1|0]
-	\return		1 if OK
-				-1 if error
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
 	*/
-	int8_t writeBit(uint8_t devAddr, uint8_t regAddr, bool data, uint8_t pos);
+	int8_t writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos);
 	
 	//! This function writes some bits via I2C
 	/*!
@@ -134,10 +160,28 @@ class TwoWire
 	\param uint8_t data: data to send
 	\param uint8_t pos: first position of the bits to write starting by the LSb [7|6|5|4|3|2|1|0]
 	\param uint8_t length: number of bits to write
-	\return		1 if OK
-				-1 if error
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
 	*/
 	int8_t writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length);
+
+	//! This function writes byte via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t data: data to send
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
+	*/
+	int8_t writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data);
 	
 	//! This function writes bytes via I2C
 	/*!
@@ -145,10 +189,14 @@ class TwoWire
 	\param uint8_t regAddr: I2C register
 	\param uint8_t *data: data to send
 	\param uint8_t length: number of bytes to write
-	\return		1 if OK
-				-1 if error
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
 	*/
-	void writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
+	int8_t writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
 	
 	//! This function reads a bit via I2C
 	/*!
@@ -156,8 +204,12 @@ class TwoWire
 	\param uint8_t regAddr: I2C register
 	\param uint8_t *data: buffer to store the data
 	\param uint8_t pos: position of the bit to read [7|6|5|4|3|2|1|0]
-	\return		Bytes read
-				-1 if error
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
 	*/
 	int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos);
 	
@@ -168,10 +220,28 @@ class TwoWire
 	\param uint8_t data: buffer to store the data
 	\param uint8_t pos: first position of the bits to read starting by the LSb [7|6|5|4|3|2|1|0]
 	\param uint8_t length: number of bits to read
-	\return		Bytes read
-				-1 if error
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
 	*/
 	int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length);
+	
+	//! This function reads a byte via I2C
+	/*!
+	\param uint8_t devAddr: I2C address of the device
+	\param uint8_t regAddr: I2C register
+	\param uint8_t data: buffer to store the data
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
+	*/
+	int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data);
 	
 	//! This function reads bytes via I2C
 	/*!
@@ -179,8 +249,12 @@ class TwoWire
 	\param uint8_t regAddr: I2C register
 	\param uint8_t data: buffer to store the data
 	\param uint8_t length: number of bytes to read
-	\return		Bytes read
-				-1 if error
+	\return		0 if OK
+				1 if length to long for buffer
+				2 if address send, NACK received
+				3 if data send, NACK received
+				4 if other twi error (lost bus arbitration, bus error, ..)
+ 				5 if timeout
 	*/
 	int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
 

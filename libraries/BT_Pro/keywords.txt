@@ -59,5 +59,25 @@ getRSSI	KEYWORD2
 pair	KEYWORD2
 removePairedDevices	KEYWORD2
 isPaired	KEYWORD2
+txPower	KEYWORD2
+mac_address	KEYWORD2
+CoD	KEYWORD2
+devClass	KEYWORD2
+commandAnswer	KEYWORD2
+theCommand	KEYWORD2
+mem_addr	KEYWORD2
+identifier	KEYWORD2
+lookForAnswer	KEYWORD2
+changeInquiryPower	KEYWORD2
+parseNames	KEYWORD2
+parseBlock	KEYWORD2
+waitInquiryAnswer	KEYWORD2
+getSetDateID	KEYWORD2
+waitScanDeviceAnswer	KEYWORD2
+setInquiryTime	KEYWORD2
+eraseSDFiles	KEYWORD2
+createSDFiles	KEYWORD2
+printBuffer	KEYWORD2
+printBuffer2	KEYWORD2
 
-BT_Pro	KEYWORD3
+BT_Pro	KEYWORD1

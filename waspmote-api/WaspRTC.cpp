@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  * 
  * 	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.9
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -35,21 +35,21 @@
 /// table_RTC /////////////////////////////////////////////////////////////////
 
 const char rtc_string_00[] 	PROGMEM	= 	"Alarm Mode matches "; 	
-const char rtc_string_01[] 	PROGMEM	= 	"[Day : hours : minutes : seconds] -> "; 	
-const char rtc_string_02[] 	PROGMEM = 	"[Date : hours : minutes : seconds] -> ";	
-const char rtc_string_03[] 	PROGMEM = 	"[Hours : minutes : seconds] -> ";		
-const char rtc_string_04[] 	PROGMEM = 	"[Minutes : seconds] -> ";		
-const char rtc_string_05[] 	PROGMEM = 	"[Seconds] -> ";		
+const char rtc_string_01[] 	PROGMEM	= 	"[Day:Hours:Minutes:Seconds] --> "; 	
+const char rtc_string_02[] 	PROGMEM = 	"[Date:Hours:Minutes:Seconds] --> ";	
+const char rtc_string_03[] 	PROGMEM = 	"[Hours:Minutes:Seconds] --> ";		
+const char rtc_string_04[] 	PROGMEM = 	"[Minutes:Seconds] --> ";		
+const char rtc_string_05[] 	PROGMEM = 	"[Seconds] --> ";		
 const char rtc_string_06[] 	PROGMEM = 	"Once per second";	
 const char rtc_string_07[] 	PROGMEM = 	"Incorrect alarm mode";	
 const char rtc_string_08[] 	PROGMEM = 	"[%02u:%02u:%02u:%02u]";	
 const char rtc_string_09[] 	PROGMEM = 	"[%02u:%02u:%02u]";	
 const char rtc_string_10[] 	PROGMEM = 	"[%02u:%02u]";
 const char rtc_string_11[] 	PROGMEM = 	"[%02u]";
-const char rtc_string_12[] 	PROGMEM = 	"[Day : hours : minutes ] -> ";
-const char rtc_string_13[] 	PROGMEM = 	"[Date : hours : minutes ] -> ";
-const char rtc_string_14[] 	PROGMEM = 	"[Hours : minutes] -> ";
-const char rtc_string_15[] 	PROGMEM = 	"[Minutes] -> ";	
+const char rtc_string_12[] 	PROGMEM = 	"[Day:Hours:Minutes] --> ";
+const char rtc_string_13[] 	PROGMEM = 	"[Date:Hours:Minutes ] --> ";
+const char rtc_string_14[] 	PROGMEM = 	"[Hours:Minutes] --> ";
+const char rtc_string_15[] 	PROGMEM = 	"[Minutes] --> ";	
 const char rtc_string_16[] 	PROGMEM = 	"Once per minute";	
 const char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";
 const char rtc_string_18[] 	PROGMEM = 	"error";	
@@ -144,7 +144,10 @@ void WaspRTC::OFF(void)
  */
 void WaspRTC::close()
 {
-	if( Wire.I2C_ON && !ACC.isON) PWR.closeI2C();
+	if (Wire.isON && !ACC.isON) 
+	{
+		PWR.closeI2C();
+	}
 }
 
 
@@ -154,18 +157,23 @@ void WaspRTC::close()
  */
 void WaspRTC::setMode(uint8_t mode, uint8_t I2C_mode)
 {
+	// set power supply as 'mode'
+	if (_boot_version < 'G')
+	{
+		pinMode(RTC_PW, OUTPUT);
+		digitalWrite(RTC_PW, mode);
+	}
+	
 	_pwrMode = mode;
-	pinMode(RTC_PW,OUTPUT);
 	switch(_pwrMode)
 	{
-		case RTC_ON 	: 	digitalWrite(RTC_PW,HIGH);
-							if( I2C_mode==RTC_I2C_MODE ) isON = 2;
-							else if( I2C_mode==RTC_NORMAL_MODE ) isON = 1;
+		case RTC_ON 	: 	if (I2C_mode==RTC_I2C_MODE) isON = 2;
+							else if (I2C_mode==RTC_NORMAL_MODE) isON = 1;
 							break;
-		case RTC_OFF 	: 	digitalWrite(RTC_PW,LOW);
-							isON = 0;
+		case RTC_OFF 	: 	isON = 0;
 							break;
 	}
+
 	
 	// stabilization time after switching on
 	delay(10);
@@ -270,8 +278,11 @@ void WaspRTC::readRTC(uint8_t endAddress)
 	uint16_t timecount = 0;
 	uint16_t timeout = 0;	
 	
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+	// init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	
 	// ADDRESSING FROM MEMORY POSITION ZERO
 	// the address specified in the datasheet is 208 (0xD0)
@@ -346,8 +357,11 @@ void WaspRTC::writeRTC()
 {
 	int timecount = 0;		
 	
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+	// init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	
 	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
@@ -381,8 +395,11 @@ void WaspRTC::writeRTCalarm1()
 {
 	byte timecount = 0;	
 	
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+	// init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	
 	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
@@ -413,8 +430,11 @@ void WaspRTC::writeRTCalarm2()
 {
 	byte timecount = 0;	
 	
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+	// init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	
 	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
 	// the address specified in the datasheet is 208 (0xD0)
@@ -702,8 +722,11 @@ void WaspRTC::configureAlarmMode (uint8_t alarmNum, uint8_t alarmMode)
  */
 void WaspRTC::writeRTCregister(uint8_t theAddress) 
 {	
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+	// init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
 	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x68)
@@ -728,8 +751,11 @@ void WaspRTC::readRTCregister(uint8_t theAddress)
 {
 	uint16_t timeout = 0;
 		
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+	// init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	
 	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
 	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x68)
@@ -1745,11 +1771,15 @@ char* WaspRTC::getAlarm2()
  */
 void WaspRTC::clearAlarmFlag()
 {
-	// get alarm which triggered last alarm
-	uint8_t trig = getAlarmTriggered();	
-	
-	// if a pending alarm is being generated then update attribute
-	if( trig != 0 ) alarmTriggered = trig;
+	// check hardware version
+	if (_boot_version < 'G')
+	{
+		// get alarm which triggered last alarm
+		uint8_t trig = getAlarmTriggered();	
+		
+		// if a pending alarm is being generated then update attribute
+		if( trig != 0 ) alarmTriggered = trig;
+	}
 	
 	// reset the alarm flags in RTC
 	RTC.registersRTC[RTC_STATUS_ADDRESS] &= B11111100;  
@@ -2035,7 +2065,7 @@ uint8_t WaspRTC::setGMT(int8_t gmt)
 	} 
 	else
 	{
-		USB.println("Invalid GMT value");
+		USB.println(F("Invalid GMT value"));
 		_gmt = 0;
 		return 1;
 	}
@@ -2116,6 +2146,122 @@ void WaspRTC::detachInt(void)
 	// clear the Alarm signal
 	clearAlarmFlag();
 }
+
+/*
+ * setWatchdog(uint16_t minutes) - Set Watchdog alarm to reset Waspmote
+ *
+ * 
+ */
+void WaspRTC::setWatchdog(uint16_t minutesWatchdog)
+{		
+	if (_boot_version < 'H')
+	{
+		USB.println(F("\n***************  WARNING *******************"));
+		USB.println(F("This example is valid only for Waspmote v15."));
+		USB.println(F("Your Waspmote version is v12."));
+		USB.println(F("*******************************************"));
+		return (void)0;
+	}
+	
+	uint8_t days = 0;
+	uint8_t hours = 0;
+	uint8_t minutes = 0;
+	
+	// check correct input
+	if (minutesWatchdog == 0) return (void)1;
+	
+	// If needed: Translate from 'minutes' to 'days, hours and minutes'
+	if (minutesWatchdog < 60)
+	{
+		minutes = (uint8_t) minutesWatchdog;
+	}
+	else if (minutesWatchdog < 1440)
+	{
+		hours = (uint8_t)(minutesWatchdog/60);
+		minutes = (uint8_t)(minutesWatchdog%60);
+	}
+	else if (minutesWatchdog < 43200)
+	{
+		days = (uint8_t)(minutesWatchdog/(24*60));
+		hours = (uint8_t)(minutesWatchdog%24);
+		minutes = (uint8_t)(minutesWatchdog%(24*60));
+	}
+	else
+	{
+		return (void)1;
+	}
+	
+	// get RTC status
+	uint8_t status = RTC.isON;
+	
+	// switch on RTC if needed
+	if (!status)
+	{
+		RTC.ON();
+	}
+	
+	// Set Alarm2 for specified time
+	RTC.setAlarm2(days, hours, minutes, RTC_OFFSET, RTC_ALM2_MODE2);
+    
+    // switch off RTC if needed
+    if (!status)
+	{
+		RTC.OFF();
+	}
+}
+  
+/*
+ * getWatchdog() - return the Watchdog alarm settings
+ *
+ * 
+ */
+char* WaspRTC::getWatchdog()
+{
+  return RTC.getAlarm2();
+}
+  
+
+
+/*
+ * unSetWatchdog() - Unset Watchdog alarm 
+ *
+ * 
+ */
+void WaspRTC::unSetWatchdog(void)
+{
+	// get RTC status
+	uint8_t status = RTC.isON;
+	
+	// switch on RTC if needed
+	if (!status)
+	{
+		RTC.ON();
+	}
+	
+	// disable the RTC alarm2
+	RTC.disableAlarm2();	
+	
+	// switch off RTC if needed
+    if (!status)
+	{
+		RTC.OFF();
+	}
+}
+
+
+/*
+ * disableSQW() - Disable SQW Square Wave Output on the SQW/INTB pin
+ *
+ * 
+ */
+void WaspRTC::disableSQW(void)
+{
+	// set INTCN to '1'
+	registersRTC[RTC_CONTROL_ADDRESS] &= B11111011;
+	registersRTC[RTC_CONTROL_ADDRESS] |= B00000100;
+	writeRTCregister(RTC_CONTROL_ADDRESS);
+}
+
 
 // Private Methods /////////////////////////////////////////////////////////////
 

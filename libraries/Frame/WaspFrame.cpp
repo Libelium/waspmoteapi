@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.9
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -26,7 +26,6 @@
 #endif
 
 #include "WaspFrame.h"
-#include "WaspFrameConstants.h"
 
 
 
@@ -69,7 +68,7 @@ WaspFrame::WaspFrame()
  */
 void WaspFrame::setFrameSize( uint8_t size )
 {
-	if( size < MAX_FRAME)
+	if (size < MAX_FRAME)
 	{		
 		// set new maximum size
 		_maxSize = size;
@@ -79,10 +78,6 @@ void WaspFrame::setFrameSize( uint8_t size )
 		// input parameter exceeds the predefined constant
 		_maxSize = MAX_FRAME;
 	}
-	
-	
-			
-	
 }
 
 
@@ -150,205 +145,119 @@ void WaspFrame::setFrameSize(	uint8_t protocol,
 								uint8_t addressing, 
 								uint8_t linkEncryption, 
 								uint8_t AESEncryption)
-{
+{	
+	// no limit
+	_maxSize = MAX_FRAME;
 	
-	/// AES disabled 
-	if( AESEncryption == DISABLED )
-	{		
-		switch (protocol)
-		{				
-			/// XBEE_802_15_4 ////////////////	
-			case XBEE_802_15_4:
-			
-				if( linkEncryption == DISABLED)
-				{									
-					// XBEE_802 & Link Disabled & AES Disabled 
-					_maxSize = 100;		
-				}
-				else if( linkEncryption == ENABLED)
-				{
-					if( addressing == UNICAST_16B )
-					{
-						// XBEE_802 & Unicast 16B  & Link Enabled & AES Disabled 
-						_maxSize = 98;	
-					}
-					else if( addressing == UNICAST_64B )
-					{
-						// XBEE_802 & Unicast 64B & Link Enabled & AES Disabled 
-						_maxSize = 94;	
-					}
-					else if( addressing == BROADCAST_MODE )
-					{	
-						// XBEE_802 & Broadcast & Link Enabled & AES Disabled 						
-						_maxSize = 95;	
-					}					
-				} 		
-				break;
-			
-			/// ZIGBEE /////////////////////
-			case ZIGBEE:
-			
-				if( linkEncryption == DISABLED)
-				{
-					if( addressing == UNICAST_64B )
-					{
-						// ZIGBEE & Unicast & Link Disabled & AES Disabled 
-						_maxSize = 74;	
-					}
-					else if( addressing == BROADCAST_MODE )
-					{	
-						// ZIGBEE & Broadcast & Link Disabled & AES Disabled 						
-						_maxSize = 92;	
-					}							
-				}
-				else if( linkEncryption == ENABLED)
-				{
-					if( addressing == UNICAST_64B )
-					{
-						// ZIGBEE & Unicast 64B & Link Enabled & AES Disabled 
-						_maxSize = 66;	
-					}
-					else if( addressing == BROADCAST_MODE )
-					{	
-						// ZIGBEE & Broadcast & Link Enabled & AES Disabled 						
-						_maxSize = 84;	
-					}					
-				} 		
-				break;
-			
-			/// DIGIMESH /////////////////////					
-			case DIGIMESH:
-				
-				_maxSize = 73;	
-				break;
-			
-			/// XBEE_900 /////////////////////					
-			case XBEE_900:
-			
-				if( linkEncryption == DISABLED)
-				{							
-					_maxSize = 100;								
-				}
-				else if( linkEncryption == ENABLED)
-				{
-					_maxSize = 80;						
-				} 
-					
-				break;
-			
-			/// XBEE_868 /////////////////////					
-			case XBEE_868:
-				
-				_maxSize = 100;								
-				break;
-				
-			default :
-				// No limit
-				_maxSize = MAX_FRAME;
-				break;
-		}			
-	}		
-	/// AES enabled 
-	else if( AESEncryption == ENABLED ) 
-	{		
-		switch (protocol)
-		{				
-			/// XBEE_802_15_4 ////////////////	
-			case XBEE_802_15_4:
-			
-				if( linkEncryption == DISABLED)
-				{									
-					// XBEE_802 & Link Disabled & AES Enabled 
-					_maxSize = ((100-10-strlen(_waspmoteID))/16)*16;	
-				}
-				else if( linkEncryption == ENABLED)
-				{
-					if( addressing == UNICAST_16B )
-					{
-						// XBEE_802 & Unicast 16B  & Link Enabled & AES Enabled 
-						_maxSize = ((98-10-strlen(_waspmoteID))/16)*16;	
-					}
-					else if( addressing == UNICAST_64B )
-					{
-						// XBEE_802 & Unicast 64B & Link Enabled & AES Enabled 
-						_maxSize = ((94-10-strlen(_waspmoteID))/16)*16;
-					}
-					else if( addressing == BROADCAST_MODE )
-					{	
-						// XBEE_802 & Broadcast & Link Enabled & AES Enabled 						
-						_maxSize = ((95-10-strlen(_waspmoteID))/16)*16;	
-					}					
-				} 		
-				break;
-			
-			/// ZIGBEE /////////////////////
-			case ZIGBEE:
-			
-				if( linkEncryption == DISABLED)
-				{
-					if( addressing == UNICAST_64B )
-					{
-						// ZIGBEE & Unicast & Link Disabled & AES Enabled 
-						_maxSize = ((74-10-strlen(_waspmoteID))/16)*16;	
-					}
-					else if( addressing == BROADCAST_MODE )
-					{	
-						// ZIGBEE & Broadcast & Link Disabled & AES Enabled 						
-						_maxSize = ((92-10-strlen(_waspmoteID))/16)*16;	
-					}							
-				}
-				else if( linkEncryption == ENABLED)
-				{
-					if( addressing == UNICAST_64B )
-					{
-						// ZIGBEE & Unicast 64B & Link Enabled & AES Enabled 
-						_maxSize = ((66-10-strlen(_waspmoteID))/16)*16;	
-					}
-					else if( addressing == BROADCAST_MODE )
-					{	
-						// ZIGBEE & Broadcast & Link Enabled & AES Enabled 						
-						_maxSize = ((84-10-strlen(_waspmoteID))/16)*16;	
-					}					
-				} 		
-				break;
-			
-			/// DIGIMESH /////////////////////					
-			case DIGIMESH:
-				
-				_maxSize = ((73-10-strlen(_waspmoteID))/16)*16;	
-				break;
-			
-			/// XBEE_900 /////////////////////					
-			case XBEE_900:
-			
-				if( linkEncryption == DISABLED)
-				{							
-					_maxSize = ((100-10-strlen(_waspmoteID))/16)*16;								
-				}
-				else if( linkEncryption == ENABLED)
-				{
-					_maxSize = ((80-10-strlen(_waspmoteID))/16)*16;						
-				} 
-					
-				break;
-			
-			/// XBEE_868 /////////////////////					
-			case XBEE_868:
-				
-				_maxSize = ((100-10-strlen(_waspmoteID))/16)*16;							
-				break;
-				
-			default :
-				// No limit
-				_maxSize = MAX_FRAME;
-				break;
-		}	
+	switch (protocol)
+	{				
+		/// XBEE_802_15_4 ////////////////	
+		case XBEE_802_15_4:
 		
-	}
-	/// No limit	
-	else
-	{ 
-		_maxSize = MAX_FRAME;
+			if( linkEncryption == DISABLED)
+			{							
+				// XBEE_802 & Link Disabled 
+				_maxSize = 100;		
+			}
+			else if( linkEncryption == ENABLED)
+			{
+				if( addressing == UNICAST_16B )
+				{
+					// XBEE_802 & Unicast 16B  & Link Enabled 
+					_maxSize = 98;	
+				}
+				else if( addressing == UNICAST_64B )
+				{
+					// XBEE_802 & Unicast 64B & Link Enabled 
+					_maxSize = 94;	
+				}
+				else if( addressing == BROADCAST_MODE )
+				{	
+					// XBEE_802 & Broadcast & Link Enabled						
+					_maxSize = 95;	
+				}					
+			} 		
+			break;
+		
+		/// ZIGBEE /////////////////////
+		case ZIGBEE:
+		
+			if( linkEncryption == DISABLED)
+			{
+				if( addressing == UNICAST_64B )
+				{
+					// ZIGBEE & Unicast & Link Disabled & AES Disabled 
+					_maxSize = 74;	
+				}
+				else if( addressing == BROADCAST_MODE )
+				{	
+					// ZIGBEE & Broadcast & Link Disabled & AES Disabled 						
+					_maxSize = 92;	
+				}							
+			}
+			else if( linkEncryption == ENABLED)
+			{
+				if( addressing == UNICAST_64B )
+				{
+					// ZIGBEE & Unicast 64B & Link Enabled & AES Disabled 
+					_maxSize = 66;	
+				}
+				else if( addressing == BROADCAST_MODE )
+				{	
+					// ZIGBEE & Broadcast & Link Enabled & AES Disabled 						
+					_maxSize = 84;	
+				}					
+			} 		
+			break;
+		
+		/// DIGIMESH /////////////////////					
+		case DIGIMESH:
+			
+			_maxSize = 73;	
+			break;
+		
+		/// XBEE_900 /////////////////////					
+		case XBEE_900:
+		
+			if( linkEncryption == DISABLED)
+			{							
+				_maxSize = 100;								
+			}
+			else if( linkEncryption == ENABLED)
+			{
+				_maxSize = 80;						
+			} 
+				
+			break;
+		
+		/// XBEE_868 /////////////////////					
+		case XBEE_868:
+			
+			_maxSize = 100;								
+			break;
+			
+		default :
+			// No limit
+			_maxSize = MAX_FRAME;
+			break;
+	}			
+	
+	/// AES enabled 
+	if (AESEncryption == ENABLED)
+	{
+		uint8_t fixed_header_length;
+		
+		if (_boot_version >= 'G')
+		{
+			fixed_header_length = 14;
+		}
+		else
+		{
+			fixed_header_length = 10;			
+		}		
+		
+		_maxSize = ((_maxSize - fixed_header_length - strlen(_waspmoteID))/16)*16;
+		
 	}
 	
 }
@@ -361,7 +270,7 @@ void WaspFrame::setFrameSize(	uint8_t protocol,
  * 
  *   
  */
-uint8_t WaspFrame::getFrameSize( void )
+uint16_t WaspFrame::getFrameSize( void )
 {
 	return _maxSize;
 }
@@ -395,7 +304,7 @@ void WaspFrame::createFrame(uint8_t mode)
 {	
 	// local variables
 	uint8_t sequence;	
-	char str[16];	
+	char str[17];
 	
 	// store mode: ASCII or BINARY
 	_mode = mode;	
@@ -417,7 +326,14 @@ void WaspFrame::createFrame(uint8_t mode)
 	if( _mode == ASCII )
 	{
 		/** ASCII FRAME **/
-		type=B10000000;
+		if (_boot_version >= 'G')
+		{
+			type = INFORMATION_FRAME_V15+128;			
+		}
+		else
+		{		
+			type = INFORMATION_FRAME_V12+128;
+		}
 		buffer[3]= type;		
 	
 		// initialize 'number of fields' byte
@@ -429,8 +345,33 @@ void WaspFrame::createFrame(uint8_t mode)
 		// set serial ID
 		length = 6;	
 		
-		// _serial_id is read in main.cpp
-		snprintf(str, sizeof(str), "%lu", _serial_id);
+		// add _serial_id depending on the hw version
+		if (_boot_version >= 'G')
+		{
+			snprintf(str, 
+					sizeof(str),
+					"%02X%02X%02X%02X%02X%02X%02X%02X", 
+					_serial_id[0], 
+					_serial_id[1], 
+					_serial_id[2], 
+					_serial_id[3], 
+					_serial_id[4], 
+					_serial_id[5], 
+					_serial_id[6], 
+					_serial_id[7]);	
+		}
+		else
+		{
+			union {
+				uint32_t lu;
+				char array[4];
+			} aux;
+			aux.array[3] = _serial_id[4];
+			aux.array[2] = _serial_id[5];
+			aux.array[1] = _serial_id[6];
+			aux.array[0] = _serial_id[7];
+			snprintf(str, sizeof(str),"%lu", aux.lu);
+		}
 		
 		for( uint16_t i=0 ; i<strlen(str) ; i++ )
 		{
@@ -498,19 +439,23 @@ void WaspFrame::createFrame(uint8_t mode)
 		
 		// now the frame is ready to be filled with new sensor values!		
 	}
-	else 
-	{		
-		if (_mode == BINARY)
+	else if (_mode == BINARY)
+	{
+		/** BINARY FRAME **/
+		if (_boot_version >= 'G')
 		{
-			/** BINARY FRAME **/
-			type=B00000000;
-			buffer[3] = type;
+			type = INFORMATION_FRAME_V15;
 		}
-				
+		else
+		{		
+			type = INFORMATION_FRAME_V12;
+		}
+		buffer[3] = type;
+		
 		// set serial ID
 		// _serial_id is read in main.cpp			
 		char val[4]; 
-		memcpy(val, (const void*)&_serial_id, 4);
+		memcpy(val, (const void*)&_serial_id[4], 4);
 		
 		/*union {
 		  unsigned long f;
@@ -522,13 +467,30 @@ void WaspFrame::createFrame(uint8_t mode)
 		u.b[0] = val[0];
 
 		USB.println(u.f);	*/
-
+		
+		
 		// concatenate sensor name to frame string
-        buffer[5] = val[0];
-		buffer[6] = val[1];
-        buffer[7] = val[2];
-		buffer[8] = val[3];
-		length = 9;		
+		// add _serial_id depending on the hw version
+		if (_boot_version >= 'G')
+		{
+			buffer[5]  = _serial_id[0];
+			buffer[6]  = _serial_id[1];
+			buffer[7]  = _serial_id[2];
+			buffer[8]  = _serial_id[3];
+			buffer[9]  = _serial_id[4];
+			buffer[10] = _serial_id[5];
+			buffer[11] = _serial_id[6];
+			buffer[12] = _serial_id[7];
+			length = 13;		
+		}
+		else
+		{
+			buffer[5] = val[0];
+			buffer[6] = val[1];
+			buffer[7] = val[2];
+			buffer[8] = val[3];
+			length = 9;		
+		}
 
 		// set identifier
 		for( int i=0 ; i<16 ; i++ )
@@ -592,6 +554,9 @@ void WaspFrame::createFrame(uint8_t mode)
  */
 uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 {	
+	// define var
+	uint16_t temp_length;
+	
 	// Variable for encrypted message's length	
 	uint16_t encrypted_length;
   
@@ -627,40 +592,73 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	// key size. ECB mode is always used for Meshlium. 
 	uint8_t	frame_type;
 	
-	if( keySize == AES_128 )
+	// insert serial ID
+	if (_boot_version >= 'G')
 	{
-		frame_type = AES128_ECB_FRAME;
-	}
-	else if( keySize == AES_192 )
-	{
-		frame_type = AES192_ECB_FRAME;		
-	}
-	else if( keySize == AES_256 )
-	{
-		frame_type = AES256_ECB_FRAME;		
+		switch (keySize)
+		{
+			case AES_128:	frame_type = AES128_ECB_FRAME_V15;
+							break;
+			case AES_192:	frame_type = AES192_ECB_FRAME_V15;
+							break;
+			case AES_256:	frame_type = AES256_ECB_FRAME_V15;
+							break;
+			default:		return 0;
+				
+		}
 	}
 	else
 	{
-		return 0;
+		switch (keySize)
+		{
+			case AES_128:	frame_type = AES128_ECB_FRAME_V12;
+							break;
+			case AES_192:	frame_type = AES192_ECB_FRAME_V12;
+							break;
+			case AES_256:	frame_type = AES256_ECB_FRAME_V12;
+							break;
+			default:		return 0;
+				
+		}
 	}
-		
-	// set serial ID
-	char val[4]; 
-	memcpy(val, (const void*)&_serial_id, 4);
-	
+
 	// set frame delimiter
 	frame.buffer[0] = '<';
 	frame.buffer[1] = '=';
 	frame.buffer[2] = '>';
 	frame.buffer[3] = frame_type;
 	frame.buffer[4] = encrypted_length + 5 + strlen(frame._waspmoteID); // length
-	frame.buffer[5] = val[0]; // serial ID
-	frame.buffer[6] = val[1]; // serial ID
-	frame.buffer[7] = val[2]; // serial ID
-	frame.buffer[8] = val[3]; // serial ID
 	
-	// temporal length of frame
-	uint16_t temp_length = 9;
+	
+	// insert serial ID
+	if (_boot_version >= 'G')
+	{
+		frame.buffer[5] = _serial_id[0]; // serial ID
+		frame.buffer[6] = _serial_id[1]; // serial ID
+		frame.buffer[7] = _serial_id[2]; // serial ID
+		frame.buffer[8] = _serial_id[3]; // serial ID
+		frame.buffer[9] = _serial_id[4]; // serial ID
+		frame.buffer[10] = _serial_id[5]; // serial ID
+		frame.buffer[11] = _serial_id[6]; // serial ID
+		frame.buffer[12] = _serial_id[7]; // serial ID
+		
+		// temporal length of frame
+		temp_length = 13;
+	}
+	else
+	{
+		// set serial ID
+		char val[4]; 
+		memcpy(val, (const void*)&_serial_id[4], 4);
+		
+		frame.buffer[5] = val[0];
+		frame.buffer[6] = val[1];
+		frame.buffer[7] = val[2];
+		frame.buffer[8] = val[3];
+		
+		// temporal length of frame
+		temp_length = 9;
+	}
 	
 	// waspmote ID
 	for(uint16_t i = 0; i < strlen(frame._waspmoteID) ; i++)
@@ -801,13 +799,21 @@ void WaspFrame::showFrame(void)
  */
 int8_t WaspFrame::addSensor(uint8_t type, int value)
 {
-	char str[10];
+	char str[20];
 	
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// convert from integer to string
 		itoa( value, str, 10);	
@@ -872,7 +878,16 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 
     	//Check again (1 byte or 2 bytes)
     	uint8_t config;
-		config =(uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type])); 
+		 	
+		if (_boot_version >= 'G')
+		{
+			config = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[type]));
+		}
+		else
+		{
+			config = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type]));		
+		}	
+		
 
 		if (config == TYPE_INT)
 		{
@@ -919,6 +934,151 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
  * 
  * Parameters:
  * 	type : Refers to the type of sensor data
+ * 	value : indicates the sensor value as a float 	
+ * 
+ * Returns: 
+ * 	'length' of the composed frame when ok 
+ * 	-1 when the maximum length of the frame is reached 
+ * 
+ */
+int8_t WaspFrame::addSensor(uint8_t type, uint16_t value)
+{
+	char str[20];
+	
+	if(_mode == ASCII)
+	{
+		// get name of sensor from table
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
+		
+		// convert from integer to string
+		ultoa( (uint32_t)value, str, 10);	
+		
+		// check if new sensor value fits in the frame or not
+		// in the case the maximum length is reached, exit with error
+		// if not, then add the new sensor length to the total length
+		if(!checkLength( strlen(name) +
+						 strlen(str)  +
+						 strlen(":")  +
+						 strlen("#") 	))
+			{
+				return -1;
+			}
+			
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value
+		// 'index_4' is needed for adding the separator '#'
+		int index_1 = length-strlen(name)-strlen(str)-strlen(":")-strlen("#");
+		int index_2 = length-strlen(str)-strlen(":")-strlen("#");
+		int index_3 = length-strlen(str)-strlen("#");
+		int index_4 = length-strlen("#");
+		
+		// add sensor tag	
+		memcpy ( &buffer[index_1], name, strlen(name) );	
+
+		// add ':'
+		memcpy ( &buffer[index_2], ":", strlen(":") );	
+	
+		// add input string defined in 'str'
+		memcpy ( &buffer[index_3], str, strlen(str) );	
+	
+		// add separator '#'
+		memcpy ( &buffer[index_4], "#", strlen("#") );	
+		
+		// increment sensor fields counter 
+		numFields++;
+		
+		// set sensor fields counter
+		buffer[4] = numFields;
+	}
+	else
+	{
+		// check if the data input type corresponds to the sensor
+		if (value<=255)
+		{
+			if( checkFields(type, TYPE_UINT8, 1) == -1 ) return -1;
+		}
+		else
+		{
+			if( checkFields(type, TYPE_INT, 1) == -1 ) return -1;
+		}
+
+		// set data bytes (in this case, int is two bytes)
+		char val[2];
+		memcpy(val,&value,2);
+
+	    /*char val1 = value &0xFF;
+    	char val2 = (value >> 8) &0xFF;  */
+
+    	//Check again (1 byte or 2 bytes)
+    	uint8_t config;
+		 	
+		if (_boot_version >= 'G')
+		{
+			config = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[type]));
+		}
+		else
+		{
+			config = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type]));		
+		}	
+		
+
+		if (config == TYPE_INT)
+		{
+			// check if new sensor value fits
+			if(!checkLength(3))
+			{
+				return -1;
+			}
+
+			// concatenate sensor name to frame string
+	        buffer[length-3] = (char)type;
+	        buffer[length-2] = val[0];
+			buffer[length-1] = val[1];
+			buffer[length] = '\0';
+		}
+		else
+		{
+			// check if new sensor value fits
+			if(!checkLength(2))
+			{
+				return -1;
+			}
+
+			// concatenate sensor name to frame string
+	        buffer[length-2] = (char)type;
+			buffer[length-1] = val[0];
+			buffer[length] = '\0';
+		}
+
+		// increment sensor fields counter 
+		numFields++;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
+
+	}
+
+	return length;
+}
+
+
+
+
+/*
+ * addSensor (type, value) - add sensor value to frame
+ * 
+ * Parameters:
+ * 	type : Refers to the type of sensor data
  * 	value : indicates the sensor value as an unsigned long
  * 
  * Returns: 
@@ -933,8 +1093,16 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long value)
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// convert from integer to string
 		ultoa( value, str, 10);
@@ -1044,7 +1212,15 @@ int8_t WaspFrame::addSensor(uint8_t type, double value)
 {
 	// get name of sensor from table
 	char numDecimals;
-	numDecimals =(uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
+		
+	if (_boot_version >= 'G')
+	{
+		numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type])); 
+	}
+	else
+	{
+		numDecimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
+	}	
 	
 	return addSensor(type, value, numDecimals);
 }
@@ -1074,8 +1250,16 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
 		dtostrf( value,	N, N, str );
 		
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// check if new sensor value fits in the frame or not
 		// in the case the maximum length is reached, exit with error
@@ -1185,7 +1369,7 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 	
 	// limit the max string length to MAX_SIZE Bytes 
 	// to avoid running out of memory
-	if ( string_length >= MAX_SIZE)
+	if (string_length >= MAX_SIZE)
 	{
 		string_length = MAX_SIZE;
 	}	
@@ -1211,8 +1395,16 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 	if(_mode == ASCII)
 	{	
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 			
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// check if new sensor value fits in the frame or not
 		// in the case the maximum length is reached, exit with error
@@ -1315,7 +1507,15 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 	{
 		// get name of sensor from table
 		char numDecimals;
-		numDecimals =(uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
+		
+		if (_boot_version >= 'G')
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type])); 
+		}
+		else
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
+		}	
 				
 		
 		// convert from float to string		
@@ -1323,8 +1523,16 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 		dtostrf( val2,	numDecimals, numDecimals, str2 );
 
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// check if new sensor value fits in the frame or not
 		// in the case the maximum length is reached, exit with error
@@ -1452,8 +1660,16 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long val1, unsigned long val2
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// convert from integer to string
 		ultoa( val1, str1, 10);
@@ -1571,17 +1787,25 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long val1, unsigned long val2
  */
 int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t val3)
 {
-	char str1[10];
-	char str2[10];
-	char str3[10];
+	char str1[20];
+	char str2[20];
+	char str3[20];
 	
 	if(_mode == ASCII)
 	{
 		/// ASCII
 		
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// convert from integer to string
 		itoa( val1, str1, 10);
@@ -1706,18 +1930,26 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
  */
 int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t val3, int val4)
 {
-	char str1[10];
-	char str2[10];
-	char str3[10];
-	char str4[10];
+	char str1[20];
+	char str2[20];
+	char str3[20];
+	char str4[20];
 
 	if(_mode == ASCII)
 	{
 		/// ASCII
 		
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// convert from integer to string
 		itoa( val1, str1, 10);
@@ -1864,15 +2096,23 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
  */
 int8_t WaspFrame::addSensor(uint8_t type, int val1,int val2,int val3)
 {
-	char str1[10];
-	char str2[10];
-	char str3[10];
+	char str1[20];
+	char str2[20];
+	char str3[20];
 
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// convert from integer to string
 		itoa( val1, str1, 10);
@@ -2001,7 +2241,15 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 	{
 		// get name of sensor from table
 		char numDecimals;
-		numDecimals =(uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
+		
+		if (_boot_version >= 'G')
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type])); 
+		}
+		else
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[type])); 
+		}	
 		
 		// convert from float to string		
 		dtostrf( val1,	numDecimals, numDecimals, str1 );
@@ -2009,8 +2257,16 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 		dtostrf( val3,	numDecimals, numDecimals, str3 );
 
 		// get name of sensor from table
-		char name[10];
-		strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 
+		char name[20];
+		
+		if (_boot_version >= 'G')
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type]))); 
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type]))); 			
+		}	
 		
 		// check if new sensor value fits in the frame or not
 		// in the case the maximum length is reached, exit with error
@@ -2144,9 +2400,16 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 	uint8_t config;
 	uint8_t nfields;
 
-	// *1* check sensor typeVal
+	// *1* check sensor typeVal		
+	if (_boot_version >= 'G')
+	{
+		config = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[type])); 
+	}
+	else
+	{
+		config = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type])); 
+	}	
 	
-	config =(uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type])); 
 		
 	// special case (0 might be 1)
 	if (config ==1)
@@ -2157,10 +2420,12 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		}
 		else
 		{
-			USB.print(F("ERR sensor type & value mismatch, "));
-			USB.print( config, DEC);
+			PRINT_FRAME(F("Error sensor type mismatch for index "));
+			USB.print(type, DEC);	
+			USB.print(F(": "));	
+			USB.print(config, DEC);
 			USB.print(F(" vs "));			
-			USB.println( typeVal, DEC);			
+			USB.println(typeVal, DEC);			
 			return -1;
 		}
 	}
@@ -2172,7 +2437,9 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		}
 		else
 		{
-			USB.print(F("ERR sensor type & value mismatch, "));
+			PRINT_FRAME(F("Error sensor type mismatch for index "));	
+			USB.print(type, DEC);	
+			USB.print(F(": "));			
 			USB.print( config, DEC);
 			USB.print(F(" vs "));			
 			USB.println( typeVal, DEC);				
@@ -2180,16 +2447,24 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		}
 	}
 
-	// *2* check sensor number of fields
-
-	nfields =(uint8_t)pgm_read_word(&(SENSOR_FIELD_TABLE[type]));
+	// *2* check sensor number of fields	
+	if (_boot_version >= 'G')
+	{
+		nfields =(uint8_t)pgm_read_word(&(FRAME_SENSOR_FIELD_TABLE[type]));
+	}
+	else
+	{
+		nfields =(uint8_t)pgm_read_word(&(SENSOR_FIELD_TABLE[type]));
+	}	
+	
+	
 	if (nfields == fields)
 	{
 		//OK
 	}
 	else
 	{
-		USB.println(F("ERR sensor type & number of fields mismatch"));
+		PRINT_FRAME(F("Error sensor type & number of fields mismatch\r\n"));
 		return -1;
 	}
 
@@ -2239,7 +2514,7 @@ void WaspFrame::setID(char* moteID)
 	// set zeros in EEPROM addresses
 	for( int i=0 ; i<16 ; i++ )
 	{
-		eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, 0x00);
+		eeprom_write_byte((unsigned char *) i+EEPROM_FRAME_MOTEID, 0x00);
 	}
 	
 	// clear the waspmote ID attribute
@@ -2248,14 +2523,14 @@ void WaspFrame::setID(char* moteID)
 	// set the mote ID from EEPROM memory
 	for( int i=0 ; i<16 ; i++ )
 	{		
-		if( moteID[i] != '#' )
+		if ((moteID[i] != '#') && (moteID[i] != ' '))
 		{
-			eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, moteID[i]);
+			eeprom_write_byte((unsigned char *) i+EEPROM_FRAME_MOTEID, moteID[i]);
 			_waspmoteID[i] = moteID[i];
 		}
 		else
 		{
-			eeprom_write_byte((unsigned char *) i+MOTEID_ADDR, '_');
+			eeprom_write_byte((unsigned char *) i+EEPROM_FRAME_MOTEID, '_');
 			_waspmoteID[i] = '_';
 		}
 		
@@ -2282,7 +2557,7 @@ void WaspFrame::getID(char* moteID)
 	// read mote ID from EEPROM memory
 	for(int i=0 ; i<16 ; i++ )
 	{
-		_waspmoteID[i] = Utils.readEEPROM(i+MOTEID_ADDR);
+		_waspmoteID[i] = Utils.readEEPROM(i+EEPROM_FRAME_MOTEID);
 		moteID[i] = _waspmoteID[i];
 	}	
 	moteID[16]='\0';
@@ -2297,7 +2572,7 @@ void WaspFrame::getID(char* moteID)
 void WaspFrame::storeSequence(uint8_t seqNumber)
 {	
 	// store frame sequence number to EEPROM[163]	
-	eeprom_write_byte((unsigned char *) SEQUENCE_ADDR, seqNumber);
+	eeprom_write_byte((unsigned char *) EEPROM_FRAME_SEQUENCE, seqNumber);
 
 
 }
@@ -2311,7 +2586,7 @@ void WaspFrame::storeSequence(uint8_t seqNumber)
 uint8_t WaspFrame::readSequence(void)
 {	
 	// read frame sequence number from EEPROM[163]
-	return Utils.readEEPROM(SEQUENCE_ADDR);
+	return Utils.readEEPROM(EEPROM_FRAME_SEQUENCE);
 
 }
 

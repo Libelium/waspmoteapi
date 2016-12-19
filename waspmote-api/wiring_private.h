@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2005-2006 David A. Mellis
- *  Modified for Waspmote by Libelium, 2014
+ *  Modified for Waspmote by Libelium, 2016
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		3.0
  *
  */
  
@@ -30,6 +30,10 @@
 #include <stdarg.h>
 
 #include "wiring.h"
+
+#ifndef __WASPCONSTANTS_H__
+  #include "WaspConstants.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"{

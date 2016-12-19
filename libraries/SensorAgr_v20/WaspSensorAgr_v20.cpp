@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.6
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona
  */
@@ -63,7 +63,7 @@ WaspSensorAgr_v20::WaspSensorAgr_v20()
 	memset( plv_array, 0x00, sizeof(plv_array) );	
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_AGRICULTURE;
+	WaspRegisterSensor |= REG_AGRICULTURE;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -506,7 +506,10 @@ float WaspSensorAgr_v20::readDendrometer(void)
 	byte data_dendro[3] = {0,0,0};
 	float value_dendro = 0;
 	
-	if( !Wire.I2C_ON ) Wire.begin();
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(300);
   
 	Wire.beginTransmission(I2C_ADDRESS_AGR_DENDROMETER);
@@ -519,13 +522,14 @@ float WaspSensorAgr_v20::readDendrometer(void)
 	Wire.requestFrom(I2C_ADDRESS_AGR_DENDROMETER, 3);
   
 	int i=0;
-	while(Wire.available())
+	while (Wire.available())
 	{
 		data_dendro[i]=Wire.receive();
 		i++;
 	}
 	
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
@@ -604,7 +608,10 @@ float WaspSensorAgr_v20::readPT1000(void)
 	byte data_pt1000[3] = {0,0,0};
 	float value_pt1000 = 0;
 	
-	if( !Wire.I2C_ON ) Wire.begin();
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(300);
 
 	Wire.beginTransmission(I2C_ADDRESS_AGR_PT1000);
@@ -617,13 +624,14 @@ float WaspSensorAgr_v20::readPT1000(void)
 	Wire.requestFrom(I2C_ADDRESS_AGR_PT1000, 3);
 
 	int k=0;
-	while(Wire.available())
+	while (Wire.available())
 	{
 		data_pt1000[k]=Wire.receive();
 		k++;
 	}
 
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
@@ -643,20 +651,24 @@ float WaspSensorAgr_v20::readRadiation(void)
 	long val = 0;
 	float val_def = 0;
 
-	if( !Wire.I2C_ON ) Wire.begin();
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
   
 	delay(150);
 
 	Wire.requestFrom(I2C_ADDRESS_AGR_RADIATION, 2);
   
 	int i = 0;
-	while(Wire.available())
+	while (Wire.available())
 	{
 		data_apogee[i] = Wire.receive();
 		i++;
 	}
   
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}

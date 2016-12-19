@@ -7,4 +7,4 @@ setBoardMode	KEYWORD2
 readADC	KEYWORD2
 readAnalogSensor	KEYWORD2
 
-SensorProtov20	KEYWORD3
+SensorProtov20	KEYWORD1

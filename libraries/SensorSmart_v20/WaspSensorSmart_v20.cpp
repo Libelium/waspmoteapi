@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
@@ -56,7 +56,7 @@ WaspSensorSmart_v20::WaspSensorSmart_v20()
 	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_METERING;
+	WaspRegisterSensor |= REG_METERING;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////

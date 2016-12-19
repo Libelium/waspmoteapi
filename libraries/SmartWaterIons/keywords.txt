@@ -8,6 +8,7 @@ SOCKET1	LITERAL1
 SOCKET2	LITERAL1
 SOCKET3	LITERAL1
 SOCKET4	LITERAL1
+MAX_POINTS	LITERAL1
 
 WaspSensorSWIons	KEYWORD2
 ON	KEYWORD2
@@ -21,7 +22,9 @@ read	KEYWORD2
 setCalibrationPoints	KEYWORD2
 pHConversion	KEYWORD2
 setpHCalibrationPoints	KEYWORD2
-
+pointToPointCalibration	KEYWORD2
+calculateConcentrationP2P	KEYWORD2
+SWIonsBoard	KEYWORD1
 
 #Temperature#
 

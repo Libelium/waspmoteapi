@@ -1,0 +1,26 @@
+# ModbusMaster keywords #
+
+
+ModbusMaster	KEYWORD2
+begin			KEYWORD2
+
+readCoils				KEYWORD2
+readDiscreteInputs		KEYWORD2
+readHoldingRegisters	KEYWORD2
+readInputRegisters		KEYWORD2
+writeSingleCoil			KEYWORD2
+writeSingleRegister		KEYWORD2
+writeMultipleCoils		KEYWORD2
+writeMultipleCoils		KEYWORD2
+writeMultipleRegisters	KEYWORD2
+writeMultipleRegisters	KEYWORD2
+maskWriteRegister		KEYWORD2
+getResponseBuffer		KEYWORD2
+clearResponseBuffer		KEYWORD2
+readWriteMultipleRegisters	KEYWORD2
+readWriteMultipleRegisters	KEYWORD2
+readRegiters				KEYWORD2
+
+RS232_COM	LITERAL1
+RS485_COM	LITERAL1
+

@@ -42,3 +42,4 @@ setDigitalPot	KEYWORD2
 getHistogramData	KEYWORD2
 getConfigVar	KEYWORD2
 getPM	KEYWORD2
+OPC_N2	KEYWORD1

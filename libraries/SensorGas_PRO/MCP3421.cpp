@@ -1,7 +1,7 @@
 /*
  *  Library for managing the MCP3421 ADC
  * 
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -34,6 +34,7 @@ MCP3421::MCP3421(){
 
 }
 
+
 /* Function:	This function performs a conversion with the desired parameters
  * Parameters:	resolution: resolution value for ADC conversion
  * 					MCP3421_RES_12_BIT or MCP3421_LOW_RES
@@ -48,7 +49,28 @@ MCP3421::MCP3421(){
  * 				conversion: MCP3421_RAW or MCP3421_VOLTS
  * Return: 		measure in milliVolts or raw
  */
-float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
+float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion )
+{
+	return readADC(I2C_ADDRESS_GASPRO_MCP3421_A1, resolution, gain, conversion);
+}
+
+
+/* Function:	This function performs a conversion with the desired parameters
+ * Parameters:	ADC_addr: I2C address for the ADC
+ * 				resolution: resolution value for ADC conversion
+ * 					MCP3421_RES_12_BIT or MCP3421_LOW_RES
+ * 					MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+ * 					MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+ * 					MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+ *  			gain: gain setting for ADC
+ * 					MCP3421_GAIN_1
+ * 					MCP3421_GAIN_2
+ * 					MCP3421_GAIN_4
+ * 					MCP3421_GAIN_8
+ * 				conversion: MCP3421_RAW or MCP3421_VOLTS
+ * Return: 		measure in milliVolts or raw
+ */
+float MCP3421::readADC(uint8_t ADC_addr, uint8_t resolution, uint8_t gain, uint8_t conversion ){
 
 	
 	uint8_t config_reg, val1, val2, val3;
@@ -58,12 +80,12 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 	
 	long aux_val;
 	
-	if( !Wire.I2C_ON ) Wire.begin();
+	if( !Wire.isON ) Wire.begin();
 
 	// Primero se manda la orden de conversion
-	Wire.beginTransmission(I2C_ADDRESS_GASPRO_MCP3421);   
+	Wire.beginTransmission(ADC_addr);   
 	
-	config_reg = 128 + (resolution * 4) + gain;
+	config_reg = 128 +(resolution * 4) + gain;
 	Wire.send(config_reg);  // start from address theAddress
 	Wire.endTransmission();
 
@@ -74,7 +96,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_12_BIT:
 			delay(6);
 			//Leer 3 bytes ( 2 de datos + configuracion)
-			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x03);
+			Wire.requestFrom(ADC_addr, (uint8_t)0x03);
 			tempo = millis();
 			while((Wire.available() < 3) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{
@@ -104,7 +126,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_14_BIT:
 			delay(18);
 			//Leer 3 bytes ( 2 de datos + configuracion)
-			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x03);			
+			Wire.requestFrom(ADC_addr, (uint8_t)0x03);			
 			tempo = millis();
 			while((Wire.available() < 3) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{
@@ -135,7 +157,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_16_BIT:
 			delay(68);
 			//Leer 3 bytes ( 2 de datos + configuracion)
-			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x03);		
+			Wire.requestFrom(ADC_addr, (uint8_t)0x03);		
 			tempo = millis();
 			while((Wire.available() < 3) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{
@@ -166,7 +188,7 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		case MCP3421_RES_18_BIT:
 			delay(300);
 			//Leer 3 bytes ( 3 de datos + configuracion)
-			Wire.requestFrom(I2C_ADDRESS_GASPRO_MCP3421, 0x04);				
+			Wire.requestFrom(ADC_addr, (uint8_t)0x04);				
 			tempo = millis();
 			while((Wire.available() < 4) && ((millis() - tempo) < MCP3421_I2C_READ_TIMEOUT))
 			{
@@ -206,7 +228,10 @@ float MCP3421::readADC(uint8_t resolution, uint8_t gain, uint8_t conversion ){
 		
 	}
 	
-
+	if ((config_reg & 0x80) != 0)
+	{
+		USB.print("ADC N_RDY");
+	}
 	
 	return value;	
 }

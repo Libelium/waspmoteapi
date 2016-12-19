@@ -1,7 +1,7 @@
-/*! \file WaspUtils.h
-    \brief Library containing useful general functions
+/*! \file WaspSPI.h
+    \brief Library for managing the SPI bus
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,16 +17,15 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.4
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
 */
   
   
-/*! \def Wasputils_h
-    \brief The library flag
-    
+/*! \def WaspSPI_h
+    \brief The library flag    
  */
 #ifndef WaspSPI_h
 #define WaspSPI_h
@@ -146,11 +145,10 @@ public:
 	WaspSPI()
 	{
 		isSD = false;
-		isSX = false;
+		isSocket0 = false;
 		isDustSensor = false;
 		isSmartWater = false;
 		isSmartWaterIons = false;
-		isRS485 = false;
 	};
  
 	static byte transfer(uint8_t _data);
@@ -185,10 +183,10 @@ public:
 	void secureBegin();
 	void secureEnd();
 	
-	//! Variable : indicates when Semtech module is being powered on
+	//! Variable : indicates when SOCKET0 module is being powered on
   	/*! true: ON; false: OFF
    	*/
-	boolean 	isSX;	
+	boolean 	isSocket0;	
 	
 	//! Variable : indicates when SD module is being powered on
   	/*! true: ON; false: OFF
@@ -209,11 +207,6 @@ public:
   	/*! true: ON; false: OFF
    	*/
 	boolean		isSmartWaterIons;
-	
-	//! Variable : indicates when RS-485 board is being powered on
-  	/*! true: ON; false: OFF
-   	*/
-	boolean		isRS485;
 
 	
 };

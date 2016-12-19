@@ -1,7 +1,7 @@
 /*! \file WaspUtils.h
     \brief Library containing useful general functions
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,8 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.3
-    Design:			David Gascón
+    Version:		3.0
+    Design:			David Gascon
     Implementation:	Alberto Bielsa, David Cuartielles
 
 */
@@ -45,40 +45,51 @@
 /*! \def LED_ON
     \brief sets LED ON
  */
-#define	LED_ON	1
-
 /*! \def LED_OFF
     \brief sets LED OFF
  */
+#define	LED_ON	1
 #define	LED_OFF	0
 
-/*! \def MUX_TO_HIGH
-    \brief sets mux high
- */
-#define	MUX_TO_HIGH	1
 
-/*! \def MUX_TO_LOW
-    \brief sets mux low
+/*! \def EEPROM_OTA_AUTHKEY
+    \brief Authentication key EEPROM address
  */
-#define	MUX_TO_LOW	0
-
+/*! \def EEPROM_FRAME_MOTEID
+    \brief MOTEID EEPROM address
+ */
+/*! \def EEPROM_FRAME_SEQUENCE
+    \brief Sequence EEPROM address
+ */ 
+/*! \def EEPROM_PROG_VERSION
+    \brief EEPROM address for program version
+ */ 
+/*! \def EEPROM_SERIALID_START
+    \brief Starting address for the backup of Serial ID of Waspmote (4B)
+ */
 /*! \def EEPROM_START
     \brief First EEPROM's writable address. There is a 1kB reserved area from 
     address 0 to address 1023.
  */
-#define EEPROM_START 1024
-
-/*! \def EEPROM_PROG_VERSION
-    \brief EEPROM address for program version
- */
+#define EEPROM_OTA_FLAG				1
+#define EEPROM_OTA_RETRIES			98
+#define EEPROM_OTA_AUTHKEY			107
+#define EEPROM_FRAME_MOTEID			147
+#define EEPROM_FRAME_SEQUENCE		163
 #define EEPROM_PROG_VERSION 		225
 #define EEPROM_PROG_VERSION_BACKUP 	226
+#define EEPROM_SERIALID_START 		227
+#define EEPROM_START 				1024
 
-/*! \def EEPROM_SERIALID_START
-    \brief Starting address for the backup of Serial ID of Waspmote (4B)
- */
-#define EEPROM_SERIALID_START 227
 
+
+
+
+//! Variable :  Waspmote bootloader version
+extern volatile uint8_t _boot_version;
+
+//! Variable :  Waspmote serial id
+extern volatile uint8_t _serial_id[8];
 
 
 /******************************************************************************
@@ -253,11 +264,23 @@ class WaspUtils
   void setMuxUSB();  
 
    
-  //! It switches off the multiplexer on UART_0 
+  //! It switches off the multiplexer on UART0 and UART1
   /*!
   \return void
    */
-  void muxOFF(); 
+  void muxOFF();  
+    
+  //! It switches off the multiplexer on UART0
+  /*!
+  \return void
+   */
+  void muxOFF0(); 
+  
+  //! It switches off the multiplexer on UART1
+  /*!
+  \return void
+   */
+  void muxOFF1(); 
   
   //! set multiplexer on UART_0 to SOCKET0
   /*!
@@ -379,6 +402,7 @@ class WaspUtils
   \return length of the converted array; '0' if error
    */
   uint16_t str2hex(char* str, uint8_t* array);
+  uint16_t str2hex(char* str, uint8_t* array, uint16_t size);
   
   //! It converts a number stored in a string into a hexadecimal number
   /*!
@@ -491,6 +515,9 @@ class WaspUtils
   \return the version of the actual bootloader
   */
   uint8_t getBootVersion();
+  
+  //! It displays the Waspmote's version
+  void showVersion();
   
 };
 

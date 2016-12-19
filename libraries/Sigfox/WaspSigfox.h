@@ -1,10 +1,10 @@
 /*! 
  * @file 	WaspSigfox.h
  * @author	Libelium Comunicaciones Distribuidas S.L.
- * @version	1.0
- * @brief 	Library for managing Sigfox modules TD1207
+ * @version	3.1
+ * @brief 	Library for managing Sigfox modules TD1207 & TD1508
  * 
- * Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ * Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  * http://www.libelium.com
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -37,8 +37,21 @@
  * Definitions & Declarations
  *****************************************************************************/
 
+//! DEBUG_SIGFOX
+/*! Possible values:
+ * 	0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages
+ */
+#define DEBUG_SIGFOX	0
+
+
+// define print message
+#define PRINT_SIGFOX(str)	USB.print(F("[Sigfox] ")); USB.print(str);
+
+
 //! UART baudrate
-#define UART_RATE 9600
+#define SIGFOX_RATE 9600
 
 //! ATcommands responses
 static char AT_OK[] 	= "OK";
@@ -72,7 +85,15 @@ enum CommandTypes
 	SIGFOX_CMD_DISPLAY = 3, // AT/<cmd>?
 };
 
-
+/*! @enum RegionTypes
+ */
+enum RegionTypes
+{
+	SIGFOX_REGION_UNKNOWN 	= 0,
+	SIGFOX_REGION_ETSI 		= 1,
+	SIGFOX_REGION_FCC 		= 2,
+	SIGFOX_REGION_ARIB 		= 3,
+};
 
 /******************************************************************************
  * Class
@@ -96,14 +117,18 @@ class WaspSigfox : public WaspUART
 		uint32_t parseUint32Value();
 
 	public:
-		uint8_t _power;			/*!< Sigfox tx power (in dBm)	*/		
-		uint32_t _id;			/*!< Sigfox module id			*/	
-		char _firmware[10];		/*!< Module firmware version	*/	
-		uint32_t _address;		/*!< LAN address				*/	 
-		uint32_t _mask;			/*!< Mask address				*/		
-		uint32_t _frequency;	/*!< Frequency					*/	
-		int _powerLAN;			/*!< LAN tx power (in dBm)		*/	
-		char _packet[35];		/*!< LAN packet structure		*/	
+		uint8_t _power;					/*!< Sigfox tx power (in dBm)	*/		
+		uint32_t _id;					/*!< Sigfox module id			*/	
+		char _firmware[10];				/*!< Module firmware version	*/	
+		uint32_t _address;				/*!< LAN address				*/	 
+		uint32_t _mask;					/*!< Mask address				*/		
+		uint32_t _frequency;			/*!< Frequency					*/	
+		int _powerLAN;					/*!< LAN tx power (in dBm)		*/	
+		char _packet[35];				/*!< LAN packet structure		*/	
+		uint8_t _region;				/*!< actual region of the module*/	
+		char _macroChannelBitmask[25];	/*!< Macro channel bitmask		*/	
+		uint8_t _macroChannel;			/*!< Macro channel 				*/	
+		int32_t _downFreqOffset;		/*!< Downlink Frequency Offset	*/	
 		
 		//! class constructor
 		WaspSigfox()
@@ -151,6 +176,15 @@ class WaspSigfox : public WaspUART
 		uint8_t disableRX();	
 		uint8_t setMultiPacket();	
 		uint8_t getMultiPacket(uint32_t time);	
+		uint8_t getRegion();
+		
+		// FCC functions
+		uint8_t setMacroChannelBitmask(char* bitmask);
+		uint8_t getMacroChannelBitmask();
+		uint8_t setMacroChannel(uint8_t config);
+		uint8_t getMacroChannel();
+		uint8_t setDownFreqOffset(int32_t offset);
+		uint8_t getDownFreqOffset();
 };
 
 //! Define the object

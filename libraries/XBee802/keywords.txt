@@ -24,4 +24,4 @@ counterACK	KEYWORD2
 _payload	KEYWORD2
 _length	KEYWORD2
 
-xbee802	KEYWORD3
+xbee802	KEYWORD1

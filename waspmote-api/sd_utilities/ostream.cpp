@@ -1,5 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
+ * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -16,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino SdFat Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
  
 #include "ostream.h"
@@ -34,15 +38,17 @@ void ostream::fill_not_left(unsigned len) {
   }
 }
 //------------------------------------------------------------------------------
-char* ostream::fmtNum(uint32_t n, char *ptr, uint8_t base) {
-  char a = flags() & uppercase ? 'A' - 10 : 'a' - 10;
-  do {
-    uint32_t m = n;
-    n /= base;
-    char c = m - base * n;
-    *--ptr = c < 10 ? c + '0' : c + a;
-  } while (n);
-  return ptr;
+char* ostream::fmtNum(uint32_t n, char *ptr, uint8_t base) 
+{
+	char a = flags() & uppercase ? 'A' - 10 : 'a' - 10;
+	do 
+	{
+		uint32_t m = n;
+		n /= base;
+		char c = m - base * n;
+		*--ptr = c < 10 ? c + '0' : c + a;
+	} while (n);
+	return ptr;
 }
 //------------------------------------------------------------------------------
 void ostream::putBool(bool b) {
@@ -63,62 +69,74 @@ void ostream::putChar(char c) {
   do_fill(1);
 }
 //------------------------------------------------------------------------------
-void ostream::putDouble(double n) {
-  uint8_t nd = precision();
-  double round = 0.5;
-  char sign;
-  char buf[13];  // room for sign, 10 digits, '.', and zero byte
-  char *end = buf + sizeof(buf) - 1;
-  char *str = end;
-  // terminate string
-  *end = '\0';
+void ostream::putDouble(double n) 
+{
+	uint8_t nd = precision();
+	double round = 0.5;
+	char sign;
+	char buf[13];  // room for sign, 10 digits, '.', and zero byte
+	char *end = buf + sizeof(buf) - 1;
+	char *str = end;
+	// terminate string
+	*end = '\0';
 
-  // get sign and make nonnegative
-  if (n < 0.0) {
-    sign = '-';
-    n = -n;
-  } else {
-    sign = flags() & showpos ? '+' : '\0';
-  }
-  // check for larger than uint32_t
-  if (n > 4.0E9) {
-    putPgm(PSTR("BIG FLT"));
-    return;
-  }
-  // round up and separate in and fraction parts
-  for (uint8_t i = 0; i < nd; ++i) round *= 0.1;
-  n += round;
-  uint32_t intPart = n;
-  double fractionPart = n - intPart;
+	// get sign and make nonnegative
+	if (n < 0.0) 
+	{
+		sign = '-';
+		n = -n;
+	}
+	else 
+	{
+		sign = flags() & showpos ? '+' : '\0';
+	}
+  
+	// check for larger than uint32_t
+	if (n > 4.0E9) 
+	{
+		putPgm(PSTR("BIG FLT"));
+		return;
+	}
+  
+	// round up and separate in and fraction parts
+	for (uint8_t i = 0; i < nd; ++i) round *= 0.1;
+	n += round;
+	uint32_t intPart = n;
+	double fractionPart = n - intPart;
 
-  // format intPart and decimal point
-  if (nd || (flags() & showpoint)) *--str = '.';
-  str = fmtNum(intPart, str, 10);
+	// format intPart and decimal point
+	if (nd || (flags() & showpoint)) *--str = '.';
+	str = fmtNum(intPart, str, 10);
 
-  // calculate length for fill
-  uint8_t len = sign ? 1 : 0;
-  len += nd + end - str;
+	// calculate length for fill
+	uint8_t len = sign ? 1 : 0;
+	len += nd + end - str;
 
-  // extract adjust field
-  fmtflags adj = flags() & adjustfield;
-  if (adj == internal) {
-    if (sign) putch(sign);
-    do_fill(len);
-  } else {
-    // do fill for internal or right
-    fill_not_left(len);
-    if (sign) *--str = sign;
-  }
-  putstr(str);
-  // output fraction
-  while (nd-- > 0) {
-    fractionPart *= 10.0;
-    int digit = static_cast<int>(fractionPart);
-    putch(digit + '0');
-    fractionPart -= digit;
-  }
-  // do fill if not done above
-  do_fill(len);
+	// extract adjust field
+	fmtflags adj = flags() & adjustfield;
+	if (adj == internal) 
+	{
+		if (sign) putch(sign);
+		do_fill(len);
+	} 
+	else 
+	{
+		// do fill for internal or right
+		fill_not_left(len);
+		if (sign) *--str = sign;
+	}
+	putstr(str);
+	
+	// output fraction
+	while (nd-- > 0) 
+	{
+		fractionPart *= 10.0;
+		int digit = static_cast<int>(fractionPart);
+		putch(digit + '0');
+		fractionPart -= digit;
+	}
+	// do fill if not done above
+	do_fill(len);
 }
 //------------------------------------------------------------------------------
 void ostream::putNum(int32_t n) {
@@ -127,36 +145,47 @@ void ostream::putNum(int32_t n) {
   putNum(n, neg);
 }
 //------------------------------------------------------------------------------
-void ostream::putNum(uint32_t n, bool neg) {
-  char buf[13];
-  char* end = buf + sizeof(buf) - 1;
-  char* num;
-  char* str;
-  uint8_t base = flagsToBase();
-  *end = '\0';
-  str = num = fmtNum(n, end, base);
-  if (base == 10) {
-    if (neg) {
-      *--str = '-';
-    } else if (flags() & showpos) {
-      *--str = '+';
-    }
-  } else if (flags() & showbase) {
-    if (flags() & hex) {
-      *--str = flags() & uppercase ? 'X' : 'x';
-    }
-    *--str = '0';
-  }
-  uint8_t len = end - str;
-  fmtflags adj = flags() & adjustfield;
-  if (adj == internal) {
-    while (str < num) putch(*str++);
-  }
-  if (adj != left) {
-    do_fill(len);
-  }
-  putstr(str);
-  do_fill(len);
+void ostream::putNum(uint32_t n, bool neg) 
+{
+	char buf[13];
+	char* end = buf + sizeof(buf) - 1;
+	char* num;
+	char* str;
+	uint8_t base = flagsToBase();
+	*end = '\0';
+	str = num = fmtNum(n, end, base);
+	if (base == 10) 
+	{
+		if (neg) 
+		{
+			*--str = '-';
+		} 
+		else if (flags() & showpos) 
+		{
+			*--str = '+';
+		}
+	} 
+	else if (flags() & showbase) 
+	{
+		if (flags() & hex) 
+		{
+			*--str = flags() & uppercase ? 'X' : 'x';
+		}
+		*--str = '0';
+	}
+  
+	uint8_t len = end - str;
+	fmtflags adj = flags() & adjustfield;
+	if (adj == internal) 
+	{
+		while (str < num) putch(*str++);
+	}
+	if (adj != left) 
+	{
+		do_fill(len);
+	}
+	putstr(str);
+	do_fill(len);
 }
 //------------------------------------------------------------------------------
 void ostream::putPgm(const char* str) {

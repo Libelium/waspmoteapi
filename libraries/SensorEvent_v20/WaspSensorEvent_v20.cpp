@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
- *  Design:		David Gascón
+ *  Version:		3.0
+ *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles
  */
  
@@ -56,7 +56,7 @@ WaspSensorEvent_v20::WaspSensorEvent_v20()
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_EVENTS;
+	WaspRegisterSensor |= REG_EVENTS;
 	
 	// init interruption attribute flag 
 	_intEnabled = false;
@@ -646,13 +646,19 @@ void WaspSensorEvent_v20::setDigipot1(uint8_t address, float value)
 	thres *=128;
 	thres /=3.3;
 	threshold = (uint8_t) thres;
-	if( !Wire.I2C_ON ) Wire.begin();
+	
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.beginTransmission(address);
 	Wire.send(B00010000);
 	Wire.send(threshold);
 	Wire.endTransmission();
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
@@ -674,13 +680,19 @@ void WaspSensorEvent_v20::setDigipot0(uint8_t address, float value)
 	thres *=128;
 	thres /=3.3;
 	threshold = (uint8_t) thres;
-	if( !Wire.I2C_ON ) Wire.begin();
+	
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.beginTransmission(address);
 	Wire.send(B00000000);
 	Wire.send(threshold);
 	Wire.endTransmission();
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}

@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2005-2006 David A. Mellis
- *  Modified for Waspmote by Libelium, 2014
+ *  Modified for Waspmote by Libelium, 2016
  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -14,12 +14,75 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  Version:		3.0
+ *
+ *
  */
  
 
 #include "wiring_private.h"
 #include "pins_waspmote.h"
 
+
+uint8_t analog_reference = DEFAULT;
+
+
+/*! 
+ * @brief	This function sets the analog_reference for ADC conversion
+ * @param 	uint8_t mode: Select the voltage reference selections for ADC
+ * 	@arg	EXTERNAL: AREF, Internal VREF turned off
+ * 	@arg	DEFAULT: AVCC with external capacitor at AREF pin
+ * 	@arg	INTERNAL1V1: Internal 1V1 reference with capacitor at AREF pin
+ * 	@arg	INTERNAL2V56: Internal 2V56 reference with capacitor at AREF pin
+ * @return	void
+ * 
+ */
+void analogReference(uint8_t mode)
+{
+	analog_reference = mode;
+	
+	// set Reference Selection bits
+	if (analog_reference == INTERNAL2V56)
+	{
+		sbi(ADMUX, REFS1);
+		sbi(ADMUX, REFS0);
+	}
+	else if (analog_reference == INTERNAL1V1)
+	{		
+		sbi(ADMUX, REFS1);
+		cbi(ADMUX, REFS0);
+	}
+	else if (analog_reference == EXTERNAL)
+	{		
+		cbi(ADMUX, REFS1);
+		cbi(ADMUX, REFS0);
+	}
+	else
+	{	
+		// DEFAULT	
+		cbi(ADMUX, REFS1);
+		sbi(ADMUX, REFS0);
+	}
+	
+	// stabilization time
+	delay(10);
+}
+
+
+/*! 
+ * @brief	This function reads the analog pin
+ * @param 	uint8_t pin: input analog pin to read from
+ * 	@arg	ANALOG1
+ * 	@arg	ANALOG2
+ * 	@arg	ANALOG3
+ * 	@arg	ANALOG4
+ *	@arg	ANALOG5
+ *	@arg	ANALOG6
+ *	@arg	ANALOG7
+ * @return	analog value in bits (from 0 to 1023) as it is using a 10-bit ADC
+ * 
+ */
 int analogRead(uint8_t pin)
 {
 	uint8_t low, high, ch = analogInPinToBit(pin);
@@ -28,7 +91,7 @@ int analogRead(uint8_t pin)
 	uint8_t channel = (ADMUX & (unsigned int) 0x0f);
 	
 	// enables the ADC
-	sbi(ADCSRA,ADEN);
+	sbi(ADCSRA, ADEN);
 	
 	// check if there is need to change the channel and wait for stabilization
 	if( channel != ch )

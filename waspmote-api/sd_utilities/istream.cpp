@@ -1,6 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
- * Modified in 2014 for Waspmote, by Y. Carmona 
+ * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino SdFat Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
 #include <float.h>
 #include "istream.h"
@@ -66,24 +69,30 @@ istream& istream::get(char& c) {
  *
  * \return always returns *this. A failure is indicated by the stream state.
  */
-istream& istream::get(char *str, streamsize n, char delim) {
-  int c;
-  FatPos_t pos;
-  m_gcount = 0;
-  while ((m_gcount + 1)  < n) {
-    c = getch(&pos);
-    if (c < 0) {
-      break;
-    }
-    if (c == delim) {
-      setpos(&pos);
-      break;
-    }
-    str[m_gcount++] = c;
-  }
-  if (n > 0) str[m_gcount] = '\0';
-  if (m_gcount == 0) setstate(failbit);
-  return *this;
+istream& istream::get(char *str, streamsize n, char delim) 
+{
+	int c;
+	FatPos_t pos;
+	m_gcount = 0;
+	
+	// do not need a timeout because there is a counter
+	while ((m_gcount + 1)  < n) 
+	{
+		c = getch(&pos);
+		if (c < 0) 
+		{
+			break;
+		}
+		if (c == delim) 
+		{
+			setpos(&pos);
+			break;
+		}
+		str[m_gcount++] = c;
+	}
+	if (n > 0) str[m_gcount] = '\0';
+	if (m_gcount == 0) setstate(failbit);
+	return *this;
 }
 //------------------------------------------------------------------------------
 void istream::getBool(bool *b) 
@@ -104,6 +113,7 @@ void istream::getBool(bool *b)
 	uint8_t i = 0;
 	int c = readSkip();
 	
+	// do not need a timeout because there is a counter
 	while( retries > 0 ) 
 	{
 		retries--;
@@ -163,6 +173,7 @@ bool istream::getDouble(double* value)
 		c = getch();
 	}
 	
+	// do not need a timeout because there is a counter
 	while( retries > 0 ) 
 	{
 		retries--;
@@ -192,48 +203,68 @@ bool istream::getDouble(double* value)
 		c = getch(&endPos);
 	}
 	
-  if (!got_digit) goto fail;
-  if (c == 'e' || c == 'E') {
-    c = getch();
-    expNeg = c == '-';
-    if (c == '-' || c == '+') {
-      c = getch();
-    }
-    while (isdigit(c)) {
-      if (exp > EXP_LIMIT) goto fail;
-      exp = exp * 10 + (c - '0');
-      c = getch(&endPos);
-    }
-  }
-  v = static_cast<double>(frac);
-  exp = expNeg ? fracExp - exp : fracExp + exp;
-  expNeg = exp < 0;
-  if (expNeg) exp = -exp;
-  pow10 = 10.0;
-  while (exp) {
-    if (exp & 1) {
-      if (expNeg) {
-        // check for underflow
-        if (v < FLT_MIN * pow10  && frac != 0) goto fail;
-        v /= pow10;
-      } else {
-        // check for overflow
-        if (v > FLT_MAX / pow10) goto fail;
-        v *= pow10;
-      }
-    }
-    pow10 *= pow10;
-    exp >>= 1;
-  }
-  setpos(&endPos);
-  *value = neg ? -v : v;
-  return true;
+	if (!got_digit) goto fail;
+	if (c == 'e' || c == 'E') 
+	{
+		c = getch();
+		expNeg = c == '-';
+		if (c == '-' || c == '+') 
+		{
+			c = getch();
+		}
+		
+		uint32_t previous = millis();
+		while (isdigit(c)) 
+		{
+			if (exp > EXP_LIMIT) goto fail;
+			exp = exp * 10 + (c - '0');
+			c = getch(&endPos);
+			
+			if (millis() - previous > 60000)
+			{
+				goto fail;
+			}			
+			
+			// Condition to avoid an overflow (DO NOT REMOVE)
+			if( millis() < previous) previous = millis();
+		}
+	}
+	v = static_cast<double>(frac);
+	exp = expNeg ? fracExp - exp : fracExp + exp;
+	expNeg = exp < 0;
+	if (expNeg) exp = -exp;
+	pow10 = 10.0;
+	
+	// do not need a timeout because there is a counter 
+	while (exp) 
+	{
+		if (exp & 1) 
+		{
+			if (expNeg) 
+			{
+				// check for underflow
+				if (v < FLT_MIN * pow10  && frac != 0) goto fail;
+				v /= pow10;
+			} 
+			else 
+			{
+				// check for overflow
+				if (v > FLT_MAX / pow10) goto fail;
+				v *= pow10;
+			}
+		}
+		pow10 *= pow10;
+		exp >>= 1;
+	}
+	setpos(&endPos);
+	*value = neg ? -v : v;
+	return true;
 
  fail:
-  // error restore position to last good place
-  setpos(&endPos);
-  setstate(failbit);
-  return false;
+	// error restore position to last good place
+	setpos(&endPos);
+	setstate(failbit);
+	return false;
 }
 //------------------------------------------------------------------------------
 /**
@@ -261,6 +292,7 @@ istream& istream::getline(char *str, streamsize n, char delim)
 	m_gcount = 0;
 	if (n > 0) str[0] = '\0';
 	
+	// do not need a timeout because there is a counter 
 	while( retries > 0 ) 
 	{
 		retries--;
@@ -329,6 +361,7 @@ bool istream::getNumber(uint32_t posMax, uint32_t negMax, uint32_t* num)
 	cutlim = cutoff % base;
 	cutoff /= base;
 
+	// do not need a timeout because there is a counter
 	while( retries > 0) 
 	{
 		retries--;
@@ -374,29 +407,35 @@ bool istream::getNumber(uint32_t posMax, uint32_t negMax, uint32_t* num)
 /**
  *
  */
-void istream::getStr(char *str) {
-  FatPos_t pos;
-  uint16_t i = 0;
-  uint16_t m = width() ? width() - 1 : 0XFFFE;
-  if (m != 0) {
-    getpos(&pos);
-    int c = readSkip();
+void istream::getStr(char *str) 
+{
+	FatPos_t pos;
+	uint16_t i = 0;
+	uint16_t m = width() ? width() - 1 : 0XFFFE;
+	if (m != 0) 
+	{
+		getpos(&pos);
+		int c = readSkip();
 
-    while (i < m) {
-      if (c < 0) {
-        break;
-      }
-      if (isspace(c)) {
-        setpos(&pos);
-        break;
-      }
-      str[i++] = c;
-      c = getch(&pos);
-    }
-  }
-  str[i] = '\0';
-  if (i == 0) setstate(failbit);
-  width(0);
+		// do not need a timeout because there is a counter
+		while (i < m) 
+		{
+			if (c < 0) 
+			{
+				break;
+			}
+			if (isspace(c)) 
+			{
+				setpos(&pos);
+				break;
+			}
+			str[i++] = c;
+			c = getch(&pos);
+		}
+	}
+	str[i] = '\0';
+	if (i == 0) setstate(failbit);
+	width(0);
 }
 //------------------------------------------------------------------------------
 /**
@@ -414,18 +453,32 @@ void istream::getStr(char *str) {
  * \return *this
  *
  */
-istream& istream::ignore(streamsize n, int delim) {
-  int c;
-  m_gcount = 0;
-  while (m_gcount < n) {
-    c = getch();
-    if (c < 0) {
-      break;
-    }
-    m_gcount++;
-    if (c == delim) break;
-  }
-  return *this;
+istream& istream::ignore(streamsize n, int delim) 
+{
+	int c;
+	m_gcount = 0;
+	uint32_t previous = millis();
+	
+	// do not need a timeout because there is a counter
+	while (m_gcount < n) 
+	{
+		c = getch();
+		if (c < 0) 
+		{
+			break;
+		}
+		m_gcount++;
+		if (c == delim) break;
+		
+		if (millis() - previous > 60000)
+		{
+			break;
+		}		
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < previous) previous = millis();		
+	}
+	return *this;
 }
 //------------------------------------------------------------------------------
 /**
@@ -448,12 +501,24 @@ int istream::peek() {
   return c;
 }
 //------------------------------------------------------------------------------
-int16_t istream::readSkip() {
-  int16_t c;
-  do {
-    c = getch();
-  } while (isspace(c) && (flags() & skipws));
-  return c;
+int16_t istream::readSkip() 
+{
+	int16_t c;
+	uint32_t previous = millis();
+	do 
+	{
+		c = getch();
+		
+		if (millis() - previous > 60000)
+		{
+			break;
+		}
+	
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if( millis() < previous) previous = millis();	
+		
+	} while (isspace(c) && (flags() & skipws));
+	return c;
 }
 //------------------------------------------------------------------------------
 /** used to implement ws() */

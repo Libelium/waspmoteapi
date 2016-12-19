@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.8
- *  Design:			David Gascón
+ *  Version:		3.0
+ *  Design:			David Gascon
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
   
@@ -194,19 +194,19 @@ long WaspUtils::map(long x, long in_min, long in_max, long out_min, long out_max
  * It sets MUX to the desired combination.
  *
  * --------------
- * MUX_LOW = 0 & MUX_HIGH = 1 ---> GPS MODULE
- * MUX_LOW = 1 & MUX_HIGH = 1 ---> GPRS MODULE
- * MUX_LOW = 1 & MUX_HIGH = 0 ---> AUX1 MODULE
- * MUX_LOW = 0 & MUX_HIGH = 0 ---> AUX2 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 1 ---> GPS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 1 ---> GPRS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 0 ---> AUX1 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 0 ---> AUX2 MODULE
  */
 void WaspUtils::setMux(uint8_t MUX_LOW, uint8_t MUX_HIGH)
 {
-	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX_0, OUTPUT);      
-	pinMode(MUX_1, OUTPUT);   
-	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX_0, MUX_LOW);
-	digitalWrite(MUX_1, MUX_HIGH);
+	pinMode(MUX1_PW, OUTPUT);
+	pinMode(MUX1_0, OUTPUT);      
+	pinMode(MUX1_1, OUTPUT);   
+	digitalWrite(MUX1_PW, HIGH);   
+	digitalWrite(MUX1_0, MUX_LOW);
+	digitalWrite(MUX1_1, MUX_HIGH);
 }
 
 
@@ -215,19 +215,19 @@ void WaspUtils::setMux(uint8_t MUX_LOW, uint8_t MUX_HIGH)
  * It sets multiplexer on UART_1 to the desired combination (0,1) to enable GPS module
  *
  * --------------
- * MUX_LOW = 0 & MUX_HIGH = 1 ---> GPS MODULE
- * MUX_LOW = 1 & MUX_HIGH = 1 ---> SOCKET1
- * MUX_LOW = 1 & MUX_HIGH = 0 ---> AUX1 MODULE
- * MUX_LOW = 0 & MUX_HIGH = 0 ---> AUX2 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 1 ---> GPS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 1 ---> GPRS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 0 ---> AUX1 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 0 ---> AUX2 MODULE
  */
 void WaspUtils::setMuxGPS()
 {
-	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX_0, OUTPUT);      
-	pinMode(MUX_1, OUTPUT);   
-	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX_0, LOW);
-	digitalWrite(MUX_1, HIGH);
+	pinMode(MUX1_PW, OUTPUT);
+	pinMode(MUX1_0, OUTPUT);      
+	pinMode(MUX1_1, OUTPUT);   
+	digitalWrite(MUX1_PW, HIGH);   
+	digitalWrite(MUX1_0, LOW);
+	digitalWrite(MUX1_1, HIGH);
 }
 
 
@@ -236,19 +236,38 @@ void WaspUtils::setMuxGPS()
  * It sets multiplexer on UART_1 to the desired combination (1,1) to enable SOCKET1
  *
  * --------------
- * MUX_LOW = 0 & MUX_HIGH = 1 ---> GPS MODULE
- * MUX_LOW = 1 & MUX_HIGH = 1 ---> SOCKET1
- * MUX_LOW = 1 & MUX_HIGH = 0 ---> AUX1 MODULE
- * MUX_LOW = 0 & MUX_HIGH = 0 ---> AUX2 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 1 ---> GPS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 1 ---> GPRS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 0 ---> AUX1 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 0 ---> AUX2 MODULE
  */
 void WaspUtils::setMuxSocket1()
 {
-	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX_0, OUTPUT);      
-	pinMode(MUX_1, OUTPUT);   
-	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX_0, HIGH);
-	digitalWrite(MUX_1, HIGH);
+	// check RTC int pin to disable line in order to communicate
+	if (digitalRead(RTC_INT_PIN_MON) == HIGH)
+	{
+		if (RTC.isON == 0)
+		{
+			RTC.ON();
+			RTC.clearAlarmFlag();
+			RTC.OFF();
+		}
+		else
+		{
+			RTC.clearAlarmFlag();
+		}
+	}
+	
+	// disable interruptions when using UART1
+	detachInterrupt(RXD1_PIN);
+	detachInterrupt(TXD1_PIN);
+	
+	pinMode(MUX1_PW, OUTPUT);
+	pinMode(MUX1_0, OUTPUT);      
+	pinMode(MUX1_1, OUTPUT);   
+	digitalWrite(MUX1_PW, HIGH);   
+	digitalWrite(MUX1_0, HIGH);
+	digitalWrite(MUX1_1, HIGH);
 }
 
 
@@ -257,19 +276,19 @@ void WaspUtils::setMuxSocket1()
  * It sets multiplexer on UART_1 to the desired combination (1,1) to enable Aux1 module
  *
  * --------------
- * MUX_LOW = 0 & MUX_HIGH = 1 ---> GPS MODULE
- * MUX_LOW = 1 & MUX_HIGH = 1 ---> SOCKET1
- * MUX_LOW = 1 & MUX_HIGH = 0 ---> AUX1 MODULE
- * MUX_LOW = 0 & MUX_HIGH = 0 ---> AUX2 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 1 ---> GPS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 1 ---> GPRS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 0 ---> AUX1 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 0 ---> AUX2 MODULE
  */
 void WaspUtils::setMuxAux1()
 {
-	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX_0, OUTPUT);      
-	pinMode(MUX_1, OUTPUT);   
-	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX_0, HIGH);
-	digitalWrite(MUX_1, LOW);
+	pinMode(MUX1_PW, OUTPUT);
+	pinMode(MUX1_0, OUTPUT);      
+	pinMode(MUX1_1, OUTPUT);   
+	digitalWrite(MUX1_PW, HIGH);   
+	digitalWrite(MUX1_0, HIGH);
+	digitalWrite(MUX1_1, LOW);
 }
 
 
@@ -278,19 +297,19 @@ void WaspUtils::setMuxAux1()
  * It sets multiplexer on UART_1 to the desired combination (1,1) to enable Aux2 module
  *
  * --------------
- * MUX_LOW = 0 & MUX_HIGH = 1 ---> GPS MODULE
- * MUX_LOW = 1 & MUX_HIGH = 1 ---> SOCKET1
- * MUX_LOW = 1 & MUX_HIGH = 0 ---> AUX1 MODULE
- * MUX_LOW = 0 & MUX_HIGH = 0 ---> AUX2 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 1 ---> GPS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 1 ---> GPRS MODULE
+ * MUX1_0 = 1 & MUX1_1 = 0 ---> AUX1 MODULE
+ * MUX1_0 = 0 & MUX1_1 = 0 ---> AUX2 MODULE
  */
 void WaspUtils::setMuxAux2()
 {
-	pinMode(MUX_PW, OUTPUT);
-	pinMode(MUX_0, OUTPUT);      
-	pinMode(MUX_1, OUTPUT);   
-	digitalWrite(MUX_PW, HIGH);   
-	digitalWrite(MUX_0, LOW);
-	digitalWrite(MUX_1, LOW);
+	pinMode(MUX1_PW, OUTPUT);
+	pinMode(MUX1_0, OUTPUT);      
+	pinMode(MUX1_1, OUTPUT);   
+	digitalWrite(MUX1_PW, HIGH);   
+	digitalWrite(MUX1_0, LOW);
+	digitalWrite(MUX1_1, LOW);
 }
 
 
@@ -299,34 +318,125 @@ void WaspUtils::setMuxAux2()
 */
 void WaspUtils::setMuxUSB()
 {
-  pinMode(MUX_PW,OUTPUT);
-  pinMode(MUX_USB_XBEE,OUTPUT);
-  digitalWrite(MUX_PW,HIGH);
-  digitalWrite(MUX_USB_XBEE,LOW);
+	if (_boot_version >= 'G')
+	{
+		pinMode(MUX0_PW,OUTPUT);
+		digitalWrite(MUX0_PW,HIGH);
+		
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		digitalWrite(MUX_USB_XBEE,LOW);
+	}
+	else
+	{
+		pinMode(MUX_PW,OUTPUT);
+		digitalWrite(MUX_PW,HIGH);
+		
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		digitalWrite(MUX_USB_XBEE,LOW);
+	}
 }
 
-/* muxOFF() - switch off the multiplexer on UART_0
+/* muxOFF() - switch off the multiplexer on UART_0 and UART_1
  *
 */
 void WaspUtils::muxOFF()
 {
-	pinMode(MUX_PW,OUTPUT);
-	pinMode(MUX_USB_XBEE,OUTPUT);
-	digitalWrite(MUX_PW,LOW);
-	digitalWrite(MUX_USB_XBEE,LOW);  
-	digitalWrite(MUX_0, LOW);
-	digitalWrite(MUX_1, LOW);
+	if (_boot_version >= 'G')
+	{
+		pinMode(MUX1_PW,OUTPUT);
+		pinMode(MUX0_PW,OUTPUT);
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		pinMode(MUX1_0,OUTPUT);
+		pinMode(MUX1_1,OUTPUT);
+		digitalWrite(MUX1_PW,LOW);
+		digitalWrite(MUX0_PW,LOW);
+		digitalWrite(MUX_USB_XBEE,LOW);  
+		digitalWrite(MUX1_0, LOW);
+		digitalWrite(MUX1_1, LOW);
+	}
+	else
+	{
+		pinMode(MUX_PW,OUTPUT);	
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		pinMode(MUX1_0,OUTPUT);
+		pinMode(MUX1_1,OUTPUT);
+		digitalWrite(MUX_PW,LOW);	
+		digitalWrite(MUX_USB_XBEE,LOW);  
+		digitalWrite(MUX1_0, LOW);
+		digitalWrite(MUX1_1, LOW);
+	}
 }
+
+
+
+/* muxOFF1() - switch off the multiplexer on UART_1
+ *
+*/
+void WaspUtils::muxOFF1()
+{
+	if (_boot_version >= 'G')
+	{
+		pinMode(MUX1_PW,OUTPUT);
+		pinMode(MUX1_0,OUTPUT);
+		pinMode(MUX1_1,OUTPUT);
+		digitalWrite(MUX1_PW,LOW);
+		digitalWrite(MUX1_0, LOW);
+		digitalWrite(MUX1_1, LOW);		
+	}
+	else
+	{
+		// previous generation -> switch mux to Aux2
+		Utils.setMuxAux2();
+	}
+}
+
+/* muxOFF0() - switch off the multiplexer on UART_0
+ *
+*/
+void WaspUtils::muxOFF0()
+{
+	if (_boot_version >= 'G')
+	{
+		pinMode(MUX0_PW,OUTPUT);
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		digitalWrite(MUX0_PW,LOW);
+		digitalWrite(MUX_USB_XBEE,LOW);
+	}
+	else
+	{
+		pinMode(MUX_PW,OUTPUT);	
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		pinMode(MUX1_0,OUTPUT);
+		pinMode(MUX1_1,OUTPUT);
+		digitalWrite(MUX_PW,LOW);
+		digitalWrite(MUX_USB_XBEE,LOW);  
+		digitalWrite(MUX1_0, LOW);
+		digitalWrite(MUX1_1, LOW);
+	}
+}
+
 
 /* setMuxSocket0() - set multiplexer on UART_0 to SOCKET0
  *
 */
 void WaspUtils::setMuxSocket0()
 {
-  pinMode(MUX_PW,OUTPUT);
-  pinMode(MUX_USB_XBEE,OUTPUT);
-  digitalWrite(MUX_PW,HIGH);
-  digitalWrite(MUX_USB_XBEE,HIGH);
+	if (_boot_version >= 'G')
+	{
+		pinMode(MUX0_PW,OUTPUT);
+		digitalWrite(MUX0_PW,HIGH);
+		
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		digitalWrite(MUX_USB_XBEE,HIGH);
+	}
+	else
+	{
+		pinMode(MUX_PW,OUTPUT);
+		digitalWrite(MUX_PW,HIGH);
+		
+		pinMode(MUX_USB_XBEE,OUTPUT);
+		digitalWrite(MUX_USB_XBEE,HIGH);
+	}
 }
 
 /* readEEPROM(address) - reads from the EEPROM specified address
@@ -366,13 +476,13 @@ void WaspUtils::setID(char* moteID)
 	// set zeros in EEPROM addresses
 	for( int i=0 ; i<16 ; i++ )
 	{
-		eeprom_write_byte( (uint8_t*)(i+MOTEID_ADDR), 0x00);
+		eeprom_write_byte( (uint8_t*)(i+EEPROM_FRAME_MOTEID), 0x00);
 	}
 	
 	// set the mote ID to EEPROM memory
 	for( int i=0 ; i<16 ; i++ )
 	{		
-		eeprom_write_byte( (uint8_t*)(i+MOTEID_ADDR), moteID[i] );
+		eeprom_write_byte( (uint8_t*)(i+EEPROM_FRAME_MOTEID), moteID[i] );
 		// break if end of string
 		if( moteID[i] == '\0') 
 		{
@@ -394,20 +504,19 @@ void WaspUtils::setAuthKey(char* authkey)
 	// set zeros in EEPROM addresses
 	for(int i=0;i<8;i++)
 	{
-		eeprom_write_byte((unsigned char *) i+AUTHKEY_ADDR, 0x00);
+		eeprom_write_byte((unsigned char *) i+EEPROM_OTA_AUTHKEY, 0x00);
 	}
 	
 	// set the authentication key to EEPROM memory
 	for(int i=0;i<8;i++)
 	{		
-		eeprom_write_byte((unsigned char *) i+AUTHKEY_ADDR, authkey[i]);
+		eeprom_write_byte((unsigned char *) i+EEPROM_OTA_AUTHKEY, authkey[i]);
 		// break if end of string
 		if( authkey[i] == '\0') 
 		{
 			break;
 		}
 	}
-
 }
 
 
@@ -501,34 +610,72 @@ unsigned long WaspUtils::readSerialChip()
 }
 
 
+
+
 /* readSerialID() - reads the Waspmote unique serial identifier
  *
  * It reads the Waspmote unique serial identifier
  */
 unsigned long WaspUtils::readSerialID()
 {
+	uint8_t error;
 	unsigned long eeprom_id;
-	unsigned long id = readSerialChip();
-		
-	if( id == 0 )
+	unsigned long id;
+	
+	if (_boot_version >= 'G')
 	{
-		// get eeprom serial id (latest Waspmote batches)
-		eeprom_id = Utils.getSerialEEPROM();
-		
-		// check correct value of serial id
-		// -> 0x0A0A0A0A is a wrong value for default Waspmote EEPROM 
-		// -> 0xFFFFFFFF is a wrong value
-		if( (eeprom_id != 0x0A0A0A0A) && (eeprom_id !=0xFFFFFFFF) )
-		{
-			id = eeprom_id;
+		eeprom.ON();
+		error = eeprom.readSerialNumber();
+		if (error == 0)
+		{		
+			_serial_id[0] = eeprom._response[0];
+			_serial_id[1] = eeprom._response[1];
+			_serial_id[2] = eeprom._response[2];
+			_serial_id[3] = eeprom._response[3];
+			_serial_id[4] = eeprom._response[4];
+			_serial_id[5] = eeprom._response[5];
+			_serial_id[6] = eeprom._response[6];
+			_serial_id[7] = eeprom._response[7];
+			return 0;
 		}
 		else
 		{
-			id = 0;
+			memset( (uint8_t*)_serial_id, 0x00, sizeof(_serial_id));
+			return 1;
 		}
 	}
-	
-	return id;
+	else
+	{
+		id = readSerialChip();
+		if( id == 0 )
+		{
+			// get eeprom serial id (latest Waspmote batches)
+			eeprom_id = Utils.getSerialEEPROM();
+			
+			// check correct value of serial id
+			// -> 0x0A0A0A0A is a wrong value for default Waspmote EEPROM 
+			// -> 0xFFFFFFFF is a wrong value
+			if( (eeprom_id != 0x0A0A0A0A) && (eeprom_id !=0xFFFFFFFF) )
+			{
+				id = eeprom_id;
+			}
+			else
+			{
+				id = 0;
+			}
+		}
+		
+		_serial_id[0] = 0x00;
+		_serial_id[1] = 0x00;
+		_serial_id[2] = 0x00;
+		_serial_id[3] = 0x00;
+		_serial_id[4] = (id>>24) & 0xFF;
+		_serial_id[5] = (id>>16) & 0xFF;
+		_serial_id[6] = (id>>8)  & 0xFF;
+		_serial_id[7] = (id>>0)  & 0xFF;
+		
+		return id;
+	}
 }
 
 
@@ -587,7 +734,7 @@ float WaspUtils::readTempDS1820(uint8_t pin, bool is3v3 )
 	
 	byte data[12];
 	byte addr[8];
-
+	delay(25);
 	if ( !OneWireTemp.search(addr))
 	{
 		//no more sensors on chain, reset search
@@ -597,7 +744,7 @@ float WaspUtils::readTempDS1820(uint8_t pin, bool is3v3 )
 	
 	if ( WaspOneWire::crc8( addr, 7) != addr[7]) 
 	{
-		return -1000;
+		return -1000;	
 	}
 
 	if ( addr[0] != 0x10 && addr[0] != 0x28)
@@ -607,8 +754,8 @@ float WaspUtils::readTempDS1820(uint8_t pin, bool is3v3 )
 	
 	OneWireTemp.reset();
 	OneWireTemp.select(addr);
-	OneWireTemp.write(0x44,0); // start conversion, with parasite power on at the end
-    delay(750);
+	OneWireTemp.write(0x44,1); // start conversion, with parasite power on at the end
+    delay(1000);
     
 	OneWireTemp.reset();
 	OneWireTemp.select(addr);    
@@ -696,12 +843,14 @@ float WaspUtils::readTemperature()
 
 	// Powering the sensor
 	PWR.setSensorPower(SENS_3V3,SENS_ON);
+	delay(1000);
   
 	// Reading the analog value
 	sensor_value = analogRead(ANALOG6);
 	delay(100);
 	sensor_value = analogRead(ANALOG6);
-  
+  	delay(100);
+
 	PWR.setSensorPower(SENS_3V3,SENS_OFF);	
 		
 	// Calculating the volts
@@ -733,7 +882,7 @@ uint8_t WaspUtils::readHumidity()
 	sensor_value = analogRead(ANALOG7);
 	delay(100);
 	sensor_value = analogRead(ANALOG7);
-	  
+	delay(100);  
 	PWR.setSensorPower(SENS_3V3,SENS_OFF);
 	
 	// Calculating the volts
@@ -815,34 +964,42 @@ uint8_t WaspUtils::long2array(long num, char* numb)
  */
 uint8_t WaspUtils::str2hex(char* str)
 {
-	int aux=0, aux2=0;
-	
-	
-	if( (*str>='0') && (*str<='9') )
-	{
-		aux=*str++-'0';
-	}
-	else if( (*str>='A') && (*str<='F') )
-	{
-		aux=*str++-'A'+10;
-	}
-	if( (*str>='0') && (*str<='9') )
-	{
-		aux2=*str-'0';
-	}
-	else if( (*str>='A') && (*str<='F') )
-	{
-		aux2=*str-'A'+10;
-	}
-	return aux*16+aux2;
+    int aux=0, aux2=0;
+
+    if( (*str>='0') && (*str<='9') )
+    {
+        aux=*str++-'0';
+    }
+    else if( (*str>='A') && (*str<='F') )
+    {
+        aux=*str++-'A'+10;
+    }
+    else if( (*str>='a') && (*str<='f') )
+    {
+        aux=*str++-'a'+10;
+    }
+    if( (*str>='0') && (*str<='9') )
+    {
+        aux2=*str-'0';
+    }
+    else if( (*str>='A') && (*str<='F') )
+    {
+        aux2=*str-'A'+10;
+    }
+    else if( (*str>='a') && (*str<='f') )
+    {
+        aux2=*str-'a'+10;
+    }
+    return aux*16+aux2;
 }
 
 
 
 /*
  * Function: Converts a string to an array of bytes
- * For example: If the input array -> 23576173706D6F74655F50726F23
- * The output string is str -> #Waspmote_Pro#
+ * For example: If the input string is defined as: 
+ * 		char input[] = "";
+ * The output string is array -> 23576173706D6F74655F50726F23
  */
 uint16_t WaspUtils::str2hex(char* str, uint8_t* array)
 {		
@@ -853,6 +1010,35 @@ uint16_t WaspUtils::str2hex(char* str, uint8_t* array)
     for(uint16_t j=0; j<length; j++)
     {    
 		array[j] = Utils.str2hex(&str[j*2]);      
+    }
+	
+	return length;
+}
+
+
+
+
+
+/*
+ * Function: Converts a string to an array of bytes
+ */
+uint16_t WaspUtils::str2hex(char* str, uint8_t* array, uint16_t size)
+{		
+    // get length in bytes (half of ASCII characters)
+	uint16_t length = strlen(str)/2;	
+	
+    // Conversion from ASCII to HEX    
+    for(uint16_t j=0; j<length; j++)
+    {    
+		// check size of array
+		if (j >= size)
+		{
+			length = j;
+			break;
+		}
+		
+		// store conversion in array
+		array[j] = Utils.str2hex(&str[j*2]);		     
     }
 	
 	return length;
@@ -1055,36 +1241,45 @@ void WaspUtils::float2String (float fl, char str[], int N)
  * 
  */
 void WaspUtils::loadOTA(const char* filename, uint8_t version)
-{  
-  
-  // save the name in EEPROM
-  for(int aux=0; aux<32; aux++)
-  {
-    if (aux < 7)
-    {
-      // filename
-      eeprom_write_byte((unsigned char *) (aux+2), uint8_t(filename[aux]));
-    }
-    else
-    {
-      // asterisks
-      eeprom_write_byte((unsigned char *) (aux+2), 0x2A);
-    }
-  }
+{ 
+	uint8_t program_version;
+	
+	// save the name in EEPROM
+	for (int aux=0; aux<32; aux++)
+	{
+		if (aux < 7)
+		{
+			// filename
+			eeprom_write_byte((uint8_t *) (aux+2), uint8_t(filename[aux]));
+		}
+		else
+		{
+			// asterisks
+			eeprom_write_byte((uint8_t *) (aux+2), 0x2A);
+		}
+	}
 
-  // set OTA flag in EEPROM to '1'
-  eeprom_write_byte((unsigned char *) 0x01, 0x01);
+	// set OTA flag in EEPROM to '1'
+	eeprom_write_byte((uint8_t *) EEPROM_OTA_FLAG, 0x01);
   
-  // sets the new program version into EEPROM
-  setProgramVersion( version);
+	// set OTA retries to 3 attempts
+	eeprom_write_byte((uint8_t *) EEPROM_OTA_RETRIES, 0x03);
+	
+	// sets the new program version into EEPROM
+	program_version = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION );
+	eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP, program_version);
+	
+	// sets the new program version into EEPROM
+	setProgramVersion(version);
   
-  SD.ON();
-  delay(100);
-  // reboot
-  PWR.reboot();
+	SD.ON();
+	delay(100);
+	
+	// reboot
+	PWR.reboot();
 
-  // A little delay
-  delay(2000);
+	// A little delay
+	delay(2000);
 }
 
 /*
@@ -1111,8 +1306,7 @@ void WaspUtils::readEEPROM()
 	{
 		USB.print(F("Address:  "));
 		USB.print(address,DEC);
-		USB.print(F(" -- Value: "));    
-		USB.print("\t\t");
+		USB.print(F(" -- Value: \t\t"));
 
 		//PID
 		aux = Utils.readEEPROM(address);
@@ -1122,14 +1316,14 @@ void WaspUtils::readEEPROM()
 
 		//CID    
 		aux = Utils.readEEPROM(address+32);
-		USB.print("\t\t");
+		USB.print(F("\t\t"));
 		USB.printHex(aux);
 		USB.print(F("   "));
 		USB.print(char(aux));
 
 		//Last Stable ID    
 		aux = Utils.readEEPROM(address+64);
-		USB.print("\t\t");
+		USB.print(F("\t\t"));
 		USB.printHex(aux);
 		USB.print(F("   "));
 		USB.println(char(aux));
@@ -1147,61 +1341,70 @@ void WaspUtils::readEEPROM()
  */
 int8_t WaspUtils::checkNewProgram()
 {
+	uint8_t buffer_OTA[32];
+	uint8_t current_ID[32];
+	uint8_t program_version;
+	uint8_t program_version_backup;
+	bool reprogrammingOK = true;
 
-  uint8_t buffer_OTA[32];
-  uint8_t current_ID[32];
-  uint8_t program_version;
-  bool reprogrammingOK = true;
+	// copy current ID (CID) to Last Stable ID 
+	for (int i = 0; i < 32; i++)
+	{
+		current_ID[i] = Utils.readEEPROM(i + 34);
+		eeprom_write_byte((uint8_t *)(i + 66), current_ID[i]);
+	}
 
-  // copy current ID (CID) to Last Stable ID 
-  for(int i = 0; i < 32; i++)
-  {
-    current_ID[i] = Utils.readEEPROM(i + 34);
-    eeprom_write_byte((uint8_t *)(i + 66), current_ID[i]);
-  }
+	// check OTA flag
+	if (WaspRegister & REG_OTA)
+	{
+		// Checking if programID and currentID are the same 
+		// If so, the program has been changed properly
+		for (int i = 0; i < 32; i++)
+		{
+			// get PID
+			buffer_OTA[i] = eeprom_read_byte((uint8_t*)(i+2));
+		}
 
-  // check OTA flag
-  if( WaspRegister & REG_OTA)
-  {
-    // Checking if programID and currentID are the same --> the program has been changed properly
-    for(int i = 0;i<32;i++)
-    {
-      // get PID
-      buffer_OTA[i] = eeprom_read_byte((uint8_t*)(i+2));
-    }
+		for (int i = 0; i < 32; i++)
+		{
+			// compare PID vs CID
+			if (buffer_OTA[i] != eeprom_read_byte((uint8_t*)(i+34)))
+			{
+				reprogrammingOK = false;
+			}
+		}
 
-    for(int i = 0;i<32;i++)
-    {
-      // compare PID vs CID
-      if (buffer_OTA[i] != eeprom_read_byte( (uint8_t*)(i+34) ) )
-      {
-        reprogrammingOK = false;
-      }
-    }
+		// unset OTA Flag in Waspmote Control Register
+		WaspRegister &= ~(REG_OTA);
 
-    // unset OTA Flag in Waspmote Control Register
-    WaspRegister &= ~(REG_OTA);
-
-    // If both IDs are equal a confirmation message is sent to the trasmitter
-    if(reprogrammingOK)
-    {
+		// If both IDs are equal a confirmation message is sent to the trasmitter
+		if (reprogrammingOK)
+		{
+			program_version = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION );
+			eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP, program_version);
+			
+			return 1;
+		}
+		// If the IDs are different an error message is sent to the transmitter
+		else
+		{     		
+			program_version = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP);
+			eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION, program_version);
+			return 0; 
+		}
+	}   
+	else
+	{   
 		program_version = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION );
-		eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP, program_version);
+		program_version_backup = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP );
 		
-		return 1;
-    }
-    // If the IDs are different an error message is sent to the transmitter
-    else
-    {     		
-		program_version = eeprom_read_byte((unsigned char *) EEPROM_PROG_VERSION_BACKUP);
-		eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION, program_version);
-		return 0; 
-    }
-  }   
-  else
-  {    
+		if (program_version_backup != program_version)
+		{
+			eeprom_write_byte((unsigned char *) EEPROM_PROG_VERSION, program_version_backup);
+			return 0;
+		}
 		return 2;  
-  }
+	}
 
 } 
 
@@ -1279,6 +1482,24 @@ uint8_t WaspUtils::getBootVersion()
 	{
 		return 0x00;
 	}
+}
+
+/*
+ * showVersion () - display Waspmote version number: v12 or v15
+ *
+ * 
+ */
+void WaspUtils::showVersion()
+{
+	if (getBootVersion() >= 'H')
+	{
+		USB.println(F("v15"));
+	}
+	else
+	{
+		USB.println(F("v12"));
+	}
+	
 }
 
 

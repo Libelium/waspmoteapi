@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.7
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -2670,7 +2670,11 @@ void WaspSD::setFileDate()
 	PWR.setSensorPower(SENS_5V,SENS_ON);
 	PWR.setSensorPower(SENS_3V3,SENS_ON);	
 	
-	RTC.ON();
+	// update RTC attributes
+	if (RTC.isON == 0)
+	{
+		RTC.ON();
+	}	
 	RTC.getTime();	
 		
 	if( !set3V3 )
@@ -2688,26 +2692,175 @@ void WaspSD::setFileDate()
 }
 
 
-
+/*
+ * showFile() - 
+ * 
+ * Print out the contents of the whole input file
+ */
 void WaspSD::showFile(char* filepath)
 {	
 	int32_t size = SD.getFileSize(filepath);
+	int32_t block = 128;
+	int32_t nL = size / block;
+	int32_t nR = size % block;
+	int32_t index = 0;
 	
 	// show file    
-	USB.println(F("\n-------------------"));	
-	beginSerial(USB_RATE, 0);
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
-	
-	for(int i=0 ; i<size ; i++)
-	{
-		SD.cat(filepath, i, 1);    		
-		printByte(SD.buffer[0], 0);
-	}
-	delay(3);
-	digitalWrite(MUX_USB_XBEE,HIGH);
 	USB.println(F("\n-------------------"));
+	USB.secureBegin();
+
+	for(int32_t i=0 ; i<nL ; i++)
+	{
+		SD.cat(filepath, index, block);
+		
+		for (int j = 0; j < block; j++)
+		{
+			printByte(SD.buffer[j], 0);
+		}
+		index += block ;
+	}
+	
+	SD.cat(filepath, index, nR);
+	for (int j = 0; j < nR; j++)
+	{
+		printByte(SD.buffer[j], 0);
+	}
+	
+	USB.secureEnd();
+	USB.println(F("\n-------------------"));	
 }
+	
+
+
+/*
+ * showSD() - 
+ * 
+ * Display the contents of the selected SD card folder o file
+ */
+void WaspSD::menu(uint32_t timeout)
+{
+	uint32_t previous;	
+	char option;
+	int i = 0;
+	char filename[20];
+	
+	// init SD card
+	SD.ON();
+	SD.goRoot();
+	
+	// check if the card is there or not
+	if (!SD.isSD())
+	{
+		USB.println(F("No SD card inserted"));
+		return (void)0;
+	}
+			
+	// get current time
+	previous = millis();
+	
+	do
+	{
+		USB.println(F("\r\n------------------------- MENU -------------------------"));
+		USB.println(F("1: List files in current working directory"));
+		USB.println(F("2: Show file"));
+		USB.println(F("3: Change directory"));
+		USB.println(F("4: Go to Root directory"));
+		USB.println(F("9: Format SD"));
+		USB.println(F("--------------------------------------------------------"));
+		
+		USB.print(F("\n==> Enter numeric option:"));
+		USB.flush();
+		
+		// wait for incoming data from keyboard
+		while (!USB.available() && (millis()-previous < timeout));
+		
+		// parse incoming bytes
+		if (USB.available() > 0)
+		{
+			previous = millis();
+			
+			// get option number
+			option = USB.read();
+			USB.println(option);			
+			USB.flush();
+			
+			switch (option)
+			{
+				case '1':
+						SD.ls(LS_DATE | LS_SIZE | LS_R);
+						previous = millis();
+						break;
+					
+				case '2':
+						// init vars
+						i = 0;						
+						previous = millis();
+						memset(filename, 0x00, sizeof(filename));
+						USB.print(F("==> Enter name of file to read:"));	
+						
+						// wait for incoming data from keyboard
+						while (!USB.available() && (millis()-previous < timeout));
+						while (USB.available() > 0)
+						{
+							filename[i] = USB.read();
+							i++;
+							if (i >= sizeof(filename))
+							{
+								break;
+							}							
+						}						
+						USB.println(filename);		
+						SD.showFile(filename);
+						previous = millis();
+						break;
+					
+				case '3':
+						// init vars
+						i = 0;						
+						previous = millis();
+						memset(filename, 0x00, sizeof(filename));
+						USB.print(F("==> Enter name of directory to change to:"));	
+						
+						// wait for incoming data from keyboard
+						while (!USB.available() && (millis()-previous < timeout));
+						while (USB.available() > 0)
+						{
+							filename[i] = USB.read();
+							i++;
+							if (i >= sizeof(filename))
+							{
+								break;
+							}
+						}
+						USB.println(filename);		
+						SD.cd(filename);
+						previous = millis();
+						break;
+					
+				case '4':
+						SD.goRoot();
+						previous = millis();
+						break;
+						
+				case '9':
+						SD.format();
+						previous = millis();
+						break;
+				default:
+						break;
+					
+			}
+		}
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if (millis() < previous) previous = millis();
+		
+	} while (millis()-previous < timeout);
+	
+	USB.println();
+	
+}
+	
 	
 // Preinstantiate Objects //////////////////////////////////////////////////////
 

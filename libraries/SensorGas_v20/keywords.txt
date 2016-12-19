@@ -35,4 +35,4 @@ readValue	KEYWORD2
 calculateResistance	KEYWORD2
 calculateConcentration	KEYWORD2
 
-SensorGasv20	KEYWORD3
+SensorGasv20	KEYWORD1

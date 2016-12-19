@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Ahmad Saad
 
@@ -73,7 +73,7 @@
 #define DISABLE 0
 #define ONE_STOP_BIT 1
 #define TWO_STOP_BITS 2
-#define MAX_SS 34
+
 
 /******************************************************************************
  * Includes

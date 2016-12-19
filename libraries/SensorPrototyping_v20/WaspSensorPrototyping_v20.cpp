@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
- *  Design:		David Gascón
+ *  Version:		3.0
+ *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra
  */
  
@@ -40,7 +40,7 @@ WaspSensorPrototyping_v20::WaspSensorPrototyping_v20()
 	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_PROTOTYPING;
+	WaspRegisterSensor |= REG_PROTOTYPING;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -108,14 +108,21 @@ float	WaspSensorPrototyping_v20::readADC(void)
 	uint16_t val;
 	uint8_t i = 0;
 
-	if( !Wire.I2C_ON ) Wire.begin();
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
 	delay(100);
 	Wire.requestFrom(B0010100, 2);
-	while(Wire.available()){
+	
+	while (Wire.available())
+	{
 		valor[i] = Wire.receive();
 		i++;
 	}
-	if( Wire.I2C_ON && !ACC.isON && RTC.isON!=1){
+	
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}

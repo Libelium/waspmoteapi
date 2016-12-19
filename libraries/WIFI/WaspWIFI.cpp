@@ -1,7 +1,7 @@
 /*! \file WaspWIFI.cpp
  *  \brief Library for managing WIFI modules
  *
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		1.12
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Joaquin Ruiz, Yuri Carmona
  */
@@ -326,29 +326,14 @@ uint8_t WaspWIFI::commandMode()
 	OFF();	
 	baud_rate = 9600;	
 	
-	// power up depending on the chosen SOCKET
-	if( _uartWIFI == SOCKET0 )
-	{
-		// set multiplexer on UART0 to SOCKET0
-		Utils.setMuxSocket0();
-		
-		// set microcontroller pins as output
-		pinMode(XBEE_PW,OUTPUT);
-		
-		// power on the module
-		digitalWrite(XBEE_PW, HIGH);
-	}
-	else if( _uartWIFI == SOCKET1 )
-	{		
-		// set multiplexer on UART1 to SOCKET1
-		Utils.setMuxSocket1();  
-		
-		// power on the module 
-		pinMode(DIGITAL6,OUTPUT);
-		digitalWrite(DIGITAL6,HIGH);	
-	}
+	// select multiplexer
+    if (_uartWIFI == SOCKET0) Utils.setMuxSocket0();
+    if (_uartWIFI == SOCKET1) Utils.setMuxSocket1();
 	
-	// wait for RN171 uart port stabilization
+	// power up depending on the chosen SOCKET
+    PWR.powerSocket(_uartWIFI, HIGH);
+    
+    // wait for RN171 uart port stabilization
 	delay(3000);
 	
 	closeSerial(_uartWIFI);
@@ -1164,43 +1149,20 @@ WaspWIFI::WaspWIFI()
 
 //! Powers on the module and enters in command mode.
 bool WaspWIFI::ON(uint8_t sock)
-{		
-		
+{	
+	// set the uart 
+	if (sock == SOCKET0) _uartWIFI = SOCKET0;
+	if (sock == SOCKET1) _uartWIFI = SOCKET1;
+
 	// previous power down prior to power up
-	if(sock==SOCKET0)
-	{
-		// set the uart 
-		_uartWIFI=SOCKET0;
-		
-	}
-	else if(sock==SOCKET1)
-	{
-		// set the uart 
-		_uartWIFI=SOCKET1;
-	}
 	OFF();
-		
+	
+    // select multiplexer
+    if (_uartWIFI == SOCKET0) Utils.setMuxSocket0();
+    if (_uartWIFI == SOCKET1) Utils.setMuxSocket1();
+    	
 	// power up depending on the chosen SOCKET
-	if(_uartWIFI==SOCKET0)
-	{
-		// set multiplexer on UART0 to SOCKET0
-		Utils.setMuxSocket0();
-		
-		// set microcontroller pins as output
-		pinMode(XBEE_PW,OUTPUT);
-		
-		// power on the module
-		digitalWrite(XBEE_PW, HIGH);
-	}
-	else if(_uartWIFI==SOCKET1)
-	{		
-		// set multiplexer on UART1 to SOCKET1
-		Utils.setMuxSocket1();  
-		
-		// power on the module 
-		pinMode(DIGITAL6,OUTPUT);
-		digitalWrite(DIGITAL6,HIGH);	
-	}
+    PWR.powerSocket(_uartWIFI, HIGH);
 	
 	// enter in command mode at 115200bps
 	if( commandMode() == 1 )
@@ -1227,28 +1189,15 @@ void WaspWIFI::OFF()
 	USB.println(F("*OFF")); 
 	#endif
 	
-	// Switches OFF the module depending on the UART
-	if(_uartWIFI==SOCKET0)
-	{					
-		// close UART0
-		closeSerial(SOCKET0);
-			
-		// power down
-		pinMode(XBEE_PW,OUTPUT);	
-		digitalWrite(XBEE_PW, LOW);
-	}
-	else if(_uartWIFI==SOCKET1)
-	{	
-		// set multiplexer on UART1 to other socket
-		Utils.setMuxGPS();
-		
-		// close UART1
-		closeSerial(SOCKET1);		
-		
-		// power down
-		pinMode(DIGITAL6,OUTPUT);
-		digitalWrite(DIGITAL6,LOW);	
-	}
+	// close UART
+	closeSerial(_uartWIFI);
+   
+	// unselect multiplexer 
+    if (_uartWIFI == SOCKET0)	Utils.setMuxUSB();
+    if (_uartWIFI == SOCKET1)	Utils.muxOFF1();
+    
+    // switch module OFF
+	PWR.powerSocket(_uartWIFI, LOW);
 	
 	// update Waspmote Register
 	if(_uartWIFI == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
@@ -1281,7 +1230,7 @@ uint8_t WaspWIFI::setAutojoinAuth(uint8_t val)
 	// Copy "set w a "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[8]))); 
 	snprintf(question, sizeof(question), "%s%d\r",buffer,val);
-	return sendCommand(question, "AOK", 5000);
+	return sendCommand(question, (char*)"AOK", 5000);
 }
 
 //! Sets the policy for automatically joining/associating with network 
@@ -1290,15 +1239,13 @@ uint8_t WaspWIFI::setJoinMode(uint8_t val)
 {
 	char question[50];
 	char buffer[20];
-	int retries=0;
-	const int MAX_RETRIES=3;
 	
 	// Copy "set w j "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[9]))); 
 	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
 	 
 	// Send command to join wlan 
-	if( sendCommand(question, "AOK", 5000)==1 )
+	if( sendCommand(question, (char*)"AOK", 5000)==1 )
 	{		
 		return 1; 		
 	}
@@ -1342,7 +1289,7 @@ uint8_t WaspWIFI::setAuthKey(uint8_t secMode, char* pass)
 		snprintf(question, sizeof(question), "%s%s\r", buffer, pass); 
 	}
 	// Sends the command over the UART.
-	return sendCommand(question, "AOK", 5000);
+	return sendCommand(question, (char*)"AOK", 5000);
 }
 
 //! Sets the link monitor timeout threshold.
@@ -1487,7 +1434,7 @@ uint8_t WaspWIFI::join(char* ssid)
 		while( retries>0 )
 		{	
 			// "join ??" command
-			if( sendCommand( question, "Associated!", Disconn_pattern, 10000, true) == 1)
+			if( sendCommand( question, (char*)"Associated!", Disconn_pattern, 10000, true) == 1)
 			{
 				// Copy "get ip\r"
 				strcpy_P(question, (char*)pgm_read_word(&(table_WIFI[72])));
@@ -1776,7 +1723,7 @@ uint8_t WaspWIFI::setDHCPoptions(uint8_t val)
 	// Copy "set i d "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[36])));
 	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
-	return sendCommand(question, "AOK", 5000);  
+	return sendCommand(question, (char*)"AOK", 5000);  
 }
 
 //! Sets the IP options.
@@ -1801,7 +1748,7 @@ uint8_t WaspWIFI::setConnectionOptions(uint8_t val)
 	// Copy "set i p "
 	strcpy_P(buffer, (char*)pgm_read_word(&(table_WIFI[38])));
 	snprintf(question, sizeof(question), "%s%d\r", buffer, val);
-	return sendCommand(question, "AOK", 5000);  
+	return sendCommand(question, (char*)"AOK", 5000);  
 }
 	
 //! Sets the TCP connection password. Provides minimal authentication by 
@@ -1923,12 +1870,11 @@ uint8_t WaspWIFI::getFile(	char* filename,
 {
 	char question[128];
 	char buffer[20];
-	uint16_t plong=0;
 	int maxBuffer=256;
 	int i=0;
 	int readRet=0;
 	unsigned long previous;
-	bool stop, end, timeout;
+	bool end, timeout;
 	unsigned long total=0;
 		
 	// get statistics
@@ -4025,10 +3971,8 @@ bool WaspWIFI::isConnected()
 bool WaspWIFI::isConnected(unsigned long timeout)
 {
 	char question[20];
-	char buffer[20];
-	uint16_t i=0;
-	bool result = false;
-	unsigned long aux_previous;	
+	char buffer[20];	
+	bool result = false;	
 	
 	#ifdef DEBUG_WIFI
 	USB.println(F("get ip\r"));  
@@ -5533,11 +5477,11 @@ uint8_t WaspWIFI::setRTCfromWiFi()
 		answer[i]='\0'; 
 		retries--;
 		// Check if module did set the time
-		if ( findPattern((uint8_t*)answer, "NOT SET",i) == -1 )
+		if ( findPattern((uint8_t*)answer, (char*)"NOT SET",i) == -1 )
 		{
 			retries = 0;
 		}
-		else if ((findPattern((uint8_t*)answer, "NOT SET",i)!=-1) && retries == 0)
+		else if ((findPattern((uint8_t*)answer, (char*)"NOT SET",i)!=-1) && retries == 0)
 		{
 			return 1;
 		}

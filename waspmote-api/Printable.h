@@ -1,6 +1,7 @@
 /*
   Printable.h - Interface class that allows printing of complex types
   Copyright (c) 2011 Adrian McEwen.  All right reserved.
+  Modified for Waspmote by Libelium, 2016
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -15,6 +16,9 @@
   You should have received a copy of the GNU Lesser General Public
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+  Version:		3.0
+
 */
 
 #ifndef Printable_h

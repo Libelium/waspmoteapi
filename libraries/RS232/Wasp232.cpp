@@ -1,7 +1,7 @@
 /*! \file Wasp232.cpp
     \brief Library for managing RS-232 module
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,8 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
-    Design:			David Gascón
+    Version:		3.0
+    Design:			David Gascon
     Implementation:	Ahmad Saad
 
  */
@@ -48,36 +48,20 @@
 //!*************************************************************
 void Wasp232::ON(char socket)
 {
-	if (socket == SOCKET0) 
-	{
-		// set Mux
-		Utils.setMuxSocket0();
-		
-		// power on
-		pinMode(XBEE_PW,OUTPUT);
-		digitalWrite(XBEE_PW,HIGH);
-		
-		// update attribute
-		_uart = SOCKET0;
-	}
-	else if (socket == SOCKET1) 
-	{
-		// set Mux
-		Utils.setMuxSocket1();
-		
-		// power on
-		pinMode(DIGITAL6, OUTPUT);
-		digitalWrite(DIGITAL6, HIGH);
-		
-		// update attribute
-		_uart = SOCKET1;
-	}
+	// set uart
+	_uart = socket;
 	
-	// update Waspmote Register
-	if(_uart == SOCKET0)	WaspRegister |= REG_SOCKET0;
-	if(_uart == SOCKET1)	WaspRegister |= REG_SOCKET1;
+	// select multiplexer
+    if (_uart == SOCKET0) 	Utils.setMuxSocket0();
+    if (_uart == SOCKET1) 	Utils.setMuxSocket1();
 	
-	// wait stabilization time
+	// Open UART
+	beginUART();
+	
+    // power on the socket
+    PWR.powerSocket(_uart, HIGH);
+    
+    // wait stabilization time
 	delay(100);
 	
 }
@@ -91,17 +75,15 @@ void Wasp232::ON(char socket)
 //!*************************************************************
 void Wasp232::OFF(void)
 {
-	closeSerial(_uart);
+	// close uart
+	closeUART();
 	
-	// update Waspmote Register
-	if(_uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
-	if(_uart == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
-
-	if (_uart == 1) {
-		digitalWrite(DIGITAL6, LOW);
-	} else {
-		digitalWrite(XBEE_PW,LOW);
-	}
+	// unselect multiplexer 
+    if (_uart == SOCKET0)	Utils.setMuxUSB();
+    if (_uart == SOCKET1)	Utils.muxOFF1();
+    
+    // switch module OFF
+	PWR.powerSocket(_uart, LOW);
 }
 
 

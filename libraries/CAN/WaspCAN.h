@@ -1,7 +1,7 @@
 /*! \file WaspCAN.h
     \brief  Library for managing CAN Bus modules
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:			1.0
+    Version:			3.0
     Design:				David Gascón
     Implementation:		Luis Antonio Martín Nuez & Ahmad Saad
 */
@@ -52,10 +52,10 @@
 #define SPI_RX_STATUS		0xB0
 #define SPI_BIT_MODIFY		0x05
 
-#define LISTEN_ONLY_MODE	0x01
-#define LOOPBACK_MODE		0x02
-#define SLEEP_MODE			0x03
-#define NORMAL_MODE			0x04
+#define CAN_LISTEN_ONLY_MODE	0x01
+#define CAN_LOOPBACK_MODE		0x02
+#define CAN_SLEEP_MODE			0x03
+#define CAN_NORMAL_MODE			0x04
 
 /***********************************************************************
                                 MCP2515 REGISTERS

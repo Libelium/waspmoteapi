@@ -1,7 +1,7 @@
 /*
  *  Library for managing the GPS v2.0 JN3 receiver
  * 
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -117,7 +117,7 @@ void WaspGPS::close()
 	closeSerial(_uart);
 	
 	// Disable UART1's multiplexer
-	Utils.setMux(MUX_TO_LOW,MUX_TO_LOW);
+	Utils.setMux(LOW,LOW);
 }
 
  

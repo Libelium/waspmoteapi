@@ -4,7 +4,7 @@ WaspRSA	KEYWORD2
 encrypt	KEYWORD2
 printMessage	KEYWORD2
 
-RSA	KEYWORD3
+RSA	KEYWORD1
 
 #bignum#
 

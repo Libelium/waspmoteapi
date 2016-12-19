@@ -1,0 +1,23 @@
+
+# KEYWORD3 specifies objects
+xbee900HP	KEYWORD1
+
+# KEYWORD2 specifies functions and attributes#
+getRFerrors	KEYWORD2
+_errorsRF	KEYWORD2
+getAvailableFreq	KEYWORD2
+_availableFreq	KEYWORD2
+setChannelMask	KEYWORD2
+getChannelMask	KEYWORD2
+_channelMask	KEYWORD2
+getMinFreqCount	KEYWORD2
+_minFreqCount	KEYWORD2
+setPreambleID	KEYWORD2
+getPreambleID	KEYWORD2
+_preambleID	KEYWORD2
+setTransmitOptions	KEYWORD2
+getTransmitOptions	KEYWORD2
+_transmitOptions	KEYWORD2
+writeValues	KEYWORD2
+
+WaspXBee900HP	KEYWORD2

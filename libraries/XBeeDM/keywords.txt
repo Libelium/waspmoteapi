@@ -19,7 +19,10 @@ networkHops	KEYWORD2
 netDelaySlots	KEYWORD2
 meshNetRetries	KEYWORD2
 retries	KEYWORD2
+setAwakeTime	KEYWORD2
+setSleepTime	KEYWORD2
+setSleepMode	KEYWORD2
 _payload	KEYWORD2
 _length	KEYWORD2
 
-xbeeDM	KEYWORD3
+xbeeDM	KEYWORD1

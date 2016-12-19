@@ -1,7 +1,7 @@
 /*! \file WaspPWR.h
     \brief Library for managing Waspmote Power & Energy Modes
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
 
@@ -36,6 +36,7 @@
  ******************************************************************************/
  
 #include <inttypes.h>
+#include <WaspUART.h>
 
 
 /******************************************************************************
@@ -113,16 +114,12 @@
 /*! \def ALL_ON
     \brief Sleep Options. Do not switch off anything
  */
-#define	SENS_OFF		1
-#define	SOCKET0_OFF		2
-#define	ALL_OFF			SENS_OFF | SOCKET0_OFF
 #define	ALL_ON			0
-
-//! DEPRECATED definitions. *** FIXME: To be deleted
-#define BAT_OFF 		ALL_ON
-//#define RTC_OFF 		ALL_ON //! It was redefined
-#define UART0_OFF 		SOCKET0_OFF
-#define UART1_OFF 		ALL_ON
+#define	SENS_OFF		1		// redefined
+#define	SOCKET0_OFF		2
+#define	ALL_OFF			3		//SENS_OFF | SOCKET0_OFF
+#define SOCKET0_ON		5
+#define	SENSOR_ON		6
 
 
 /*! \def HIB_ADDR
@@ -138,7 +135,8 @@ extern volatile uint16_t	intFlag;
 extern volatile uint16_t 	intConf;
 extern volatile uint8_t		intCounter;
 extern volatile uint8_t		intArray[8];
-extern volatile unsigned long 	WaspRegister;
+extern volatile uint16_t 	WaspRegister;
+extern volatile uint16_t 	WaspRegisterSensor;
 
 
 /******************************************************************************
@@ -154,27 +152,24 @@ class WaspPWR
 {
   private:
 	  
-	//! It sets a certain internal peripheral on 
     /*!
-	\param uint8_t peripheral : the peripheral to set on
+    \brief	It sets a certain internal peripheral on 
+	\param 	uint8_t peripheral : the peripheral to set on
 	\return void
-	\sa resetIPF(uint8_t peripheral), getIPF()
 	*/ 
 	void setIPF(uint8_t peripheral);
 	
-	//! It sets a certain internal peripheral off 
     /*!
-	\param uint8_t peripheral : the peripheral to set off
+    \brief	It sets a certain internal peripheral off 
+	\param 	uint8_t peripheral : the peripheral to set off
 	\return void
-	\sa setIPF(uint8_t peripheral), getIPF()
 	 */ 
 	void resetIPF(uint8_t peripheral);
 	
-	//! It gets the whole IPR 
     /*!
-	\param void
+    \brief 	It gets the whole IPR 
+	\param 	void
 	\return the IPRA flag
-	\sa setIPF(uint8_t peripheral), resetIPF(uint8_t peripheral)
 	 */
 	uint8_t getIPF();
 
@@ -192,133 +187,178 @@ class WaspPWR
 	 */ 
     WaspPWR();
 	
-	//! It sets ON/OFF 3V3 or 5V switches
-    	/*!
-	\param uint8_t type : SENS_3V3 or SENS_5V
-	\param uint8_t mode : SENS_ON or SENS_OFF
+    /*!
+    \brief	It sets ON/OFF 3V3 or 5V switches
+	\param 	uint8_t type:
+		\arg SENS_3V3
+		\arg SENS_5V
+	\param 	uint8_t mode: 
+		\arg SENS_ON
+		\arg SENS_OFF
 	\return void
 	 */ 
-	void 	setSensorPower(uint8_t type, uint8_t mode);
+	void setSensorPower(uint8_t type, uint8_t mode);
 	
-	//! It enables or disables watchdog interruption
-    	/*!
-	\param uint8_t mode : WTD_ON or WTD_OFF
+    /*!
+    \brief It enables or disables watchdog interruption
+	\param uint8_t mode: 
+		\arg WTD_ON 
+		\arg WTD_OFF		
+	\param uint8_t timer: 
+		\arg WTD_16MS
+		\arg WTD_32MS
+		\arg WTD_64MS
+		\arg WTD_128MS
+		\arg WTD_250MS
+		\arg WTD_500MS
+		\arg WTD_1S
+		\arg WTD_2S
+		\arg WTD_4S
+		\arg WTD_8S
+	\return void
+	 */ 
+	void setWatchdog(uint8_t mode, uint8_t timer);
+	
+	/*!
+    \brief It switches off the specified Waspmote switches
+	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
+	\return void
+	 */ 
+	void switchesOFF(uint8_t option);
+	
+    /*!
+    \brief It switches on the specified Waspmote switches
+	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
+	\return void
+	 */
+	void switchesON(uint8_t option);
+
+    /*!
+    \brief It sets the microcontroller to the lowest consumption sleep mode
+	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
+	\return void
+	 */
+	void sleep(uint8_t option);
+	
+    /*!
+    \brief It sets the microcontroller to the lowest consumption sleep mode 
+		enabling the watchdog
 	\param uint8_t timer : WTD_16MS, WTD_32MS, WTD_64MS, WTD_128MS, WTD_250MS, 
 	WTD_500MS, WTD_1S, WTD_2S, WTD_4S or WTD_8S
-	\return void
-	 */ 
-	void 	setWatchdog(uint8_t mode, uint8_t timer);
-	
-	//! It switches off the specified Waspmote switches
-    	/*!
 	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
 	\return void
-	\sa switchesON(uint8_t option)
-	 */ 
-	void	switchesOFF(uint8_t option);
-	
-	//! It switches on the specified Waspmote switches
-    	/*!
-	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
-	\return void
-	\sa switchesOFF(uint8_t option)
 	 */
-	void	switchesON(uint8_t option);
+	void sleep(uint8_t timer, uint8_t option);
 	
-	//! It sets the microcontroller to the lowest consumption sleep mode
+
     /*!
-	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
-	\return void
-	\sa sleep(uint8_t timer, uint8_t option), deepSleep(const char* time2wake, 
-	uint8_t offset, uint8_t mode, uint8_t option), 
-	hibernate(const char* time2wake, uint8_t offset, uint8_t mode)
-	 */
-	void	sleep(uint8_t option);
-	
-	//! It sets the microcontroller to the lowest consumption sleep mode 
-	//! enabling the watchdog
-    /*!
-	\param uint8_t timer : WTD_16MS, WTD_32MS, WTD_64MS, WTD_128MS, WTD_250MS, 
-	WTD_500MS, WTD_1S, WTD_2S, WTD_4S or WTD_8S
-	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
-	\return void
-	\sa sleep(uint8_t option)
-	\sa deepSleep(const char* time2wake, uint8_t offset, uint8_t mode, uint8_t option)
-	\sa hibernate(const char* time2wake, uint8_t offset, uint8_t mode)
-	 */
-	void	sleep(uint8_t timer, uint8_t option);
-	
-	//! It sets the microcontroller to the lowest consumption sleep mode 
-	//! enabling RTC interruption
-    /*!
+    \brief It sets the microcontroller to the lowest consumption sleep mode 
+		enabling RTC interruption
 	\param const char* time2wake : string that indicates the time to wake up. 
-	It looks like "dd:hh:mm:ss"
-	\param uint8_t offset : RTC_OFFSET or RTC_ABSOLUTE
-	\param uint8_t mode : RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3, 
-	RTC_ALM1_MODE4 or RTC_ALM1_MODE5
-	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF
+		It looks like "dd:hh:mm:ss"
+	\param uint8_t offset: 	
+		\arg RTC_OFFSET 
+		\arg RTC_ABSOLUTE
+	\param uint8_t mode: 
+		\arg RTC_ALM1_MODE1 
+		\arg RTC_ALM1_MODE2
+		\arg RTC_ALM1_MODE3 
+		\arg RTC_ALM1_MODE4 
+		\arg RTC_ALM1_MODE5
+	\param uint8_t option : ALL_ON, ALL_OFF, SENS_OFF, SOCKET0_OFF, SENSOR_ON
 	\return void
-	\sa sleep(uint8_t option)
-	\sa sleep(uint8_t timer, uint8_t option)
-	\sa hibernate(const char* time2wake, uint8_t offset, uint8_t mode)
 	 */
-	void	deepSleep(const char* time2wake, uint8_t offset, uint8_t mode, uint8_t option);
+	void deepSleep(const char* time2wake, uint8_t offset, uint8_t mode);
+	void deepSleep(const char* time2wake, uint8_t offset, uint8_t mode, uint8_t option);
 	
-	//! It switches off the general switch enabling RTC interruption
+	
     /*!
+    \brief It switches off the general switch enabling RTC interruption
 	\param const char* time2wake : string that indicates the time to wake up. 
-	It looks like "dd:hh:mm:ss"
-	\param uint8_t offset : RTC_OFFSET or RTC_ABSOLUTE
-	\param uint8_t mode : RTC_ALM1_MODE1, RTC_ALM1_MODE2, RTC_ALM1_MODE3, 
-	RTC_ALM1_MODE4 or RTC_ALM1_MODE5
+		It looks like "dd:hh:mm:ss"
+	\param uint8_t offset: 	
+		\arg RTC_OFFSET 
+		\arg RTC_ABSOLUTE
+	\param uint8_t mode : 		
+		\arg RTC_ALM1_MODE1 
+		\arg RTC_ALM1_MODE2
+		\arg RTC_ALM1_MODE3 
+		\arg RTC_ALM1_MODE4 
+		\arg RTC_ALM1_MODE5
 	\return void
-	\sa sleep(uint8_t option)
-	\sa sleep(uint8_t timer, uint8_t option)
-	\sa deepSleep(const char* time2wake, uint8_t offset, uint8_t mode, uint8_t option)
 	 */
-	void 	hibernate(const char* time2wake, uint8_t offset, uint8_t mode); 
+	void hibernate(const char* time2wake, uint8_t offset, uint8_t mode); 
 	
-	//! It gets the remaining battery %
-    /*!
-	\return the remaining battery %
+	
+	/*!
+    \brief  It gets the remaining battery %
+	\return the remaining battery in % unit
 	 */
 	uint8_t	getBatteryLevel(); 
 	
-	//! It gets the remaining battery in volts
+
     /*!
-	\return the remaining battery in volts %
+    \brief  It gets the remaining battery in volts
+	\return the remaining battery in volts
 	 */
-	float  getBatteryVolts();
+	float getBatteryVolts();
 	
-	//! It closes I2C bus
+
     /*!
+    \brief  It gets the current charging the battery
+	\return the current charging the battery in mA
+	 */
+	uint16_t getBatteryCurrent();
+	
+	
+    /*!
+    \brief 	It gets the state of the battery charger 
+	\return the he state of the battery charger (1 Battery is being charged, 0 battery is not being charged)
+	 */
+	bool getChargingState();
+
+    /*!
+    \brief  It closes I2C bus
 	\return void
 	 */
-	void 	closeI2C();
-	
-	//! It checks if Hibernate has generated the reset
+	void closeI2C();
+
     /*!
+    \brief  It checks if Hibernate has generated the reset
 	\return void
 	 */
-	void	ifHibernate();
+	void ifHibernate();
         
-    //! It restarts Waspmote
     /*!
+    \brief  It restarts Waspmote
     \return void
     */
-    void	reboot();
+    void reboot();
     
-    //! It cleans the interruption signal
     /*!
+    \brief  It cleans the interruption signal
     \return void
     */  
     void clearInterruptionPin();
         
-    //! It prints the 'intFlag' bitmap
     /*!
+    \brief  It prints the 'intFlag' bitmap
     \return void
     */      
     void printIntFlag();
+    
+    /*!
+    \brief  Manage SOCKET0 or SOCKET1 to set them to ON/OFF state
+    \return void
+    */ 
+    void powerSocket(uint8_t socket, uint8_t state);
+    
+    /*!
+    \brief  Check if XBee modules are connected to SOCKET0
+    \return void
+    */ 
+    void checkPeripherals();
+    
 };
 
 extern WaspPWR PWR;

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1  
+    Version:		3.0 
     Design:			David Gascón
     Implementation:	Ahmad Saad
  */
@@ -53,30 +53,34 @@ Wasp485::Wasp485()
 //!*************************************************************
 uint8_t Wasp485::ON()
 {			
+	// Switch ON the module in Socket0
+    PWR.powerSocket(SOCKET0, HIGH);
+	
 	// Configure the SS pin and the switch as outputs
-	pinMode(XBEE_PW, OUTPUT);
-	pinMode(MAX_SS, OUTPUT);
-	SPI.isRS485 = true;
+	pinMode(SOCKET0_SS, OUTPUT);
+	SPI.isSocket0 = true;
 
 	// Deselect the MAX chip
-	digitalWrite(MAX_SS, HIGH);
-	delay(100);
-	// Switch ON the module in the XBee socket
-	digitalWrite(XBEE_PW,HIGH);
-	delay(100);
+	digitalWrite(SOCKET0_SS, HIGH);
+	delay(200);
+	
 	//Configure the MISO, MOSI, CS, SPCR.
 	SPI.secureBegin();
 	SPI.begin();
-	 
+	
 	//Set Most significant bit first
 	SPI.setBitOrder(MSBFIRST);
+	
 	//Divide the clock frequency 
 	SPI.setClockDivider(SPI_CLOCK_DIV2);
 	//Set data mode 
+		
 	SPI.setDataMode(SPI_MODE0);
-	delay(100);
+	
+
 	//Configure 8-bits comunnication mode
 	maxWrite(LCR_REG , 0x03);
+
 	//Disables clock pre dividier.
 	maxWrite(PLLCFG_REG , 0x01);
 
@@ -96,9 +100,10 @@ uint8_t Wasp485::ON()
 //!*************************************************************
 void Wasp485::OFF(void)
 {
-	digitalWrite(XBEE_PW,LOW);	
-	SPI.isSX = false;
-	SPI.secureEnd();
+    PWR.powerSocket(SOCKET0, LOW);
+
+	SPI.isSocket0 = false;
+	SPI.close();
 }
 
 
@@ -319,7 +324,7 @@ uint8_t Wasp485::baudRateConfig(unsigned long speed)
 		maxWrite(BRGDIVLSB_REG, 0xC0);
 		maxWrite(BRGDIVMSB_REG, 0x00);
 	} 
-	
+
 	//!Return 0 if all success. Else return 1. 
 	if (maxRead(CLKSRC_REG) == 0x1A)
 		return 0;
@@ -455,10 +460,12 @@ void Wasp485::maxWrite(char address, char data)
 {	
 	// Disable all SPI slaves
 	SPI.setSPISlave(ALL_DESELECTED);
+	delay(1);
 	// Select SX slave
 	SPI.setSPISlave(SOCKET0_SELECT);
 	
 	SPI.transfer(0x80 | address);
+	
 	SPI.transfer(data);
 	
 	// Disable all SPI slaves
@@ -476,6 +483,7 @@ uint8_t Wasp485::maxRead(char address)
 {
 	// Disable all SPI slaves
 	SPI.setSPISlave(ALL_DESELECTED);
+	delay(1);
 	// Select SX slave
 	SPI.setSPISlave(SOCKET0_SELECT);
 
@@ -484,6 +492,7 @@ uint8_t Wasp485::maxRead(char address)
 	
 	// Disable all SPI slaves
 	SPI.setSPISlave(ALL_DESELECTED);
+	
 	return data;
 }
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,13 +15,13 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.2
+ *  Version:		3.0
  *  Design:			Ahmad Saad
  */
 
  
-#ifndef WaspSensorSW_h
-#define WaspSensorSW_h
+#ifndef WASPSENSORSW_H
+#define WASPSENSORSW_H
 
 /******************************************************************************
  * Includes
@@ -30,9 +30,9 @@
 #include <utility/ADC.h>
 #include <utility/filter.h>
 
-/******************************************************************************
- * Definitions & Declarations
- ******************************************************************************/
+//**********************************************************************
+// Definitions & Declarations
+// *********************************************************************
 
 #define	SENS_SW_DO				2
 #define	SENS_SW_COND			3
@@ -40,8 +40,9 @@
 #define	SENS_SW_ORP				5
 #define	SENS_SW_DI				6
 
-
+//**********************************************************************
 // Calibration values of the conductivity sensor
+//**********************************************************************
 #define	SW_COND_CAL_01		0.0271
 #define	SW_COND_CAL_02		0.0365
 #define	SW_COND_CAL_03		0.0478
@@ -59,8 +60,9 @@
 #define	SW_COND_CAL_15		0.9076
 #define	SW_COND_CAL_16		0.9931
 
-#define FILTER_SAMPLES 7
-
+//**********************************************************************
+// ADC CHANNELS
+//**********************************************************************
 #define TEMP_CHANNEL 	0
 #define DO_CHANNEL 		2
 #define PH_CHANNEL 		3
@@ -68,9 +70,31 @@
 #define DI_CHANNEL 		5
 #define COND_CHANNEL 	7
 
-#define pH_SOCKET 3
-#define ORP_SOCKET 2
-#define DI_SOCKET 1
+//**********************************************************************
+// SOCKET DEFINITIONS
+//**********************************************************************
+#define PT1000_SOCKET	6
+#define EC_SOCKET		5
+#define DO_SOCKET		4
+#define pH_SOCKET		3
+#define ORP_SOCKET		2
+#define DI_SOCKET		1
+
+#define FILTER_SAMPLES 7
+
+//! DEBUG MODE
+/*! 0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages 
+ */
+#define DEBUG_WATER		0
+
+#define PRINT_WATER(str)		USB.print(F("[WATER] ")); USB.print(str);
+#define PRINT_WATER_VAL(val)	USB.print(float(val));
+
+#define PRINTLN_WATER(str)		USB.print(F("[WATER] ")); USB.println(str);
+#define PRINTLN_WATER_VAL(val)	USB.println(float(val));
+
  
 //**************************************************************************************************
 //  Smart Water Board Class 
@@ -94,23 +118,19 @@ class WaspSensorSW
 	private:
 		
 		//! Read from the ADC
-		float getMeasure(uint8_t, uint8_t);		
-		
-
-		
+		float getMeasure(uint8_t, uint8_t);
 };
 
-extern WaspSensorSW SensorSW;
+extern WaspSensorSW Water;
 
 #endif
-
 
 
 //**************************************************************************************************
 // Temperature sensor class 
 //**************************************************************************************************
-#ifndef PT1000_h
-#define PT1000_h
+#ifndef PT1000CLASS_H
+#define PT1000CLASS_H
 
 class pt1000Class
 {
@@ -126,8 +146,8 @@ class pt1000Class
 //**************************************************************************************************
 // pH sensor class 
 //**************************************************************************************************
-#ifndef pHsensor_h
-#define pHsensor_h
+#ifndef PHSENSORCLASS_H
+#define PHSENSORCLASS_H
 
 class pHClass
 {
@@ -159,12 +179,11 @@ class pHClass
 #endif
 
 
-
 //**************************************************************************************************
 // Conductivity sensor class 
 //**************************************************************************************************
-#ifndef Conductivity_h
-#define Conductivity_h
+#ifndef CONDUCTIVITYCLASS_h
+#define CONDUCTIVITYCLASS_h
 
 class conductivityClass
 {
@@ -194,8 +213,8 @@ class conductivityClass
 //**************************************************************************************************
 // ORP sensor class 
 //**************************************************************************************************
-#ifndef ORP_h
-#define ORP_h
+#ifndef ORPCLASS_h
+#define ORPCLASS_h
 
 class ORPClass
 {
@@ -218,8 +237,8 @@ class ORPClass
 //**************************************************************************************************
 // DO sensor class 
 //**************************************************************************************************
-#ifndef DO_h
-#define DO_h
+#ifndef DOCLASS_H
+#define DOCLASS_H
 
 class DOClass
 {

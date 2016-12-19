@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -51,8 +51,6 @@
 #define BLOCK_SIZE 	32					// Bytes per block used reading UART
 #define BLOCK_MAC_SIZE	17				// Bytes per block used to parse Macs
 #define COMMAND_SIZE	40
-#define BT_PRO_PW_1   6					// Bluetooth power pin when UART1 is used. Same as DIGITAL 6
-#define BT_PRO_PW_0   22				// Bluetooth power pin when UART0 is used. Same as Xbee_pw
 #define BT_NODE_ID_ADDR 1024				// EEPROM address where node ID is stored.
 #define ERRORSD1			"err1"		// Error writting.
 #define ERRORSD2			"err2"		// Error creating.

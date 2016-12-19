@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Marcos Yarza, Alejandro Gállego
 
@@ -46,6 +46,10 @@
 #define DUST_SENSOR_POWER DIGITAL1
 
 #define OPC_N2_DEBUG 0
+// #define OPC_N2_DEBUG 1
+
+#define OPC_N2_SPI_MODE		0
+#define OPC_N2_UART_MODE	1
 
 /// Sensor commands /////////////////////////////////////////////////////////////////
 // COMMAND: Set digital pot
@@ -68,10 +72,10 @@ const uint8_t READ_CONFIG_VAR PROGMEM = 0x3C;
 const uint8_t WRITE_CONFIG_VAR PROGMEM = 0x3A;
 
 // COMMAND: Read histogram
-const uint8_t READ_HISTOGRAM PROGMEM = 0X30;				// It will reset the histogram too
+const uint8_t READ_HISTOGRAM PROGMEM = 0x30;				// It will reset the histogram too
 
 // UNUSED COMMAND
-const uint8_t SAVE_CONFIG PROGMEM = 0X43;
+const uint8_t SAVE_CONFIG PROGMEM = 0x43;
 
 // COMMAND: Read sensor status
 const uint8_t CHECK_STATUS PROGMEM = 0xCF;
@@ -89,7 +93,7 @@ extern volatile uint8_t	pwrGasPRORegister;
 /*!
 	WaspOPC_N2 Class defines all the variables and functions used to manage OPC N2 particle sensosr 
  */
-class WaspOPC_N2
+class WaspOPC_N2 : public WaspUART
 {
 
 	/// private methods //////////////////////////
@@ -101,12 +105,19 @@ class WaspOPC_N2
      */ 
 	uint8_t isON;
 	
+	//! Variable : working mode 
+    /*!
+	 * 0 if the sensor uses SPI, 1 if uses UART
+     */ 
+	bool _mode;
+	
 	//! This function checks if the OPC-N2 sensor is ready
 	/*!
 	\return		0 if not ready
 				1 if  ready
 	*/
 	uint8_t checkStatus();
+
 	
 	//! This function inits the SPI bus to use with OPC-N2 module
 	/*!
@@ -239,12 +250,21 @@ class WaspOPC_N2
 	WaspOPC_N2();
 	
 	/// Funtions ///////////////////////////////////////////////////////////////
-	//! This function opens SPI port and powers the sensor
+	//! This function opens UART port and powers the sensor
 	/*!
 	\return		0 if the sensor doesn't init correctly
 				1 if init OK
 	*/
 	uint8_t ON();
+	
+	//! This function opens desired communication port and powers the sensor
+    /*!
+	 * 
+	\param	bool com_mode: 0 if the sensor uses SPI, 1 if uses UART
+	\return		0 if the sensor doesn't init correctly
+				1 if init OK
+	*/
+	uint8_t ON(bool com_mode);
 	
 	//! This function closes SPI port and powers OFF the sensor
 	/*!
@@ -252,6 +272,13 @@ class WaspOPC_N2
 				1 if powers off correctly
 	*/
 	uint8_t OFF();
+	
+	//! This function closes SPI port and powers OFF the sensor
+	/*!
+	\return		0 if the sensor doesn't power off correctly
+				1 if powers off correctly
+	*/
+	uint8_t OFF_UART();
 	
 	//! This function reads the information string from OPC-N2 sensor 
 	/*!

@@ -15,7 +15,7 @@ printMessage	KEYWORD2
 sizeOfBlocks	KEYWORD2
 encrypt	KEYWORD2
 
-AES	KEYWORD3
+AES	KEYWORD1
 
 #keyschedule#
 

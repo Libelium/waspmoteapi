@@ -1,10 +1,10 @@
 /*! 
  * @file 	WaspSigfox.cpp
  * @author	Libelium Comunicaciones Distribuidas S.L.
- * @version	1.0
- * @brief 	Library for managing Sigfox modules TD1207
+ * @version	3.1
+ * @brief 	Library for managing Sigfox modules TD1207 & TD1508
  *
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -84,7 +84,7 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
 
 			default: 
 					#if DEBUG_SIGFOX > 0
-						USB.print(F("[debug] error type\n"));
+						PRINT_SIGFOX(F("error type\n"));
 					#endif
 				return (void)0; 
 		}
@@ -166,7 +166,7 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
 			{
 				//error
 				#if DEBUG_SIGFOX > 0
-					USB.print(F("[debug] not enough buffer size\n"));
+					PRINT_SIGFOX(F("not enough buffer size\n"));
 				#endif
 				memset( _command, 0x00, sizeof(_command) );
 				return (void)0;				
@@ -186,8 +186,8 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
     
     // show command
     #if DEBUG_SIGFOX > 1
-		USB.print(F("[debug] "));
-		USB.println( _command );		
+		PRINT_SIGFOX(F("_command: "));
+		USB.println( _command );
 	#endif
 }
 
@@ -262,53 +262,19 @@ uint32_t WaspSigfox::parseUint32Value()
  */
 uint8_t WaspSigfox::ON(uint8_t socket)
 {
-	_baudrate = UART_RATE;
+	_baudrate = SIGFOX_RATE;
 	_uart = socket;
 
-	if (socket == SOCKET0)
-	{  
-		_uart = SOCKET0;
-		
-		// Set multiplexer
-		Utils.setMuxSocket0(); 
-		
-		// Open UART
-		beginUART();
-		
-		// power up
-		pinMode(XBEE_PW,OUTPUT);
-		digitalWrite(XBEE_PW,HIGH);	
-	}
-	else
-	{	
-		// check RTC int pin to disable line in order to communicate
-		if (digitalRead(RTC_INT_PIN_MON) == HIGH)
-		{
-			if (RTC.isON == 0 )
-			{
-				RTC.ON();
-				RTC.clearAlarmFlag();
-				RTC.OFF();
-			}
-			else
-			{
-				RTC.clearAlarmFlag();
-			}
-		}
-		
-		_uart = SOCKET1;
-		
-		// Set multiplexer
-		Utils.setMuxSocket1(); 
-		
-		// Open UART
-		beginUART();
-		
-		// power up
-		pinMode(DIGITAL6,OUTPUT);
-		digitalWrite(DIGITAL6,HIGH);			
-	}
+	// select multiplexer
+    if (_uart == SOCKET0) 	Utils.setMuxSocket0();
+    if (_uart == SOCKET1) 	Utils.setMuxSocket1();
 	
+	// Open UART
+	beginUART();
+	
+    // power on the socket
+    PWR.powerSocket(_uart, HIGH);
+
 	delay(5000);
 	
 	// Check communication
@@ -329,31 +295,15 @@ uint8_t WaspSigfox::ON(uint8_t socket)
  */
 uint8_t WaspSigfox::OFF(uint8_t socket)
 {
-	if (socket == SOCKET0)
-	{  
-		_uart = SOCKET0;
+	// close uart
+	closeUART();	
+	
+	// unselect multiplexer 
+    if (_uart == SOCKET0)	Utils.setMuxUSB();
+    if (_uart == SOCKET1)	Utils.muxOFF1();
 		
-		// Set multiplexer
-		Utils.setMuxUSB(); 
-		
-		// close UART0
-		closeUART();		
-		
-		// power down
-		pinMode(XBEE_PW,OUTPUT);	
-		digitalWrite(XBEE_PW, LOW);
-	}
-	else
-	{	
-		_uart = SOCKET1;
-		
-		// close UART1
-		closeUART();
-		
-		// power down
-		pinMode(DIGITAL6,OUTPUT);
-		digitalWrite(DIGITAL6,LOW);			
-	}
+    // switch module OFF
+	PWR.powerSocket(_uart, LOW);
 	
 	return SIGFOX_ANSWER_OK;	
 }
@@ -377,7 +327,8 @@ uint8_t WaspSigfox::check()
 	
 	if( status == 1 )
 	{
-		// ok
+		// ok -> get module region
+		getRegion();
 		return SIGFOX_ANSWER_OK;
 	}
 	else if(status == 2)
@@ -676,8 +627,8 @@ uint8_t WaspSigfox::send(uint8_t* data, uint16_t length)
 	Utils.hex2str(data, ascii_command, length);
 	
 	#if DEBUG_SIGFOX > 1
-		USB.print(F("[debug] "));
-		USB.println( ascii_command );		
+		PRINT_SIGFOX(F("ascii_command: "));
+		USB.println( ascii_command );
 	#endif	
 	
 	return send(ascii_command);
@@ -778,8 +729,8 @@ uint8_t WaspSigfox::sendACK(uint8_t* data, uint16_t length)
 	Utils.hex2str(data, ascii_command, length);
 	
 	#if DEBUG_SIGFOX > 1
-		USB.print(F("[debug] "));
-		USB.println( ascii_command );		
+		PRINT_SIGFOX(F("ascii_command: "));
+		USB.println( ascii_command );
 	#endif	
 	
 	return sendACK(ascii_command);
@@ -944,22 +895,15 @@ uint8_t WaspSigfox::sendKeepAlive(uint8_t period)
 uint8_t WaspSigfox::continuosWave(uint32_t freq, bool enable)
 {
 	char param1[20];
-		
-	// create "AT$CW=<enable>" command
-	snprintf(_command, sizeof(_command),"ATS900=%lu\r", freq);
-	
-	// set frequency setting
-	if( sendCommand(_command, AT_OK, AT_ERROR, 500) != 1)
-	{
-		return SIGFOX_ANSWER_ERROR;
-	}
-	
+	char param2[20];		
+
 	// convert to string	
-	utoa((uint16_t)enable, param1, 10);
+	ltoa((uint32_t)freq, param1, 10);
+	utoa((uint16_t)enable, param2, 10);
 	
 	// create "AT$CW=<enable>" command
-	GEN_ATCOMMAND_SET("CW", param1);
-	
+	GEN_ATCOMMAND_SET("CW", param1, param2);
+		
 	// set CW mode: enabled or disabled
 	if( sendCommand(_command, AT_OK, AT_ERROR, 500) != 1)
 	{
@@ -1547,6 +1491,308 @@ uint8_t WaspSigfox::getMultiPacket(uint32_t time)
 		return SIGFOX_NO_ANSWER;
 	}	
 }
+
+
+
+/*!
+ * @brief	get the actual region of the module
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ */
+uint8_t WaspSigfox::getRegion()
+{
+	uint8_t status;
+	
+	status = sendCommand("ATS304?\r", "\r\n", AT_ERROR, 1000);
+	
+	if (status != 1)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+	
+	status = waitFor(AT_OK, AT_ERROR, 1000);
+
+	if (status == 1 )
+	{
+		// get value from received data
+		_region = parseUint8Value();	
+		
+		return 0;
+	}
+	else if (status == 2 )
+	{	
+		// error
+		return 1;
+	}
+	else
+	{
+		// time out
+		return 2;
+	}
+}
+
+
+
+/*!
+ * @brief	This function configures the SIGFOX FCC Macro Channel Bitmask to 
+ * 			enable/disable the 192KHz macro channels authorized for transmission
+ * 			
+ * @remarks	This parameter is used only in FCC region, there is no effect in 
+ * 			ETSI. To change this parameter, an AT&W command and ATZ command are 
+ * 			required
+ * @param 	char* bitmask: "000000000000000000000000" to "FFFFFFFFFFFFFFFFFFFFFFFF"
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ */
+uint8_t WaspSigfox::setMacroChannelBitmask(char* bitmask)
+{
+	uint8_t answer;
+	
+	snprintf(_command, sizeof(_command), "ATS306=%s\r", bitmask);
+	
+	// 1. send command
+	answer = sendCommand(_command, AT_OK, AT_ERROR, 1000);	
+	
+	// check possible error answers
+	if (answer == 2)
+	{
+		// error
+		return SIGFOX_ANSWER_ERROR;
+	}
+	else if (answer == 0)
+	{
+		// timeout
+		return SIGFOX_NO_ANSWER;
+	}
+	
+	// 2. save config
+	answer = saveSettings();
+
+	return answer;	
+}
+
+
+/*!
+ * @brief	This function queries the SIGFOX FCC Macro Channel Bitmask to 
+ * 			enable/disable the 192KHz macro channels authorized for transmission
+ * @remarks	This parameter is used only in FCC region, there is no effect in 
+ * 			ETSI. To change this parameter, an AT&W command and ATZ command are 
+ * 			required
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ */
+uint8_t WaspSigfox::getMacroChannelBitmask()
+{
+	uint8_t answer;
+	
+	snprintf(_command, sizeof(_command), "ATS306?\r");
+	
+	// enter command mode
+	if (sendCommand(_command, AT_EOL, AT_ERROR, 1000) != 1)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+	
+	answer = waitFor(AT_EOL, 1000);
+	
+	// enter command mode
+	if (answer != 1)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+	
+	// get value from received data
+	answer = parseString(_macroChannelBitmask, sizeof(_macroChannelBitmask), "\r\n", 1);
+	
+	if (answer != 0)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+	
+	return SIGFOX_ANSWER_OK;	
+}
+
+
+
+
+
+/*!
+ * @brief	This function configures the SIGFOX Default FCC Macro Channel.
+ * 			
+ * @remarks	This parameter is used only in FCC region, there is no effect in 
+ * 			ETSI. To change this parameter, an AT&W command and ATZ command are 
+ * 			required
+ * @param 	uint8_t config: range from 1 to 82. 
+ * 			The default FCC channel value must be between 1 and 82. At least 9 
+ * 			macro channels must be enabled to ensure the minimum of 50 FCC 
+ * 			channels. Parameter is 3 x 32bits words, with word 1 first.
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ */
+uint8_t WaspSigfox::setMacroChannel(uint8_t config)
+{
+	uint8_t answer;
+	
+	snprintf(_command, sizeof(_command), "ATS307=%u\r", config);
+	
+	// 1. send command
+	answer = sendCommand(_command, AT_OK, AT_ERROR, 1000);	
+	
+	// check possible error answers
+	if (answer == 2)
+	{
+		// error
+		return SIGFOX_ANSWER_ERROR;
+	}
+	else if (answer == 0)
+	{
+		// timeout
+		return SIGFOX_NO_ANSWER;
+	}
+	
+	// 2. save config
+	answer = saveSettings();
+
+	return answer;	
+}
+
+
+/*!
+ * @brief	This function queries the SIGFOX Default FCC Macro Channel.
+ * @remarks	This parameter is used only in FCC region, there is no effect in 
+ * 			ETSI. To change this parameter, an AT&W command and ATZ command are 
+ * 			required
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ */
+uint8_t WaspSigfox::getMacroChannel()
+{
+	uint8_t answer;
+	
+	snprintf(_command, sizeof(_command), "ATS307?\r");
+	
+	// enter command mode
+	if (sendCommand(_command, AT_EOL, AT_ERROR, 1000) != 1)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+	
+	answer = waitFor(AT_EOL, 1000);
+	
+	// enter command mode
+	if (answer != 1)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+	
+	// get value from received data
+	answer = parseUint8(&_macroChannel, "\r\n", 1);
+	
+	if (answer != 0)
+	{
+		return SIGFOX_ANSWER_ERROR;		
+	}
+		
+	return SIGFOX_ANSWER_OK;	
+}
+
+
+
+
+
+/*!
+ * @brief	This function configures the SIGFOX Downlink frequency offset.
+ * 			
+ * @remarks	This parameter is used only in FCC region, there is no effect in 
+ * 			ETSI. To change this parameter, an AT&W command and ATZ command are 
+ * 			required
+ * @param 	uint8_t config: range from -30000000  to 30000000 Hz
+ * 			The default value in FCC mode is 3000000 Hz
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ */
+uint8_t WaspSigfox::setDownFreqOffset(int32_t offset)
+{
+	uint8_t answer;
+	
+	snprintf(_command, sizeof(_command), "ATS308=%li\r", offset);
+
+	// 1. send command
+	answer = sendCommand(_command, AT_OK, AT_ERROR, 1000);	
+	
+	// check possible error answers
+	if (answer == 2)
+	{
+		// error
+		return SIGFOX_ANSWER_ERROR;
+	}
+	else if (answer == 0)
+	{
+		// timeout
+		return SIGFOX_NO_ANSWER;
+	}
+	
+	// 2. save config
+	answer = saveSettings();
+
+	return answer;	
+}
+
+
+/*!
+ * @brief	This function queries the SIGFOX Downlink frequency offset.
+ * @remarks	This parameter is used only in FCC region, there is no effect in 
+ * 			ETSI. To change this parameter, an AT&W command and ATZ command are 
+ * 			required
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ */
+uint8_t WaspSigfox::getDownFreqOffset()
+{
+	uint8_t answer;
+	
+	snprintf(_command, sizeof(_command), "ATS308?\r");
+	
+	// enter command mode
+	if (sendCommand(_command, AT_EOL, AT_ERROR, 1000) != 1)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+	
+	answer = waitFor(AT_EOL, 1000);
+	
+	// enter command mode
+	if (answer != 1)
+	{
+		return SIGFOX_ANSWER_ERROR;
+	}
+
+	// get value from received data
+	answer = parseInt32(&_downFreqOffset, "\r\n");
+	
+	if (answer != 0)
+	{
+		return SIGFOX_ANSWER_ERROR;		
+	}
+		
+	return SIGFOX_ANSWER_OK;	
+}
+
+
 
 
 // Preinstantiate Objects /////////////////////////////////////////////////////

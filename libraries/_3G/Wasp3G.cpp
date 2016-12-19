@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.8
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -113,6 +113,9 @@ const char XMODEM_SEND[]		PROGMEM = "+CRXFILE=";		//60
 const char CHECK_GPRS[]			PROGMEM = "+CGREG?";		//61
 const char CHECK_GPRS_RES[]		PROGMEM = "+CGREG: 0,";		//62
 
+const char GET_TIME[]			PROGMEM	= "+CCLK?";			//63
+const char GET_TIME_RES[]		PROGMEM	= "+CCLK: ";		//64
+
 
 const char* const  table_MISC[] PROGMEM = 
 {   
@@ -196,7 +199,10 @@ const char* const  table_MISC[] PROGMEM =
 	XMODEM_SEND,			//60
 	
 	CHECK_GPRS,				//61
-	CHECK_GPRS_RES,			//62	
+	CHECK_GPRS_RES,			//62
+
+	GET_TIME,				//63	
+	GET_TIME_RES,			//64
 };
 
 
@@ -525,6 +531,10 @@ const char HTTP_FRAME_3[]	PROGMEM	= "\r\nContent-Length: ";									//15
 const char HTTP_END_GET[]	PROGMEM	= "0\r\n\r\n";												//16
 const char HTTP_END_POST[]	PROGMEM	= "\r\n\r\nframe=";											//17
 
+const char HTP_SERVER[]		PROGMEM	= "+CHTPSERV=";		//18
+const char HTP_UPDATE[]		PROGMEM	= "+CHTPUPDATE";	//19
+const char HTP_UPDATE_RES[]	PROGMEM	= "+CHTPUPDATE: ";	//20
+
 
 
 const char* const table_HTTP[] PROGMEM = 
@@ -549,6 +559,10 @@ const char* const table_HTTP[] PROGMEM =
 	HTTP_FRAME_3,	//15
 	HTTP_END_GET,	//16
 	HTTP_END_POST,	//17
+	
+	HTP_SERVER,	//18
+	HTP_UPDATE,	//19
+	HTP_UPDATE_RES,	//20
 };
 #endif
 
@@ -749,10 +763,10 @@ int8_t Wasp3G::check3Gconnection(unsigned long time){
 		if( millis() < previous) previous = millis();
 	}while (((answer == 2) || (answer == 4) || (answer == 0) || (answer == -1)) && ((millis() - previous) < (time * 1000)));
 	 
-	//#if _3G_debug_mode>0
+	#if _3G_debug_mode>0
 		USB.print(F("Network status: "));
 		USB.println(answer, DEC);
-//	#endif
+	#endif
 
 	if (((answer != 1) && (answer != 5) && (answer != -1)) || ((millis() - previous) > (time * 1000)))
 	{
@@ -894,16 +908,15 @@ int8_t Wasp3G::initHTTP()
 int8_t Wasp3G::sendHTTPrequest(		const char* url,
 									uint16_t port,
 									uint8_t* data,
-									int length,
+									uint16_t length,
 									uint8_t method )
 {
 	
-	int8_t answer;
-	int16_t count;		
+	int8_t answer;		
 	char aux_conv[3];
 	memset( aux_conv, 0x00, sizeof(aux_conv) );	
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, url, port);
@@ -1064,7 +1077,7 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 	uint8_t len;
 	
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	count = 0;
 	aux = serialRead(_socket);
@@ -1099,7 +1112,7 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 			aux = serialRead(_socket);
 			if (aux != -1)
 			{	
-				if (count < BUFFER_SIZE)
+				if (count < _3G_BUFFER_SIZE)
 				{
 					buffer_3G[count] = aux;
 					count++;
@@ -1750,7 +1763,7 @@ void Wasp3G::begin(){
 */
 void Wasp3G::close(){
 	closeSerial(_socket);
-	Utils.setMux(MUX_TO_LOW, MUX_TO_LOW);
+	Utils.setMux(LOW, LOW);
 }
 
 /* OFF(void) - closes UART1 and powers off the SIM5218 module
@@ -2089,7 +2102,7 @@ int8_t Wasp3G::getIMEI(){
 	int8_t answer,counter;
 	unsigned long previous;
 
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[13])));	//GET_IMEI
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[14])));	//GET_IMEI_R
 	answer=sendCommand2(str_aux1, str_aux2, ERROR);
@@ -2142,7 +2155,7 @@ int8_t Wasp3G::getIMSI(){
 	unsigned long previous;
 	int8_t counter=0;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[15])));	//GET_IMSI
 	sendCommand1(str_aux1, "\r\n");
 	previous = millis();
@@ -2196,7 +2209,7 @@ int8_t	Wasp3G::manageIncomingData(unsigned long waiting_time){
 	int16_t a;		 //counter and auxiliar variable
 	unsigned long previous = 0;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	a=0;	
 	
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[57])));	//INCOMING_CALL
@@ -2208,7 +2221,7 @@ int8_t	Wasp3G::manageIncomingData(unsigned long waiting_time){
 	// Wait for data
 	serialFlush(_socket);
 	previous = millis();
-	while (((millis()-previous) < waiting_time) && (a < BUFFER_SIZE) && (a >= 0))
+	while (((millis()-previous) < waiting_time) && (a < _3G_BUFFER_SIZE) && (a >= 0))
 	{
 		if (serialAvailable(_socket) != 0)
 		{
@@ -2389,7 +2402,7 @@ int8_t	Wasp3G::readCall(){
 	uint8_t a = 0;
 	unsigned long previous;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);	
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);	
 	
 	previous = millis();
 	
@@ -2821,7 +2834,7 @@ int8_t Wasp3G::readSMS(uint8_t index){
 				previous = millis();
 			}
 			
-		}while ((strstr(buffer_3G, "OK\r\n") == NULL) && ((millis() - previous) < 2000) && (counter < BUFFER_SIZE));
+		}while ((strstr(buffer_3G, "OK\r\n") == NULL) && ((millis() - previous) < 2000) && (counter < _3G_BUFFER_SIZE));
 		buffer_3G[counter-6] = '\0';
 		#if _3G_debug_mode>0
 			USB.println(F(""));
@@ -2933,7 +2946,7 @@ int8_t Wasp3G::incomingSMS(){
 		
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
-	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 1000) && (count < BUFFER_SIZE));
+	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 1000) && (count < _3G_BUFFER_SIZE));
 	
 	buffer_3G[count-1] = '\0';
 	
@@ -3018,7 +3031,7 @@ int8_t Wasp3G::takePicture(){
 	int8_t count;	
 	unsigned long previous;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	digitalWrite(FILTER_ENABLE, LOW);
 	delay(500);	
@@ -4181,7 +4194,7 @@ int8_t Wasp3G::downloadFile(const char* origin_path, uint8_t destination, unsign
 	}
 	
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	// Request the file and selects the destination location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[6])));		//FTP_GET_FILE
 	if (strchr(origin_path, '/') == strrchr(origin_path, '/'))
@@ -4406,7 +4419,7 @@ unsigned long Wasp3G::getFTPsize(const char* FTP_file)
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, FTP_TIMEOUT, SEND_ONCE);
 	previous = millis();
 	
-	memset( buffer_3G, '\0', BUFFER_SIZE);
+	memset( buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[28])));	//FTP_LIST_END
 	if (answer == 1)
 	{
@@ -5299,7 +5312,7 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 	answer=sendCommand1(buffer_3G, "From:");	
 	if (answer == 1)
 	{
-		memset(buffer_3G, '\0', BUFFER_SIZE);
+		memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 		x=0;
 		previous=millis();
 		
@@ -5320,7 +5333,7 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 			
 		}while (((buffer_3G[x-1] != 'K') && (buffer_3G[x-2] != 'O')) 
 					&& ((millis()-previous) < POP3_TIMEOUT)
-					&& (x < BUFFER_SIZE));
+					&& (x < _3G_BUFFER_SIZE));
 		
 		buffer_3G[x-4]='\0';
 		
@@ -5415,7 +5428,7 @@ int8_t Wasp3G::getPOP3mail(uint8_t index){
 			
 		}while ((buffer_3G[x-1] != '\r')
 					&& ((millis()-previous) < POP3_TIMEOUT)
-					&& (x < BUFFER_SIZE));
+					&& (x < _3G_BUFFER_SIZE));
 		
 		buffer_3G[x-1] = '\0';
 		
@@ -5551,7 +5564,7 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 	changeBaudrate(2400);
 	getIfReady();
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	delay(1000);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, url, port);
@@ -5582,126 +5595,183 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 		return -3;
 	}	
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	// Reads the response from the server ('0' header and answer, '1' only answer from Meshlium)
 	return readHTTPresponse(parse);
 }
 
-/* setTimebyURL - Sets the time of Waspmote's RTC getting the time from an url
+/* setTimebyURL - Sets the time of Waspmote's RTC getting the time from an HTP server
  *
- * This function sets the time of Waspmote's RTC getting the time from an url
+ * This function sets the time of Waspmote's RTC getting the time from an HTP server
  *
  * Returns '1' on success,
  * '0' if no connection
  * '-1' if error setting APN, username and password,
- * '-2' if error opening a HTTP session,
- * '-3' if error receiving data or timeout waiting data,
- * '-4' if error changing the baudrate (data received is OK),
- * '-5' if unknown error for HTTP,
- * '-6' if HTTP task is busy,
- * '-7' if fail to resolve server address,
- * '-8' if HTTP timeout,
- * '-9' if fail to transfer data,
- * '-10' if memory error,
- * '-11' if invalid parameter,
- * '-12' if network error,
+ * '-2' if error checking the connection
+ * '-3' if error adding the HTP server
+ * '-4' if error reading the time from 3G's RTC
+ * '-5' HTP Unknown error
+ * '-6' HTP Wrong parameter
+ * '-7' HTP Wrong date and time calculated
+ * '-8' HTP Network error
  * '-15' if error setting APN, username and password with CME_error code available
- * '-16' if error opening a HTTP session with CME_error code available
- * '-20' if error checking the connection
- * '-21' if fail setting the time of the internal RTC of the 3G module
 */
-int16_t Wasp3G::setTimebyURL(){
+int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
+	
 	int16_t answer;
-	uint16_t HTTP_data;
 	char aux_str[20];
-	uint8_t len;
-	char* aux_ptr;
 	uint8_t year, month, date, day_week, hour, minute, second;
+	int8_t timezone;
 	bool RTC_ant=false;
 	
-	answer = readURL("pruebas.libelium.com", 80, "GET /rmarandom.php HTTP/1.1\r\nHost: pruebas.libelium.com\r\nContent-Length: 0\r\n\r\n");
-	// gets URL from the solicited URL
-	if ( answer == 1)
+	uint16_t count=0;	
+	unsigned long previous;
+	
+	// Checks the connection
+	answer = check3Gconnection(90);
+	if ((answer != 1) && (answer != -1))
 	{
-		// checks if the response is OK
-		if (strstr(buffer_3G, "200 ok") == NULL)
-		{
-			// url response its not OK 
-			return -17;
-		}
-		
-		// finds the data length
-		aux_ptr = strstr(buffer_3G, "\r\n\r\n");
-		if (aux_ptr == NULL)
-		{
-			// url response its not OK 
-			return -18;
-		}
-		
-		
-		memset(aux_str, '\0', strlen(aux_str));		
-		aux_ptr += 4;
-		
-		strncpy(aux_str, aux_ptr, strchr(aux_ptr, '\r') - aux_ptr);
-		sscanf(aux_str, "%x", &len);
-		
-		aux_ptr = aux_ptr + 3;
-		
-		memset(aux_str, '\0', strlen(aux_str));
-		strncpy(aux_str, aux_ptr, len);
-
-		//sscanf(aux_str, "%02u%02u%02u%02u%02u%02u%02u", &year, &year, &month, &date, &hour, &minute, &second);
-		year = ((aux_str[2] - 0x30) * 10) + (aux_str[3] - 0x30);
-		month = ((aux_str[4] - 0x30) * 10) + (aux_str[5] - 0x30);
-		date = ((aux_str[6] - 0x30) * 10) + (aux_str[7] - 0x30);
-		hour = ((aux_str[8] - 0x30) * 10) + (aux_str[9] - 0x30);
-		minute = ((aux_str[10] - 0x30) * 10) + (aux_str[11] - 0x30);
-		second = ((aux_str[12] - 0x30) * 10) + (aux_str[13] - 0x30);
-		
-		#if _3G_debug_mode>0
-			USB.print(F("year "));  
-			USB.print(year, DEC);
-			USB.print(F("; month "));  
-			USB.print(month, DEC);
-			USB.print(F("; date "));  
-			USB.println(date, DEC);
-			USB.print(F("hour "));  
-			USB.print(hour, DEC);
-			USB.print(F("; minute "));  
-			USB.print(minute, DEC);
-			USB.print(F("; second "));  
-			USB.println(second, DEC);
-		#endif
-		
-		if (RTC.isON == 0) // Checks if the RTC is on
-		{
-			RTC_ant = true;
-			RTC.ON();
-		}
-			
-		// Stes the RTC time
-		RTC.setTime(year, month, date, RTC.dow(year, month, date), hour, minute, second); //Gets time from RTC
-				
-		if (RTC_ant == 1) // Powers off the RTC if before it was off
-		{
-			RTC.OFF();
-		}
-		
-		// Sets the RTC of the 3G too 
-		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
-		answer = sendCommand2( buffer_3G, OK_RESPONSE, ERROR);
-		
-		if (answer == 2)
-		{
-			return -19;
-		}
-		
-		return 1;
+		return 0;
+	}
+	else if (answer == -1)
+	{		
+		return -2;
 	}
 	
-	return answer;
+	// Configures the operator parameters
+	answer = initHTTP();
+	if (answer != 1)
+	{
+		return answer - 4;
+	}
+	
+			
+	// ADD the HTP server
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[18])));	//"+CHTPSERV="
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"ADD\",\"%s\",%u,1", str_aux1, htp_server, htp_port);
+	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
+	if (answer != 1)
+	{
+		return -3;
+	}
+	
+	// Updating date and time using HTP protocol
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[19])));	//"+CHTPUPDATE"
+	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[20])));	//"+CHTPUPDATE: "
+	answer=sendCommand2(str_aux1, str_aux2, ERROR);
+	if (answer != 1)
+	{
+		return answer;
+	}
+	delay(100);
+	answer = serialRead(_socket) - 0x30;
+	if (answer != 0)
+	{
+		#if _3G_debug_mode>0
+			USB.print(F("Error HTP: "));
+			USB.println(answer, DEC);
+		#endif
+		return answer;
+	}
+	
+	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[63])));	//"+CCLK?"
+	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[64])));	//"+CCLK:"
+	answer=sendCommand2(str_aux1, str_aux2, ERROR);
+	if (answer != 1)
+	{
+		return -4;
+	}
+	
+		count = 0;	
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
+	previous = millis();
+	do{
+		while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000))
+		{	
+			if (millis() < previous)
+			{
+				previous = millis();
+			}
+		}
+		buffer_3G[count]=serialRead(_socket);
+		count++;
+		
+		if (millis() < previous)
+		{
+			previous = millis();
+		}
+		
+	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 5000) && (count < _3G_BUFFER_SIZE));
+	
+	year = ((buffer_3G[1] - 0x30) * 10) + (buffer_3G[2] - 0x30);
+	month = ((buffer_3G[4] - 0x30) * 10) + (buffer_3G[5] - 0x30);
+	date = ((buffer_3G[7] - 0x30) * 10) + (buffer_3G[8] - 0x30);
+	hour = ((buffer_3G[10] - 0x30) * 10) + (buffer_3G[11] - 0x30);
+	minute = ((buffer_3G[13] - 0x30) * 10) + (buffer_3G[14] - 0x30);
+	second = ((buffer_3G[16] - 0x30) * 10) + (buffer_3G[17] - 0x30);
+	timezone = (((buffer_3G[19] - 0x30) * 10) + (buffer_3G[20] - 0x30)) / 4;
+	if(buffer_3G[18] == '-')
+	{
+		timezone *= -1;
+ 	}
+
+	#if _3G_debug_mode>0
+		USB.print(F("year "));  
+		USB.print(year, DEC);
+		USB.print(F("; month "));  
+		USB.print(month, DEC);
+		USB.print(F("; date "));  
+		USB.println(date, DEC);
+		USB.print(F("hour "));  
+		USB.print(hour, DEC);
+		USB.print(F("; minute "));  
+		USB.print(minute, DEC);
+		USB.print(F("; second "));  
+		USB.print(second, DEC);
+		USB.print(F("; timezone "));  
+		USB.println((timezone), DEC);
+	#endif
+		
+	if (timezone >= 0)
+	{
+		if(hour >= timezone)
+		{
+			hour = hour - timezone;
+		}
+		else
+		{
+			hour = hour - timezone + 24;
+		}
+	}
+	else
+	{	
+		if((hour - timezone) > 23)
+		{
+			hour = hour - timezone - 24;
+		}
+		else
+		{
+			hour = hour - timezone;
+		}
+		
+	}
+		
+	if (RTC.isON == 0) // Checks if the RTC is on
+	{
+		RTC_ant = true;
+		RTC.ON();
+	}
+
+	// Stes the RTC time
+	RTC.setTime(year, month, date, RTC.dow(year, month, date), hour, minute, second); //Gets time from RTC
+
+	if (RTC_ant == 1) // Powers off the RTC if before it was off
+	{
+		RTC.OFF();	
+	}
+
+	return 1;
 	
 	
 }
@@ -5745,12 +5815,20 @@ int16_t Wasp3G::setTimebyMeshlium(const char* url, uint16_t port){
 	// read mote ID from EEPROM memory
 	for(int i=0 ; i<16 ; i++ )
 	{
-		MID[i]=Utils.readEEPROM(i+MOTEID_ADDR);
+		MID[i]=Utils.readEEPROM(i+EEPROM_FRAME_MOTEID);
 	}
 	MID[16]='\0';
 	
 	// Generates a frame
-	snprintf(frame_data, sizeof(frame_data),  "<=>%c0#%lu#%s#0#", 155, _serial_id, MID);
+	snprintf(frame_data, 
+				sizeof(frame_data), 
+				"<=>%c0#%02x%02x%02x%02x#%s#0#",
+				155, 
+				_serial_id[4], 
+				_serial_id[5], 
+				_serial_id[6], 
+				_serial_id[7], 
+				MID);
 	
 	answer = sendHTTPframe( url, port, (uint8_t*) frame_data, strlen(frame_data), GET, 1);
 	// gets URL from the solicited URL
@@ -6055,7 +6133,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		return -15;
 	}
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	// Receives data
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[8])));
@@ -6105,7 +6183,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 			aux = serialRead(_socket);
 			if (aux != -1)
 			{	
-				if (count < BUFFER_SIZE)
+				if (count < _3G_BUFFER_SIZE)
 				{
 					buffer_3G[count] = aux;
 					count++;
@@ -6324,7 +6402,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 			do{
 				buffer_3G[count]=serialRead(_socket);
 				count++;
-			}while ((serialAvailable(_socket) != 0) && (count < BUFFER_SIZE));
+			}while ((serialAvailable(_socket) != 0) && (count < _3G_BUFFER_SIZE));
 			buffer_3G[count]='\0';
 		}
 		else
@@ -6409,7 +6487,7 @@ int8_t Wasp3G::getGPSinfo(){
 	
 	// Gets GPS string
 	count = 0;	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	previous = millis();
 	do{
 		while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000))
@@ -6427,7 +6505,7 @@ int8_t Wasp3G::getGPSinfo(){
 			previous = millis();
 		}
 		
-	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 5000) && (count < BUFFER_SIZE));
+	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 5000) && (count < _3G_BUFFER_SIZE));
 	buffer_3G[count] = '\0';
 	
 	#if _3G_debug_mode>0
@@ -7477,9 +7555,9 @@ int16_t Wasp3G::readIPdata(){
 	
 	if (data_length != 0)
 	{
-		memset(buffer_3G, '\0', BUFFER_SIZE);
+		memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 		i = 0;
-		while ((data_length > i) && ((millis() - previous) < 30000) && (i < BUFFER_SIZE)){
+		while ((data_length > i) && ((millis() - previous) < 30000) && (i < _3G_BUFFER_SIZE)){
 			while((serialAvailable(_socket) == 0) && ((millis() - previous) < 30000))
 			{
 				// Condition to avoid an overflow (DO NOT REMOVE)
@@ -7523,7 +7601,7 @@ int8_t Wasp3G::listClients(){
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_IP[15])));		//SERVER_LIST_R
 	answer = sendCommand2(str_aux1, str_aux2, ERROR_IP);
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	if (answer == 2)
 	{
@@ -7555,7 +7633,7 @@ int8_t Wasp3G::listClients(){
 				previous = millis();
 			}
 			
-		}while ((answer == 1) && ((millis()-previous) < 3000) && (counter < BUFFER_SIZE));
+		}while ((answer == 1) && ((millis()-previous) < 3000) && (counter < _3G_BUFFER_SIZE));
 		buffer_3G[counter] = '\0';
 	}
 	
@@ -7651,7 +7729,7 @@ int8_t Wasp3G::getIP(){
 				previous = millis();
 			}
 			
-		}while ((buffer_3G[counter-1] != '\r') && ((millis()-previous) < 3000) && (counter < BUFFER_SIZE));
+		}while ((buffer_3G[counter-1] != '\r') && ((millis()-previous) < 3000) && (counter < _3G_BUFFER_SIZE));
 		buffer_3G[counter] = '\0';
 	}	
 	
@@ -7670,7 +7748,7 @@ int8_t Wasp3G::QueryDomainfromIP(const char* ip){
 	int8_t answer;
 	unsigned long previous;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[20])));		//DOMFROMIP
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, ip);	
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR);
@@ -7717,7 +7795,7 @@ int8_t Wasp3G::QueryDomainfromIP(const char* ip){
 					previous = millis();
 				}
 				
-			}while ((buffer_3G[counter-1] != '"') && ((millis() - previous) < 1000) && (counter < BUFFER_SIZE));
+			}while ((buffer_3G[counter-1] != '"') && ((millis() - previous) < 1000) && (counter < _3G_BUFFER_SIZE));
 			buffer_3G[counter-1] = '\0';
 			
 			return 1;
@@ -7742,7 +7820,7 @@ int8_t Wasp3G::QueryIPfromDomain(const char* domain){
 	int8_t answer;
 	unsigned long previous;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[19])));		//IPFROMDOM
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, domain);	
 	answer=sendCommand2(buffer_3G, str_aux1, ERROR);
@@ -8479,7 +8557,7 @@ int8_t Wasp3G::ls(int8_t type){
 				previous = millis();
 			}	
 				
-		}while ((counter < BUFFER_SIZE)
+		}while ((counter < _3G_BUFFER_SIZE)
 				&& !((buffer_3G[counter-2] == 'O') && (buffer_3G[counter-1] == 'K'))
 				&& ((millis()-previous) < 3000));
 		
@@ -8594,7 +8672,7 @@ int8_t Wasp3G::getCellsysInfo(){
 	unsigned long previous;
 	char command[15];
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	// reduces the baudrate
 	changeBaudrate(4800);
@@ -8629,7 +8707,7 @@ int8_t Wasp3G::getCellsysInfo(){
 				
 			}while ((buffer_3G[x-1] != '\r')
 				&& ((millis() - previous) < 5000)
-				&& (x < BUFFER_SIZE));
+				&& (x < _3G_BUFFER_SIZE));
 			
 			if ((millis() - previous) < 5000)
 			{
@@ -8683,7 +8761,7 @@ int8_t Wasp3G::getCellchannel(){
 	int x;
 	unsigned long previous;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[35])));	//CELL_CHN_INFO
@@ -8715,7 +8793,7 @@ int8_t Wasp3G::getCellchannel(){
 		}while (!((buffer_3G[x-1] == 'K')
 			&& (buffer_3G[x-2] == 'O'))
 			&& ((millis() - previous) < 5000)
-			&& (x < BUFFER_SIZE));
+			&& (x < _3G_BUFFER_SIZE));
 		buffer_3G[x-4] = '\0';
 	}
 	
@@ -8736,7 +8814,7 @@ int8_t Wasp3G::getCellradioparam(){
 	int x;
 	unsigned long previous;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[36])));	//CELL_RADIO_PARAM
 	answer = sendCommand1(str_aux1, str_aux1);
@@ -8750,7 +8828,7 @@ int8_t Wasp3G::getCellradioparam(){
 		do{			
 			// reads from socket 1
 			buffer_3G[x] = serialRead(_socket);
-			if ((buffer_3G[x] != -1) &&  (x < BUFFER_SIZE))
+			if ((buffer_3G[x] != -1) &&  (x < _3G_BUFFER_SIZE))
 			{	
 				x++;
 			}	
@@ -8838,7 +8916,7 @@ int8_t Wasp3G::scanNetworkchannels(int chn_start, int chn_end, bool mode){
 				
 		}while ((buffer_3G[x-1] != 'N')
 			&& ((millis() - previous) < 10000)
-			&& (x < BUFFER_SIZE));
+			&& (x < _3G_BUFFER_SIZE));
 		
 		buffer_3G[x-3] = '\0';
 	}
@@ -8887,7 +8965,7 @@ int8_t Wasp3G::getUEsysInfo(){
 			
 		}while ((buffer_3G[x-1] != '\r')
 			&& ((millis() - previous) < 5000)
-			&& (x < BUFFER_SIZE));
+			&& (x < _3G_BUFFER_SIZE));
 		
 		buffer_3G[x-1]='\0';
 	}
@@ -8946,7 +9024,7 @@ int8_t Wasp3G::WCDMAsysInfo(){
 	int8_t answer, x;
 	unsigned long previous;
 	
-	memset(buffer_3G, '\0', BUFFER_SIZE);
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[37])));	//CELL_SET_SYS_INFO
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[38])));	//CELL_SET_SYS_INFO_R
@@ -8975,7 +9053,7 @@ int8_t Wasp3G::WCDMAsysInfo(){
 			
 		}while ((buffer_3G[x-1] != '\n')
 			&& ((millis() - previous) < 10000)
-			&& (x < BUFFER_SIZE));
+			&& (x < _3G_BUFFER_SIZE));
 		
 		waitForData(str_aux2, 2000, millis(), 0);
 		
@@ -9023,7 +9101,7 @@ int8_t Wasp3G::WCDMAsysInfo(){
 			
 		}while ((buffer_3G[x-1] != '\n')
 			&& ((millis() - previous) < 10000)
-			&& (x < BUFFER_SIZE));
+			&& (x < _3G_BUFFER_SIZE));
 		
 		buffer_3G[x-1]='\0';
 	}
@@ -9157,7 +9235,7 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
 	uint16_t i;
 	
 	// Cleans 'buffer_3G':
-	memset (buffer_3G, '\0', BUFFER_SIZE);
+	memset (buffer_3G, '\0', _3G_BUFFER_SIZE);
 	
 	i = 0;
 	
@@ -9188,7 +9266,7 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
 			#endif
 			delay(20);
 			
-			if (i < BUFFER_SIZE)
+			if (i < _3G_BUFFER_SIZE)
 			{
 				i++;
 			}
@@ -9672,7 +9750,7 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 			SD.goRoot();
 			
 			// Reads the file
-			strcpy(buffer_3G, SD.cat(OTA_ver_file, 0, BUFFER_SIZE));
+			strcpy(buffer_3G, SD.cat(OTA_ver_file, 0, _3G_BUFFER_SIZE));
 
 			// Searchs the file name
 			str_pointer = strstr(buffer_3G, "FILE:");

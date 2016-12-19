@@ -1,6 +1,6 @@
 /* Arduino Sd2Card Library
  * Copyright (C) 2012 by William Greiman
- * Modified in 2014 for Waspmote, by Y. Carmona 
+ * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino Sd2Card Library
  *
@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino Sd2Card Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
 #ifndef SpiCard_h
 #define SpiCard_h
@@ -47,13 +50,13 @@ uint8_t const SPI_EIGHTH_SPEED = 16;
 uint8_t const SPI_SIXTEENTH_SPEED = 32;
 //------------------------------------------------------------------------------
 /** init timeout ms */
-uint16_t const SD_INIT_TIMEOUT = 2000;
+uint32_t const SD_INIT_TIMEOUT = 2000;
 /** erase timeout ms */
-uint16_t const SD_ERASE_TIMEOUT = 10000;
+uint32_t const SD_ERASE_TIMEOUT = 10000;
 /** read timeout ms */
-uint16_t const SD_READ_TIMEOUT = 300;
+uint32_t const SD_READ_TIMEOUT = 300;
 /** write time out ms */
-uint16_t const SD_WRITE_TIMEOUT = 600;
+uint32_t const SD_WRITE_TIMEOUT = 600;
 //------------------------------------------------------------------------------
 // SD card errors
 /** timeout error for command CMD0 (initialize card in SPI mode) */
@@ -213,7 +216,7 @@ class Sd2Card {
   void chipSelectHigh();
   void chipSelectLow();
   void type(uint8_t value) {m_type = value;}
-  bool waitNotBusy(uint16_t timeoutMillis);
+  bool waitNotBusy(uint32_t timeoutMillis);
   bool writeData(uint8_t token, const uint8_t* src);
  
   // private data  

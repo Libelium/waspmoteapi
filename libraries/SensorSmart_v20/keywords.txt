@@ -38,4 +38,4 @@ setSensorMode	KEYWORD2
 readValue	KEYWORD2
 readValue	KEYWORD2
 
-SensorSmartv20	KEYWORD3
+SensorSmartv20	KEYWORD1

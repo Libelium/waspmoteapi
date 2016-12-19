@@ -1,7 +1,7 @@
 /*! \file WaspXBeeZB.h
     \brief Library for managing XBee ZigBee modules
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Yuri Carmona
 
@@ -330,103 +330,73 @@ public:
     */
 	void setKnownDestination(packetXBee* paq, uint8_t* address);
 	
+	//! 
+	uint8_t setCoordinator(uint8_t input);
+	//! 
+	uint8_t getCoordinator();
+	
 	
 	/// Variables /////////////////////////////////////////////////////////////
 	
 	//! Variable : the 16b parent´s network address
-  	/*!
-	 */
 	uint8_t parentNA[2];
 	
 	//! Variable : the number of children which can still connect to the current device
-  	/*!
-	 */
 	uint8_t remainingChildren;
 	
 	//! Variable : the current device type
-  	/*!
-	 */
 	uint8_t deviceType[4];
 	
 	//! Variable : the bytes that can be used in the payload
-  	/*!
-	 */
 	uint8_t maxPayloadBytes[2];
 	
 	//! Variable : the operating 64-bit PAN ID
-  	/*!
-	 */
 	uint8_t operating64PAN[8];
 	
 	//! Variable : the operating 16-bit PAN ID
-  	/*!
-	 */
 	uint8_t operating16PAN[2];
 	
 	//! Variable : the maximum hops limit (range [0x00-0xFF])
-  	/*!
-	 */
 	uint8_t maxUnicastHops; 
 	
 	//! Variable : the maximum number of hops for each broadcast data transmission (range [0x00-0x20])
-  	/*!
-	 */
 	uint8_t maxBroadcastHops;
 	
 	//! Variable : the ZigBee Stack profile (range [0-2])
-  	/*!
-	 */
 	uint8_t stackProfile;
 	
 	//! Variable : the number of Sleep Periods to not assert XBee pin
-  	/*!
-	 */
 	uint8_t periodSleep[2];
 	
 	//! Variable : the time that a Coordinator/Router allows nodes to join (range [0x00-0xFF])
-  	/*!
-	 */
 	uint8_t joinTime; 
 	
 	//! Variable : the channel verification parameter (range [0-1])
-  	/*!
-	 */
 	uint8_t channelVerification;
 	
 	//! Variable : the join notification setting (range [0-1])
-  	/*!
-	 */
 	uint8_t joinNotification;
 	
 	//! Variable : the time between consecutive aggregate route broadcast messages (range [0x00-0xFF])
-  	/*!
-	 */
 	uint8_t aggregateNotification;
 	
 	//! Variable : information regarding last node join request
-  	/*!
-	 */
 	uint8_t associationIndication;
 	
 	//! Variable : options for encryption (range [0-2])
-  	/*!
-	 */
 	uint8_t encryptOptions;
 	
 	//! Variable : the 128-bit AES encryption key (range [0-0xFFFFFFFFFFFFFFFF])
-  	/*!
-	 */
 	uint8_t networkKey[16];
 	
 	//! Variable : the power mode of the device (range [0-1])
-  	/*!
-	 */
 	uint8_t powerMode;
 	
 	//! Variable : the voltage on the Vcc pin
-  	/*!
-	 */
-	uint8_t supplyVoltage[2];
+	uint8_t supplyVoltage[2];	
+	
+	//! Variable : if this device is a coordinator (1) or not (0)
+	uint8_t coordinatorEnable; 
 };
 
 extern WaspXBeeZB	xbeeZB;

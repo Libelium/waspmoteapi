@@ -1,7 +1,7 @@
 /*! \file WaspRFID.cpp
- *  \brief Library for managing WIFI modules
+ *  \brief Library for managing RFID modules
  *
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:			1.2
+ *  Version:			3.0
  *  Design:				David Gascón
  *  Implementation:		Ahmad Saad, Javier Solobera
  */
@@ -41,37 +41,23 @@
  \param uint8_t socket: The uart por used
 */ 	
 void WaspRFID::ON(uint8_t socket)
-{
-	if (socket == SOCKET1)
-	{
-		// select uart
-		_uart = SOCKET1;
-		
-		// set uart baudrate
-		Utils.setMuxSocket1();
-		beginSerial(RFID_RATE, _uart);
-		
-		// power supply
-		pinMode(DIGITAL6, OUTPUT);
-		digitalWrite(DIGITAL6, HIGH);
-	} 
-	else
-	{
-		// select uart
-		_uart = SOCKET0;
-		
-		// set uart baudrate
-		Utils.setMuxSocket0();
-		beginSerial(RFID_RATE, _uart);
-		
-		// power supply
-		pinMode(XBEE_PW,OUTPUT);
-		digitalWrite(XBEE_PW,HIGH);
-	}
+{	
+	// set uart
+	_uart = socket;
+    
+	// select multiplexer
+    if (_uart == SOCKET0) 	Utils.setMuxSocket0();
+    if (_uart == SOCKET1) 	Utils.setMuxSocket1();
+    
+    // open uart
+    beginSerial(RFID_RATE, _uart);
 	
-	// update Waspmote Register
-	if(_uart == SOCKET0)	WaspRegister |= REG_SOCKET0;
-	if(_uart == SOCKET1)	WaspRegister |= REG_SOCKET1;
+    // power on the socket
+    PWR.powerSocket(_uart, HIGH);
+    
+    // update Waspmote Register
+	if (_uart == SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if (_uart == SOCKET1)	WaspRegister |= REG_SOCKET1;
 
 	serialFlush(_uart);
 	delay(100);
@@ -87,19 +73,17 @@ void WaspRFID::OFF(void)
 	// close UART
 	closeSerial(_uart);
 	
-	// update Waspmote Register
-	if(_uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
-	if(_uart == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
+	// unselect multiplexer 
+    if (_uart == SOCKET0)	Utils.setMuxUSB();
+    if (_uart == SOCKET1)	Utils.muxOFF1();
+    
+    // switch module OFF
+	PWR.powerSocket(_uart, LOW);
 	
-	// power off depending on the socket
-	if (_uart == 1) 
-	{
-		digitalWrite(DIGITAL6, LOW);
-	} 
-	else 
-	{
-		digitalWrite(XBEE_PW,LOW);
-	}
+	// update Waspmote Register
+	if (_uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if (_uart == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);
+
 }
 
 	

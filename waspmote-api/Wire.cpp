@@ -1,5 +1,5 @@
 /*
- *  Modified for Waspmote by Libelium, 2009-2015
+ *  Modified for Waspmote by Libelium, 2009-2016
  *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
@@ -15,6 +15,8 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * 	Version:	3.0 
  */
  
 extern "C" {
@@ -61,6 +63,10 @@ TwoWire::TwoWire()
 
 void TwoWire::begin(void)
 {
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("I2C begin\n"));
+	#endif
+	
 	// init buffer for reads
 	memset( rxBuffer, 0x00, BUFFER_LENGTH);
 	rxBufferIndex = 0;
@@ -74,8 +80,10 @@ void TwoWire::begin(void)
 	twi_init();
   
 	// update flag
-	I2C_ON = 1;
+	isON = 1;
 	
+	Wire.secureBegin();
+
 	delayMicroseconds(4);	
 }
 
@@ -89,7 +97,7 @@ void TwoWire::begin(uint8_t address)
 
 void TwoWire::begin(int address)
 {
-  begin((uint8_t)address);
+	begin((uint8_t)address);
 }
 
 
@@ -119,9 +127,6 @@ uint8_t TwoWire::requestFrom(uint8_t address, uint8_t quantity)
 	// set rx buffer iterator vars
 	rxBufferIndex = 0;
 	rxBufferLength = quantity;
-	
-	// Secure I2C power management
-	Wire.secureEnd();
 	
 	return ret;
 }
@@ -163,9 +168,6 @@ uint8_t TwoWire::endTransmission(void)
 	// indicate that we are done transmitting
 	transmitting = 0;
 	
-	// Secure I2C power management
-	Wire.secureEnd();
-	
 	return ret;
 }
 
@@ -196,9 +198,6 @@ void TwoWire::send(uint8_t data)
 		// in slave send mode
 		// reply to master
 		twi_transmit(&data, 1);
-		
-		// Secure I2C power management
-		Wire.secureEnd();
 	}
 }
 
@@ -223,9 +222,6 @@ void TwoWire::send(uint8_t* data, uint8_t quantity)
 		// in slave send mode
 		// reply to master
 		twi_transmit(data, quantity);
-			
-		// Secure I2C power management
-		Wire.secureEnd();
 	}
 }
 
@@ -234,7 +230,7 @@ void TwoWire::send(uint8_t* data, uint8_t quantity)
 // or after beginTransmission(address)
 void TwoWire::send(char* data)
 {
-  send((uint8_t*)data, strlen(data));
+	send((uint8_t*)data, strlen(data));
 }
 
 // must be called in:
@@ -242,7 +238,7 @@ void TwoWire::send(char* data)
 // or after beginTransmission(address)
 void TwoWire::send(int data)
 {
-  send((uint8_t)data);
+	send((uint8_t)data);
 }
 
 // must be called in:
@@ -250,7 +246,7 @@ void TwoWire::send(int data)
 // or after requestFrom(address, numBytes)
 uint8_t TwoWire::available(void)
 {
-  return rxBufferLength - rxBufferIndex;
+	return rxBufferLength - rxBufferIndex;
 }
 
 // must be called in:
@@ -258,75 +254,90 @@ uint8_t TwoWire::available(void)
 // or after requestFrom(address, numBytes)
 uint8_t TwoWire::receive(void)
 {
-  // default to returning null char
-  // for people using with char strings
-  uint8_t value = '\0';
+	// default to returning null char
+	// for people using with char strings
+	uint8_t value = '\0';
   
-  // get each successive byte on each call
-  if(rxBufferIndex < rxBufferLength){
-    value = rxBuffer[rxBufferIndex];
-    ++rxBufferIndex;
-  }
+	// get each successive byte on each call
+	if(rxBufferIndex < rxBufferLength)
+	{
+		value = rxBuffer[rxBufferIndex];
+		++rxBufferIndex;
+	}
 
-  return value;
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("rxBuffer: "));
+		USB.printHexln(rxBuffer, rxBufferIndex);
+	#endif
+	
+	return value;
 }
 
 // behind the scenes function that is called when data is received
 void TwoWire::onReceiveService(uint8_t* inBytes, int numBytes)
 {
-  // don't bother if user hasn't registered a callback
-  if(!user_onReceive){
-    return;
-  }
-  // don't bother if rx buffer is in use by a master requestFrom() op
-  // i know this drops data, but it allows for slight stupidity
-  // meaning, they may not have read all the master requestFrom() data yet
-  if(rxBufferIndex < rxBufferLength){
-    return;
-  }
-  // copy twi rx buffer into local read buffer
-  // this enables new reads to happen in parallel
-  for(uint8_t i = 0; i < numBytes; ++i){
-    rxBuffer[i] = inBytes[i];    
-  }
-  // set rx iterator vars
-  rxBufferIndex = 0;
-  rxBufferLength = numBytes;
-  // alert user program
-  user_onReceive(numBytes);
+	// don't bother if user hasn't registered a callback
+	if(!user_onReceive)
+	{
+		return;
+	}
+	// don't bother if rx buffer is in use by a master requestFrom() op
+	// i know this drops data, but it allows for slight stupidity
+	// meaning, they may not have read all the master requestFrom() data yet
+	if(rxBufferIndex < rxBufferLength)
+	{
+		return;
+	}
+	// copy twi rx buffer into local read buffer
+	// this enables new reads to happen in parallel
+	for(uint8_t i = 0; i < numBytes; ++i)
+	{
+		rxBuffer[i] = inBytes[i];    
+	}
+	// set rx iterator vars
+	rxBufferIndex = 0;
+	rxBufferLength = numBytes;
+	// alert user program
+	user_onReceive(numBytes);
 }
 
 // behind the scenes function that is called when data is requested
 void TwoWire::onRequestService(void)
 {
-  // don't bother if user hasn't registered a callback
-  if(!user_onRequest){
-    return;
-  }
-  // reset tx buffer iterator vars
-  // !!! this will kill any pending pre-master sendTo() activity
-  txBufferIndex = 0;
-  txBufferLength = 0;
-  // alert user program
-  user_onRequest();
+	// don't bother if user hasn't registered a callback
+	if(!user_onRequest)
+	{
+		return;
+	}
+	// reset tx buffer iterator vars
+	// !!! this will kill any pending pre-master sendTo() activity
+	txBufferIndex = 0;
+	txBufferLength = 0;
+	// alert user program
+	user_onRequest();
 }
 
 // sets function called on slave write
 void TwoWire::onReceive( void (*function)(int) )
 {
-  user_onReceive = function;
+	user_onReceive = function;
 }
 
 // sets function called on slave read
 void TwoWire::onRequest( void (*function)(void) )
 {
-  user_onRequest = function;
+	user_onRequest = function;
 }
 
 void TwoWire::close()
 {
 	twi_close();
-	I2C_ON = 0;
+	isON = 0;	
+	Wire.secureEnd();
+	
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("I2C closed\n"));
+	#endif
 }
 
 
@@ -345,20 +356,32 @@ void TwoWire::secureBegin()
 	
 	// this codeblock belongs to the performance of the I2C bus
 	// check if any Sensor Board (with I2C components) is ON before using I2C
-	if( (WaspRegister & REG_METERING) 		||
-		(WaspRegister & REG_AGRICULTURE)	||
-		(WaspRegister & REG_GASES) 			||
-		(WaspRegister & REG_EVENTS) 		||
-		(WaspRegister & REG_CITIES_V14) 	||
-		(WaspRegister & REG_CITIES_V15) 	||
-		(WaspRegister & REG_PROTOTYPING) )
+	if ((WaspRegisterSensor & REG_METERING) 		||
+		(WaspRegisterSensor & REG_AGRICULTURE)	||
+		(WaspRegisterSensor & REG_GASES) 			||
+		(WaspRegisterSensor & REG_EVENTS) 		||
+		(WaspRegisterSensor & REG_CITIES_V14) 	||
+		(WaspRegisterSensor & REG_CITIES_V15) 	||
+		(WaspRegisterSensor & REG_PROTOTYPING))
 	{
-		if( Wire.isBoard == false )
-		{			
+		if (Wire.isBoard == false)
+		{	
+			#if DEBUG_I2C > 0
+				PRINT_I2C(F("Sensor Board power ON\n"));
+			#endif		
 			// It is necessary to switch on the power supply if the Sensor Board is 
 			// connected to Waspmote so as not to cause intereferences in the I2C bus
-			PWR.setSensorPower(SENS_3V3, SENS_ON);
-			PWR.setSensorPower(SENS_5V, SENS_ON);
+			if ((WaspRegisterSensor & REG_EVENTS) && !_3V3_ON)
+			{
+				PWR.setSensorPower(SENS_3V3, SENS_ON);		
+				delay(50);		
+			}
+			else if (!_5V_ON || !_3V3_ON)
+			{
+				PWR.setSensorPower(SENS_3V3, SENS_ON);
+				PWR.setSensorPower(SENS_5V, SENS_ON);	
+				delay(50);						
+			}
 		}
 	}		
 }
@@ -375,40 +398,49 @@ void TwoWire::secureEnd()
 {		
 	// this codeblock belongs to the performance of the I2C bus
 	// check if any Sensor Board (with I2C components) is ON before using I2C
-	if( (WaspRegister & REG_METERING) 		||
-		(WaspRegister & REG_AGRICULTURE)	||
-		(WaspRegister & REG_GASES) 			||
-		(WaspRegister & REG_EVENTS) 		||
-		(WaspRegister & REG_CITIES_V14) 	||
-		(WaspRegister & REG_CITIES_V15) 	||
-		(WaspRegister & REG_PROTOTYPING) )
+	if ((WaspRegisterSensor & REG_METERING) 	||
+		(WaspRegisterSensor & REG_AGRICULTURE)	||
+		(WaspRegisterSensor & REG_GASES) 		||
+		(WaspRegisterSensor & REG_EVENTS) 		||
+		(WaspRegisterSensor & REG_CITIES_V14) 	||
+		(WaspRegisterSensor & REG_CITIES_V15) 	||
+		(WaspRegisterSensor & REG_PROTOTYPING))
 	{
 		// this codeblock belongs to the performance of the SD card
 		// switch off the SX module if it was not powered on 
-		if( (Wire.isBoard == false) )
+		if (Wire.isBoard == false)
 		{
+			#if DEBUG_I2C > 0
+				PRINT_I2C(F("Sensor Board power OFF\n"));
+			#endif		
+			
 			// switch OFF sensor boards to previous state before 'secureBegin'
-			PWR.setSensorPower(SENS_3V3, SENS_OFF);
-			PWR.setSensorPower(SENS_5V, SENS_OFF);
+			if (WaspRegisterSensor & REG_EVENTS)
+			{
+				PWR.setSensorPower(SENS_3V3, SENS_OFF);				
+			}
+			else
+			{
+				PWR.setSensorPower(SENS_3V3, SENS_OFF);
+				PWR.setSensorPower(SENS_5V, SENS_OFF);							
+			}
 		}
 		else
 		{
 			// if sensor board were switched off without doing OFF from their 
 			// class function, then it is necessary to do it manually:
 			// set power supply lines to previous state before 'secureBegin'
-			if( _3V3_ON == false )
+			if (_3V3_ON == false)
 			{
 				PWR.setSensorPower(SENS_3V3, SENS_OFF);
 			}
 			
-			if( _5V_ON == false )
+			if (_5V_ON == false)
 			{
 				PWR.setSensorPower(SENS_5V, SENS_OFF);
 			}
 		}
-		
-		
-	}	
+	}
 }
 
 /* Function: 	This function writes a bit via I2C
@@ -416,10 +448,14 @@ void TwoWire::secureEnd()
  *				regAddr: I2C register
  *				data: data to send
  *				pos: position of the bit to write [7|6|5|4|3|2|1|0]
- * Return: 		1 if OK, -1 if error
- * 				
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
  */
-int8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, bool data, uint8_t pos)
+int8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos)
 {
 	uint8_t buffer;
 	uint8_t mask;
@@ -428,36 +464,36 @@ int8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, bool data, uint8_t po
 
 	// Read the register
 	error = readBytes(devAddr, regAddr, &buffer, 1);
-	if (error != 1)
+	if (error != 0)
 	{
 		return error;
 	}
 	
-
-	#ifdef I2C_DEBUG_FULL		
-		USB.print(F("Bit pos: "));
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("Bit pos: "));
 		USB.println(pos, DEC);	
-		USB.print("Old value: ");
+		PRINT_I2C(F("Old value: "));
 		USB.println(buffer, BIN);
 	#endif
+	
 	// Mask to the read data and stores the value
 	mask = ~(1 << pos);
-	data = (data << pos) & mask;
+	data = (data << pos);
 	buffer &= mask;	
 	buffer |= data;
 	
-	#ifdef I2C_DEBUG_FULL
-		USB.print("mask: ");
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("mask: "));
 		USB.println(mask, BIN);
-		USB.print("data: ");
+		PRINT_I2C(F("data: "));
 		USB.println(data, BIN);
-		USB.print("New value: ");
+		PRINT_I2C(F("New value: "));
 		USB.println(buffer, BIN);
 	#endif
 	
 	// Write the register
-	writeBytes(devAddr, regAddr, &buffer, 1);
-	if (error != 1)
+	error = writeBytes(devAddr, regAddr, &buffer, 1);
+	if (error != 0)
 	{
 		return error;
 	}	
@@ -471,7 +507,12 @@ int8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, bool data, uint8_t po
  *				data: data to send
  *				pos: first position of the bits to write starting by the LSb [7|6|5|4|3|2|1|0]
  *				length: number of bits to write
- * Return: 		1 if OK, -1 if error
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
  */
 int8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length)
 {
@@ -481,17 +522,17 @@ int8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_
 	
 	// Read the register
 	error = readBytes(devAddr, regAddr, &buffer, 1);
-	if (error != 1)
+	if (error != 0)
 	{
 		return error;
 	}	
 	
-	#ifdef I2C_DEBUG_FULL		
-		USB.print(F("Bit pos: "));
+	#if DEBUG_I2C > 1	
+		PRINT_I2C(F("Bit pos: "));
 		USB.println(pos, DEC);		
-		USB.print(F("Bit length: "));
+		PRINT_I2C(F("Bit length: "));
 		USB.println(length, DEC);	
-		USB.print("Old value: ");
+		PRINT_I2C(F("Old value: "));
 		USB.println(buffer, BIN);
 	#endif
 	
@@ -501,18 +542,18 @@ int8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_
 	buffer &= ~mask;	
 	buffer |= data;
 	
-	#ifdef I2C_DEBUG_FULL
-		USB.print("mask: ");
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("mask: "));
 		USB.println(mask, BIN);
-		USB.print("data: ");
+		PRINT_I2C(F("data: "));
 		USB.println(data, BIN);
-		USB.print("New value: ");
+		PRINT_I2C(F("New value: "));
 		USB.println(buffer, BIN);
 	#endif
 	        
 	// Write the register
-	writeBytes(devAddr, regAddr, &buffer, 1);
-	if (error != 1)
+	error = writeBytes(devAddr, regAddr, &buffer, 1);
+	if (error != 0)
 	{
 		return error;
 	}	
@@ -525,13 +566,36 @@ int8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_
  *				regAddr: I2C register
  *				data: data to send
  *				length: number of bytes to send
- * Return: 		Nothing
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
  */
-void TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
+int8_t TwoWire::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data)
 {	
-    
-	#ifdef I2C_DEBUG
-        USB.print(F("I2C (0x"));
+	return writeBytes(devAddr, regAddr, &data, 1);
+}
+
+/* Function: 	This function writes bytes via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: data to send
+ *				length: number of bytes to send
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
+ */
+int8_t TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
+{	
+    uint8_t error;
+	
+	#if DEBUG_I2C > 0
+        PRINT_I2C(F("I2C (0x"));
         USB.printHex(devAddr);
         USB.print(F(") writing "));
         USB.print(length, DEC);
@@ -540,17 +604,21 @@ void TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_
         USB.print(F("..."));
     #endif
 	
-	// Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+	// init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
     
     for (uint8_t k = 0; k < length; k += min(length, BUFFER_LENGTH))
     {
         Wire.beginTransmission(devAddr);
         Wire.send(regAddr + k);   
 		
-        for (uint8_t i = 0; i < length; i++) {
+        for (uint8_t i = 0; i < length; i++) 
+        {
             Wire.send( data[i]);
-			#ifdef I2C_DEBUG
+			#if DEBUG_I2C > 0
                 USB.printHex(data[i]);
                 if (i + 1 < length)
                 {
@@ -558,12 +626,21 @@ void TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_
 				}
 			#endif
         }        
-		Wire.endTransmission();
+		error = Wire.endTransmission();
+		/*if (error != 0)
+		{
+			#if DEBUG_I2C > 0
+				USB.println(F(". endTransmission error"));
+			#endif
+			return error;
+		}*/
     }	
 
-	#ifdef I2C_DEBUG
+	#if DEBUG_I2C > 0
         USB.println(F(". Done"));
     #endif
+		
+	return 0;
 }
 
 /* Function: 	This function reads a bit via I2C
@@ -571,7 +648,12 @@ void TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_
  *				regAddr: I2C register
  *				data: buffer to store the data
  *				pos: position of the bit to read [7|6|5|4|3|2|1|0]
- * Return: 		Bytes read, -1 if error
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
  */
 int8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos)
 {
@@ -580,10 +662,10 @@ int8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t
 	
 	answer = readBytes( devAddr, regAddr, &buffer, 1);
 	
-	#ifdef I2C_DEBUG_FULL		
-		USB.print(F("Bit pos: "));
+	#if DEBUG_I2C > 1	
+		PRINT_I2C(F("Bit pos: "));
 		USB.println(pos, DEC);
-		USB.print("Old value: ");
+		PRINT_I2C(F("Old value: "));
 		USB.println(buffer, BIN);
 	#endif
 	
@@ -598,10 +680,10 @@ int8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t
 		
 	}
 	
-	#ifdef I2C_DEBUG_FULL
-		USB.print("mask: ");
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("mask: "));
 		USB.println(mask, BIN);
-		USB.print("New value: ");
+		PRINT_I2C(F("New value: "));
 		USB.println(data[0], BIN);
 	#endif
 	
@@ -613,7 +695,12 @@ int8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t
  *				regAddr: I2C register
  *				data: buffer to store the data
  *				pos: position of the bit to read starting by the LSb  [7|6|5|4|3|2|1|0]
- * Return: 		Bytes read, -1 if error
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
  */
 int8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length)
 {
@@ -623,12 +710,12 @@ int8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_
 
 	answer = readBytes( devAddr, regAddr, &buffer, 1);	
 	
-	#ifdef I2C_DEBUG_FULL		
-		USB.print(F("Bit pos: "));
+	#if DEBUG_I2C > 1		
+		PRINT_I2C(F("Bit pos: "));
 		USB.println(pos, DEC);		
-		USB.print(F("Bit length: "));
+		PRINT_I2C(F("Bit length: "));
 		USB.println(length, DEC);	
-		USB.print("Old value: ");
+		PRINT_I2C(F("Old value: "));
 		USB.println(buffer, BIN);
 	#endif
 	
@@ -638,10 +725,10 @@ int8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_
 	buffer &= mask;
 	data[0] = buffer;	
 	
-	#ifdef I2C_DEBUG_FULL
-		USB.print("mask: ");
+	#if DEBUG_I2C > 1
+		PRINT_I2C(F("mask: "));
 		USB.println(mask, BIN);
-		USB.print("New value: ");
+		PRINT_I2C(F("New value: "));
 		USB.println(buffer, BIN);
 	#endif
 	
@@ -652,14 +739,35 @@ int8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_
  * Parameters:	devAddr: I2C address of the device
  *				regAddr: I2C register
  *				data: buffer to store the data
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
+ */
+int8_t TwoWire::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data)
+{	
+	return readBytes( devAddr, regAddr, data, 1);
+}
+
+/* Function: 	This function reads bytes via I2C
+ * Parameters:	devAddr: I2C address of the device
+ *				regAddr: I2C register
+ *				data: buffer to store the data
  *				length: number of bytes to read
- * Return: 		Bytes read, -1 if error
+ * Return: 		0 if OK
+ *				1 if length to long for buffer
+ *				2 if address send, NACK received
+ *				3 if data send, NACK received
+ *				4 if other twi error (lost bus arbitration, bus error, ..)
+ * 				5 if timeout
  */
 int8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
 {
     
-	#ifdef I2C_DEBUG
-        USB.print(F("I2C (0x"));
+	#if DEBUG_I2C > 0
+        PRINT_I2C(F("I2C (0x"));
         USB.printHex(devAddr);
         USB.print(F(") reading "));
         USB.print(length, DEC);
@@ -669,16 +777,27 @@ int8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8
     #endif
 
     int8_t count = 0;
-    uint32_t t1;
+    uint32_t t1 = millis();
+	uint8_t error;
 
-    // Inits I2C bus
-	if( !Wire.I2C_ON ) Wire.begin();
+    // init I2C bus
+	if (!Wire.isON)
+	{
+		Wire.begin();
+	}
     
     for (uint8_t k = 0; k < length; k += min(length, BUFFER_LENGTH))
     {
         Wire.beginTransmission(devAddr);
-        Wire.send(regAddr + k);
-        Wire.endTransmission();
+        Wire.send(regAddr + k);        
+		error = Wire.endTransmission();
+		/*if (error != 0)
+		{
+			#if DEBUG_I2C > 0
+				USB.println(F(". endTransmission error"));
+			#endif
+			return error;
+		}*/
 		t1 = millis();
         Wire.requestFrom(devAddr, (uint8_t)min(length - k, BUFFER_LENGTH));
         
@@ -686,7 +805,7 @@ int8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8
         for (; Wire.available() && ((readTimeout == 0) || (millis() - t1) < readTimeout); count++)
         {
             data[count] = Wire.receive();
-            #ifdef I2C_DEBUG
+            #if DEBUG_I2C > 0
                 USB.printHex(data[count]);
                 if (count + 1 < length)
                 {
@@ -694,23 +813,34 @@ int8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8
 				}
 			#endif
         }        
-		Wire.endTransmission();
+		error = Wire.endTransmission();
+	/*	if (error != 0)
+		{
+			#if DEBUG_I2C > 0
+				USB.println(F(". endTransmission error"));
+			#endif
+			return error;
+		}*/
+			
     }
 
 
     // check for timeout
     if ((readTimeout > 0) && ((millis() - t1) >= readTimeout) && (count < length))
     {
-		count = -1; // timeout
+		#if DEBUG_I2C > 0
+			USB.print(F(". Timeout error"));
+		#endif
+		return 5; // timeout
 	}
 
-	#ifdef I2C_DEBUG
+	#if DEBUG_I2C > 0
         USB.print(F(". Done ("));
         USB.print(count, DEC);
         USB.println(F(" read)."));
     #endif
 
-    return count;
+    return 0;
 }
 
 

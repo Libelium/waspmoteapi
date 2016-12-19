@@ -23,4 +23,4 @@ getCPM	KEYWORD2
 ledBar	KEYWORD2
 WaspSensorRadiation	KEYWORD2
 
-RadiationBoard	KEYWORD3
+RadiationBoard	KEYWORD1

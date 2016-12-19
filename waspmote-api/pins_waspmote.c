@@ -1,7 +1,7 @@
 /*
  *  Copyright (c) 2005 David A. Mellis
  * 	Revised for Waspmote by D. Cuartielles & A. Bielsa, 2009
- * 	Revised for Waspmote by Libelium, 2014
+ * 	Revised for Waspmote by Libelium, 2016
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.0
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	D.Mellis, D. Cuartielles, A. Bielsa, Y. Carmona
  */
@@ -132,8 +132,8 @@ const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	PF	,	//	PF	6	**	19	**	ANA5
 	PF	,	//	PF	7	**	20	**	ANA6
 	PF	,	//	PF	0	**	21	**	BAT_MONITOR
-	PA	,	//	PA	1	**	22	**	XBEE_PW
-	PD	,	//	PD	7	**	23	**	XBEE SLEEP
+	PA	,	//	PA	1	**	22	**	SOCKET0_PW
+	PD	,	//	PD	7	**	23	**	MUX_PW (Waspmote v12) or MUX1_PW (v15)
 	PE	,	//	PE	5	**	24	**	SENS_PW_5V
 	PA	,	//	PA	6	**	25	**	BAT_MONITOR_PW
 	PE	,	//	PE	2	**	26	**	SENS_PW_3v3
@@ -143,8 +143,8 @@ const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	PB	,	//	PB	1	**	30	**	SD_SCK
 	PB	,	//	PB	2	**	31	**	SD_MOSI
 	PB	,	//	PB	3	**	32	**	SD_MISO
-	PB	,	//	PB	4	**	33	**	SERID_PW
-	PB	,	//	PB	5	**	34	**	SERID_IN
+	PB	,	//	PB	4	**	33	**	HIB_PIN
+	PB	,	//	PB	5	**	34	**	SOCKET0_SS
 	PA	,	//	PA	0	**	35	**	GPS_PW
 	PB	,	//	PB	6	**	36	**	GPS_RX
 	PB	,	//	PB	7	**	37	**	GPS_TX
@@ -153,14 +153,16 @@ const uint8_t PROGMEM digital_pin_to_port_PGM[] = {
 	PD	,	//	PD	0	**	40	**	I2C_SCL
 	PD	,	//	PD	1	**	41	**	I2C_SDA
 	PC	,	//	PC	3	**	42	**	GPRS_PW
-	PD	,	//	PD	2	**	43	**	GPRS_RX
-	PD	,	//	PD	3	**	44	**	GPRS_TX
-	PA	,	//	PA	7	**	45	**	BOOT PIN
-	PC	,	//	PC	2	**	46	**	PWON
-	PD	,	//	PD	4	**	47	**	FREE PIN
-	PG	,	//	PG	2	**	48	**	RTC_PW
+	PD	,	//	PD	2	**	43	**	GPS/Socket1/Aux1/Aux2_RX
+	PD	,	//	PD	3	**	44	**	GPS/Socket1/Aux1/Aux2_TX
+	PA	,	//	PA	7	**	45	**	XBEE_MON
+	PC	,	//	PC	2	**	46	**	GPRS_PIN
+	PD	,	//	PD	4	**	47	**	XBEE_SLEEP
+	PG	,	//	PG	2	**	48	**	MUX0_PW (Waspmote v15) or RTC_PW (v12)
 	PG	,	//	PG	1	**	49	**	RTC_SLEEP
-  	PG	,	//	PG	0	**	50	**	LOW_BAT_MON
+  	PG	,	//	PG	0	**	50	**	MAIN POWER_3V3
+  	PG	,	//	PG	3	**	51	**	CHG_IND (v15)
+  	PG	,	//	PG	4	**	52	**	SPI_ON (v15)
 };
 
 const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
@@ -187,8 +189,8 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	_BV(	6	)	,	//	PF	6	**	19	**	ANA5
 	_BV(	7	)	,	//	PF	7	**	20	**	ANA6
 	_BV(	0	)	,	//	PF	0	**	21	**	BAT_MONITOR
-	_BV(	1	)	,	//	PA	1	**	22	**	XBEE_PW
-	_BV(	7	)	,	//	PD	7	**	23	**	XBEE SLEEP
+	_BV(	1	)	,	//	PA	1	**	22	**	SOCKET0_PW
+	_BV(	7	)	,	//	PD	7	**	23	**	MUX_PW (v12) or MUX1_PW (v15)
 	_BV(	5	)	,	//	PE	5	**	24	**	SENS_PW_5V
 	_BV(	6	)	,	//	PA	6	**	25	**	BAT_MONITOR_PW
 	_BV(	2	)	,	//	PE	2	**	26	**	SENS_PW_3v3
@@ -198,8 +200,8 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	_BV(	1	)	,	//	PB	1	**	30	**	SD_SCK
 	_BV(	2	)	,	//	PB	2	**	31	**	SD_MOSI
 	_BV(	3	)	,	//	PB	3	**	32	**	SD_MISO
-	_BV(	4	)	,	//	PB	4	**	33	**	SERID_PW
-	_BV(	5	)	,	//	PB	5	**	34	**	SERID_IN
+	_BV(	4	)	,	//	PB	4	**	33	**	HIB_PIN
+	_BV(	5	)	,	//	PB	5	**	34	**	SOCKET0_SS
 	_BV(	0	)	,	//	PA	0	**	35	**	GPS_PW
 	_BV(	6	)	,	//	PB	6	**	36	**	GPS_RX
 	_BV(	7	)	,	//	PB	7	**	37	**	GPS_TX
@@ -208,23 +210,25 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 	_BV(	0	)	,	//	PD	0	**	40	**	I2C_SCL
 	_BV(	1	)	,	//	PD	1	**	41	**	I2C_SDA
 	_BV(	3	)	,	//	PC	3	**	42	**	GPRS_PW
-	_BV(	2	)	,	//	PD	2	**	43	**	GPRS_RX
-	_BV(	3	)	,	//	PD	3	**	44	**	GPRS_TX
-	_BV(	7	)	,	//	PA	7	**	45	**	BOOT PIN
-	_BV(	2	)	,	//	PC	2	**	46	**	PWON
-	_BV(	4	)	,	//	PD	4	**	47	**	FREE PIN
-	_BV(	2	)	,	//	PG	2	**	48	**	RTC_PW
+	_BV(	2	)	,	//	PD	2	**	43	**	GPS/Socket1/Aux1/Aux2_RX
+	_BV(	3	)	,	//	PD	3	**	44	**	GPS/Socket1/Aux1/Aux2_TX
+	_BV(	7	)	,	//	PA	7	**	45	**	XBEE_MON
+	_BV(	2	)	,	//	PC	2	**	46	**	GPRS_PIN
+	_BV(	4	)	,	//	PD	4	**	47	**	XBEE_SLEEP
+	_BV(	2	)	,	//	PG	2	**	48	**	MUX0_PW (v15) or RTC_PW (v12)
 	_BV(	1	)	,	//	PG	1	**	49	**	RTC_SLEEP
-	_BV(	0	)	,	//	PG	0	**	50	**	LOW_BAT_MON
+	_BV(	0	)	,	//	PG	0	**	50	**	MAIN POWER_3V3
+	_BV(	3	)	,	//	PG	3	**	51	**	CHG_IND (v15)
+	_BV(	4	)	,	//	PG	4	**	52	**	SPI_ON (v15)
 
 };
 
 const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
-	//			PORT	PIN		WASP API PIN		DESCRIPTION
+	//					PORT	PIN		WASP API PIN		DESCRIPTION
 	NOT_ON_TIMER	,	//	PE	0	**	0	**	USB_XBEE_RX
 	NOT_ON_TIMER	,	//	PE	1	**	1	**	USB_XBEE_TX
-	TIMER3A		,	//	PE	3	**	2	**	DIGITAL1
-	TIMER3B		,	//	PE	4	**	3	**	DIGITAL0
+	TIMER3A			,	//	PE	3	**	2	**	DIGITAL1
+	TIMER3B			,	//	PE	4	**	3	**	DIGITAL0
 	NOT_ON_TIMER	,	//	PC	4	**	4	**	DIGITAL7
 	NOT_ON_TIMER	,	//	PC	5	**	5	**	DIGITAL8
 	NOT_ON_TIMER	,	//	PC	6	**	6	**	DIGITAL6
@@ -243,8 +247,8 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	NOT_ON_TIMER	,	//	PF	6	**	19	**	ANA5
 	NOT_ON_TIMER	,	//	PF	7	**	20	**	ANA6
 	NOT_ON_TIMER	,	//	PF	0	**	21	**	BAT_MONITOR
-	NOT_ON_TIMER	,	//	PA	1	**	22	**	XBEE_PW
-	NOT_ON_TIMER	,	//	PD	7	**	23	**	XBEE SLEEP
+	NOT_ON_TIMER	,	//	PA	1	**	22	**	SOCKET0_PW
+	NOT_ON_TIMER	,	//	PD	7	**	23	**	MUX_PW (v12) or MUX1_PW (v15)
 	NOT_ON_TIMER	,	//	PE	5	**	24	**	SENS_PW_5V
 	NOT_ON_TIMER	,	//	PA	6	**	25	**	BAT_MONITOR_PW
 	NOT_ON_TIMER	,	//	PE	2	**	26	**	SENS_PW_3v3
@@ -254,8 +258,8 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	NOT_ON_TIMER	,	//	PB	1	**	30	**	SD_SCK
 	NOT_ON_TIMER	,	//	PB	2	**	31	**	SD_MOSI
 	NOT_ON_TIMER	,	//	PB	3	**	32	**	SD_MISO
-	NOT_ON_TIMER	,	//	PB	4	**	33	**	SERID_PW
-	NOT_ON_TIMER	,	//	PB	5	**	34	**	SERID_IN
+	NOT_ON_TIMER	,	//	PB	4	**	33	**	HIB_PIN
+	NOT_ON_TIMER	,	//	PB	5	**	34	**	SOCKET0_SS
 	NOT_ON_TIMER	,	//	PA	0	**	35	**	GPS_PW
 	NOT_ON_TIMER	,	//	PB	6	**	36	**	GPS_RX
 	NOT_ON_TIMER	,	//	PB	7	**	37	**	GPS_TX
@@ -264,14 +268,16 @@ const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
 	NOT_ON_TIMER	,	//	PD	0	**	40	**	I2C_SCL
 	NOT_ON_TIMER	,	//	PD	1	**	41	**	I2C_SDA
 	NOT_ON_TIMER	,	//	PC	3	**	42	**	GPRS_PW
-	NOT_ON_TIMER	,	//	PD	2	**	43	**	GPRS_RX
-	NOT_ON_TIMER	,	//	PD	3	**	44	**	GPRS_TX
-	NOT_ON_TIMER	,	//	PA	7	**	45	**	BOOT PIN
-	NOT_ON_TIMER	,	//	PC	2	**	46	**	PWON
-	NOT_ON_TIMER	,	//	PD	4	**	47	**	FREE PIN
-	NOT_ON_TIMER	,	//	PG	2	**	48	**	RTC_PW
+	NOT_ON_TIMER	,	//	PD	2	**	43	**	GPS/Socket1/Aux1/Aux2_RX
+	NOT_ON_TIMER	,	//	PD	3	**	44	**	GPS/Socket1/Aux1/Aux2_TX
+	NOT_ON_TIMER	,	//	PA	7	**	45	**	XBEE_MON
+	NOT_ON_TIMER	,	//	PC	2	**	46	**	GPRS_PIN
+	NOT_ON_TIMER	,	//	PD	4	**	47	**	XBEE_SLEEP
+	NOT_ON_TIMER	,	//	PG	2	**	48	**	MUX0_PW (v15) or RTC_PW (v12)
 	NOT_ON_TIMER	,	//	PG	1	**	49	**	RTC_SLEEP
-	NOT_ON_TIMER	,	//	PG	0	**	50	**	LOW_BAT_MON
+	NOT_ON_TIMER	,	//	PG	0	**	50	**	MAIN POWER_3V3
+	NOT_ON_TIMER	,	//	PG	3	**	51	**	CHG_IND (v15)
+	NOT_ON_TIMER	,	//	PG	4	**	52	**	SPI_ON (v15)
 
 };
 

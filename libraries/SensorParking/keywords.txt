@@ -54,4 +54,4 @@ readParking	KEYWORD2
 readParkingSetReset	KEYWORD2
 estimateState	KEYWORD2
 
-SensorParking	KEYWORD3
+SensorParking	KEYWORD1

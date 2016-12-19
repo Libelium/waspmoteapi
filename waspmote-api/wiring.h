@@ -1,6 +1,6 @@
 /*
  *  Modified for Waspmote by D. Cuartielles & A. Bielsa, 2009
- *	Modified for Waspmote, 2014
+ *	Modified for Waspmote, 2016
  * 
  *  Copyright (c) 2005-2006 David A. Mellis
  *
@@ -16,6 +16,8 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * 	Version:	3.0 
  */
  
 
@@ -73,6 +75,7 @@ void init(void);
 void pinMode(uint8_t, uint8_t);
 void digitalWrite(uint8_t, uint8_t);
 int digitalRead(uint8_t);
+void analogReference(uint8_t mode);
 int analogRead(uint8_t);
 void analogWrite(uint8_t, int);
 

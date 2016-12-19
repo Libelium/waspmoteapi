@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -72,13 +72,6 @@ void WaspXBee900::init(	uint8_t uart_used )
 {	
 	protocol=XBEE_900;
 	uart=uart_used;
-	
-	// in the case the XBee is plugged to SOCKET0 it is necessary to make sure
-	// that the multiplexor is selecting teh XBee module
-	if(uart_used==SOCKET0)
-	{
-		Utils.setMuxSocket0();
-	}
 	
 	data_length=0;
 	it=0;
@@ -336,8 +329,7 @@ uint8_t WaspXBee900::sendXBeePriv(struct packetXBee* packet)
 {
 	// Local variables
 	uint8_t TX[120];
-    uint8_t counter=0;
-    uint16_t aux=0;
+    uint8_t counter=0;  
     uint8_t protegido=0;
     uint8_t tipo=0;
     int8_t error=2; 
@@ -364,8 +356,7 @@ uint8_t WaspXBee900::sendXBeePriv(struct packetXBee* packet)
     {
 		// set fragment length for 'Transmit Request' frames (0x10)
         TX[2]=14+packet->data_length; 
-        
-        aux=0;
+      
         TX[3]=0x10; // frame Type
         tipo=18;	 
         

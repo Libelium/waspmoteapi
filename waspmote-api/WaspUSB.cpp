@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
- *  Design:			David Gascón
+ *  Version:		3.0
+ *  Design:			David Gascon
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
  
@@ -50,13 +50,8 @@ void WaspUSB::ON()
 	// open UART0
 	beginSerial(USB_RATE, _uart);
 	
-	// switch multiplexer on
-	pinMode(MUX_PW,OUTPUT);
-	digitalWrite(MUX_PW,HIGH);
-	
 	// configure multiplexer to USB port. XBee disabled
-	pinMode(MUX_USB_XBEE,OUTPUT);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	Utils.setMuxUSB();
 	
 	// unset XBee interruption line
 	pinMode(XBEE_MON,OUTPUT);
@@ -70,12 +65,22 @@ void WaspUSB::ON()
  */
 void WaspUSB::OFF()
 {
-	// First: close UART
-	closeSerial(_uart);
-	
-	// Second: configure multiplexer to XBEE port
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,HIGH);	
+	if (!(WaspRegister & REG_SOCKET0))
+	{	
+		// close UART
+		closeSerial(_uart);
+		
+		// switch off mux on uart0
+		if (_boot_version >= 'G')
+		{		
+			Utils.muxOFF0();
+		}
+	}
+	else
+	{
+		// configure mux to Socket0
+		Utils.setMuxSocket0();
+	}
 	
 	// unset XBee interruption line
 	pinMode(XBEE_MON,OUTPUT);
@@ -91,8 +96,7 @@ uint8_t WaspUSB::available()
 	beginSerial(USB_RATE, _uart);
 
 	// configure multiplexor to USB port
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	Utils.setMuxUSB();
 	
 	return serialAvailable( _uart);
 }
@@ -607,10 +611,9 @@ void WaspUSB::printHexln(uint8_t* pointer, uint16_t length)
 void WaspUSB::secureBegin()
 {
 	// store previous baudrate
-	_reg_ubrr0h = UBRR0H;
-	_reg_ubrr0l = UBRR0L;
-	_reg_ucsr0c = UCSR0C;
-	_reg_ucsr1c = UCSR1C;
+	_reg_ubrr0h = UBRR0H;	// USART0 Baud Rate Register High Byte
+	_reg_ubrr0l = UBRR0L;	// USART0 Baud Rate Register Low Byte
+	_reg_ucsr0c = UCSR0C; 	// USART0 Control and Status Register n C
 	
 	// No parity bit
 	cbi(UCSR0C, UPM01);
@@ -623,8 +626,7 @@ void WaspUSB::secureBegin()
 	beginSerial(USB_RATE, _uart);
 	
 	// switch on mux
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,LOW);
+	Utils.setMuxUSB();
 }
 
 
@@ -641,18 +643,21 @@ void WaspUSB::secureEnd()
 	if (WaspRegister & REG_SOCKET0)
 	{
 		delay(3);
-		digitalWrite(MUX_USB_XBEE,HIGH);
+		Utils.setMuxSocket0();
 	}
 	else
 	{
 		delay(3);
+		if (_boot_version >= 'G')
+		{
+			Utils.muxOFF0();
+		}
 	}
 	
 	// load previous stored registers
 	UBRR0H = _reg_ubrr0h;
 	UBRR0L = _reg_ubrr0l;
 	UCSR0C = _reg_ucsr0c;
-	UCSR1C = _reg_ucsr1c;
 }
 
 

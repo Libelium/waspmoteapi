@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Covadonga Albiñana, Yuri Carmona
  */
@@ -69,9 +69,10 @@ uint8_t WaspSX1272::ON()
 	#endif
 
 	// Powering the module
-	pinMode(XBEE_PW,OUTPUT);
-	digitalWrite(XBEE_PW,HIGH);
-	SPI.isSX = true;
+    PWR.powerSocket(SOCKET0, HIGH);
+    
+    // update SPI flag
+	SPI.isSocket0 = true;
   
 	//Configure the MISO, MOSI, CS, SPCR.
 	SPI.begin();
@@ -114,16 +115,15 @@ void WaspSX1272::OFF()
 		USB.println(F("Starting 'OFF'"));
 	#endif
 
-	// disable Semtech SPI flag
-	SPI.isSX = false;
+	// disable SPI flag
+	SPI.isSocket0 = false;
 	// close SPI bus if it is posible
 	SPI.close();
   
-	// Power off
-	pinMode(XBEE_PW,OUTPUT);
-	digitalWrite(XBEE_PW,LOW);
-  
-	#if (SX1272_debug_mode > 1)
+	// Powering the module
+    PWR.powerSocket(SOCKET0, LOW);
+    
+    #if (SX1272_debug_mode > 1)
 		USB.println(F("## Setting OFF ##"));
 		USB.println();
 	#endif
@@ -139,17 +139,18 @@ byte WaspSX1272::readRegister(byte address)
 {
     byte value = 0x00;
 
-	// Disable all SPI slaves
-    SPI.setSPISlave(ALL_DESELECTED);
     // Select SX slave
     SPI.setSPISlave(SOCKET0_SELECT);
     
-    //PRUEBA SPI
+    // read from module
     delay(1);
     bitClear(address, 7);		// Bit 7 cleared to write in registers
     SPI.transfer(address);
     value = SPI.transfer(0x00);
 
+	// Disable all SPI slaves
+    SPI.setSPISlave(ALL_DESELECTED);
+    
     #if (SX1272_debug_mode > 1)
         USB.print(F("## Reading:  ##\t"));
 		USB.print(F("Register "));
@@ -171,16 +172,16 @@ byte WaspSX1272::readRegister(byte address)
 */
 void WaspSX1272::writeRegister(byte address, byte data)
 {
-	// Disable all SPI slaves
-    SPI.setSPISlave(ALL_DESELECTED);
     // Select SX slave
     SPI.setSPISlave(SOCKET0_SELECT);
-    
-    //PRUEBA SPI
+
+    // write to module
     delay(1);
     bitSet(address, 7);			// Bit 7 set to read from registers
     SPI.transfer(address);
     SPI.transfer(data);
+    
+    // Disable all SPI slaves
     SPI.setSPISlave(ALL_DESELECTED);
 
     #if (SX1272_debug_mode > 1)
@@ -666,7 +667,7 @@ uint8_t	WaspSX1272::getHeader()
 	#endif
 
 	// take out bit 2 from REG_MODEM_CONFIG1 indicates ImplicitHeaderModeOn
-	if( bitRead(REG_MODEM_CONFIG1, 2) == 0 )
+	if( bitRead(readRegister(REG_MODEM_CONFIG1), 2) == 0 )
 	{ // explicit header mode (ON)
 		_header = HEADER_ON;
 		state = 1;

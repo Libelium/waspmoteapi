@@ -1,7 +1,7 @@
 /*! \file TurbiditySensor.cpp
-	\brief Library for managing the Smart Water Turbidity Sensor Board
+	\brief Library for managing the Smart Water Turbidity Sensor
 
-	Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-	Version:			1.2
+	Version:			3.1
 	Design:				David Gascón
 	Implementation:		Ahmad Saad
 */
@@ -32,15 +32,24 @@
 
 #include "TurbiditySensor.h"
 
+/***********************************************************************
+ * Class contructors
+ ***********************************************************************/
+turbidityClass::turbidityClass()
+{
+	// The sensor comes from factory with a default address
+	// This direction can be changed using the function configureSensorAddress
+}
+
 
 /***********************************************************************
  * Class contructors
  ***********************************************************************/
-turbiditySensorClass::turbiditySensorClass()
+turbidityClass::turbidityClass(uint8_t address)
 {
 	// The sensor comes from factory with a default address
 	// This direction can be changed using the function configureSensorAddress
-	ModbusMaster485 sensor(DEFAULT_ADDRESS);
+	sensor = ModbusMaster(RS232_COM, address);
 }
 
 /***********************************************************************
@@ -53,49 +62,46 @@ turbiditySensorClass::turbiditySensorClass()
 //!	Param : void														
 //!	Returns: "0" if no error, "-1" if error						
 //!*************************************************************
-char turbiditySensorClass::ON()
+uint8_t turbidityClass::ON()
 {
-	char result = -1;
-	
-	// Switch ON the power supply
-	PWR.setSensorPower(SENS_5V, SENS_ON);
-	// The sensor uses 9600 bps speed communication
-	sensor.begin(9600);
-	
-	// Important: Reset the registers of the sensor
-	resetSensor();
-	
-	// Configure the sensor address
-	result = configureSensorAddress(SENSOR_ADDRESS);
 
-#if DEBUG_MODE == 1
-	// Check that the address has been well configured
-	if (result == -1) {
-		// If no response from the slave, print an error message
-		USB.println(F("Communication Error. The address hasn't been configured."));
-	} 
-	else { 
-		USB.println(F("Sensor address configured correctly"));
-	}
-#endif
-
+	uint8_t result;
+	
 	delay(10);
 
-	// Clear the Modbus buffers
-	clearBuffer();
+	if (_boot_version < 'H')
+	{
+		sensor = ModbusMaster(RS485_COM);		
+		
+		// The sensor uses 9600 bps speed communication
+		sensor. begin(9600);
+		
+		// Switch ON the power supply
+		PWR.setSensorPower(SENS_5V, SENS_ON);	
 	
-	// Configure the type measurement of the temperature sensor
-	typeMeasurementConfiguration(TEMP_TYPE_CON, 0x0003);
-	delay(20);
-	clearBuffer();
+		WaspRegister |= REG_RS485;
+	}
+	else
+	{
+		sensor = ModbusMaster(RS232_COM);
 
-	// Configue the type measurement of the turbidity sensor
-	typeMeasurementConfiguration(TURB_TYPE_CON, 0x0003);
-	delay(20);
-	clearBuffer();
+		// The sensor uses 9600 bps speed communication
+		sensor.begin(9600, 1);
+		Utils.setMuxAux1(); // set Auxiliar1 socket
 	
-	// Configure the average measurement
-	average(25);
+		// Switch ON the power supply
+		PWR.setSensorPower(SENS_5V, SENS_ON);	
+		WaspRegister |= REG_SOCKET1;
+
+		// Turbidity Sensor ON
+		pinMode(PWR_TURBIDITY, OUTPUT);
+		digitalWrite(PWR_TURBIDITY, HIGH);
+		
+	}
+	
+	delay(100);
+
+	result = init();
 	
 	return result;
 }
@@ -107,10 +113,16 @@ char turbiditySensorClass::ON()
 //!	Param : void														
 //!	Returns: void							
 //!*************************************************************
-void turbiditySensorClass::OFF()
-{
-	// Supply the sensor using 5V output
-	PWR.setSensorPower(SENS_5V, SENS_OFF);
+void turbidityClass::OFF()
+{	
+	if (_boot_version >= 'H')
+	{
+	
+		// Turbidity Sensor ON
+		pinMode(PWR_TURBIDITY, OUTPUT);
+		digitalWrite(PWR_TURBIDITY, LOW);
+		
+	}
 }
 
 
@@ -119,11 +131,11 @@ void turbiditySensorClass::OFF()
 //********************************************************************** 
 //!*************************************************************
 //!	Name:	readTurbidity()											
-//!	Description: Reads the turbidity value from the sensor		
+//!	Description: Read the turbidity value from the sensor		
 //!	Param : void														
 //!	Returns: "0" if no error, "-1" if error						
 //!*************************************************************
-uint8_t turbiditySensorClass::readTurbidity()
+uint8_t turbidityClass::readTurbidity()
 {
 	////////////////////////////////////////////////////////////////////
 	// This declaration is used to generate a float from two integers 
@@ -136,7 +148,32 @@ uint8_t turbiditySensorClass::readTurbidity()
 	} 
 	foo;
 	
-	//readTemperature();
+	
+	if (_boot_version < 'H')
+	{
+		// The sensor uses 9600 bps speed communication
+		sensor.begin(9600);
+		
+		// Switch ON the power supply
+		PWR.setSensorPower(SENS_5V, SENS_ON);	
+	
+		WaspRegister |= REG_RS485;
+	}
+	else
+	{
+		// The sensor uses 9600 bps speed communication
+		sensor.begin(9600, 1);
+		Utils.setMuxAux1(); // set Auxiliar1 socket
+	
+		// Switch ON the power supply
+		PWR.setSensorPower(SENS_5V, SENS_ON);	
+		WaspRegister |= REG_SOCKET1;
+
+		// Turbidity Sensor ON
+		pinMode(PWR_TURBIDITY, OUTPUT);
+		digitalWrite(PWR_TURBIDITY, HIGH);
+	}
+	
 	delay(10);
 	
 	//writeCalibrationValue(0x005D, getTemperature());	
@@ -147,8 +184,8 @@ uint8_t turbiditySensorClass::readTurbidity()
 	// This variable will store the result of the communication
 	// result = 0 : no errors 
 	// result = 1 : error occurred
-	int result = -1;
-	int retries = 0;
+	uint8_t result = -1;
+	uint8_t retries = 0;
 	
 	while ((result !=0) && (retries < 20)) 
 	{
@@ -159,18 +196,16 @@ uint8_t turbiditySensorClass::readTurbidity()
 		
 		result = sensor.getResponseBuffer(0);
 		
-		#if DEBUG_MODE == 1
-			USB.print(F("Turbidity measurement status: "));
-			USB.print(result, BIN);
-			USB.print(F("\n"));
+		#if DEBUG_TURBIDITY > 1
+			PRINT_TURBIDITY(F("Turbidity measurement status: "));
+			PRINTLN_TURBIDITY_VAL(result);			
 		#endif
 		
 		result = sensor.getResponseBuffer(0) & 0x0007;     
 
-		#if DEBUG_MODE == 1
-			USB.print(F("Turbidity measurement status after mask: "));
-			USB.print(result, BIN);
-			USB.print(F("\n"));
+		#if DEBUG_TURBIDITY > 1
+			PRINT_TURBIDITY(F("Turbidity measurement status after mask: "));
+			PRINTLN_TURBIDITY_VAL(result);
 		#endif
 		delay(10);
 	}
@@ -180,11 +215,11 @@ uint8_t turbiditySensorClass::readTurbidity()
 	clearBuffer();
 
 	if (result != 0) {
-		#if DEBUG_MODE == 1
-			USB.println(F("Communication error while reading turbidity measurement status..."));
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("Communication error while reading turbidity measurement status..."));
 		#endif
 
-		return -1;
+		return 1;
 	} 
 	else {
 		
@@ -199,13 +234,13 @@ uint8_t turbiditySensorClass::readTurbidity()
 		}
 
 		if (result != 0) {
-			#if DEBUG_MODE == 1
+			#if DEBUG_TURBIDITY > 0
 				// If no response from the slave, print an error message
-				USB.println(F("Communication error while reading Turbidity..."));
+				PRINTLN_TURBIDITY(F("Communication error while reading Turbidity"));
 			#endif
 			delay(150);
 			
-			return -1;
+			return 1;
 		}
 		else {
 			// If all OK
@@ -226,13 +261,38 @@ uint8_t turbiditySensorClass::readTurbidity()
 //!	Param : void														
 //!	Returns: The turbidity value						
 //!*************************************************************
-float turbiditySensorClass::getTurbidity()
+float turbidityClass::getTurbidity()
 {
-	// Every sensor you use with digitalSmooth needs its own array
+	uint8_t status = -1;
+	uint8_t retries = 0;
+	
+	while ((status !=0) && (retries < 4)) 
+	{
+		
+		delay(20);
+		retries++;
+		status = readTurbidity();
+		
+	}
+	
+	if (status == 1)
+	{
+		//if readTurbidity function fails return -1000
+		return -1000.0;
+	}
+	
 	rawData1 = turbidity * 1000;
 	smoothData1 = digitalSmooth(rawData1, sensSmoothArray1);  
 
 	float turbidity = smoothData1/1000.0;
+	
+	// negative values aren't usefull so return zeros
+	// if sensor returns zeros (negative values) is might be badly placed
+	if (turbidity<0.0)
+	{
+		turbidity = 0.0;
+	}
+	
 	return turbidity;
 }
  
@@ -247,9 +307,26 @@ float turbiditySensorClass::getTurbidity()
 //!	Param : void														
 //!	Returns: The temperature value									
 //!*************************************************************
-float turbiditySensorClass::getTemperature()
+float turbidityClass::getTemperature()
 {
-	return temperature;
+	uint8_t status = -1;
+	uint8_t retries = 0;
+	
+	while ((status !=0) && (retries < 4)) 
+	{
+		
+		delay(20);
+		retries++;
+		status = readTemperature();
+		
+	}
+	if (status==0)
+	{	
+		return temperature;
+	}
+	
+	// if readTemperature function fails -1000 is returned
+	return -1000.0;
 }
 
 //**********************************************************************
@@ -262,75 +339,36 @@ float turbiditySensorClass::getTemperature()
 //! 		 config: The configuration to write					
 //!	Returns: void														
 //!*************************************************************
-void turbiditySensorClass::typeMeasurementConfiguration(uint16_t address, uint16_t config)
+uint8_t turbidityClass::typeMeasurementConfiguration(uint16_t address, uint16_t config)
 {
 	delay(100);
-	int result = sensor.writeSingleRegister(address, config);
+	uint8_t result = sensor.writeSingleRegister(address, config);
 	delay(100);
 
-	#if DEBUG_MODE == 1
-		// Chechk that the direction has been well writed
-		if (result == -1) {
-			// If no response from the slave, print an error message
-			USB.println(F("ERROR. Type Measurement Register not configured."));
-		} 
-		else { 
-			USB.println(F("Type Measurement Register well configured"));
-		}
-	#endif
-
-	clearBuffer();
-	delay(150);
+	// Chechk that the direction has been well writed
+	if (result == 0) 
+	{
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("Type Measurement Register well configured"));
+		#endif
+		
+		clearBuffer();
+		delay(150);
+		return 0;
+	} 
+	else 
+	{ 			
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("ERROR. Type Measurement Register not configured."));
+		#endif
+		
+		clearBuffer();
+		delay(150);
+		return 1;
+	}
+	
 }
 
-/*
- * // Not tested functions
-void temperatureSensorCalibration()
-{
-	//Variable to read data from the serial monitor. 
-	char serialByte = '0';
-	
-	/////////////////////////////////////////////////////////////////////////////
-	// OFFSET CALIBRATION PROCESS at 0ºC
-	/////////////////////////////////////////////////////////////////////////////
-	average(1);
-	temporaryCoeficients(DISABLE);
-
-	serialFlush(0);
-	
-	while(serialByte != 'R')
-	{		
-		readTemperature();
-		delay(250);
-		serialByte = serialRead(0);
-	}
-
-	writeCalibrationValue(TEMP_CAL1_REG, foo.toFloat);
-	temporaryCoeficients(OFFSET_0);
-	delay(5000);
-
-	/////////////////////////////////////////////////////////////////////////////
-	// CALIBRATION PROCESS at 25ºC
-	/////////////////////////////////////////////////////////////////////////////
-	
-	temporaryCoeficients(OFFSET_0);
-
-	serialByte = '0';  
-	serialFlush(0);
-	
-	while(serialByte != 'R')
-	{		
-		readTemperature();
-		delay(250);	
-		serialByte = serialRead(0);
-	}
-
-
-	writeCalibrationValue(TEMP_CAL2_REG, foo.toFloat);
-	temporaryCoeficients(OFFSET_0 | TEMP_25);
-	writeNameDate();
-	temporaryCoeficients(DISABLED); 
-}*/
 
 
 //!*************************************************************
@@ -339,10 +377,50 @@ void temperatureSensorCalibration()
 //!	Param : void														
 //!	Returns: void														
 //!*************************************************************
-void turbiditySensorClass::resetSensor()
+uint8_t turbidityClass::resetSensor()
 {
-	sensor.writeSingleRegister(RESET_REG, 0x000F);
-	delay(100);
+	// Result of the communication
+	uint8_t result;
+
+	// Use the new address of the sensor 
+	sensor.setSlaveAddress(DEFAULT_ADDRESS);
+
+	result = sensor.writeSingleRegister(RESET_REG, 0x000F);
+	delay(200);
+	
+	if (result == 0) 
+	{	
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("Reset well done"));
+		#endif	
+					
+		return 0;
+	} 
+	else 
+	{ 
+		// Use the new address of the sensor 
+		sensor.setSlaveAddress(SENSOR_ADDRESS);
+		
+		result = sensor.writeSingleRegister(RESET_REG, 0x000F);
+		delay(100);
+	
+		if (result == 0) 
+		{	
+			#if DEBUG_TURBIDITY > 0
+				PRINTLN_TURBIDITY(F("Reset well done"));	
+			#endif	
+			
+			return 0;		
+		} 
+		else
+		{
+			#if DEBUG_TURBIDITY > 0
+				PRINTLN_TURBIDITY(F("Reset failure"));	
+			#endif
+			
+			return 1;
+		}
+	}	
 }
 
 
@@ -355,26 +433,32 @@ void turbiditySensorClass::resetSensor()
 //!	Param : void														
 //!	Returns: void														
 //!*************************************************************
-void turbiditySensorClass::startMeasurment(uint8_t parameter)
+uint8_t turbidityClass::startMeasurment(uint8_t parameter)
 {
 	// Result of the communication
-	int result = -1;
-
+	uint8_t result;
+	
 	result = sensor.writeSingleRegister(NEW_MEAS_REG, parameter);
 	delay(100); 
 	
-	#if DEBUG_MODE == 1
-		// Chechk that the direction has been well writed
-		if (result == -1) {
-			// If no response from the slave, print an error message
-			USB.println(F("Communication Error. The sensor can't take a new measure."));
-		} 
-		else { 
-			USB.println(F("Starting a new measure process..."));
-		}
-	#endif
+	// Chechk that the direction has been well writed
+	if (result == 0) 
+	{
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("Starting a new measure process..."));
+		#endif
+		
+		return 0;		
+	} 
+	else 
+	{ 
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("Communication Error. The sensor can't take a new measure."));
+		#endif
+		init();
+		return 1;
+	}
 
-	delay(10);
 }
 
 
@@ -383,11 +467,11 @@ void turbiditySensorClass::startMeasurment(uint8_t parameter)
 //**********************************************************************
 //!*************************************************************
 //!	Name:	readTemperature()											
-//!	Description: Reads the temperature value from the sensor		
+//!	Description: Read the temperature value from the sensor		
 //!	Param : void														
 //!	Returns: "0" if no error, "-1" if error						
 //!*************************************************************
-uint8_t turbiditySensorClass::readTemperature() 
+uint8_t turbidityClass::readTemperature() 
 {
 	union 
 	{
@@ -396,15 +480,39 @@ uint8_t turbiditySensorClass::readTemperature()
 	}
 	foo;
 	
-	clearBuffer();
+	if (_boot_version < 'H')
+	{
+		// The sensor uses 9600 bps speed communication
+		sensor.begin(9600);
+		
+		// Switch ON the power supply
+		PWR.setSensorPower(SENS_5V, SENS_ON);	
+	
+		WaspRegister |= REG_RS485;
+	}
+	else
+	{
+		// The sensor uses 9600 bps speed communication
+		sensor.begin(9600, 1);
+		Utils.setMuxAux1(); // set Auxiliar1 socket
+	
+		// Switch ON the power supply
+		PWR.setSensorPower(SENS_5V, SENS_ON);	
+		WaspRegister |= REG_SOCKET1;
 
+		// Turbidity Sensor ON
+		pinMode(PWR_TURBIDITY, OUTPUT);
+		digitalWrite(PWR_TURBIDITY, HIGH);
+	}
+	
+	clearBuffer();
 	startMeasurment(TEMP_NEW_MEAS);
 
 	// This variable will store the result of the communication
 	// result = 0 : no errors 
 	// result = 1 : error occurred
-	int result = -1;
-	int retries = 0;
+	uint8_t result = -1;
+	uint8_t retries = 0;
 
 	delay(100);
 
@@ -416,18 +524,16 @@ uint8_t turbiditySensorClass::readTemperature()
 		
 		result = sensor.getResponseBuffer(0);
 		
-		#if DEBUG_MODE == 1
-			USB.print(F("Temperature measurement status: "));
-			USB.print(result, BIN);
-			USB.print(F("\n"));
+		#if DEBUG_TURBIDITY > 1
+			PRINT_TURBIDITY(F("Temperature measurement status: "));
+			PRINTLN_TURBIDITY_VAL(result);
 		#endif
 		
 		result = sensor.getResponseBuffer(0) & 0x0007;
 
-		#if DEBUG_MODE == 1
-			USB.print(F("Temperature measurement status: "));
-			USB.print(result, BIN);
-			USB.print(F("\n"));
+		#if DEBUG_TURBIDITY > 1
+			PRINT_TURBIDITY(F("Temperature measurement status: "));
+			PRINTLN_TURBIDITY_VAL(result);
 		#endif
 		
 		delay(100);    
@@ -436,22 +542,22 @@ uint8_t turbiditySensorClass::readTemperature()
 	delay(100);
 
 	if (result != 0) {    
-		#if DEBUG_MODE == 1
-			USB.println(F("Communication error while reading temperature measurement status..."));
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("Communication error while reading temperature measurement status..."));
 		#endif
 
-		return -1;
+		return 1;
 	} 
 	else {
 		result = sensor.readHoldingRegisters(TEMP_VALUE_REG, 2);
 
 		if (result != 0) {
-			#if DEBUG_MODE == 1
+			#if DEBUG_TURBIDITY > 1
 				// If no response from the slave, print an error message
-				USB.println(F("Communication error while reading temperature..."));
+				PRINTLN_TURBIDITY(F("Communication error while reading temperature..."));
 			#endif
 			
-			return -1;
+			return 1;
 			delay(100);
 		}
 		else {
@@ -476,23 +582,29 @@ uint8_t turbiditySensorClass::readTemperature()
 //!	Param : void												
 //!	Returns: void					
 //!*************************************************************
-void turbiditySensorClass::average(uint8_t average)
+uint8_t turbidityClass::average(uint8_t average)
 {
 	if (average > 50)
 		average = 50;
 	
-	int result = sensor.writeSingleRegister(AVRG_PARA_REG, average);
+	uint8_t result = sensor.writeSingleRegister(AVRG_PARA_REG, average);
 
-	#if DEBUG_MODE == 1
 	// Chechk that the direction has been well writed
-		if (result == -1) {
-			// If no response from the slave, print an error message
-			USB.println(F("Communication Error. Average not configured."));
-		} 
-		else { 
-			USB.println(F("Average configured..."));
-		}
-	#endif 
+	if (result == 0)
+	{
+		#if DEBUG_TURBIDITY > 0	
+			PRINTLN_TURBIDITY(F("Average configured..."));
+		#endif 
+		return 0;
+	} 
+	else
+	
+	{ 
+		#if DEBUG_TURBIDITY > 0
+			PRINTLN_TURBIDITY(F("Communication Error. Average not configured."));
+		#endif 
+		return 1;
+	}
 }
 
 
@@ -505,29 +617,31 @@ void turbiditySensorClass::average(uint8_t average)
 //!	Param : address: the address to configure				
 //!	Returns: void					
 //!*************************************************************
-int turbiditySensorClass::configureSensorAddress(uint8_t address)
+uint8_t turbidityClass::configureSensorAddress(uint8_t address)
 {
 	
-	int result = -1;
-	int retries = 0;
-	
-	while ((result !=0) & (retries < 10))
-	{ 
+	uint8_t result = -1;
+	uint8_t retries = 0;
+
+	while ((result !=0) && (retries < 10))
+	{ 	
 		retries ++;
 		// Asign the address to the sensor
 		result = sensor.writeSingleRegister(ADDRESS_REG, address);
 		delay(50);
 	}
 
-#if DEBUG_MODE == 1
-	if (result == -1) {
-		// If no response from the slave, print an error message
-		USB.println(F("Communication Error. Address not configured."));
-	} 
-	else { 
-		USB.println(F("Address well configured"));
-	}
-#endif
+	#if DEBUG_TURBIDITY > 0
+		if (result == 0) 
+		{
+			// If no response from the slave, print an error message
+			PRINTLN_TURBIDITY(F("Address well configured"));
+		} 
+		else 
+		{ 
+			PRINTLN_TURBIDITY(F("Communication Error. Address not configured."));
+		}
+	#endif
 
 	// Use the new address of the sensor 
 	sensor.setSlaveAddress(SENSOR_ADDRESS);
@@ -538,8 +652,8 @@ int turbiditySensorClass::configureSensorAddress(uint8_t address)
 
 	// If the address == 1, no errors
 	if (sensor.getResponseBuffer(0) != 0x01) {
-		// If no response from the slave return -1
-		return -1; 
+		// If no response from the slave return 1
+		return 1; 
 	}
 	else {
 		return 0;
@@ -553,7 +667,7 @@ int turbiditySensorClass::configureSensorAddress(uint8_t address)
 //!	Param : void				
 //!	Returns: void					
 //!*************************************************************
-void turbiditySensorClass::clearBuffer()
+void turbidityClass::clearBuffer()
 {
 	// Clear Response Buffer
 	sensor.clearResponseBuffer();
@@ -561,49 +675,6 @@ void turbiditySensorClass::clearBuffer()
 	delay(10);
 }
 
-//**********************************************************************
-// Frame 60 in the documentation for Temperature
-// Not tested functions
-//**********************************************************************
-void turbiditySensorClass::readCompensationTemperature(uint16_t _register)
-{
-	
-		union 
-	{
-		int ints[2];   
-		float toFloat;
-	} 
-	foo;
-  // Result of the communication
-  //int result = -1;
-
- /* foo.toFloat = temperature;
-  node.setTransmitBuffer(0 , foo.ints[1]);
-  node.setTransmitBuffer(1 , foo.ints[0]); 
-
-#if DEBUG_MODE == 1
-  USB.println(F("Writting compensation temperature returned by Master"));
-#endif
-
-  node.writeMultipleRegisters(COMP_TEMP_REG, 2);
-  delay(100);*/
-
-#if DEBUG_MODE == 1
-  sensor.readHoldingRegisters(_register, 4);
-  USB.print(F("Temperature writed in register: ")); 
-  USB.print(_register, HEX); 
-  // Print the read data from the slave 
-  USB.print(sensor.getResponseBuffer(0), DEC);
-  USB.print(F(" "));
-  USB.print(sensor.getResponseBuffer(1), DEC);
-  USB.print(F(" "));
-
-  foo.ints[0]= sensor.getResponseBuffer(1);
-  foo.ints[1]= sensor.getResponseBuffer(0);
-
-  USB.println(foo.toFloat);
-#endif
-}
 
 //!*************************************************************
 //!	Name:	digitalSmooth()									
@@ -612,7 +683,7 @@ void turbiditySensorClass::readCompensationTemperature(uint16_t _register)
 //!			int *sensSmoothArray: array of previous values		
 //!	Returns: long: filtered value					
 //!*************************************************************
-long turbiditySensorClass::digitalSmooth(int rawIn, int *sensSmoothArray)
+long turbidityClass::digitalSmooth(int rawIn, int *sensSmoothArray)
 {
 	// "int *sensSmoothArray" passes an array to the function - the asterisk indicates the array name is a pointer
 	long j, k, temp, top, bottom;
@@ -664,5 +735,102 @@ long turbiditySensorClass::digitalSmooth(int rawIn, int *sensSmoothArray)
 	return total / k;
 }
 
+
+
+//!*************************************************************
+//!	Name:	init()									
+//!	Description: Initialization function	
+//!	Returns:	1 reset error	
+//!				2 configure address error
+//!*************************************************************
+
+uint8_t turbidityClass::init()
+{
+	uint8_t status = -1;
+	uint8_t retries = 0;
+	
+	while ((status !=0) && (retries < 4)) 
+	{
+		
+		delay(20);
+		retries++;
+	
+		// Important: Reset the registers of the sensor
+		status = resetSensor();
+		
+	}
+	
+	// Check that the reset has been done
+	if (status == 0) 
+	{
+		#if DEBUG_TURBIDIRY > 0
+		PRINTLN_TURBIDITY(F("Sensor reset correctly"));
+		#endif
+	} 
+	else 
+	{ 
+		#if DEBUG_TURBIDIRY > 0
+		PRINTLN_TURBIDITY(F("Communication Error. The reset hasn't been done."));
+		#endif
+		return 1;
+	}
+	
+	// Configure the sensor address
+	status = configureSensorAddress(SENSOR_ADDRESS);
+
+	// Check that the address has been well configured
+	if (status == 0) 
+	{
+		#if DEBUG_TURBIDIRY > 0
+		PRINTLN_TURBIDITY(F("Sensor address configured correctly"));
+		#endif
+	} 
+	else 
+	{ 
+		#if DEBUG_TURBIDIRY > 0
+		PRINTLN_TURBIDITY(F("Communication Error. The address hasn't been configured."));
+		#endif
+		return 2;
+	}
+
+
+	delay(10);
+
+	// Clear the Modbus buffers
+	clearBuffer();
+	
+	status = -1;
+	retries = 0;
+	
+	while ((status !=0) && (retries < 4)) 
+	{
+		retries++;
+		
+		// Configure the type measurement of the temperature sensor
+		status = typeMeasurementConfiguration(TEMP_TYPE_CON, 0x0003);
+		delay(20);
+		clearBuffer();
+
+	}
+	
+	// Check that the address has been well configured
+	if (status == 0) 
+	{
+		#if DEBUG_TURBIDIRY > 0
+		PRINTLN_TURBIDITY(F("Sensor meassurement configured correctly"));
+		#endif
+	} 
+	else 
+	{ 
+		#if DEBUG_TURBIDIRY > 0
+		PRINTLN_TURBIDITY(F("Communication Error. The meassurement type hasn't been configured."));
+		#endif
+		return 3;
+	}
+	// Configure the average measurement
+	average(25);
+	
+	return 0;
+}
 
 

@@ -1,7 +1,7 @@
 /*
  *  Copyright (c) 2008 D. Cuartielles
  *  Copyright (c) 2005-2006 David A. Mellis
- *  Modified for Waspmote by Libelium, 2014
+ *  Modified for Waspmote by Libelium, 2016
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,8 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *  Version:		1.0
+ * 
+ *  Version:		3.0
  *  Implementation:	D. Mellis, D. Cuartielles, A. Bielsa, Y. Carmona
  */
  
@@ -325,25 +326,22 @@ void init()
 	sbi(TCCR3A, WGM30);
 
 	// configure and enable a2d conversions
-    //FIXME: this is to turn on ADC!! 
-	//PWR.setIPF(IPADC); //---> the following is taken from WaspPWR
-        // turn on the power on the ADC
-        // by writing a zero to the register
-        cbi(PRR0, PRADC);
+	// turn on the power on the ADC
+	// by writing a zero to the register
+	cbi(PRR0, PRADC);
 
-	    // set a2d reference to AVCC (5 volts)
-	    cbi(ADMUX, REFS1);
-	    sbi(ADMUX, REFS0);
+	// set a2d reference to AVCC
+	cbi(ADMUX, REFS1);
+	sbi(ADMUX, REFS0);
 
-		// set a2d prescale factor to 128
-		// 16 MHz / 128 = 125 KHz, inside the desired 50-200 KHz range.
-		// FIXME: this will not work properly for other clock speeds, and
-		// this code should use F_CPU to determine the prescale factor.
-		sbi(ADCSRA, ADPS2);
-		sbi(ADCSRA, ADPS1);
+	// set a2d prescale factor to 128
+	// 14745600 Hz / 128 = 115200 Hz, inside the desired 50-200 KHz range
+	sbi(ADCSRA, ADPS2);
+	sbi(ADCSRA, ADPS1);
+	sbi(ADCSRA, ADPS0);
 
-        // enable a2d conversions
-        sbi(ADCSRA, ADEN);
+	// enable a2d conversions
+	sbi(ADCSRA, ADEN);
 	
 
 	// the bootloader connects pins 0 and 1 to the USART; disconnect them

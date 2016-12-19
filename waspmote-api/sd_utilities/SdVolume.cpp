@@ -1,6 +1,6 @@
 /* Arduino SdFat Library
  * Copyright (C) 2012 by William Greiman
- * Modified in 2014 for Waspmote, by Y. Carmona 
+ * Modified in 2016 for Waspmote, by Y. Carmona 
  *
  * This file is part of the Arduino SdFat Library
  *
@@ -17,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino SdFat Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
 #include "SdFat.h"
 //------------------------------------------------------------------------------
@@ -36,84 +39,103 @@ Sd2Card* SdVolume::m_sdCard;            // pointer to SD card object
 #endif  // USE_MULTIPLE_CARDS
 //------------------------------------------------------------------------------
 // find a contiguous group of clusters
-bool SdVolume::allocContiguous(uint32_t count, uint32_t* curCluster) {
-  // start of group
-  uint32_t bgnCluster;
-  // end of group
-  uint32_t endCluster;
-  // last cluster of FAT
-  uint32_t fatEnd = m_clusterCount + 1;
+bool SdVolume::allocContiguous(uint32_t count, uint32_t* curCluster) 
+{
+	// start of group
+	uint32_t bgnCluster;
+	// end of group
+	uint32_t endCluster;
+	// last cluster of FAT
+	uint32_t fatEnd = m_clusterCount + 1;
 
-  // flag to save place to start next search
-  bool setStart;
+	// flag to save place to start next search
+	bool setStart;
 
-  // set search start cluster
-  if (*curCluster) {
-    // try to make file contiguous
-    bgnCluster = *curCluster + 1;
+	// set search start cluster
+	if (*curCluster) 
+	{
+		// try to make file contiguous
+		bgnCluster = *curCluster + 1;
 
-    // don't save new start location
-    setStart = false;
-  } else {
-    // start at likely place for free cluster
-    bgnCluster = m_allocSearchStart;
+		// don't save new start location
+		setStart = false;
+	} 
+	else 
+	{
+		// start at likely place for free cluster
+		bgnCluster = m_allocSearchStart;
 
-    // save next search start if one cluster
-    setStart = count == 1;
-  }
-  // end of group
-  endCluster = bgnCluster;
+		// save next search start if one cluster
+		setStart = count == 1;
+	}
+	// end of group
+	endCluster = bgnCluster;
 
-  // search the FAT for free clusters
-  for (uint32_t n = 0;; n++, endCluster++) {
-    // can't find space checked all clusters
-    if (n >= m_clusterCount) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-    // past end - start from beginning of FAT
-    if (endCluster > fatEnd) {
-      bgnCluster = endCluster = 2;
-    }
-    uint32_t f;
-    if (!fatGet(endCluster, &f)) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
+	// search the FAT for free clusters
+	for (uint32_t n = 0;; n++, endCluster++) 
+	{
+		// can't find space checked all clusters
+		if (n >= m_clusterCount) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+		// past end - start from beginning of FAT
+		if (endCluster > fatEnd) {
+		  bgnCluster = endCluster = 2;
+		}
+		uint32_t f;
+		if (!fatGet(endCluster, &f)) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
 
-    if (f != 0) {
-      // cluster in use try next cluster as bgnCluster
-      bgnCluster = endCluster + 1;
-    } else if ((endCluster - bgnCluster + 1) == count) {
-      // done - found space
-      break;
-    }
-  }
-  // mark end of chain
-  if (!fatPutEOC(endCluster)) {
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  // link clusters
-  while (endCluster > bgnCluster) {
-    if (!fatPut(endCluster - 1, endCluster)) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-    endCluster--;
-  }
-  if (*curCluster != 0) {
-    // connect chains
-    if (!fatPut(*curCluster, bgnCluster)) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-  }
-  // return first cluster number to caller
-  *curCluster = bgnCluster;
+		if (f != 0) 
+		{
+			// cluster in use try next cluster as bgnCluster
+			bgnCluster = endCluster + 1;
+		} 
+		else if ((endCluster - bgnCluster + 1) == count) 
+		{
+			// done - found space
+			break;
+		}
+	}
+  
+	// mark end of chain
+	if (!fatPutEOC(endCluster)) 
+	{
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+  
+	// link clusters
+	// do not need timeout because there is a counter
+	while (endCluster > bgnCluster) 
+	{
+		if (!fatPut(endCluster - 1, endCluster)) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+		endCluster--;
+	}
+	
+	if (*curCluster != 0) 
+	{
+		// connect chains
+		if (!fatPut(*curCluster, bgnCluster)) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+	}
+	// return first cluster number to caller
+	*curCluster = bgnCluster;
 
-  // remember possible next free cluster
-  if (setStart) m_allocSearchStart = bgnCluster + 1;
+	// remember possible next free cluster
+	if (setStart) m_allocSearchStart = bgnCluster + 1;
 
   return true;
 
@@ -429,81 +451,113 @@ bool SdVolume::fatPut(uint32_t cluster, uint32_t value) {
 }
 //------------------------------------------------------------------------------
 // free a cluster chain
-bool SdVolume::freeChain(uint32_t cluster) {
-  uint32_t next;
+bool SdVolume::freeChain(uint32_t cluster) 
+{
+	uint32_t next;
+	uint32_t previous = millis();
+	
+	// clear free cluster location
+	m_allocSearchStart = 2;
 
-  // clear free cluster location
-  m_allocSearchStart = 2;
+	do 
+	{
+		if (!fatGet(cluster, &next)) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+		
+		// free cluster
+		if (!fatPut(cluster, 0)) 
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}	
+		cluster = next;
+		
+		if (millis() - previous > 60000)
+		{
+			DBG_FAIL_MACRO;
+			goto fail;
+		}
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if (millis() < previous) previous = millis();
+	} while (!isEOC(cluster));
+	
 
-  do {
-    if (!fatGet(cluster, &next)) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-    // free cluster
-    if (!fatPut(cluster, 0)) {
-      DBG_FAIL_MACRO;
-      goto fail;
-    }
-
-    cluster = next;
-  } while (!isEOC(cluster));
-
-  return true;
+	return true;
 
  fail:
-  return false;
+	return false;
 }
 //------------------------------------------------------------------------------
 /** Volume free space in clusters.
  *
  * \return Count of free clusters for success or -1 if an error occurs.
  */
-int32_t SdVolume::freeClusterCount() {
-  uint32_t free = 0;
-  uint32_t lba;
-  uint32_t todo = m_clusterCount + 2;
-  uint16_t n;
+int32_t SdVolume::freeClusterCount() 
+{
+	uint32_t free = 0;
+	uint32_t lba;
+	uint32_t todo = m_clusterCount + 2;
+	uint16_t n;
 
-  if (FAT12_SUPPORT && m_fatType == 12) {
-    for (unsigned i = 2; i < todo; i++) {
-      uint32_t c;
-      if (!fatGet(i, &c)) {
-        DBG_FAIL_MACRO;
-        goto fail;
-      }
-      if (c == 0) free++;
-    }
-  } else if (m_fatType == 16 || m_fatType == 32) {
-    lba = m_fatStartBlock;
-    while (todo) {
-      cache_t* pc = cacheFetchFat(lba++, CACHE_FOR_READ);
-      if (!pc) {
-        DBG_FAIL_MACRO;
-        goto fail;
-      }
-      n = m_fatType == 16 ? 256 : 128;
-      if (todo < n) n = todo;
-      if (m_fatType == 16) {
-        for (uint16_t i = 0; i < n; i++) {
-          if (pc->fat16[i] == 0) free++;
-        }
-      } else {
-        for (uint16_t i = 0; i < n; i++) {
-          if (pc->fat32[i] == 0) free++;
-        }
-      }
-      todo -= n;
-    }
-  } else {
-    // invalid FAT type
-    DBG_FAIL_MACRO;
-    goto fail;
-  }
-  return free;
+	if (FAT12_SUPPORT && m_fatType == 12) 
+	{
+		for (unsigned i = 2; i < todo; i++) 
+		{
+			uint32_t c;
+			if (!fatGet(i, &c)) 
+			{
+				DBG_FAIL_MACRO;
+				goto fail;
+			}
+			if (c == 0) free++;
+		}
+	} 
+	else if (m_fatType == 16 || m_fatType == 32) 
+	{
+		lba = m_fatStartBlock;
+		
+		// do not need a timeout because there is a counter		
+		while (todo) 
+		{
+			cache_t* pc = cacheFetchFat(lba++, CACHE_FOR_READ);
+			if (!pc) 
+			{
+				DBG_FAIL_MACRO;
+				goto fail;
+			}
+			n = m_fatType == 16 ? 256 : 128;
+			if (todo < n) n = todo;
+			if (m_fatType == 16) 
+			{
+				for (uint16_t i = 0; i < n; i++) 
+				{
+					if (pc->fat16[i] == 0) free++;
+				}
+			} 
+			else 
+			{
+				for (uint16_t i = 0; i < n; i++) 
+				{
+					if (pc->fat32[i] == 0) free++;
+				}
+			}
+			todo -= n;
+		}
+	} 
+	else 
+	{
+		// invalid FAT type
+		DBG_FAIL_MACRO;
+		goto fail;
+	}
+	return free;
 
  fail:
-  return -1;
+	return -1;
 }
 //------------------------------------------------------------------------------
 /** Initialize a FAT volume.

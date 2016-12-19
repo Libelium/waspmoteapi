@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
  *  This program is free software: you can redistribute it and/or modify
@@ -14,10 +14,10 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		1.9
-    Design:			David Gascón
-    Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
+ * 
+ *	Version:		3.1
+ *	Design:			David Gascón
+ * 	Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
  
   
@@ -39,7 +39,7 @@
 /*! \def WASPMOTE_API_VERSION
     \brief Waspmote API version number
  */
-#define WASPMOTE_API_VERSION 20
+#define WASPMOTE_API_VERSION 26
  
  
  
@@ -228,9 +228,6 @@
 /*! \def ACC_INT_PIN_MON
     \brief Monitorization pin used for ACC interruptions
  */
- /*! \def BAT_INT_PIN_MON
-    \brief Monitorization pin used for BAT interruptions
- */ 
  /*! \def RTC_INT_PIN_MON
     \brief Monitorization pin used for RTC interruptions
  */ 
@@ -251,13 +248,14 @@
     \brief Monitorization pin used for Pluviometer sensor interruptions
  */ 
 #define	ACC_INT_PIN_MON		RDY_ACC 	// PE6
-#define	BAT_INT_PIN_MON		LOW_BAT_MON	// PG0
 #define	RTC_INT_PIN_MON		RST_RTC		// PE7
 #define	WTD_INT_PIN_MON		DIGITAL0	// PE4
 #define XBEE_INT_PIN_MON	XBEE_MON	// PA7
 #define RAD_INT_PIN_MON   	DIGITAL7	// PC4
 #define PIR_3G_PIN_MON    	ANA4		// PF5 (ANALOG5)
-#define	PLV_INT_PIN_MON		DIGITAL4
+#define	PLV_INT_PIN_MON		DIGITAL4	// v20
+#define	PLV_INT_PIN_MON_V30		ANA3	// v30
+
 #define	UART1_INT_PIN_MON	GPRS_PIN 	// PC2
 
 // Event Sensor Board
@@ -351,27 +349,34 @@
 /*! \def REG_DUST_GASES_PRO
     \brief Bit dedicated to the marking of the Dust sensor in Gases PRO Board
  */
-#define	REG_5V				1		// bit 0
-#define	REG_3V3				2 		// bit 1
-#define	REG_SOCKET0			4 		// bit 2
-#define	REG_SOCKET1			8 		// bit 3
-#define	REG_METERING		16 		// bit 4
-#define	REG_AGRICULTURE		32 		// bit 5
-#define	REG_GASES			64 		// bit 6
-#define	REG_EVENTS			128		// bit 7
-#define	REG_CITIES_V14		256		// bit 8	
-#define	REG_CITIES_V15		512		// bit 9
-#define	REG_RADIATION		1024	// bit 10
-#define	REG_PROTOTYPING		2048	// bit 11
-#define	REG_PARKING			4096	// bit 12
-#define	REG_VIDEO_CAMERA	8192	// bit 13
-#define	REG_WATER			16384	// bit 14
-#define	REG_OTA				32768	// bit 15
-#define	REG_SD				65536	// bit 16
-#define	REG_SX				131072	// bit 17
-#define	REG_DUST_GASES_PRO	262144	// bit 18
-#define	REG_WATER_IONS		524288	// bit 19
-#define REG_RS485			1048576	// bit 20
+
+// WaspRegister
+static const uint16_t	REG_5V				=	1;			// bit 0
+static const uint16_t	REG_3V3				=	2;			// bit 1
+static const uint16_t	REG_SOCKET0			=	4;			// bit 2
+static const uint16_t	REG_SOCKET1			=	8; 			// bit 3
+static const uint16_t	REG_SD				=	16; 		// bit 4
+static const uint16_t	REG_SX				=	32; 		// bit 5
+static const uint16_t	REG_RS485			=	64; 		// bit 6
+static const uint16_t	REG_XBEE_SOCKET0	=	128;		// bit 7
+static const uint16_t	REG_OTA				=	256;		// bit 8
+
+
+// WaspRegisterSensor
+static const uint16_t	REG_METERING		=	1;			// bit 0
+static const uint16_t	REG_AGRICULTURE		=	2;			// bit 1
+static const uint16_t	REG_DUST_GASES_PRO	=	4;			// bit 2
+static const uint16_t	REG_WATER_IONS		=	8;			// bit 3
+static const uint16_t	REG_GASES			=	16;			// bit 4
+static const uint16_t	REG_CITIES_PRO		=	32;			// bit 5
+static const uint16_t	REG_EVENTS			=	64;			// bit 6
+static const uint16_t	REG_CITIES_V14		=	128;		// bit 7	
+static const uint16_t	REG_CITIES_V15		=	256;		// bit 8
+static const uint16_t	REG_RADIATION		=	512;		// bit 9
+static const uint16_t	REG_PROTOTYPING		=	1024;		// bit 10
+static const uint16_t	REG_PARKING			=	2048;		// bit 11
+static const uint16_t	REG_VIDEO_CAMERA	=	4096;		// bit 12
+static const uint16_t	REG_WATER			=	8192;		// bit 13
 
 
 /*******************************************************************************
@@ -391,14 +396,10 @@
 /*! \def XBEE_ON
     \brief XBee Power Mode. OFF in this case    
  */
-/*! \def XBEE_HIBERNATE
-    \brief XBee Power Mode. HIBERNATE in this case    
- */
 /*! \def XBEE_OFF
     \brief XBee Power Mode. OFF in this case    
  */
 #define	XBEE_ON			1
-#define	XBEE_HIBERNATE	2
 #define	XBEE_OFF		3
 
 
@@ -448,18 +449,33 @@
 #define	ENABLED		1
 
 
-// Used EEPROM addresses 
-/*! \def AUTHKEY_ADDR
-    \brief Authentication key EEPROM address
- */
-/*! \def MOTEID_ADDR
-    \brief MOTEID EEPROM address
- */
-/*! \def SEQUENCE_ADDR
-    \brief Sequence EEPROM address
- */
-#define MOTEID_ADDR		147
-#define SEQUENCE_ADDR	163
-#define AUTHKEY_ADDR	107
+
+// Define the Voltage Reference Selections for ADC
+#define EXTERNAL 		0
+#define DEFAULT 		1
+#define INTERNAL1V1 	2
+#define INTERNAL2V56 	3
+
+// Define of the sensor boards sockets
+#define SOCKET_1		1
+#define SOCKET_2		2
+#define SOCKET_3		3
+#define SOCKET_4		4
+#define SOCKET_5		5
+#define SOCKET_6		6
+#define SOCKET_7		7
+#define SOCKET_8		8
+#define SOCKET_9		9
+#define SOCKET_10		10
+
+// Define the Plug&Sense! 
+#define SOCKET_A		101
+#define SOCKET_B		102
+#define SOCKET_C		103
+#define SOCKET_D		104
+#define SOCKET_E		105
+#define SOCKET_F		106
+
+
 
 #endif

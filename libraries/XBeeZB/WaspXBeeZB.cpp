@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.2
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -64,6 +64,8 @@ const char	set_netwk_key_ZB[]		PROGMEM	=	"7E001408524E4B000000000000000000000000
 const char	set_power_mode_ZB[]		PROGMEM	=	"7E00050852504D0000";	// AT+PM
 const char	get_power_mode_ZB[]		PROGMEM	=	"7E00040852504D08";		// AT+PM
 const char	get_supply_Volt_ZB[]	PROGMEM	=	"7E0004085225562A";		// AT+%V
+const char	set_coordinator_ZB[]	PROGMEM	=	"7E0005085243450000";	// AT+CE
+const char	get_coordinator_ZB[]	PROGMEM	=	"7E00040852434500";		// AT+CE
 
 
 
@@ -98,7 +100,9 @@ const char* const table_ZB[] PROGMEM =
 	set_netwk_key_ZB,		// 26
 	set_power_mode_ZB,		// 27
 	get_power_mode_ZB,		// 28
-	get_supply_Volt_ZB		// 29  	
+	get_supply_Volt_ZB,		// 29  	
+	set_coordinator_ZB,		// 30	
+	get_coordinator_ZB,		// 31  	
 };
 
 
@@ -117,14 +121,7 @@ void	WaspXBeeZB::init( uint8_t uart_used	)
 {
 	protocol=ZIGBEE;
 	uart=uart_used;
-		
-	// in the case the XBee is plugged to SOCKET0 it is necessary to make sure
-	// that the multiplexor is selecting teh XBee module
-	if(uart_used==SOCKET0)
-	{
-		Utils.setMuxSocket0();
-	}		
-
+	
 	pos=0;
 	discoveryOptions=0x00;
 	awakeTime[0]=AWAKE_TIME_ZIGBEE_H;
@@ -1321,6 +1318,68 @@ void WaspXBeeZB::setKnownDestination(packetXBee* paq, uint8_t* address)
 
     paq->naD[0]=address[0];
     paq->naD[1]=address[1];	
+}
+
+
+
+
+/*
+ Function: Set/read if this device is a coordinator (1) or not (0)
+ Returns: Integer that determines if there has been any error 
+   error=2 --> The command has not been executed
+   error=1 --> There has been an error while executing the command
+   error=0 --> The command has been executed with no errors
+ Values: Change the NJ command
+ Parameters:
+   input: if this device is a coordinator (1) or not (0)
+*/
+uint8_t WaspXBeeZB::setCoordinator(uint8_t input)
+{
+    int8_t error = 2;        
+    error_AT = 2;    
+    char buffer[20];
+    
+    // set_coordinator_ZB
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_ZB[30])));
+    
+    gen_data(buffer,input);
+    gen_checksum(buffer);
+    error = gen_send(buffer);
+    
+    if (error == 0)
+    {
+        coordinatorEnable = input;
+    }
+    return error;
+}
+
+
+
+/*
+ Function: Read the time that a Coordinator/Router allows nodes to join
+ Returns: Integer that determines if there has been any error 
+   error=2 --> The command has not been executed
+   error=1 --> There has been an error while executing the command
+   error=0 --> The command has been executed with no errors
+ Values: Executes the NJ command. Stores in global "joinTime" variable the time allowing join
+*/
+uint8_t WaspXBeeZB::getCoordinator()
+{
+    int8_t error = 2;        
+    error_AT = 2;    
+    char buffer[20];
+    
+    // get_coordinator_ZB
+    strcpy_P(buffer, (char*)pgm_read_word(&(table_ZB[31])));
+    
+    gen_data(buffer);
+    error = gen_send(buffer);
+    
+    if (error == 0)
+    {
+        coordinatorEnable = data[0];
+    }
+    return error;
 }
 
 

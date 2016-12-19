@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.1
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Yuri Carmona
 
@@ -27,18 +27,21 @@
 #ifndef WaspUART_h
 #define WaspUART_h
 
-/******************************************************************************
- * Includes
- ******************************************************************************/
- 
- 
 
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
 
-#define UART_DEBUG 0
+//! DEBUG MODE
+/*! 0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages 
+ * \Remarks do not enable mode 2 unless SOCKET1 is used
+ */
+#define DEBUG_UART 0
 
+// define print MACRO
+#define PRINT_UART(str)		USB.print(F("[UART] ")); USB.print(str);
 
 /*! \def UART0
     \brief UART0 of the MCU
@@ -234,26 +237,38 @@ public:
 	
 	//! It waits depending on the baudrate used
 	void latencyDelay();
+	
+	void setUART(uint8_t uart);
+	void setBaudrate(uint32_t baudrate);
 
 protected:
 	
 	//! It parses the contents of _buffer and copies the string to the pointer
 	uint8_t parseString(char* str, uint16_t size, char* delimiters);
+	uint8_t parseString(char* str, uint16_t size, char* delimiters, uint8_t n);
 	
 	//! It parses the contents of _buffer and converts it to a float type
 	uint8_t parseFloat(float* value, char* delimiters);
 	
+	//! It parses the contents of _buffer and converts it to a uint8_t type
+	uint8_t parseUint8(uint8_t* value, char* delimiters);
+	uint8_t parseUint8(uint8_t* value, char* delimiters, uint8_t n);
+	
 	//! It parses the contents of _buffer and converts it to a uint32_t type
-	uint8_t parseUint32(uint32_t* value, char* delimiters);
+	uint8_t parseUint32(uint32_t* value, char* delimiters);	
+
+	//! It parses the contents of _buffer and converts it to a int32_t type
+	uint8_t parseInt32(int32_t* value, char* delimiters);
+	uint8_t parseInt32(int32_t* value, char* delimiters, uint8_t n);
 
 	//! It parses the contents of _buffer and converts it to a int type
-	uint8_t parseInt(int* value, char* delimiters);
-	
-	//! It parses the contents of _buffer and converts it to a uint16_t type
-	uint8_t parseUint8(uint8_t* value, char* delimiters);
+	uint8_t parseInt(int* value, char* delimiters);	
 	
 	//! It parses the contents of _buffer and converts it to a uint16_t type
 	uint8_t parseHex(uint8_t* value, char* delimiters);
+	
+	void secureBegin();
+	
 };
 
 

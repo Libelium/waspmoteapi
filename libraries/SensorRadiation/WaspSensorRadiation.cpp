@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.1
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Marcos Yarza, Javier Siscart
  */
@@ -52,7 +52,7 @@ WaspRadiationBoard::WaspRadiationBoard()
 	ledArray[4] = DIGITAL3;
 	
 	// update Waspmote Control Register
-	WaspRegister |= REG_RADIATION;
+	WaspRegisterSensor |= REG_RADIATION;
 
 }
 
@@ -241,7 +241,7 @@ float WaspRadiationBoard::getCPM(long time)
 	float k=0;
 	float minute = 60000;
 	unsigned long previous=millis();
-
+	
 	enableInterrupts(RAD_INT);
 	while( (millis()-previous<time) )
     {
@@ -250,9 +250,8 @@ float WaspRadiationBoard::getCPM(long time)
 			disableInterrupts(RAD_INT);
 			intFlag &= ~(RAD_INT);
 			countPulse();
-
-			while(!digitalRead(RAD_INT_PIN_MON));
     		enableInterrupts(RAD_INT);
+			while(!digitalRead(RAD_INT_PIN_MON));
   		}
     
     	// Condition to avoid an overflow (DO NOT REMOVE)

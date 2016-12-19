@@ -1,5 +1,5 @@
 /*
- *  Revised for Waspmote by Libelium, 2009-2015
+ *  Revised for Waspmote by Libelium, 2009-2016
  *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
@@ -15,6 +15,8 @@
   
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ *	Version:		3.0
  */
  
 

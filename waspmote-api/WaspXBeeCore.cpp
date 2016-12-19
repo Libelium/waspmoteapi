@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		2.2
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -492,7 +492,11 @@ uint8_t WaspXBeeCore::setPAN(uint8_t* PANID)
     int8_t error=2;
     char buffer[33];
         
-    if( (protocol==XBEE_802_15_4) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) ) 
+    if( (protocol == XBEE_802_15_4) 
+	||	(protocol == DIGIMESH) 
+	||	(protocol == XBEE_900) 
+	|| 	(protocol == XBEE_868) 
+	|| 	(protocol == XBEE_900HP) ) 
     {
         error_AT=2;
 
@@ -520,12 +524,17 @@ uint8_t WaspXBeeCore::setPAN(uint8_t* PANID)
 
     if(!error)
     {
-        if( (protocol==XBEE_802_15_4) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) ) 
-        {
+		if( (protocol == XBEE_802_15_4) 
+		||	(protocol == DIGIMESH) 
+		||	(protocol == XBEE_900) 
+		|| 	(protocol == XBEE_868) 
+		|| 	(protocol == XBEE_900HP) ) 
+		{
 			PAN_ID[0] = PANID[0];
 			PAN_ID[1] = PANID[1];           
         }
-        if(protocol==ZIGBEE) 
+        
+        if( protocol == ZIGBEE ) 
         {
 			PAN_ID[0] = PANID[0];
 			PAN_ID[1] = PANID[1]; 
@@ -565,8 +574,12 @@ uint8_t WaspXBeeCore::getPAN()
     
     if(!error)
     {
-        if( (protocol==XBEE_802_15_4) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) ) 
-        {
+		if( (protocol == XBEE_802_15_4) 
+		||	(protocol == DIGIMESH) 
+		||	(protocol == XBEE_900) 
+		|| 	(protocol == XBEE_868) 
+		|| 	(protocol == XBEE_900HP) ) 
+		{
 			PAN_ID[0] = data[0];
 			PAN_ID[1] = data[1];          
         }
@@ -671,7 +684,7 @@ uint8_t WaspXBeeCore::setAwakeTime(uint8_t* awake)
         error=gen_send(buffer);
     }
     
-    if( (protocol==DIGIMESH) || (protocol==XBEE_900) )
+    if( (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_900HP))
     {
         error_AT=2;
         
@@ -691,7 +704,7 @@ uint8_t WaspXBeeCore::setAwakeTime(uint8_t* awake)
             awakeTime[0]=awake[0];
             awakeTime[1]=awake[1];
         }
-        if( (protocol==DIGIMESH) || (protocol==XBEE_900) )
+        if( (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_900HP) )
         {
             awakeTime[0]=awake[0];
             awakeTime[1]=awake[1];
@@ -730,7 +743,7 @@ uint8_t WaspXBeeCore::setSleepTime(uint8_t* sleep)
         error=gen_send(buffer);
     }
     
-    if( (protocol==DIGIMESH) || (protocol==XBEE_900) )
+    if( (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_900HP) )
     {
         error_AT=2;
  
@@ -750,7 +763,7 @@ uint8_t WaspXBeeCore::setSleepTime(uint8_t* sleep)
             sleepTime[0]=sleep[0];
             sleepTime[1]=sleep[1];
         }
-        if( (protocol==DIGIMESH) || (protocol==XBEE_900) )
+        if( (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_900HP) )
         {
             sleepTime[0]=sleep[0];
             sleepTime[1]=sleep[1];
@@ -1025,9 +1038,10 @@ uint8_t WaspXBeeCore::setScanningTime(uint8_t* time)
         error=gen_send(buffer);
     }
     
-    if( protocol==XBEE_868 || 
-		protocol==DIGIMESH || 
-		protocol==XBEE_900 	)
+    if( ( protocol == XBEE_868 )
+	|| 	( protocol == DIGIMESH ) 
+	|| 	( protocol == XBEE_900 ) 
+	||	( protocol == XBEE_900HP ) 	)
     {
         error_AT=2;
 		// set_scanning_time_DM
@@ -1046,7 +1060,7 @@ uint8_t WaspXBeeCore::setScanningTime(uint8_t* time)
         {
             scanTime[0]=time[0];
         }
-        if( (protocol==DIGIMESH) || (protocol==XBEE_868)|| (protocol==XBEE_900) )
+        if( (protocol==DIGIMESH) || (protocol==XBEE_868)|| (protocol==XBEE_900)|| (protocol==XBEE_900HP) )
         {
             scanTime[0]=time[0];
             scanTime[1]=time[1];
@@ -1088,7 +1102,7 @@ uint8_t WaspXBeeCore::getScanningTime()
         {
             scanTime[0]=data[1]; 
         }
-        if( (protocol==DIGIMESH) || (protocol==XBEE_868) || (protocol==XBEE_900))
+        if( (protocol==DIGIMESH) || (protocol==XBEE_868) || (protocol==XBEE_900)|| (protocol==XBEE_900HP))
         {
             scanTime[0]=data[0];
             scanTime[1]=data[1];
@@ -1585,7 +1599,7 @@ uint8_t WaspXBeeCore::getRSSI()
     //clear buffer
     memset( ByteIN, 0x00, sizeof(ByteIN) );    
 
-    if( (protocol == XBEE_802_15_4 ) || (protocol==ZIGBEE) )
+    if( (protocol == XBEE_802_15_4 ) || (protocol==ZIGBEE) || (protocol==XBEE_900HP) )
     {
         error_AT=2;
 		
@@ -1633,7 +1647,7 @@ uint8_t WaspXBeeCore::getRSSI()
     
     if( error == 0 )
     {
-        if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) )
+        if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_900HP) )
         {
             valueRSSI[0] = data[0];
         }    
@@ -1844,7 +1858,11 @@ uint8_t WaspXBeeCore::setSleepOptions(uint8_t soption)
     int8_t error=2;
     char buffer[20];
         
-    if( (protocol==ZIGBEE) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) )
+    if(( protocol == ZIGBEE ) 
+    || ( protocol == DIGIMESH ) 
+    || ( protocol == XBEE_900 ) 
+    || ( protocol == XBEE_868 )
+    || ( protocol == XBEE_900HP )  )
     {
         error_AT = 2;
 
@@ -1886,7 +1904,11 @@ uint8_t WaspXBeeCore::getSleepOptions()
     strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[42])));
     if(buffer==NULL) return 1;
         
-    if( (protocol==ZIGBEE) || (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_868) )
+    if(( protocol == ZIGBEE ) 
+    || ( protocol == DIGIMESH ) 
+    || ( protocol == XBEE_900 ) 
+    || ( protocol == XBEE_868 )
+    || ( protocol == XBEE_900HP )  )
     {
         error_AT = 2;
         gen_data(buffer);
@@ -2028,10 +2050,11 @@ uint8_t WaspXBeeCore::getDestinationAddress(uint8_t* naD)
 			naD[0]=data[2]; 
 			naD[1]=data[3]; 			
 		}
-		else if( protocol == ZIGBEE 	||
-				 protocol == DIGIMESH 	||
-				 protocol == XBEE_900 	||
-				 protocol == XBEE_868 		 )
+		else if(( protocol == ZIGBEE )
+				|| 	( protocol == DIGIMESH )
+				||  ( protocol == XBEE_900 )
+				||  ( protocol == XBEE_868)
+				||  ( protocol == XBEE_900HP)	 )
 		{			
 			naD[0]=0x00; 
 			naD[1]=0x13; 
@@ -2204,16 +2227,40 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
     uint8_t error=2;   
     
     // call initialization function
-    init(uart_used);    
+    init(uart_used);
     
-    begin(uart,XBEE_RATE);
-	setMode(XBEE_ON);
+    // select multiplexer
+    if (uart == SOCKET0) 
+    {
+		Utils.setMuxSocket0();
+	}
+    if (uart == SOCKET1) 
+    {
+		Utils.setMuxSocket1();
+		
+		// update WaspRegister for SPI interferences in Waspv15
+		WaspRegister &= ~(REG_XBEE_SOCKET0);
+	}
+    
+    // begin serial communication
+	beginSerial(XBEE_RATE, uart);
+    
+    // power on the socket
+    PWR.powerSocket(uart, HIGH);
+    
+    if (_boot_version >= 'G')
+	{	
+		// update SPI flag
+		SPI.isSocket0 = true;
+	}
 	
 	// update Waspmote Register
 	if(uart_used==SOCKET0)	WaspRegister |= REG_SOCKET0;
 	if(uart_used==SOCKET1)	WaspRegister |= REG_SOCKET1;
 
     if( protocol == ZIGBEE) delay(500);
+    else if( protocol == XBEE_868LP) delay(500);
+    else if( protocol == XBEE_900HP) delay(500);
     else if( protocol == DIGIMESH) delay(500);
     else delay(50);
     error=0;
@@ -2227,72 +2274,6 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
 
 
 /*
- Function: opens uart communication depending on the selected uart.
- It also set high the microcontroller pins which switch the XBee ON and select
- the USB multiplexor output in order to communicate with the XBee instead of the
- USB port.
- 
- Returns: void
-*/
-void WaspXBeeCore::begin(uint8_t uart, uint32_t speed)
-{	
-	// begin serial communication
-	beginSerial(speed, uart);
-	
-	// set microcontroller pins as output
-	pinMode(XBEE_PW,OUTPUT);
-    pinMode(MUX_PW,OUTPUT);
-	pinMode(MUX_USB_XBEE,OUTPUT);
-	
-	// set multiplexor supply on
-	digitalWrite(MUX_PW,HIGH);
-	digitalWrite(MUX_USB_XBEE,HIGH);
-}
-
-
-/*
- Function: switches ON/OFF the correspondent XBee module allocated in the 
- selected uart. 
- It also switches the GPRS/GPS/aux1/aux2 multiplexor to Expansion Board (GPRS) 
- Returns: void
-*/
-void WaspXBeeCore::setMode(uint8_t mode)
-{    
-	switch (mode)
-	{
-		case XBEE_ON:	if(uart==SOCKET0) 
-						{
-							digitalWrite(XBEE_PW,HIGH);
-						}
-						else if(uart==SOCKET1)
-						{	
-							// Switch Multiplexor to Expansion Board 
-							Utils.setMuxSocket1(); 	
-							// Switch on XBee module
-							pinMode(DIGITAL6,OUTPUT);
-							digitalWrite(DIGITAL6,HIGH);
-						}
-						break;
-	
-		case XBEE_OFF:	if(uart==SOCKET0)
-						{	 
-							digitalWrite(XBEE_PW,LOW);
-						}
-						else if(uart==SOCKET1)
-						{
-							Utils.setMux(MUX_TO_LOW,MUX_TO_LOW);
-							// Switch off XBee module
-							pinMode(DIGITAL6,OUTPUT);
-							digitalWrite(DIGITAL6,LOW);
-						}
-						break;
-	
-		default:		break;
-	}
-}
-
-
-/*
  Function: disconnects XBee, switching it off and closing the UART
  Returns: Integer that determines if there has been any error 
    error=2 --> The command has not been executed
@@ -2302,12 +2283,22 @@ void WaspXBeeCore::setMode(uint8_t mode)
 uint8_t WaspXBeeCore::OFF()
 {
     uint8_t error=2;
+   
+    // close UART
+	closeSerial(uart);
+   
+	// unselect multiplexer 
+    if (uart == SOCKET0)	Utils.setMuxUSB();
+    if (uart == SOCKET1)	Utils.muxOFF1();
     
-    // close UART and MUX
-	close();
+    // switch module OFF
+	PWR.powerSocket(uart, LOW);
 	
-	// switch XBee OFF
-	setMode(XBEE_OFF);
+	if (_boot_version >= 'G')
+	{	
+		// update SPI flag
+		SPI.isSocket0 = false;
+	}
 	
 	// update Waspmote Register
 	if(uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
@@ -2318,15 +2309,6 @@ uint8_t WaspXBeeCore::OFF()
     return error;
 }
 
-
-void WaspXBeeCore::close()
-{
-	closeSerial(uart);
-	pinMode(MUX_PW,OUTPUT);
-	pinMode(MUX_USB_XBEE,OUTPUT);
-	digitalWrite(MUX_PW,LOW);
-	digitalWrite(MUX_USB_XBEE,LOW);
-}
 
 
 /*
@@ -2352,8 +2334,9 @@ uint8_t WaspXBeeCore::sleep()
     	digitalWrite(DIGITAL7,HIGH); 		   
     }
     
-    // close UART and MUX
-    close();
+    // close UART and Multiplexer
+	closeSerial(uart);
+	Utils.setMuxUSB();
     
     error=0;
     return error;
@@ -2381,7 +2364,8 @@ uint8_t WaspXBeeCore::wake()
     	digitalWrite(DIGITAL7,LOW);     	
     }
     
-    begin(uart,XBEE_RATE);
+	Utils.setMuxSocket0();
+    beginSerial(XBEE_RATE, uart);
     
     delay(50);
     error=0;
@@ -2481,6 +2465,12 @@ uint8_t WaspXBeeCore::sendXBee(struct packetXBee* packet)
 						break;
 						
 		case XBEE_868:	maxPayload=100;
+						break;
+						
+		case XBEE_900HP:maxPayload=0xFF;
+						break;
+						
+		case XBEE_868LP:maxPayload=0xFF;
 						break;
 		
 		default:		break;
@@ -4185,7 +4175,8 @@ uint8_t WaspXBeeCore::atCommandResponse(	uint8_t* 	data_in,
 		// FIXME: Digimesh/868/900 typo
 		if( (protocol == DIGIMESH || 
 			 protocol == XBEE_900 || 
-			 protocol == XBEE_868	) && data_in[start+7]==0x40 )
+			 protocol == XBEE_868 || 
+			 protocol == XBEE_900HP	) && data_in[start+7]==0x40 )
 		{				
 			// do nothing. it is a valid response because these protocols
 			// answer command_status = 0x40 when doing a Discovery 
@@ -4263,7 +4254,7 @@ uint8_t WaspXBeeCore::txStatusResponse()
     uint8_t status=0;
     uint16_t num_TX=0;
     uint8_t num_esc=0;
-    uint16_t interval=2000;
+    uint16_t interval=5000;
     uint8_t num_mes=0;
     uint16_t i=1;
     uint16_t length_mes=0;
@@ -4511,7 +4502,7 @@ uint8_t WaspXBeeCore::txZBStatusResponse()
     uint8_t status=0;
     uint16_t num_TX=0;
     uint8_t num_esc=0;
-    uint16_t interval=2000;
+    uint16_t interval=5000;
     uint8_t num_mes=0;
     uint16_t i=1;
     uint16_t length_mes=0;
@@ -4879,8 +4870,9 @@ void WaspXBeeCore::treatScan()
     else if( protocol == ZIGBEE 	|| 
 			 protocol == DIGIMESH 	|| 
 			 protocol == XBEE_900 	|| 
-			 protocol == XBEE_868	 )
-    {
+			 protocol == XBEE_868	|| 
+			 protocol == XBEE_900HP	 )
+    { 
 		if (data_length>19)
 		{
 			length_NI = data_length-19;
@@ -5583,9 +5575,7 @@ void WaspXBeeCore::new_firmware_end()
 			
 		// set destination parameters
 		setDestinationParams(paq_sent, destination, data);			
-			
-		// set random seed
-		srand(_serial_id);
+		
 		// delay random time
 		delay( (rand()%delay_end + delay_start) );
 		// Try to send the answer for several times
@@ -5634,8 +5624,6 @@ void WaspXBeeCore::new_firmware_end()
 		// set destination parameters
 		setDestinationParams(paq_sent, destination, data);	
 
-		// set random seed
-		srand(_serial_id);
 		// delay random time
 		delay( (rand()%delay_end + delay_start) );
 		// Try to send the answer for several times
@@ -5827,8 +5815,6 @@ void WaspXBeeCore::upload_firmware()
 			// set destination parameters
 			setDestinationParams(paq_sent, destination, data);	
 			
-			// set random seed
-			srand(_serial_id);
 			// delay random time
 			delay( (rand()%delay_end + delay_start) );
 			// Try to send the answer for several times
@@ -5905,8 +5891,6 @@ void WaspXBeeCore::upload_firmware()
 			// set destination parameters
 			setDestinationParams(paq_sent, destination, data);	
 			
-			// set random seed
-			srand(_serial_id);
 			// delay random time
 			delay( (rand()%delay_end + delay_start) );
 			// Try to send the answer for several times
@@ -6004,8 +5988,6 @@ void WaspXBeeCore::request_ID()
 		// set destination parameters
 		setDestinationParams(paq_sent, destination, data);	
 		
-		// set random seed
-		srand(_serial_id);
 		// delay random time
 		delay( (rand()%delay_end + delay_start) );
 		// Try to send the answer for several times
@@ -6112,8 +6094,6 @@ void WaspXBeeCore::request_bootlist()
 	
 						setDestinationParams(paq_sent, destination, data);
 						
-						// set random seed
-						srand(_serial_id);
 						// delay random time
 						delay( (rand()%delay_end + delay_start) );
 						// Try to send the answer for several times
@@ -6171,8 +6151,6 @@ void WaspXBeeCore::request_bootlist()
 					// set destination parameters
 					setDestinationParams(paq_sent, destination, data);
 					
-					// set random seed
-					srand(_serial_id);
 					// delay random time
 					delay( (rand()%delay_end + delay_start) );
 					// Try to send the answer for several times
@@ -6214,10 +6192,7 @@ void WaspXBeeCore::request_bootlist()
 
 					// set destination parameters
 					setDestinationParams(paq_sent, destination, data);
-					
-					
-					// set random seed
-					srand(_serial_id);
+		
 					// delay random time
 					delay( (rand()%delay_end + delay_start) );
 					// Try to send the answer for several times
@@ -6323,9 +6298,7 @@ void WaspXBeeCore::checkNewProgram()
 
 			// set destination parameters
 			setDestinationParams(paq_sent, destination, data);
-			
-			// set random seed
-			srand(_serial_id);
+
 			// delay random time
 			delay( (rand()%delay_end + delay_start) );
 			// Try to send the answer for several times
@@ -6361,8 +6334,6 @@ void WaspXBeeCore::checkNewProgram()
 			// set destination parameters
 			setDestinationParams(paq_sent, destination, data);
 			
-			// set random seed
-			srand(_serial_id);
 			// delay random time
 			delay( (rand()%delay_end + delay_start) );
 			// Try to send the answer for several times
@@ -6396,8 +6367,6 @@ void WaspXBeeCore::checkNewProgram()
 		// set destination parameters
 		setDestinationParams(paq_sent, destination, data);
 
-		// set random seed
-		srand(_serial_id);
 		// delay random time
 		delay( (rand()%delay_end + delay_start) );
 		// Try to send the answer for several times
@@ -6621,9 +6590,7 @@ void WaspXBeeCore::delete_firmware()
 		
 		// set destination parameters
 		setDestinationParams(paq_sent, destination, data);
-		
-		// set random seed
-		srand(_serial_id);
+	
 		// delay random time
 		delay( (rand()%delay_end + delay_start) );
 		
@@ -6665,9 +6632,7 @@ void WaspXBeeCore::delete_firmware()
 
 		// set destination parameters
 		setDestinationParams(paq_sent, destination, data);
-		
-		// set random seed
-		srand(_serial_id);
+
 		// delay random time
 		delay( (rand()%delay_end + delay_start) );
 		
@@ -6893,9 +6858,7 @@ void WaspXBeeCore::gen_escaped_frame(	uint8_t* TX,
 int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 {
 	unsigned long previous;
-	int i=0;
-	uint16_t start 	= 0;
-	uint16_t end 	= 0;
+	uint16_t i=0;
 	uint16_t length = 0;
 	bool restart = false;
 	bool doneStep1 = false;
@@ -7240,8 +7203,7 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
  * state = 0  --> OK: The command has been executed with no errors
  */
 uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
-{
-	uint16_t length = 0;
+{	
 	bool status = false;
 	uint8_t error = 0;
 	int result;
@@ -7303,9 +7265,9 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 		if( status == true )
 		{		
 			// wait for response
-			int error = receivePacketTimeout( 5000 );
+			int rx_error = receivePacketTimeout( 5000 );
 		
-			if( error == 0 )
+			if( rx_error == 0 )
 			{
 				if( _length == PATTERN_LENGTH )
 				{
@@ -7375,7 +7337,10 @@ uint8_t WaspXBeeCore::setRTCfromMeshlium(char* address)
 				if( status == true)
 				{
 					// set new timestamp
-					RTC.ON();					
+					if (RTC.isON == 0)
+					{
+						RTC.ON();
+					}
 					error = RTC.setTime(year, 
 										month, 
 										date,

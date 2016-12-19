@@ -1,7 +1,7 @@
 /*! \file WaspXBeeCore.h
     \brief Library for managing the XBee modules
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.5
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Yuri Carmona
 
@@ -41,6 +41,7 @@
 #include "WConstants.h"
 #include "WaspUSB.h"
 #include "pins_waspmote.h"
+#include "WaspConstants.h"
 #include <inttypes.h>
 
 // SD Utilities
@@ -58,6 +59,8 @@
 #define	DIGIMESH 		3
 #define XBEE_900 		4
 #define XBEE_868 		5
+#define XBEE_900HP 		6
+#define XBEE_868LP 		7
 
 
 //Different modes
@@ -663,12 +666,9 @@ struct rxPacket91_t
 	uint8_t		checksum;
 };
 
-
-//! Variable :  Waspmote serial id
-/*!
-*/ 
-extern volatile unsigned long _serial_id;
-
+extern volatile uint8_t _boot_version;
+extern volatile uint16_t WaspRegister;
+extern volatile uint16_t WaspRegisterSensor;
 
 
 
@@ -697,8 +697,8 @@ private:
 	*/
 	SdFile boot_file;
 
-public:
-	
+public:	
+
 	//! Class constructor
 	/*! Initializes buffers	 
 	  \param void
@@ -707,9 +707,12 @@ public:
 	WaspXBeeCore()
 	{	
 		// set the default maximum number of retries to '3'
-		_send_retries = 3;
-	};
-	
+		_send_retries = 3;	
+		
+		// update WaspRegister for SPI interferences in Waspv15
+		WaspRegister |= REG_XBEE_SOCKET0;	
+	}
+
 	//! It initalizes all necessary variables including its parent's variables
 	virtual void init(	uint8_t uart_used );
 	
@@ -1053,7 +1056,6 @@ public:
 	//! It sends a packet from one XBee to another XBee in API mode
 	/*! This function performs application-level retries.
 	 * 	This function is only used for 64-bit addressing.
-  	/*!
     \param char* macAddress : destination MAC address
     \param char* data : data to be sent (as string)
     \return '0' on success, '1' error
@@ -1063,7 +1065,6 @@ public:
     //! It sends a packet from one XBee to another XBee in API mode
 	/*! This function performs application-level retries.
 	 * 	This function is only used for 64-bit addressing.
-  	/*!
     \param char* macAddress : destination MAC address
     \param uint8_t* pointer : pointer to buffer of data to be sent
     \param uint16_t length  : length of the buffer
@@ -1124,33 +1125,13 @@ public:
     \return '0' on success, '1' otherwise
      */    
     uint8_t ON(uint8_t uart_used);
-    
-    //! It opens the UART  
-  	/*! It also set high the microcontroler pins which switch the XBee on and 
-  	select the USB multiplexor output in order to communicate with the XBee 
-  	instead of the USB port.
-	\return void
-	 */
-    void begin(uint8_t uart, uint32_t speed);
-    
-    //! switches ON/OFF the XBee module depending on the socket
-  	/*! It also switches the GPRS/GPS/aux1/aux2 multiplexor to Expansion Board  
-	\return void
-	 */
-    void setMode(uint8_t mode);
-	
+    	
 	//! It disconnects XBee, switching it off and closing the UART
   	/*!
     \return '0' on success, '1' otherwise
      */
     uint8_t OFF();
-    
-    //! It closes the UART and unsets the multiplexor to the XBee
-  	/*!
-    \return void
-     */
-    void close();
-	
+    	
 	//! It sets the XBee to sleep, asserting PIN 9
   	/*!
     \return '0' on success, '1' otherwise

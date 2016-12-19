@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -1033,25 +1033,20 @@ int8_t WaspBT_Pro::ON(uint8_t UartMode)
 	// prevent bad uart number. By default UART1
 	if (UartMode>=2) _uartBT = 1;
 	else _uartBT=UartMode;	
-		
-	if(!_uartBT) 
-	{
-		Utils.setMuxSocket0();
-		beginSerial(_baudrateBT,_uartBT);
-		pinMode(BT_PRO_PW_0,OUTPUT);	
-		digitalWrite(BT_PRO_PW_0,HIGH);
-	}
-	else	
-	{
-		Utils.setMuxSocket1();
-		beginSerial(_baudrateBT,_uartBT);
-		pinMode(BT_PRO_PW_1,OUTPUT);
-		digitalWrite(BT_PRO_PW_1,HIGH);		
-	}
 	
+	// select multiplexer
+    if (_uartBT == SOCKET0)	Utils.setMuxSocket0();
+    if (_uartBT == SOCKET1)	Utils.setMuxSocket1();
+	
+	// open uart	
+	beginSerial(_baudrateBT,_uartBT);
+	
+	// power on the socket
+    PWR.powerSocket(_uartBT, HIGH);
+    
 	// update Waspmote Register
-	if(_uartBT == SOCKET0)	WaspRegister |= REG_SOCKET0;
-	if(_uartBT == SOCKET1)	WaspRegister |= REG_SOCKET1;	
+	if (_uartBT == SOCKET0)	WaspRegister |= REG_SOCKET0;
+	if (_uartBT == SOCKET1)	WaspRegister |= REG_SOCKET1;	
 	
 	//~ beginSerial(_baudrateBT,_uartBT);
 	serialFlush(_uartBT);
@@ -1087,24 +1082,19 @@ int8_t WaspBT_Pro::ON()
 */ 
 void WaspBT_Pro::OFF() 
 {
-	
+	// close uart
 	closeSerial(_uartBT);
 	
 	// update Waspmote Register
-	if(_uartBT == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
-	if(_uartBT == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
+	if (_uartBT == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if (_uartBT == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);	
 
-	if(!_uartBT) 
-	{
-		pinMode(BT_PRO_PW_0,OUTPUT);
-		digitalWrite(BT_PRO_PW_0,LOW);
-	}
-	else 
-	{
-		Utils.setMux(MUX_TO_LOW,MUX_TO_LOW);
-		pinMode(BT_PRO_PW_1,OUTPUT);
-		digitalWrite(BT_PRO_PW_1,LOW);		
-	}
+	// unselect multiplexer 
+    if (_uartBT == SOCKET0) Utils.setMuxUSB();
+    if (_uartBT == SOCKET1) Utils.muxOFF1();
+
+	// switch module OFF
+	PWR.powerSocket(_uartBT, LOW);
 	
 	SD.OFF();
 	

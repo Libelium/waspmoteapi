@@ -1,7 +1,7 @@
-/*! \file WaspCAN.h
+/*! \file WaspCAN.cpp
     \brief  Library for managing CAN Bus modules
  *
- *  Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:			1.0
+ *  Version:			3.0
  *  Design:				David Gascon
  *  Implementation:		Luis Antonio Martin Nuez & Ahmad Saad
  */
@@ -56,8 +56,8 @@ bool WaspCAN::ON(uint16_t speed)
 	#endif
 	
 	//Active power Xbee
-	pinMode(XBEE_PW,OUTPUT);
-	digitalWrite(XBEE_PW,HIGH);
+	PWR.powerSocket(SOCKET0, HIGH);
+	SPI.isSocket0 = true;
 	
 	//SD CS configure
 	pinMode(SD_SS,OUTPUT);
@@ -167,7 +167,7 @@ bool WaspCAN::ON(uint16_t speed)
 	writeRegister( BFPCTRL, 0 );
 	
 	//Set normal mode
-	setMode(NORMAL_MODE);
+	setMode(CAN_NORMAL_MODE);
 	
 	//Test its correct mode
 	/*
@@ -193,7 +193,8 @@ bool WaspCAN::ON(uint16_t speed)
 //!*************************************************************
 void WaspCAN::OFF(void )
 {
-	digitalWrite(XBEE_PW, LOW);
+	PWR.powerSocket(SOCKET0, LOW);
+	SPI.isSocket0 = false;
 	delay(100);
 }
 
@@ -399,16 +400,16 @@ void WaspCAN::setMode(uint8_t mode)
 {
 	uint8_t mode_register = 0;
 	
-	if (mode == LISTEN_ONLY_MODE) {
+	if (mode == CAN_LISTEN_ONLY_MODE) {
 		mode_register = (0<<REQOP2)|(1<<REQOP1)|(1<<REQOP0);
 	}
-	else if (mode == LOOPBACK_MODE) {
+	else if (mode == CAN_LOOPBACK_MODE) {
 		mode_register = (0<<REQOP2)|(1<<REQOP1)|(0<<REQOP0);
 	}
-	else if (mode == SLEEP_MODE) {
+	else if (mode == CAN_SLEEP_MODE) {
 		mode_register = (0<<REQOP2)|(0<<REQOP1)|(1<<REQOP0);
 	}
-	else if (mode == NORMAL_MODE) {
+	else if (mode == CAN_NORMAL_MODE) {
 		mode_register = (0<<REQOP2)|(0<<REQOP1)|(0<<REQOP0);
 	}
 		

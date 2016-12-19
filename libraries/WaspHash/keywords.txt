@@ -11,7 +11,7 @@ printMessageDigest	KEYWORD2
 md5	KEYWORD2
 sha	KEYWORD2
 
-HASH	KEYWORDS3
+HASH	KEYWORD1
 
 
 #md5#

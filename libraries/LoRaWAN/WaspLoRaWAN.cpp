@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		0.3
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -111,6 +111,16 @@
  const char command_78[]	PROGMEM	= 	"mac set rx2 %u %lu\r\n";
  const char command_79[]	PROGMEM	= 	"mac set rxdelay1 %u\r\n";
  const char command_80[]	PROGMEM	= 	"mac reset\r\n";
+ const char command_81[]	PROGMEM	= 	"mac get status\r\n";
+ const char command_82[]	PROGMEM	= 	"mac tx cnf %u ";
+ const char command_83[]	PROGMEM	= 	"mac tx uncnf %u ";
+ const char command_84[]	PROGMEM	= 	"sys sleep %lu\r\n";
+ const char command_85[]	PROGMEM	= 	"mac set ar %s\r\n";
+ const char command_86[]	PROGMEM	= 	"mac get ar\r\n";
+ const char command_87[]	PROGMEM	= 	"mac get rxdelay1\r\n";
+ const char command_88[]	PROGMEM	= 	"mac get rxdelay2\r\n";
+ const char command_89[]	PROGMEM	= 	"mac get rx2 %s\r\n";
+
  
 
 const char* const table_LoRaWAN_COMMANDS[] PROGMEM= 	  
@@ -195,7 +205,16 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
 	command_77,
 	command_78,
 	command_79,
-	command_80
+	command_80,	
+	command_81,
+	command_82,	
+	command_83,
+	command_84,
+	command_85,
+	command_86,
+	command_87,
+	command_88,
+	command_89
 };
 
 /******************************************************************************
@@ -277,50 +296,17 @@ uint8_t WaspLoRaWAN::ON(uint8_t socket)
 
 	OFF(socket);
 	delay(200);
+	
+	// select multiplexer
+    if (_uart == SOCKET0) 	Utils.setMuxSocket0();
+    if (_uart == SOCKET1) 	Utils.setMuxSocket1();
+	
+	// Open UART
+	beginUART();
+	
+    // power on the socket
+    PWR.powerSocket(_uart, HIGH);
 
-	if (socket == SOCKET0)
-	{  
-		_uart = SOCKET0;
-		
-		// Set multiplexer
-		Utils.setMuxSocket0(); 
-
-		// Open UART
-		beginUART();
-		
-		// power up
-		pinMode(XBEE_PW,OUTPUT);
-		digitalWrite(XBEE_PW,HIGH);	
-	}
-	else
-	{	
-		// check RTC int pin to disable line in order to communicate
-		if (digitalRead(RTC_INT_PIN_MON) == HIGH)
-		{
-			if (RTC.isON == 0 )
-			{
-				RTC.ON();
-				RTC.clearAlarmFlag();
-				RTC.OFF();
-			}
-			else
-			{
-				RTC.clearAlarmFlag();
-			}
-		}
-		
-		_uart = SOCKET1;
-		
-		// Set multiplexer
-		Utils.setMuxSocket1(); 
-		
-		// Open UART
-		beginUART();
-		
-		// power up
-		pinMode(DIGITAL6,OUTPUT);
-		digitalWrite(DIGITAL6,HIGH);			
-	}
 	delay(300);
 	error = check();
 	return error;
@@ -336,32 +322,18 @@ uint8_t WaspLoRaWAN::ON(uint8_t socket)
  */
 uint8_t WaspLoRaWAN::OFF(uint8_t socket)
 {
-	if (socket == SOCKET0)
-	{  
-		_uart = SOCKET0;
-		
-		// Set multiplexer
-		Utils.setMuxUSB(); 
-		
-		// close UART0
-		closeUART();		
-		
-		// power down
-		pinMode(XBEE_PW,OUTPUT);	
-		digitalWrite(XBEE_PW, LOW);
-	}
-	else
-	{	
-		_uart = SOCKET1;
-		
-		// close UART1
-		closeUART();
-		
-		// power down
-		pinMode(DIGITAL6,OUTPUT);
-		digitalWrite(DIGITAL6,LOW);			
-	}
+	_uart = socket;
+
+	// close uart
+	closeUART();	
 	
+	// unselect multiplexer 
+    if (_uart == SOCKET0) Utils.setMuxUSB();
+    if (_uart == SOCKET1) Utils.muxOFF1();
+
+	// switch module OFF
+	PWR.powerSocket(_uart, LOW);
+
 	return LORAWAN_ANSWER_OK;	
 }
  
@@ -430,10 +402,12 @@ uint8_t WaspLoRaWAN::factoryReset()
 	uint8_t status;
 	char ans1[15];
 	char ans2[15];
+	char carr[5];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
+	memset(carr,0x00,sizeof(carr));
 	
 	// create "sys factoryRESET" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[1])));
@@ -441,19 +415,21 @@ uint8_t WaspLoRaWAN::factoryReset()
 	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[5])));
 	// create "RN2903" answer
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[20])));
+	// create "\r\n" answer
+	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	
 	//send command and wait for ans
 	status = sendCommand(_command,ans1,ans2,5000);
 	
 	if (status == 1)
 	{
-		waitFor("\r\n",1000);
+		waitFor(carr,1000);
 		_version = RN2483_MODULE;
 		return LORAWAN_ANSWER_OK;
 	}
 	else if (status == 2)
 	{
-		waitFor("\r\n",1000);
+		waitFor(carr,1000);
 		_version = RN2903_MODULE;
 		return LORAWAN_ANSWER_OK;
 	}
@@ -476,18 +452,22 @@ uint8_t WaspLoRaWAN::factoryReset()
 uint8_t WaspLoRaWAN::getEUI()
 {
 	uint8_t status;
-	char ans1[15];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "sys get hweui" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[2])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 0)
 	{
@@ -495,7 +475,7 @@ uint8_t WaspLoRaWAN::getEUI()
 	}
 	else if (status == 1)
 	{		
-		char* pch = strtok((char*)_buffer,"\r\n");
+		char* pch = strtok((char*)_buffer,ans1);
 		if (pch != NULL)
 		{
 			memset(_eui,0x00,sizeof(_eui));
@@ -525,18 +505,22 @@ uint8_t WaspLoRaWAN::getEUI()
 uint8_t WaspLoRaWAN::getAddr()
 {
 	uint8_t status;
-	char ans1[15];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "sys get hweui" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[2])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 0)
 	{
@@ -544,7 +528,7 @@ uint8_t WaspLoRaWAN::getAddr()
 	}
 	else if (status == 1)
 	{		
-		char* pch = strtok((char*)_buffer,"\r\n");
+		char* pch = strtok((char*)_buffer,ans1);
 		if (pch != NULL)
 		{
 			memset(_devAddr,0x00,sizeof(_devAddr));
@@ -574,18 +558,22 @@ uint8_t WaspLoRaWAN::getAddr()
 uint8_t WaspLoRaWAN::getSupplyPower()
 {
 	uint8_t status;
-	char ans1[15];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "sys get vdd" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[3])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{	
@@ -849,18 +837,22 @@ uint8_t WaspLoRaWAN::setDeviceEUI(char* eui)
 uint8_t WaspLoRaWAN::getDeviceEUI()
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get deveui" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[25])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 0)
 	{
@@ -868,7 +860,7 @@ uint8_t WaspLoRaWAN::getDeviceEUI()
 	}
 	else if (status == 1)
 	{		
-		char* pch = strtok((char*)_buffer,"\r\n");
+		char* pch = strtok((char*)_buffer,ans1);
 		if (pch != NULL)
 		{
 			memset(_devEUI,0x00,sizeof(_devEUI));
@@ -959,7 +951,7 @@ uint8_t WaspLoRaWAN::setDeviceAddr(char* addr)
 		strncpy(_devAddr,addr,sizeof(_devAddr));
 		return LORAWAN_ANSWER_OK;
 	}
-	else if (status = 2)
+	else if (status == 2)
 	{
 		return LORAWAN_ANSWER_ERROR;
 	}
@@ -982,18 +974,22 @@ uint8_t WaspLoRaWAN::setDeviceAddr(char* addr)
 uint8_t WaspLoRaWAN::getDeviceAddr()
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get devaddr" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[24])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 0)
 	{
@@ -1001,7 +997,7 @@ uint8_t WaspLoRaWAN::getDeviceAddr()
 	}
 	else if (status == 1)
 	{		
-		char* pch = strtok((char*)_buffer,"\r\n");
+		char* pch = strtok((char*)_buffer,ans1);
 		if (pch != NULL)
 		{
 			memset(_devAddr,0x00,sizeof(_devAddr));
@@ -1166,18 +1162,22 @@ uint8_t WaspLoRaWAN::setAppEUI(char* eui)
 uint8_t WaspLoRaWAN::getAppEUI()
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get appeui" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[26])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 0)
 	{
@@ -1185,7 +1185,7 @@ uint8_t WaspLoRaWAN::getAppEUI()
 	}
 	else if (status == 1)
 	{		
-		char* pch = strtok((char*)_buffer,"\r\n");
+		char* pch = strtok((char*)_buffer,ans1);
 		if (pch != NULL)
 		{
 			memset(_appEUI,0x00,sizeof(_appEUI));
@@ -1381,9 +1381,11 @@ uint8_t WaspLoRaWAN::setPower(uint8_t index)
 					case 868:
 							if ((index > 5) || (index < 1)) return LORAWAN_INPUT_ERROR;
 							else break;
+							
 					case 433:
 							if (index > 5) return LORAWAN_INPUT_ERROR;	
 							else break;
+							
 					default:
 							return LORAWAN_VERSION_ERROR;		
 				}
@@ -1430,18 +1432,22 @@ uint8_t WaspLoRaWAN::setPower(uint8_t index)
 uint8_t WaspLoRaWAN::getPower()
 {
 	uint8_t status;	
-	char ans1[15];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get pwrindx" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[29])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,100);
+	status = sendCommand(_command,ans1,ans2,100);
 
 	if (status == 1)
 	{
@@ -1550,18 +1556,22 @@ uint8_t WaspLoRaWAN::setDataRate(uint8_t datarate)
 uint8_t WaspLoRaWAN::getDataRate()
 {
 	uint8_t status;	
-	char ans1[15];
+	char ans1[5];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get dr" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[27])));
-	// create "ok" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,100);
+	status = sendCommand(_command,ans1,ans2,100);
 
 	if (status == 1)
 	{
@@ -1610,6 +1620,18 @@ uint8_t WaspLoRaWAN::saveConfig()
 	
 	if (status == 1)
 	{
+		status = LoRaWAN.getUpCounter();
+		if (status == 1)
+		{
+			status = LoRaWAN.getUpCounter();
+			status = LoRaWAN.getDownCounter();
+			return LORAWAN_ANSWER_OK;
+		}
+		status = LoRaWAN.getDownCounter();
+		if (status == 1)
+		{
+			return LORAWAN_ANSWER_OK;
+		}
 		return LORAWAN_ANSWER_OK;
 	}
 	else if (status == 2)
@@ -1665,6 +1687,8 @@ uint8_t WaspLoRaWAN::joinABP()
 		//wait for response
 		if (waitFor(ans1,800) == 1)
 		{
+			setUpCounter(_upCounter);
+			setDownCounter(_downCounter);
 			return LORAWAN_ANSWER_OK;
 		}
 		else 
@@ -1702,42 +1726,90 @@ uint8_t WaspLoRaWAN::joinOTAA()
 	char ans1[15];
 	char ans2[15];
 	char ans3[15];
+	uint8_t dev_addr[] = {0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x00};
+	uint8_t nwk_s_key[] = {0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x00};
+	uint8_t app_s_key[] = {0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x00};
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 	memset(ans3,0x00,sizeof(ans3));
 	
-	// create "mac join otaa" command
-	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[76])));
-	// create "ok" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
-	// create "invalid_param" answer
-	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
-	// create "keys_not_init" answer
-	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[17])));
+	//initialize devAddr so field is not empty
+	status = setDeviceAddr((char*)dev_addr);
+	if ( status != 0)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
 	
-	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,ans3,500);
+	//initialize NwkSKey so field is not empty
+	status = setNwkSessionKey((char*)nwk_s_key);
+	if ( status != 0)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	
+	//initialize AppSKey so field is not empty
+	status = setAppSessionKey((char*)app_s_key);
+	if ( status != 0)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	
+		
+	// try to join via OTAA
+	int retries = 3;
+	do
+	{
+		// create "mac join otaa" command
+		sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[76])));
+		// create "ok" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+		// create "invalid_param" answer
+		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+		// create "keys_not_init" answer
+		sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[17])));
+		
+		//send command and wait for ans
+		status = sendCommand(_command,ans1,ans2,ans3,1000);
 
+		if (status == 1)
+		{
+			// create "accepted" answer
+			memset(ans1,0x00,sizeof(ans1));
+			sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[6])));
+			// create "denied" answer
+			memset(ans2,0x00,sizeof(ans2));
+			sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[19])));
+			
+			//wait for response
+			if (waitFor(ans1,ans2,20000) == 1)
+			{
+				status = saveConfig();
+				if (status == 0)
+				{
+					return LORAWAN_ANSWER_OK;
+				}
+				else 
+				{
+					return LORAWAN_ANSWER_ERROR;
+				}
+			}
+			else 
+			{
+				// continue with next attempt
+				//return LORAWAN_ANSWER_ERROR;
+			}
+		}	
+		
+		retries--;		
+		
+	} while (retries > 0);
+	
+	
 	if (status == 1)
 	{
-		memset(ans1,0x00,sizeof(ans1));
-		// create "accepted" answer
-		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[6])));
-		memset(ans2,0x00,sizeof(ans2));
-		// create "denied" answer
-		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[19])));
-		
-		//wait for response
-		if (waitFor(ans1,ans2,20000) == 1)
-		{
-			return LORAWAN_ANSWER_OK;
-		}
-		else 
-		{
-			return LORAWAN_ANSWER_ERROR;
-		}
+		return LORAWAN_ANSWER_ERROR;
 	}
 	else if (status == 2)
 	{
@@ -1750,7 +1822,7 @@ uint8_t WaspLoRaWAN::joinOTAA()
 	else 
 	{
 		return LORAWAN_NO_ANSWER;
-	}
+	}	
 }
 
 
@@ -1783,6 +1855,7 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 	char ans2[20];
 	char ans3[20];
 	char ans4[20];
+	char carr[5];
 	
 	// clear data received flag
 	_dataReceived = false;
@@ -1826,6 +1899,7 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 		memset(ans2,0x00,sizeof(ans2));
 		memset(ans3,0x00,sizeof(ans3));
 		memset(ans4,0x00,sizeof(ans4));
+		memset(carr,0x00,sizeof(carr));
 		
 		// mac_rx
 		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])));
@@ -1835,13 +1909,15 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 		strcpy_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));		
 		// invalid_data_len
 		strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
+		// \r\n
+		strcpy_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 		
 		//wait for response
 		status = waitFor(ans1, ans2, ans3, ans4, 20000);
 		
 		if (status == 1)
 		{
-			waitFor("\r\n",500);
+			waitFor(carr,500);
 			if (_length > 0)
 			{
 				char* pch = strtok((char*) _buffer," \r\n");
@@ -1901,6 +1977,154 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 }
 
 
+/*!
+ * 
+ * @brief	This function sends a LoRaWAN packet and waits for ACK
+ * 	
+ * @param 	char* data:	data to be sent
+ * 			uint8_t port: port number to send data
+ * 
+ * @remarks	data is a sequence of digit representing the value of byte stream
+ * 			expressed in hexadecimal value (i.e.: payload =12A435 – the payload 
+ * 			is composed by the following byte stream: 0x12, 0xA4, 0x35 – 6 digit
+ * 			converted in 3 bytes). The maximum length of frame is 584 digit (292 Bytes).
+ * 			User can check _datareceived to know if a downlink was performed
+ * 	
+ * @return		 
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ * 	@arg	'4' if data length error
+ * 	@arg	'5' if error when sending data
+ * 	@arg	'6' if module hasn't joined to a network
+ *  @arg	'7' if input port parameter error
+ */
+uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t length)
+{
+	uint8_t status;
+	char ans1[20];
+	char ans2[20];
+	char ans3[20];
+	char ans4[20];
+	char byte2send[3];
+	char carr[5];
+	
+	// clear data received flag
+	_dataReceived = false;
+	
+	// clear buffers
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	memset(ans3,0x00,sizeof(ans3));
+	memset(byte2send,0x00,sizeof(byte2send));
+	memset(carr,0x00,sizeof(carr));
+	
+	// check port
+	if (port > 223) return LORAWAN_INPUT_ERROR;
+	
+	// create "mac tx cnf <port> " command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[82])),port);
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "not_joined" answer
+	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
+	// create "\r\n" answer
+	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+
+	//send command and wait for ans
+	printString(_command,_uart);
+	for (uint16_t i=0; i<length;i++)
+	{
+		Utils.hex2str((uint8_t*)&payload[i], byte2send, 1);
+		printByte(byte2send[0],_uart);
+		printByte(byte2send[1],_uart);
+	}
+	printString(carr,_uart);
+	status = waitFor(ans1,ans2,ans3,1000);
+
+	if (status == 1)
+	{
+		// clear buffer
+		memset(ans1,0x00,sizeof(ans1));
+		memset(ans2,0x00,sizeof(ans2));
+		memset(ans3,0x00,sizeof(ans3));
+		memset(ans4,0x00,sizeof(ans4));
+		
+		// mac_rx
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])));
+		// mac_tx_ok
+		strcpy_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
+		// mac_err
+		strcpy_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));		
+		// invalid_data_len
+		strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
+		
+		//wait for response
+		status = waitFor(ans1, ans2, ans3, ans4, 20000);
+		
+		if (status == 1)
+		{
+			waitFor(carr,500);
+			if (_length > 0)
+			{
+				char* pch = strtok((char*) _buffer," \r\n");
+				_port = atoi(pch);
+				
+				pch = strtok(NULL," \r\n");
+								
+				memset(_data,0x00,sizeof(_data));
+				strncpy(_data, pch, sizeof(_data)-1);
+			
+				saveConfig();
+				_dataReceived = true;
+				return LORAWAN_ANSWER_OK;
+			}
+			else
+			{
+				saveConfig();
+				return LORAWAN_ANSWER_OK;
+			}
+		}
+		else if (status == 2)
+		{
+			saveConfig();
+			return LORAWAN_ANSWER_OK;
+		}
+		else if (status == 3)
+		{
+			saveConfig();
+			return LORAWAN_SENDING_ERROR;
+		}
+		else if (status == 4)
+		{
+			saveConfig();
+			return LORAWAN_LENGTH_ERROR;
+		}
+		else
+		{
+			saveConfig();
+			return LORAWAN_NO_ANSWER;
+		}
+	}
+	else if (status == 2)
+	{
+		saveConfig();
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else if (status == 3)
+	{
+		saveConfig();
+		return LORAWAN_NOT_JOINED;
+	}
+	else
+	{
+		saveConfig();
+		return LORAWAN_NO_ANSWER;
+	}
+}
 
 
 /*!
@@ -1932,6 +2156,7 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 	char ans2[20];
 	char ans3[20];
 	char ans4[20];
+	char carr[5];
 	
 	// clear data received flag
 	_dataReceived = false;
@@ -1974,6 +2199,7 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 		memset(ans2,0x00,sizeof(ans2));
 		memset(ans3,0x00,sizeof(ans3));
 		memset(ans4,0x00,sizeof(ans4));
+		memset(carr,0x00,sizeof(carr));
 			
 		// mac_rx <port>
 		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])));
@@ -1983,13 +2209,15 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 		sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));
 		// invalid_data_len
 		sprintf_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
+		// \r\n
+		sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 		
 		//wait for response
 		status = waitFor(ans1, ans2, ans3, ans4, 20000);
 		
 		if (status == 1)
 		{
-			waitFor("\r\n",500);
+			waitFor(carr,500);
 			
 			if (_length > 0)
 			{
@@ -2049,6 +2277,158 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 	}
 }
 
+
+/*!
+ * 
+ * @brief	This function sends a LoRaWAN packet and waits for ACK
+ * 	
+ * @param 	char* data:	data to be sent
+ * 			uint8_t port: port number to send data
+ * 
+ * @remarks	data is a sequence of digit representing the value of byte stream
+ * 			expressed in hexadecimal value (i.e.: payload =12A435 – the payload 
+ * 			is composed by the following byte stream: 0x12, 0xA4, 0x35 – 6 digit
+ * 			converted in 3 bytes). The maximum length of frame is 584 digit (292 Bytes).
+ * 			User can check _datareceived to know if a downlink was performed
+ * 	
+ * @return		 
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ * 	@arg	'4' if data length error
+ * 	@arg	'5' if error when sending data
+ * 	@arg	'6' if module hasn't joined to a network
+ *  @arg	'7' if input port parameter error
+ */
+uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t length)
+{
+	uint8_t status;
+	char ans1[20];
+	char ans2[20];
+	char ans3[20];
+	char ans4[20];
+	char byte2send[3];
+	char carr[5];
+	
+	// clear data received flag
+	_dataReceived = false;
+	
+	// clear buffers
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	memset(ans3,0x00,sizeof(ans3));
+	memset(carr,0x00,sizeof(carr));
+	memset(byte2send,0x00,sizeof(byte2send));
+	
+	// check port
+	if (port > 223) return LORAWAN_INPUT_ERROR;
+	
+	// create "mac tx uncnf <port> " command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[83])),port);
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "not_joined" answer
+	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
+	// create "\r\n" answer
+	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+
+	//send command and wait for ans
+	printString(_command,_uart);
+	for (uint16_t i=0; i<length;i++)
+	{
+		Utils.hex2str((uint8_t*)&payload[i], byte2send, 1);
+		printByte(byte2send[0],_uart);
+		printByte(byte2send[1],_uart);
+	}
+	printString(carr,_uart);
+	status = waitFor(ans1,ans2,ans3,1000);
+
+	if (status == 1)
+	{
+		// clear buffer
+		memset(ans1,0x00,sizeof(ans1));
+		memset(ans2,0x00,sizeof(ans2));
+		memset(ans3,0x00,sizeof(ans3));
+		memset(ans4,0x00,sizeof(ans4));
+		memset(carr,0x00,sizeof(carr));
+			
+		// mac_rx
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])));
+		// mac_tx_ok
+		strcpy_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
+		// mac_err
+		strcpy_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));
+		// invalid_data_len
+		strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
+		// create "\r\n" answer
+		sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	
+		//wait for response
+		status = waitFor(ans1, ans2, ans3, ans4, 20000);
+		
+		if (status == 1)
+		{
+			waitFor(carr,500);
+			if (_length > 0)
+			{
+				char* pch = strtok((char*) _buffer," \r\n");
+				_port = atoi(pch);
+				
+				pch = strtok(NULL," \r\n");
+								
+				memset(_data,0x00,sizeof(_data));
+				strncpy(_data, pch, sizeof(_data)-1);
+			
+				saveConfig();
+				_dataReceived = true;
+				return LORAWAN_ANSWER_OK;
+			}
+			else
+			{
+				saveConfig();
+				return LORAWAN_ANSWER_OK;
+			}
+		}
+		else if (status == 2)
+		{
+			saveConfig();
+			return LORAWAN_ANSWER_OK;
+		}
+		else if (status == 3)
+		{
+			saveConfig();
+			return LORAWAN_SENDING_ERROR;
+		}
+		else if (status == 4)
+		{
+			saveConfig();
+			return LORAWAN_LENGTH_ERROR;
+		}
+		else
+		{
+			saveConfig();
+			return LORAWAN_NO_ANSWER;
+		}
+	}
+	else if (status == 2)
+	{
+		saveConfig();
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else if (status == 3)
+	{
+		saveConfig();
+		return LORAWAN_NOT_JOINED;
+	}
+	else
+	{
+		saveConfig();
+		return LORAWAN_NO_ANSWER;
+	}
+}
 
 
 /*! 
@@ -2167,17 +2547,21 @@ uint8_t WaspLoRaWAN::getDutyCyclePrescaler()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get dcycle" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[31])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -2365,10 +2749,12 @@ uint8_t WaspLoRaWAN::setChannelFreq(uint8_t channel, uint32_t freq)
 uint8_t WaspLoRaWAN::getChannelFreq(uint8_t channel)
 {
 	uint8_t status;
-	char ans1[50];
+	char ans2[15];
+	char ans1[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	switch (_version)
 	{
@@ -2392,11 +2778,13 @@ uint8_t WaspLoRaWAN::getChannelFreq(uint8_t channel)
 	
 	// create "mac get ch freq" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[35])),channel);
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 1)
 	{
@@ -2496,10 +2884,12 @@ uint8_t WaspLoRaWAN::setChannelDutyCycle(uint8_t channel, uint16_t dcycle)
 uint8_t WaspLoRaWAN::getChannelDutyCycle(uint8_t channel)
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	//check module (this function is only available for RN2483)
 	if (_version == RN2903_MODULE)
@@ -2512,11 +2902,13 @@ uint8_t WaspLoRaWAN::getChannelDutyCycle(uint8_t channel)
 	
 	// create "mac get ch dcycle" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[36])),channel);
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 1)
 	{
@@ -2631,10 +3023,12 @@ uint8_t WaspLoRaWAN::setChannelDRRange(uint8_t channel, uint8_t minDR, uint8_t m
 uint8_t WaspLoRaWAN::getChannelDRRange(uint8_t channel)
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	switch (_version)
 	{
@@ -2658,11 +3052,13 @@ uint8_t WaspLoRaWAN::getChannelDRRange(uint8_t channel)
 	
 	// create "mac get ch drrange" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[37])),channel);
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 1)
 	{
@@ -2716,8 +3112,13 @@ uint8_t WaspLoRaWAN::setChannelStatus(uint8_t channel, char* state)
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 	
+	// create "on" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[9])));
+	// create "off" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[10])));
+	
 	// check state
-	if ((strcmp(state, "on")) && (strcmp(state, "off"))) return LORAWAN_INPUT_ERROR;
+	if ((strcmp(state, ans1)) && (strcmp(state, ans2))) return LORAWAN_INPUT_ERROR;
 	
 	switch (_version)
 	{
@@ -2905,17 +3306,20 @@ uint8_t WaspLoRaWAN::getRetries()
 {
 	uint8_t status;	
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	
 	// create "mac get retx" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[70])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,100);
+	status = sendCommand(_command,ans1,ans2,100);
 	
 	if (status == 1)
 	{
@@ -2949,10 +3353,12 @@ uint8_t WaspLoRaWAN::getRetries()
 uint8_t WaspLoRaWAN::getBand()
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	//check module (this function is only available for RN2483)
 	if (_version == RN2903_MODULE)
@@ -2962,11 +3368,13 @@ uint8_t WaspLoRaWAN::getBand()
 	
 	// create "mac get band" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[28])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 1)
 	{
@@ -2996,18 +3404,22 @@ uint8_t WaspLoRaWAN::getBand()
 uint8_t WaspLoRaWAN::getMargin()
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get mrgn" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[32])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 1)
 	{
@@ -3037,18 +3449,22 @@ uint8_t WaspLoRaWAN::getMargin()
 uint8_t WaspLoRaWAN::getGatewayNumber()
 {
 	uint8_t status;
-	char ans1[50];
+	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get gwnb" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[33])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,300);
+	status = sendCommand(_command,ans1,ans2,300);
 	
 	if (status == 1)
 	{
@@ -3127,17 +3543,21 @@ uint8_t WaspLoRaWAN::getUpCounter()
 {
 	uint8_t status;	
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get upctr" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[73])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,100);
+	status = sendCommand(_command,ans1,ans2,100);
 	
 	if (status == 1)
 	{
@@ -3261,17 +3681,21 @@ uint8_t WaspLoRaWAN::getDownCounter()
 {
 	uint8_t status;	
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "mac get dnctr" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[75])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,100);
+	status = sendCommand(_command,ans1,ans2,100);
 	
 	if (status == 1)
 	{
@@ -3569,14 +3993,17 @@ uint8_t WaspLoRaWAN::getRadioSNR()
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get snr" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[65])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 
 	if (status == 1)
 	{
@@ -3660,17 +4087,21 @@ uint8_t WaspLoRaWAN::getRadioSF()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get sf" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[59])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -3765,17 +4196,21 @@ uint8_t WaspLoRaWAN::getRadioPower()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get pwr" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[58])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -3853,17 +4288,21 @@ uint8_t WaspLoRaWAN::getRadioMode()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get mod" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[56])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -3961,17 +4400,20 @@ uint8_t WaspLoRaWAN::getRadioFreq()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	
 	// create "radio get freq" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[57])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -4077,17 +4519,21 @@ uint8_t WaspLoRaWAN::getRadioReceivingBW()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get rxbw" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[60])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -4170,17 +4616,21 @@ uint8_t WaspLoRaWAN::getRadioBitRateFSK()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get bitrate" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[61])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -4259,17 +4709,21 @@ uint8_t WaspLoRaWAN::getRadioFreqDeviation()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get fdev" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[71])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -4448,17 +4902,21 @@ uint8_t WaspLoRaWAN::getRadioPreamble()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get prlen" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[67])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -4538,21 +4996,25 @@ uint8_t WaspLoRaWAN::getRadioCR()
 {
 	uint8_t status;
 	char ans1[15];
-	
+	char ans2[15];
+		
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get cr" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[62])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,100);
+	status = sendCommand(_command,ans1,ans2,100);
 	
 	if (status == 1)
 	{
-		char* pch = strtok((char*)_buffer,"\r\n");
+		char* pch = strtok((char*)_buffer,ans1);
 		if (pch != NULL)
 		{
 			memset(_radioCR, 0x00, sizeof(_radioCR));
@@ -4635,17 +5097,21 @@ uint8_t WaspLoRaWAN::getRadioWDT()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get wdt" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[63])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
 	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -4729,17 +5195,21 @@ uint8_t WaspLoRaWAN::getRadioBW()
 {
 	uint8_t status;
 	char ans1[15];
+	char ans2[15];
 	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
 	
 	// create "radio get bw" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[64])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",ans1,500);
+	status = sendCommand(_command,ans1,ans2,500);
 	
 	if (status == 1)
 	{
@@ -4885,6 +5355,549 @@ uint8_t WaspLoRaWAN::setRX1Delay(uint16_t delay)
 }
 
 
+
+/*!
+ * @brief	This function gets MAC status from the module
+ * 
+ * @remarks This functino is necessary before showing MAC status with 
+ * 			showMACStatus() function
+ * 
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer
+ */
+uint8_t WaspLoRaWAN::getMACStatus()
+{
+	uint8_t status;
+	char ans1[15];
+	char carr[5];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(carr,0x00,sizeof(carr));
+	
+	// create "mac get status" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[81])));
+	// create "invalid_param" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "\r\n" answer
+	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+
+	//send command and wait for ans
+	status = sendCommand(_command,"000",ans1);
+
+	if (status == 1)
+	{
+		status = waitFor(carr,ans1);
+		char* pointer = strtok((char*)_buffer,carr);
+		memset(ans1,0x00,sizeof(ans1));
+		memcpy(ans1,pointer,sizeof(ans1));
+		uint8_t aux[5];
+		for (uint8_t i=0; i<5; i++)
+		{
+			if (ans1[i]>='0' && ans1[i]<='9')
+			{
+				aux[4-i] = ans1[i] - '0';
+			}
+			else if (ans1[i]>='A' && ans1[i]<='F')
+			{
+				aux[4-i] = ans1[i] - 'A' + 10;
+			}
+			else
+			{
+				return LORAWAN_ANSWER_ERROR;
+			}
+		}
+		
+		_macStatus = (aux[4]*(16^4))+(aux[3]*(16^3))+(aux[2]*(16^2))+(aux[1]*16)+aux[0];
+		return LORAWAN_ANSWER_OK;
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*!
+ * @brief	This function returns MAC status verbose
+ * 
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer
+ */
+uint8_t WaspLoRaWAN::showMACStatus()
+{
+	if (_macStatus&0x01) USB.println(F("Module joined to a network"));
+	else USB.println(F("Module not joined to a network"));
+
+	if (_macStatus&0x10) USB.println(F("Automatic reply status enabled"));
+	else USB.println(F("Automatic reply status disabled"));
+	
+	if (_macStatus&0x20) USB.println(F("ADR status enabled"));
+	else USB.println(F("ADR status disabled"));
+	
+	if (_macStatus&0x40) USB.println(F("Silent inmediately status enabled"));
+	else USB.println(F("Silent inmediately status disabled"));
+	
+	if (_macStatus&0x80) USB.println(F("MAC paused"));
+	else USB.println(F("MAC not paused"));
+	
+	if (_macStatus&0x200) USB.println(F("Link check status enabled"));
+	else USB.println(F("Link check status disabled"));
+	
+	if (_macStatus&0x400) USB.println(F("Channels updated via NewChannelReq or CFList"));
+	else USB.println(F("Channels not updated"));
+	
+	if (_macStatus&0x800) USB.println(F("Output power updated"));
+	else USB.println(F("Output power not updated"));
+	
+	if (_macStatus&0x1000) USB.println(F("Number of repetitions updated"));
+	else USB.println(F("Number of repetitions not updated"));
+	
+	if (_macStatus&=0x2000) USB.println(F("Prescaler updated"));
+	else USB.println(F("Prescaler not updated"));
+	
+	if (_macStatus&=0x4000) USB.println(F("RX2 window parameter updated"));
+	else USB.println(F("RX2 window not updated"));
+	
+	if (_macStatus&=0x8000) USB.println(F("TX timing updated"));
+	else USB.println(F("TX timing not updated"));
+	
+	if (_macStatus&=0x10000) USB.println(F("Rejoin needed"));
+	else USB.println(F("End device functional"));
+	
+}
+
+void WaspLoRaWAN::convertString(char* string2convert, char* outputString)
+{	
+	Utils.hex2str((uint8_t*)string2convert, outputString, strlen(string2convert));
+}
+
+void WaspLoRaWAN::convertString(uint8_t* string2convert, char* outputString)
+{	
+	Utils.hex2str(string2convert, outputString, strlen((char*)string2convert));
+}
+
+/*!
+ * @brief	This function puts the module to sleep
+ * 
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer
+ */
+uint8_t WaspLoRaWAN::sleep()
+{
+	return sleep(4294967295);
+}
+
+/*!
+ * @brief	This function puts the module to sleep
+ * 
+ * @param	uint32_t time: 100..4294967295
+ * 
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer
+ */
+uint8_t WaspLoRaWAN::sleep(uint32_t time)
+{
+	uint8_t status;
+	char ans1[25];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	
+	// create "mac get status" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[84])),time);
+	// create "invalid_param" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,1000);
+
+	if (status == 1)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+/*!
+ * @brief	This function force the module to wake up
+ * 
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer
+ */
+uint8_t WaspLoRaWAN::wakeUp()
+{
+	uint8_t status;
+	char ans1[25];
+
+	memset(ans1,0x00,sizeof(ans1));
+	
+	beginUART();
+  	
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	
+	printByte(0x00,_uart);
+	printByte(0x55,_uart);
+
+	delay(500);
+	
+	sleep(100);
+	status = waitFor(ans1,500);
+	
+	if (status == 1)
+	{
+		return LORAWAN_ANSWER_OK;
+	}
+	else
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+}
+
+
+/*! 
+ * @brief	This function is used to set the automatic reply status from module
+ * 
+ * @param	char* state: "on"/"off"
+ * 
+ * @return		
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ *  @arg	'7' if input parameter error
+ */
+uint8_t WaspLoRaWAN::setAR(char* state)
+{
+	uint8_t status;
+	char ans1[15];
+	char ans2[15];
+
+	// check state
+	if ((strcmp(state, "on")) && (strcmp(state, "off"))) return LORAWAN_INPUT_ERROR;
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	// create "mac set ar" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[85])),state);
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,500);
+		
+	if (status == 1)
+	{
+		if (strcmp(state, "on")  == 0) _ar = true;
+		if (strcmp(state, "off") == 0) _ar = false;		
+		return LORAWAN_ANSWER_OK;
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*! 
+ * @brief	This function is used to get the automatic reply status from module
+ * 
+ * @param	char* state: "on"/"off"
+ * 
+ * @return		
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ *  @arg	'7' if input parameter error
+ */
+uint8_t WaspLoRaWAN::getAR()
+{
+	uint8_t status;
+	char ans1[15];
+	char ans2[15];
+	char ans3[15];
+
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	memset(ans2,0x00,sizeof(ans3));
+	
+	// create "mac get ar" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[86])));
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[9])));
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[10])));
+	// create "invalid_param" answer
+	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,ans3,500);
+	
+	if (status == 1)
+	{
+		_ar = true;
+		return LORAWAN_ANSWER_OK;
+	}
+	else if (status == 2)
+	{
+		_ar = false;
+		return LORAWAN_ANSWER_OK;
+	}
+	else if (status == 3)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*! 
+ * @brief	This function is used to get the first receive window delay
+ * 
+ * @return		
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ *  @arg	'7' if input parameter error
+ */
+uint8_t WaspLoRaWAN::getRX1Delay()
+{
+	uint8_t status;
+	char ans1[15];
+	char ans2[15];
+
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	// create "mac get rxdelay1" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[87])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,500);
+	
+	if (status == 1)
+	{
+		_rx1Delay = parseIntValue();
+		return LORAWAN_ANSWER_OK;
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*! 
+ * @brief	This function is used to get the second receive window delay
+ * 
+ * @return		
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ *  @arg	'7' if input parameter error
+ */
+uint8_t WaspLoRaWAN::getRX2Delay()
+{
+	uint8_t status;
+	char ans1[15];
+	char ans2[15];
+
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	// create "mac get rxdelay2" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[88])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,500);
+	
+	if (status == 1)
+	{
+		_rx2Delay = parseIntValue();
+		return LORAWAN_ANSWER_OK;
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*! 
+ * @brief	This function is used to set the automatic reply status from module
+ * 
+ * @param	char* state: "on"/"off"
+ * 
+ * @return		
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ *  @arg	'7' if input parameter error
+ */
+uint8_t WaspLoRaWAN::getRX2Parameters(char* band)
+{
+	uint8_t status;
+	char ans1[15];
+	char ans2[15];
+
+	// check state
+	if ((strcmp(band, "868")) && (strcmp(band, "433"))) return LORAWAN_INPUT_ERROR;
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	// create "mac set ar" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[89])),band);
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,500);
+		
+	if (status == 1)
+	{
+		char * pch;	
+		pch = strtok((char*) _buffer," \r\n");
+		if (pch != NULL)
+		{
+			_rx2DataRate = strtoul(pch,NULL, 10);
+			pch = strtok(NULL,"\r\n");
+			if (pch != NULL)
+			{
+				_rx2Frequency = strtoul(pch,NULL, 10);
+				return LORAWAN_ANSWER_OK;
+			}
+			return LORAWAN_ANSWER_ERROR;
+		}
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+
+
+
+/*! 
+ * @brief	This function calculates the maximum payload for current settings
+ *  
+ * @return		
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ */
+uint8_t WaspLoRaWAN::getMaxPayload()
+{
+	uint8_t error;
+	_maxPayload = 0;
+	
+	// get current data rate
+	error = getDataRate();
+
+	if (error == 0)
+	{
+		if (_version == RN2483_MODULE)
+		{
+			switch (_dataRate)
+			{
+				case 0:	
+				case 1:	
+				case 2:	_maxPayload = 51;
+						break;
+				case 3: _maxPayload = 115;
+						break;
+				case 4:
+				case 5:
+				case 6:
+				case 7: _maxPayload = 242;
+						break;
+				default:_maxPayload = 0;
+						return 1;
+						break;
+			}
+		}
+		else if (_version == RN2903_MODULE)
+		{
+			switch (_dataRate)
+			{
+				case 0:	_maxPayload = 11;
+						break;
+				case 1:	_maxPayload = 53;
+						break;
+				case 2:	_maxPayload = 129;
+						break;
+				case 3: 
+				case 4: _maxPayload = 242;
+						break;
+				default:_maxPayload = 0;
+						return 1;
+						break;
+			}
+		}
+		else
+		{
+			return 1;
+		}
+	}
+	else
+	{
+		return 1;
+	}
+	
+	return 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Private functions
 ////////////////////////////////////////////////////////////////////////////////
@@ -4912,7 +5925,13 @@ uint32_t WaspLoRaWAN::parseValue(uint8_t base)
 uint32_t WaspLoRaWAN::parseIntValue()
 {
 	char * pch;	
-	pch = strtok((char*) _buffer,"\r\n");
+	char carr[5];
+	
+	memset(carr,0x00,sizeof(carr));
+	// create "\r\n" answer
+	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	
+	pch = strtok((char*) _buffer,carr);
 	if (pch != NULL)
 	{
 		return atol(pch);
@@ -4928,15 +5947,19 @@ uint32_t WaspLoRaWAN::parseIntValue()
 float WaspLoRaWAN::parseFloatValue()
 {
 	char * pch;	
-	pch = strtok((char*) _buffer,"\r\n");
+	char carr[5];
+	
+	memset(carr,0x00,sizeof(carr));
+	// create "\r\n" answer
+	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	
+	pch = strtok((char*) _buffer,carr);
 	if (pch != NULL)
 	{
 		return atof(pch);
 	}
 	return 0;
 }
-
-
 
 
 // Preinstantiate Objects /////////////////////////////////////////////////////

@@ -22,4 +22,4 @@ supplyVoltage	KEYWORD2
 _payload	KEYWORD2
 _length	KEYWORD2
 
-xbee900	KEYWORD3
+xbee900	KEYWORD1

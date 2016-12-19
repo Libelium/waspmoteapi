@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		3.0
  *  Design:			Ahmad Saad
  */
 
@@ -41,7 +41,7 @@
 WaspSensorSWIons::WaspSensorSWIons()
 {
 	// Update Waspmote Control Register
-	WaspRegister |= REG_WATER_IONS;
+	WaspRegisterSensor |= REG_WATER_IONS;
 	
 	PWR.setSensorPower(SENS_5V, SENS_OFF);
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);
@@ -139,22 +139,22 @@ float ionSensorClass::read(void)
 	digitalWrite(DIGITAL3, LOW); 
 
 	// Select the channel to be read from the multiplexer
-	if (_mySocket == SOCKETA) {
+	if (_mySocket == SOCKET_A) {
 		
 		digitalWrite(DIGITAL5, LOW);
 		digitalWrite(DIGITAL4, LOW);
 		
-	} else if (_mySocket == SOCKETB){
+	} else if (_mySocket == SOCKET_B){
 		
 		digitalWrite(DIGITAL5, HIGH);
 		digitalWrite(DIGITAL4, LOW);
 		
-	} else if (_mySocket == SOCKETC) {
+	} else if (_mySocket == SOCKET_C) {
 		
 		digitalWrite(DIGITAL5, LOW);
 		digitalWrite(DIGITAL4, HIGH);
 	
-	} else if (_mySocket == SOCKETD) {
+	} else if (_mySocket == SOCKET_D) {
 		
 		digitalWrite(DIGITAL5, HIGH);
 		digitalWrite(DIGITAL4, HIGH);
@@ -218,6 +218,19 @@ void ionSensorClass::setCalibrationPoints(const float calVoltages[],const float 
 }
 
 
+
+//!*************************************************************************************
+//!	Name:	setCalibrationPoints()										
+//!	Description: Calculate the slope and the intersection of the logarithmic function
+//!	Param :		void
+//!	Returns:	void
+//!*************************************************************************************
+void ionSensorClass::setCalibrationPoints()
+{
+	setCalibrationPoints(voltages, concentrations, numPoints);
+}
+
+
 //!*************************************************************************************
 //!	Name:	pointToPointCalibration()
 //!	Description: Calibration using point to point method
@@ -256,7 +269,17 @@ float ionSensorClass::calculateConcentration(float input)
 	// The ions sensors have a logarithmic response (Nernst Equation)
 	// The calibration process in a non-linear regression
 	// y = a * log10(x) + b => x = 10 ^ ((y - b) / a)
-	return  pow(10, ((input - intersection) / slope));
+	
+	float concentration = pow(10, ((input - intersection) / slope));
+	
+	if (concentration > 999999.9) 
+	{
+		return -1; 
+	}
+	else 
+	{
+		return concentration;
+	}
 }
 
 //!*************************************************************************************
@@ -272,8 +295,8 @@ float ionSensorClass::calculateConcentrationP2P(float input)
 	int i = 0;
 	
 	// This loop is to find the range where the input is located
-	while ((!inRange) && (i < (numPoints-1))) {
-		
+	while ((!inRange) && (i < (numPoints-1))) 
+	{
 		if ((input > voltages[i]) && (input <= voltages[i + 1]))
 			inRange = true;
 		else if ((input <= voltages[i]) && (input > voltages[i+1]))
@@ -287,32 +310,45 @@ float ionSensorClass::calculateConcentrationP2P(float input)
 	
 	// If the voltage input is in a range, we calculate in the slope 
 	// and the intersection of the logaritmic function
-	if (inRange ) {
+	if (inRange ) 
+	{
 		// Slope of the logarithmic function 
 		temp_slope = (voltages[i] - voltages[i+1]) / (log10(concentrations[i]) - log10(concentrations[i+1]));
 		// Intersection of the logarithmic function
-		temp_intersection = voltages[i] - temp_slope * log10(concentrations[i]);
-		// Return the value of teh concetration
-		return pow(10, ((input - temp_intersection) / temp_slope));
+		temp_intersection = voltages[i] - temp_slope * log10(concentrations[i]);		
+	
 	// Else, we calculate the logarithmic function with the nearest point
-	} else {
-		
-		if (fabs(input - voltages[0]) < fabs(input - voltages[numPoints-1])) {
+	} 
+	else
+	{
+		if (fabs(input - voltages[0]) < fabs(input - voltages[numPoints-1])) 
+		{
 			// Slope of the logarithmic function
 			temp_slope = (voltages[1] - voltages[0]) / (log10(concentrations[1]) - log10(concentrations[0]));
 			// Intersection of the logarithmic function
 			temp_intersection = voltages[0] - temp_slope * log10(concentrations[0]);
-			// Return the value of teh concetration
-			return pow(10, ((input - temp_intersection) / temp_slope));
-		} else {
+			
+		} 
+		else
+		{
 			// Slope of the logarithmic function
 			temp_slope = (voltages[numPoints-1] - voltages[numPoints-2]) / (log10(concentrations[numPoints-1]) - log10(concentrations[numPoints-2]));
 			// Intersection of the logarithmic function
 			temp_intersection = voltages[numPoints-1] - temp_slope * log10(concentrations[numPoints-1]);
-			// Return the value of the concetration
-			return pow(10, ((input - temp_intersection) / temp_slope));
 		}
-	}	
+	}
+	
+	float concentration = pow(10, ((input - temp_intersection) / temp_slope));
+	
+	// Return the value of the concetration
+	if (concentration > 999999.9) 
+	{
+		return -1; 
+	}
+	else 
+	{
+		return concentration;
+	} 
 }
 
 //!*************************************************************************************
@@ -329,15 +365,17 @@ float ionSensorClass::pHConversion(float input, float temp)
 	float sensitivity;
 	
 	// The temperature of the water must be between 0 and 100 ºC
-	if( (temp < 0)||(temp > 100))
+	if( (temp < 0.0)||(temp > 100.0))
 		return -1.0;
 	
 	// The calibration temperature must be between 0 and 100 ºC
 	if((calibration_temperature < 0)||(calibration_temperature > 100))
 		return -2.0;
 
-	// TWo ranges calibration
-	if (input > calibration_point_7 ) {
+
+	// Two ranges calibration
+	if (input > calibration_point_7 )
+	{
 		// The sensitivity is calculated using the other two calibration values
 		// Asumme that the pH sensor is lineal in the range.
 		// sensitivity = pHVariation / volts
@@ -351,7 +389,9 @@ float ionSensorClass::pHConversion(float input, float temp)
 		return 7.0 + (calibration_point_7-input) / sensitivity;
 		//				|					|
 		//			(pH 7 voltage	-	Measured volts) = Variation from the reference 
-	} else	{
+	}
+	else
+	{
 		// The sensitivity is calculated using the other two calibration values
 		sensitivity = (calibration_point_7-calibration_point_10) / 3;
 		// Add the change in the pH owed to the change in temperature
@@ -359,6 +399,21 @@ float ionSensorClass::pHConversion(float input, float temp)
 
 		return 7.0 + (calibration_point_7-input)/sensitivity;
 	}
+}
+
+
+//!*************************************************************************************
+//!	Name:	pHConversion()
+//!	Description: Returns the pH value
+//!	Param: 	float input: voltage measured at the sensor output
+//!				float temp: temperature of the test solution
+//!	Returns: 	float value : the pH of the solution
+//! 			-1 : wrong temperature introduced
+//!				-2 : wrong calibration temperature introduced						
+//!*************************************************************************************
+float ionSensorClass::pHConversion(float input)
+{
+	return pHConversion(input, 25.0);
 }
 
 //!*************************************************************************************
@@ -417,7 +472,15 @@ float pt1000Class::read(void)
 	float temp = 0.26048 * value - 260.83;
 	delay(100);
 
-	return temp;
+	if ((temp > 100.0) || (temp < 0.0))
+	{
+		return -1.0;
+	}
+	else 
+	{
+		return temp;
+	}
+
 }
 
 

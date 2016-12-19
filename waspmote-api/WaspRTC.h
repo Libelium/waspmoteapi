@@ -1,7 +1,7 @@
 /*! \file WaspRTC.h
     \brief Library for managing the RTC
     
-    Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
     
  	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
@@ -21,7 +21,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.5
+    Version:		3.0
     Design:			David Gascón
     Implementation:	A. Bielsa, D. Cuartielles, M. Yarza, Y. Carmona
 
@@ -105,13 +105,13 @@
 /*! \def RTC_LSB_TEMP_ADDRESS
     \brief RTC Addresses constants. LSB Temperature register in this case
  */
-#define	RTC_SECONDS_ADDRESS		0x00	
-#define	RTC_MINUTES_ADDRESS		0x01
-#define	RTC_HOURS_ADDRESS		0x02
-#define	RTC_DAYS_ADDRESS		0x03
-#define	RTC_DATE_ADDRESS		0x04
-#define	RTC_MONTH_ADDRESS		0x05
-#define	RTC_YEAR_ADDRESS		0x06
+#define	RTC_SECONDS_ADDRESS			0x00	
+#define	RTC_MINUTES_ADDRESS			0x01
+#define	RTC_HOURS_ADDRESS			0x02
+#define	RTC_DAYS_ADDRESS			0x03
+#define	RTC_DATE_ADDRESS			0x04
+#define	RTC_MONTH_ADDRESS			0x05
+#define	RTC_YEAR_ADDRESS			0x06
 #define	RTC_ALM1_START_ADDRESS		0x07
 #define	RTC_ALM1_SECONDS_ADDRESS	0x07
 #define	RTC_ALM1_MINUTES_ADDRESS	0x08
@@ -611,9 +611,7 @@ class WaspRTC
     /*!
 	\param const char* time : the time and date to set in the RTC. It looks 
 		like "YY:MM:DD:dow:hh:mm:ss"
-	\return void
-	\sa setTime(uint8_t year, uint8_t month, uint8_t date, uint8_t day_week, 
-	uint8_t hour, uint8_t minute, uint8_t second), getTime()
+	\return '0' if OK; '1' if error
 	 */
 	uint8_t setTime(const char* time);
 	
@@ -626,16 +624,15 @@ class WaspRTC
 	\param uint8_t hour : the hours to set in the RTC
 	\param uint8_t minute : the minutes to set in the RTC
 	\param uint8_t second : the seconds to set in the RTC
-	\return '0' on succes, '1' otherwise
-	\sa setTime(const char* time), getTime()
+	\return '0' if OK; '1' if error
 	 */
-	uint8_t setTime(	uint8_t year, 
+	uint8_t setTime(uint8_t year, 
 					uint8_t month,
 					uint8_t date, 
 					uint8_t day_week, 
 					uint8_t hour, 
 					uint8_t minute, 
-					uint8_t second	);
+					uint8_t second);
 	
 	//! It gets from the RTC the date and time, storing them in the 
 	//! corresponding variables
@@ -815,7 +812,7 @@ class WaspRTC
 	//! It gets GMT value
     /*! This function get the GMT variable
 	\param 	void
-	\return 	int8_t _gmt
+	\return int8_t _gmt
 	 */	
 	int8_t getGMT();
 	
@@ -823,12 +820,33 @@ class WaspRTC
     /*! This function gets the two last bit of the RTC status register and 
      * returns the number of the alarm has been triggered
 	\param 	void
-	\return 	uint8_t 1 if alarm 1 has been triggered
-						2 if alarm 2 has been triggered
-						3 if both alarms have been triggered
+	\return uint8_t 1 if alarm 1 has been triggered
+					2 if alarm 2 has been triggered
+					3 if both alarms have been triggered
 	 */
 	uint8_t getAlarmTriggered();
+
+	/*! It sets the RTC alarm2 for generating a Waspmote reset 
+	\param uint16_t minutesWatchdog indicates the number of minute hand changes 
+		to perform before the reset is done
+	\return void
+	*/
+	void setWatchdog(uint16_t minutesWatchdog);
 	
+	/*! It gets the RTC alarm2 settings for generating a Waspmote reset 
+	\return pointer to the buffer which stores the watchdog time settings
+	*/
+	char* getWatchdog();
+	
+	/*! It disables the RTC alarm2 so no reset will be done
+	\return void
+	*/
+	void unSetWatchdog(void);
+	
+	/*! It disables the SQW output from the RTC
+	\return void
+	*/	
+	void disableSQW();
 };
 
 extern WaspRTC RTC;

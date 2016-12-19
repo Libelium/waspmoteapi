@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.5
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -682,17 +682,8 @@ int8_t WaspBLE::ON(uint8_t UartMode)
 	if (UartMode >= 2) _uartBT = 1;
 	else _uartBT = UartMode;	
 	
-	// Power On the module with the corresponding pin	 
-	if(_uartBT == SOCKET0) 
-	{		
-		pinMode(BLE_PW_0,OUTPUT);	
-		digitalWrite(BLE_PW_0,HIGH);
-	}
-	else if (_uartBT == SOCKET1)
-	{
-		pinMode(BLE_PW_1,OUTPUT);
-		digitalWrite(BLE_PW_1,HIGH);
-	}
+    // power on the socket
+    PWR.powerSocket(_uartBT, HIGH);
 	
 	// delay to power up.
 	delay(100);
@@ -759,24 +750,18 @@ void WaspBLE::OFF()
 	closeSerial(_uartBT);
 	
 	// update Waspmote Register
-	if(_uartBT == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
-	if(_uartBT == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);
+	if (_uartBT == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);
+	if (_uartBT == SOCKET1)	WaspRegister &= ~(REG_SOCKET1);
 	
 	// to disable wake up pin.
 	sleep();
 	
-	// Disable power pin.
-	if(!_uartBT) 
-	{
-		pinMode(BLE_PW_0,OUTPUT);
-		digitalWrite(BLE_PW_0,LOW);
-	}
-	else 
-	{
-		Utils.setMux(MUX_TO_LOW,MUX_TO_LOW);
-		pinMode(BLE_PW_1,OUTPUT);
-		digitalWrite(BLE_PW_1,LOW);		
-	}
+	// unselect multiplexer 
+    if (_uartBT == SOCKET0) Utils.setMuxUSB();
+    if (_uartBT == SOCKET1) Utils.muxOFF1();
+
+	// switch module OFF
+	PWR.powerSocket(_uartBT, LOW);
 }
 
 
@@ -945,6 +930,19 @@ uint16_t WaspBLE::scanDevice(uint8_t* Mac, uint8_t maxTime, uint8_t TXPower)
 		strcpy_P(message, (char*)pgm_read_word(&(table_BLE[6]))); 
 		USB.printf(message, errorCode);
 		#endif
+		
+		// Now it is necessary to stop scan. 
+		if(endProcedure() != 0)
+		{
+			#if BLE_DEBUG > 0
+			// copy "Stop fail. err: %x\n" form flash
+			char message[25] ="";
+			strcpy_P(message, (char*)pgm_read_word(&(table_BLE[5]))); 
+			USB.printf(message, errorCode);
+			#endif
+			return errorCode;
+		}
+				
 		return errorCode;
 	}
 	
@@ -2641,17 +2639,14 @@ uint16_t WaspBLE::writeLocalAttribute(uint16_t handle, uint8_t * data, uint8_t l
 uint16_t WaspBLE::writeLocalAttribute(uint16_t handle, uint8_t indicate, uint8_t * data, uint8_t length)
 {	
 	// maximum writtable data is 54 bytes length
+	uint8_t payload[54];
 	
+	uint8_t flag = 0;
+
 	if (length > 54)
 	{
 		length = 54;
 	}
-	
-	uint8_t payload[length+4];
-	
-	uint8_t flag = 0;
-
-	
 
 	payload[0] = (uint8_t)(handle & 0x00FF);
 	payload[1] = (uint8_t)((handle & 0xFF00) >> 8);
@@ -2811,7 +2806,7 @@ uint16_t WaspBLE::attributeWrite(uint8_t connection, uint16_t atthandle, char * 
 uint16_t WaspBLE::attributeWrite(uint8_t connection, uint16_t atthandle, uint8_t * data, uint8_t length)
 {
 	
-	uint8_t payload[length+4];
+	uint8_t payload[length];
 	
 	payload[0] = connection;
 	payload[1] = (uint8_t)(atthandle & 0x00FF);

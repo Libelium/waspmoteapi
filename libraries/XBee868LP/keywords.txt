@@ -1,0 +1,46 @@
+_errorsRF	KEYWORD2
+_goodPackets	KEYWORD2
+_transmisionErrors	KEYWORD2
+_availableFreq	KEYWORD2
+_channelMask	KEYWORD2
+_minFreqCount	KEYWORD2
+_preambleID	KEYWORD2
+_transmitOptions	KEYWORD2
+_networkHops	KEYWORD2
+_netDelaySlots	KEYWORD2
+_meshNetRetries	KEYWORD2
+_retries	KEYWORD2
+multipleBroadcast	KEYWORD2
+channelRSSI	KEYWORD2
+maxPayloadBytes	KEYWORD2
+ 
+getAvailableFreq	KEYWORD2
+getChannelMask	KEYWORD2
+getChannelRSSI	KEYWORD2
+getGoodPackets	KEYWORD2
+getMeshNetworkRetries	KEYWORD2
+getMultipleBroadcast	KEYWORD2
+getNetworkDelaySlots	KEYWORD2
+getPayloadBytes	KEYWORD2
+getNetworkHops	KEYWORD2
+getPreambleID	KEYWORD2
+getRetries	KEYWORD2
+getRFerrors	KEYWORD2
+getTransmisionErrors	KEYWORD2
+getTransmitOptions	KEYWORD2
+init	KEYWORD2
+sendXBeePriv	KEYWORD2
+setMeshNetworkRetries	KEYWORD2
+setChannelMask	KEYWORD2
+setNetworkDelaySlots	KEYWORD2
+setMultipleBroadcast	KEYWORD2
+setNetworkHops	KEYWORD2
+setPreambleID	KEYWORD2
+setRetries	KEYWORD2
+setTransmitOptions	KEYWORD2
+WaspXBee868LP	KEYWORD2
+
+xbee868LP	KEYWORD1
+
+TO_DIGIMESH	LITERAL1
+TO_POINT_TO_MULTIPOINT	LITERAL1

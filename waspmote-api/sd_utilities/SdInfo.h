@@ -1,5 +1,6 @@
 /* Arduino Sd2Card Library
  * Copyright (C) 2012 by William Greiman
+ * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino Sd2Card Library
  *
@@ -16,6 +17,9 @@
  * You should have received a copy of the GNU General Public License
  * along with the Arduino Sd2Card Library.  If not, see
  * <http://www.gnu.org/licenses/>.
+ * 
+ * Version:		3.0
+ * 
  */
 #ifndef SdInfo_h
 #define SdInfo_h

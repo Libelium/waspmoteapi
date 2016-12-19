@@ -36,4 +36,4 @@ attachInt	KEYWORD2
 detachInt	KEYWORD2
 loadInt	KEYWORD2
 
-SensorEventv20	KEYWORD3
+SensorEventv20	KEYWORD1

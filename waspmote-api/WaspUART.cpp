@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.1
+ *  Version:		3.0
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -26,6 +26,17 @@
 #endif
 
 #include "WaspUART.h"
+
+
+void WaspUART::setUART(uint8_t uart)
+{
+	_uart = uart;
+}
+
+void WaspUART::setBaudrate(uint32_t baudrate)
+{
+	_baudrate = baudrate;
+}
 
 
 /*
@@ -43,6 +54,8 @@ void WaspUART::beginUART()
 	// update Waspmote Register
 	if(_uart==SOCKET0)	WaspRegister |= REG_SOCKET0;
 	if(_uart==SOCKET1)	WaspRegister |= REG_SOCKET1;
+	
+	secureBegin();
 }
 
 
@@ -207,19 +220,21 @@ uint8_t  WaspUART::sendCommand(	char* command,
 {
 	// index counter
 	uint16_t i = 0;
-  	
-  	#if UART_DEBUG > 0
-		USB.print(F("[debug] cmd:"));  USB.println(command);  	
+	
+	secureBegin();
+    
+  	#if DEBUG_UART > 0
+		PRINT_UART(F("cmd:")); USB.println(command);  	
   	#endif
-  	#if UART_DEBUG > 1			
-		USB.print(F("[debug] ans1:")); USB.println(ans1); 	
-		if(ans2!=NULL) { USB.print(F("[debug] ans2:")); USB.println(ans2);}
-		if(ans3!=NULL) { USB.print(F("[debug] ans3:")); USB.println(ans3);}
-		if(ans4!=NULL) { USB.print(F("[debug] ans4:")); USB.println(ans4);}
+  	#if DEBUG_UART > 1			
+		PRINT_UART(F("ans1:")); USB.println(ans1); 	
+		if(ans2!=NULL) { PRINT_UART(F("ans2:")); USB.println(ans2);}
+		if(ans3!=NULL) { PRINT_UART(F("ans3:")); USB.println(ans3);}
+		if(ans4!=NULL) { PRINT_UART(F("ans4:")); USB.println(ans4);}
   	#endif
 		
 	// clear uart buffer before sending command
-	if( _flush_mode == true )
+	if (_flush_mode == true)
 	{
 		serialFlush(_uart); 		
 	}
@@ -238,34 +253,34 @@ uint8_t  WaspUART::sendCommand(	char* command,
 	unsigned long previous = millis();
 	
 	// check available data for 'timeout' milliseconds
-    while( (millis() - previous) < timeout )
+    while ((millis() - previous) < timeout)
     {
-		if( serialAvailable(_uart) )
+		if (serialAvailable(_uart))
 		{
-			if ( i < (sizeof(_buffer)-1) )
+			if (i < (sizeof(_buffer)-1))
 			{	
-				_buffer[i++] = serialRead(_uart);				
-				_length++;			
+				_buffer[i++] = serialRead(_uart);		
+				_length++;
 			}
 		}
 			
 		// Check 'ans1'
-		if( find( _buffer, _length, ans1 ) == true )
+		if (find( _buffer, _length, ans1 ) == true)
 		{		
-			#if UART_DEBUG > 0
-				USB.print(F("[debug] ans:"));	
+			#if DEBUG_UART > 0
+				PRINT_UART(F("found:"));	
 				USB.println( ans1 );	
 			#endif		
 			return 1;
 		}
 		
 		// Check 'ans2'
-		if( ans2 != NULL )
+		if (ans2 != NULL)
 		{
 			if( find( _buffer, _length, ans2 ) == true )
 			{	
-				#if UART_DEBUG > 0
-					USB.print(F("[debug] ans:"));	
+				#if DEBUG_UART > 0
+					PRINT_UART(F("found:"));	
 					USB.println( ans2 );	
 				#endif			
 				return 2;
@@ -273,12 +288,12 @@ uint8_t  WaspUART::sendCommand(	char* command,
 		}
 		
 		// Check 'ans3'
-		if( ans3 != NULL )
+		if (ans3 != NULL)
 		{
 			if( find( _buffer, _length, ans3 ) == true )
 			{	
-				#if UART_DEBUG > 0
-					USB.print(F("[debug] ans:"));	
+				#if DEBUG_UART > 0
+					PRINT_UART(F("found:"));		
 					USB.println( ans3 );	
 				#endif				
 				return 3;
@@ -286,12 +301,12 @@ uint8_t  WaspUART::sendCommand(	char* command,
 		}
 		
 		// Check 'ans4'
-		if( ans4 != NULL )
+		if (ans4 != NULL)
 		{
 			if( find( _buffer, _length, ans4 ) == true )
 			{	
-				#if UART_DEBUG > 0
-					USB.print(F("[debug] ans:"));	
+				#if DEBUG_UART > 0
+					PRINT_UART(F("found:"));
 					USB.println( ans4 );	
 				#endif			
 				return 4;
@@ -303,11 +318,11 @@ uint8_t  WaspUART::sendCommand(	char* command,
 	}
 		
 	// timeout
-	#if UART_DEBUG > 0
-		USB.println(F("[debug] no answer"));
+	#if DEBUG_UART > 0
+		PRINT_UART(F("no answer\n"));
 	#endif	
-	#if UART_DEBUG > 1
-		USB.print(F("[debug] _buffer:"));
+	#if DEBUG_UART > 1
+		PRINT_UART(F("_buffer:"));
 		USB.println( _buffer, _length);
 	#endif	
 	return 0; 
@@ -361,19 +376,21 @@ bool WaspUART::find( uint8_t* buffer, uint16_t length, char* pattern)
  */
 void  WaspUART::sendCommand( uint8_t* command, uint16_t length )
 {  	
+	secureBegin();
+	
 	// clear uart buffer before sending command
-	if( _flush_mode == true )
+	if (_flush_mode == true)
 	{
 		serialFlush(_uart); 		
 	}
 	
 	/// print command
-	for (int i = 0; i < length; i++)
+	for (uint16_t i = 0; i < length; i++)
 	{
 		printByte( command[i], _uart ); 
 	}	
 
-	delay( _def_delay );	
+	delay( _def_delay );		
 }
 
 
@@ -469,12 +486,14 @@ uint8_t  WaspUART::waitFor( char* ans1,
 	// index counter
 	uint16_t i = 0;
 	
+	secureBegin();
+	
 	// clear _buffer
 	memset( _buffer, 0x00, sizeof(_buffer) );
 	_length = 0;
 	
 	// get actual instant
-	unsigned long previous = millis();
+	uint32_t previous = millis();
 	
 	// check available data for 'timeout' milliseconds
     while( (millis() - previous) < timeout )
@@ -491,10 +510,10 @@ uint8_t  WaspUART::waitFor( char* ans1,
 		// Check 'ans1'
 		if( find( _buffer, _length, ans1 ) == true )
 		{		
-			#if UART_DEBUG > 0
-				USB.print(F("[debug] found:"));	
+			#if DEBUG_UART > 0
+				PRINT_UART(F("found:"));
 				USB.println( ans1 );	
-			#endif		
+			#endif
 			return 1;
 		}
 		
@@ -503,10 +522,10 @@ uint8_t  WaspUART::waitFor( char* ans1,
 		{
 			if( find( _buffer, _length, ans2 ) == true )
 			{	
-				#if UART_DEBUG > 0
-					USB.print(F("[debug] found:"));	
+				#if DEBUG_UART > 0
+					PRINT_UART(F("found:"));	
 					USB.println( ans2 );	
-				#endif		
+				#endif
 				return 2;
 			}
 		}
@@ -516,8 +535,8 @@ uint8_t  WaspUART::waitFor( char* ans1,
 		{
 			if( find( _buffer, _length, ans3 ) == true )
 			{	
-				#if UART_DEBUG > 0
-					USB.print(F("[debug] found:"));	
+				#if DEBUG_UART > 0
+					PRINT_UART(F("found:"));
 					USB.println( ans3 );	
 				#endif			
 				return 3;
@@ -529,10 +548,10 @@ uint8_t  WaspUART::waitFor( char* ans1,
 		{
 			if( find( _buffer, _length, ans4 ) == true )
 			{	
-				#if UART_DEBUG > 0
-					USB.print(F("[debug] found:"));	
+				#if DEBUG_UART > 0
+					PRINT_UART(F("found:"));
 					USB.println( ans4 );	
-				#endif			
+				#endif		
 				return 4;
 			}
 		}	
@@ -579,6 +598,8 @@ uint16_t  WaspUART::readBuffer(uint16_t requestBytes, bool clearBuffer)
 	uint16_t i = 0;
 	uint16_t nBytes = 0;
 	
+	secureBegin();
+	
 	if( clearBuffer == true )
 	{
 		// clear _buffer
@@ -586,15 +607,12 @@ uint16_t  WaspUART::readBuffer(uint16_t requestBytes, bool clearBuffer)
 		_length = 0;
 	}
 	
-	// get actual instant
-	unsigned long previous = millis();
-	
-	// check available data for 'timeout' milliseconds
-	while( serialAvailable(_uart) )
+	// read available data
+	while (serialAvailable(_uart))
 	{
-		if ( (i < (sizeof(_buffer)-1)) && (requestBytes>0) )
+		if ((i < (sizeof(_buffer)-1)) && (requestBytes>0))
 		{
-			_buffer[i++] = serialRead(_uart);				
+			_buffer[i++] = serialRead(_uart);		
 			_length++;
 			nBytes++;
 			requestBytes--;	
@@ -604,7 +622,7 @@ uint16_t  WaspUART::readBuffer(uint16_t requestBytes, bool clearBuffer)
 		{
 			break;
 		}
-	}
+	}	
 		
 	return nBytes;
 }
@@ -676,13 +694,59 @@ uint8_t WaspUART::parseString(char* str, uint16_t size, char* delimiters)
 	if (pch != NULL)
 	{
 		memset(str,0x00, size);
-		strncpy(str, pch, size);
+		strncpy(str, pch, size-1);
 		return 0;
 	}
 	else
 	{
 		return 1;
 	}
+}
+
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<response>\r\n"
+ * 			Then you can call: parseString(data, sizeof(data),"\r\n")
+ * 
+ * @param	char* str: pointer to the buffer where parsed data is stored
+ * @param	uint16_t size: size of input 'str' buffer
+ * @param	char* delimiters: string containing the delimiter characters
+ * @param	uint8_t n: number of element to search for in the string of elements
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseString(char* str, uint16_t size, char* delimiters, uint8_t n)
+{
+	// define the pointer to seek for token
+	char* pch;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	for (int i = 0; i < n; i++)
+	{
+	
+		if (pch == NULL)
+		{
+			return 1;
+		}
+		
+		// check element
+		if (i+1 == n)
+		{
+			memset(str,0x00, size);
+			strncpy(str, pch, size-1);
+			return 0;
+		}
+		
+		// iterate to next element
+		pch = strtok(NULL, delimiters);
+	}
+	
+	return 1;
 }
 
 
@@ -721,6 +785,89 @@ uint8_t WaspUART::parseFloat(float* value, char* delimiters)
 
 
 
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<value>\r\n"
+ * 			Then you can call: parseUint8(&variable, "\r\n")
+ * 
+ * @param	uint8_t* value: pointer to the variable where parsed data is stored
+ * @param	char* delimiters: string containing the delimiter characters
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseUint8(uint8_t* value, char* delimiters)
+{
+	// define the pointer to seek for token
+	char* pch;
+	uint32_t aux;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	if (pch != NULL)
+	{
+		aux = strtoul( pch, NULL, 10);
+		*value = (uint8_t)aux;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<value>\r\n"
+ * 			Then you can call: parseUint8(&variable, "\r\n")
+ * 
+ * @param	uint8_t* value: pointer to the variable where parsed data is stored
+ * @param	char* delimiters: string containing the delimiter characters
+ * @param	uint8_t n: number of element to search for in the string of elements
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseUint8(uint8_t* value, char* delimiters, uint8_t n)
+{
+	// define the pointer to seek for token
+	char* pch;
+	uint32_t aux;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	for (int i = 0; i < n; i++)
+	{
+		if (pch == NULL)
+		{
+			return 1;
+		}		
+		
+		// check element
+		if (i+1 == n)
+		{
+			aux = strtoul( pch, NULL, 10);
+			*value = (uint8_t)aux;
+			return 0;
+		}
+		
+		// iterate to next element
+		pch = strtok(NULL, delimiters);
+	}
+	
+	return 1;
+}
+
+
+
+
 /*!
  * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
  * 			as inputs in delimiters. 
@@ -750,6 +897,81 @@ uint8_t WaspUART::parseUint32(uint32_t* value, char* delimiters)
 	{
 		return 1;
 	}
+}
+
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<value>\r\n"
+ * 			Then you can call: parseInt32(&variable, "\r\n")
+ * 
+ * @param	int32_t* value: pointer to the variable where parsed data is stored
+ * @param	char* delimiters: string containing the delimiter characters
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseInt32(int32_t* value, char* delimiters)
+{
+	// define the pointer to seek for token
+	char* pch;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	if (pch != NULL)
+	{
+		*value = strtol( pch, NULL, 10);
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+/*!
+ * @brief	It parses the contents in '_buffer' escaping the delimiters indicated
+ * 			as inputs in delimiters. 
+ * 			For instance _buffer stores: "<value>\r\n"
+ * 			Then you can call: parseInt32(&variable, "\r\n")
+ * 
+ * @param	int32_t* value: pointer to the variable where parsed data is stored
+ * @param	char* delimiters: string containing the delimiter characters
+ * 
+ * @return 	
+ * 	@arg	'0' if ok
+ * 	@arg	'1' if error
+ */
+uint8_t WaspUART::parseInt32(int32_t* value, char* delimiters, uint8_t n)
+{
+	// define the pointer to seek for token
+	char* pch;
+	uint32_t aux;
+	
+	pch = strtok( (char*)_buffer, delimiters);
+	
+	for (int i = 0; i < n; i++)
+	{
+		if (pch == NULL)
+		{
+			return 1;
+		}		
+		
+		// check element
+		if (i+1 == n)
+		{
+			aux = strtol( pch, NULL, 10);
+			*value = (int32_t)aux;
+			return 0;
+		}
+		
+		// iterate to next element
+		pch = strtok(NULL, delimiters);
+	}
+	
+	return 1;
 }
 
 
@@ -784,6 +1006,34 @@ uint8_t WaspUART::parseInt(int* value, char* delimiters)
 		return 1;
 	}
 }
+
+/*!
+ * 
+ */
+void WaspUART::secureBegin()
+{
+	/*
+	if (_uart == SOCKET1)
+	{	
+		// set ss pin in socket0 to low
+		pinMode(SOCKET0_SS,OUTPUT);
+		digitalWrite(SOCKET0_SS,HIGH);
+		
+		if (WaspRegister & REG_XBEE_SOCKET0)
+		{
+			// switch module ON
+			PWR.powerSocket(SOCKET0, HIGH);
+		
+			// set ss pin in socket0 to low
+			//pinMode(XBEE_MON,OUTPUT);
+			//digitalWrite(XBEE_MON,LOW);
+		}		
+	}	
+	*/
+	
+}
+
+
 
 
 

@@ -1,7 +1,7 @@
 /*! \file WaspBLE.h
     \briefLibrary for managing the Bluetooth low energy BLE112
     
-    Copyright (C) 2014 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		1.2
+    Version:		3.0
     Design:			David Gascón
     Implementation:	Javier Siscart
 
@@ -50,11 +50,7 @@
 
 // General constants
 // Default baudrate
-#define BT_BLUEGIGA_RATE	115200		
-// Bluetooth power pin when SOCKET1 is used. Same as DIGITAL 6
-#define BLE_PW_1   6
-// Bluetooth power pin when SOCKET0 is used. Same as Xbee_pw				
-#define BLE_PW_0   22
+#define BT_BLUEGIGA_RATE	115200
 //	BLuetooth Sleep pin for SOCKET0. Same as XBEE_SLEEP		
 #define	BLE_SLEEP	47			
 //max packet size allowed by the protocol

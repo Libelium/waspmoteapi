@@ -1,7 +1,7 @@
 /*! \file TurbiditySensor.h
-	\brief Library for managing the Smart Water Turbidity Sensor Board
+	\brief Library for managing the Smart Water Turbidity Sensor
 
-	Copyright (C) 2015 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
  
 	This program is free software: you can redistribute it and/or modify
@@ -17,28 +17,25 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		1.2
-	Design:		David Gascón
-	Implementation:	Ahmad Saad
+	Version:			3.1
+	Design:				David Gascón
+	Implementation:		Ahmad Saad
 */
 
 
 #ifndef TurbditySensor_h
 #define TurbditySensor_h
 
-/******************************************************************************
- * Includes
- ******************************************************************************/
+/*****************************************************************************
+* Includes
+******************************************************************************/
 #include <inttypes.h>
 
 /////////////////////////////////////////////////////////////////////////////
 // Include the neccesary libraries.
-// The turbidity sensor uses RS-485 Modbus communication
 /////////////////////////////////////////////////////////////////////////////
 
-#include "../RS485/Wasp485.h"
-#include "../ModbusMaster485/ModbusMaster485.h"
-
+#include "ModbusMaster.h"
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
@@ -58,7 +55,6 @@
 #define TEMP_TYPE_CON		0x00A5
 #define TURB_TYPE_CON		0x00A6
 #define AVRG_PARA_REG		0x00AA
-#define DISABLED			0x0000
 #define TURB_MEAS_STATUS	0x0065
 #define NEW_MEAS_REG		0x0001
 #define TEMP_NEW_MEAS		0x0001
@@ -68,16 +64,28 @@
 #define OFFSET_0			0x0001
 #define TEMP_25				0x0002
 
+// Turbidity ON/OFF control Pin
+#define PWR_TURBIDITY	17
+
 // This address will be configured as a first step 
 #define SENSOR_ADDRESS		0x0001
 #define DEFAULT_ADDRESS 	0x0000
 
-// Debug mode define
-#define DEBUG_MODE 0
+// FilterSamples should be an odd number, no smaller than 3
+#define filterSamples	7
 
-// FilterSamples should  be an odd number, no smaller than 3
-#define filterSamples   11
+//! DEBUG MODE
+/*! 0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages 
+ */
+#define DEBUG_TURBIDITY	0
 
+#define PRINT_TURBIDITY(str)		USB.print(F("[TURBIDITY] ")); USB.print(str);
+#define PRINT_TURBIDITY_VAL(val)	USB.print(val, BIN);
+
+#define PRINTLN_TURBIDITY(str)		USB.print(F("[TURBIDITY] ")); USB.println(str);
+#define PRINTLN_TURBIDITY_VAL(val)	USB.println(val, BIN);
 
 /******************************************************************************
  * Class
@@ -88,33 +96,38 @@
 	This Class defines all the variables and functions used for
 	managing the Turbidity Sensor
  */
-class turbiditySensorClass
+class turbidityClass
 {
 	public: 
 		
 		// Public functions
-		turbiditySensorClass();
-		char ON();
+		turbidityClass();
+		turbidityClass(uint8_t);
+
+		uint8_t ON();
 		void OFF();
 		uint8_t readTurbidity();
 		float getTurbidity();
+		
+		uint8_t readTemperature();
+		float getTemperature();
 
 	private:
 	
 		// Sensor management functions
-		uint8_t readTemperature();
 		void readCompensationTemperature(uint16_t _register);
-		void startMeasurment(uint8_t parameter);
-		void typeMeasurementConfiguration(uint16_t address, uint16_t config);
-		void resetSensor();
-		void average(uint8_t average);
-		int configureSensorAddress(uint8_t address);
+		uint8_t startMeasurment(uint8_t parameter);
+		uint8_t typeMeasurementConfiguration(uint16_t address, uint16_t config);
+		uint8_t resetSensor();
+		uint8_t average(uint8_t average);
+		uint8_t configureSensorAddress(uint8_t address);
 		void clearBuffer();
 		void writeCalibrationValue(uint16_t address, float value);
-		float getTemperature();
+		
+		uint8_t init();
 
 		// For Mdobus management
-		ModbusMaster485 sensor;
+		ModbusMaster sensor;
 		// Sensor variables
 		float temperature;
 		float turbidity;
