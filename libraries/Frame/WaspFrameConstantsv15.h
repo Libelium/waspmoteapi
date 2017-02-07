@@ -1,7 +1,7 @@
 /*! \file WaspFrameConstantsv15.h
     \brief Header file for Waspmote v15 Frame Constants
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
@@ -224,6 +224,12 @@
 #define SENSOR_AMBIENT_HUM				76
 #define SENSOR_AMBIENT_PRES				77
 #define SENSOR_AMBIENT_LUXES			78
+
+// 4-20 mA
+#define SENSOR_4_20_CURRENT_SOCKET_A	175
+#define SENSOR_4_20_CURRENT_SOCKET_B	176
+#define SENSOR_4_20_CURRENT_SOCKET_C	177
+#define SENSOR_4_20_CURRENT_SOCKET_D	178
 
 
 // Common sensors
@@ -460,6 +466,14 @@ const char	str_frame_169[]  PROGMEM = "";    			// reserved
 const char	str_frame_170[]  PROGMEM = "TCB"; 
 const char	str_frame_171[]  PROGMEM = "HUMB"; 
 const char	str_frame_172[]  PROGMEM = "LUM"; 
+const char	str_frame_173[]  PROGMEM = ""; 
+const char	str_frame_174[]  PROGMEM = ""; 
+
+// 4-20 mA
+const char	str_frame_175[]  PROGMEM = "CUR_A"; 
+const char	str_frame_176[]  PROGMEM = "CUR_B"; 
+const char	str_frame_177[]  PROGMEM = "CUR_C"; 
+const char	str_frame_178[]  PROGMEM = "CUR_D"; 
 
 
 
@@ -645,6 +659,12 @@ const char* const FRAME_SENSOR_TABLE[] PROGMEM=
 	str_frame_170,
 	str_frame_171,
 	str_frame_172,
+	str_frame_173,
+	str_frame_174,
+	str_frame_175,
+	str_frame_176,
+	str_frame_177,
+	str_frame_178,
 	
 };
 	
@@ -865,6 +885,14 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 170
 	2,		// 171
 	2,		// 172
+	0,		// 173
+	0,		// 174
+	
+	//// 4-20 mA
+	2,		// 175
+	2,		// 176
+	2,		// 177
+	2,		// 178
 };
 
 
@@ -1080,6 +1108,14 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 170
 	1,		// 171
 	1,		// 172
+	1,		// 173
+	1,		// 174
+	
+	//// 4-20 mA
+	1,		// 175
+	1,		// 176
+	1,		// 177
+	1,		// 178
 	
 };
 	
@@ -1286,12 +1322,20 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	2,		// 166
 	2,		// 167
 	2,		// 168
-	0,	// 169
+	0,		// 169
 		
 	//// Ambient Control
 	2,		// 170
 	1,		// 171
 	3,		// 172
+	0,		// 173
+	0,		// 174
+	
+	//// 4-20 mA
+	3,		// 175
+	3,		// 176
+	3,		// 177
+	3,		// 178
 	
 	
 };

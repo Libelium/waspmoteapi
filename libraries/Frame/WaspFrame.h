@@ -1,7 +1,7 @@
 /*! \file WaspFrame.h
     \brief Library for creating formated frames
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -48,6 +48,14 @@
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
+
+//! DEBUG_FRAME
+/*! Possible values:
+ * 	0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages
+ */
+#define DEBUG_FRAME 	0
 
 // define print message
 #define PRINT_FRAME(str)	USB.print(F("[FRAME] ")); USB.print(str);
@@ -108,31 +116,13 @@
 #define SERVICE2_FRAME 			5
 #define INFORMATION_FRAME_V15	6
 
-/*! \def AES128_ECB_FRAME_V12
-    \brief Encrypted frame using AES-128 key size and ECB mode (Waspmote v12)
- */
-/*! \def AES192_ECB_FRAME_V12
-    \brief Encrypted frame using AES-192 key size and ECB mode (Waspmote v12)
- */
-/*! \def AES256_ECB_FRAME_V12
-    \brief Encrypted frame using AES-256 key size and ECB mode (Waspmote v12)
- */
-/*! \def AES128_ECB_FRAME_V15
-    \brief Encrypted frame using AES-128 key size and ECB mode (Waspmote v15)
- */
-/*! \def AES192_ECB_FRAME_V15
-    \brief Encrypted frame using AES-192 key size and ECB mode (Waspmote v15)
- */
-/*! \def AES256_ECB_FRAME_V15
-    \brief Encrypted frame using AES-256 key size and ECB mode (Waspmote v15)
- */
-#define AES128_ECB_FRAME_V15	94
-#define AES192_ECB_FRAME_V15	95
-#define AES256_ECB_FRAME_V15	96
+// Define frame types for encrypted frames in different formats
+#define AES_ECB_FRAME_V15		96
 #define AES128_ECB_FRAME_V12	97
 #define AES192_ECB_FRAME_V12	98
 #define AES256_ECB_FRAME_V12	99
-
+#define AES_ECB_END_TO_END_V15	100
+#define AES_ECB_END_TO_END_V12	101
 
 
 /*! \def TYPE_UINT8
@@ -172,6 +162,8 @@
 //! Variable :  Waspmote serial id
 extern volatile uint8_t _serial_id[8];
 
+const uint8_t max_fields = 20;
+
 
 /******************************************************************************
  * Class
@@ -210,25 +202,17 @@ private:
      */ 
     uint8_t sequence;
     
-    //! Variable : number of sensor values within the frame
-    /*!
-     */ 
-    uint8_t numFields;     
-    
     //! Variable : frame format: ASCII (0) or BINARY (1)
-    /*!
-     */ 
     uint8_t _mode;   
     
     //! Variable : maximum frame size 
-    /*!
-     */ 
     uint16_t _maxSize;
     
     //! Variable : buffer for Waspmote ID. 16B maximum
-    /*!
-     */ 
-    char _waspmoteID[17];	
+    char _waspmoteID[17];
+    
+    //! Variable: encryption flag for End-to-End encryption from device to Cloud
+    uint8_t _encryptionToCloud;
     
 public:
 
@@ -303,6 +287,10 @@ public:
 	 */
     uint8_t encryptFrame( uint16_t AESmode, char* password );
     
+	/*! Function: Enabled/Disabled the encryption mode to Cloud	
+	\param uint8_t flag: ENABLED or DISABLED
+	*/
+    void encryptionToCloud(uint8_t flag);
     
 	//! Function : set the frame type
     /*! This function sets the frame type (fourth byte of the frame header)
@@ -340,20 +328,39 @@ public:
 
     void setID(char* moteID);
     void getID(char* moteID);
-    
+   
     void decrementSequence(void);
+    
+    //! Function: add special timestamp field
+    int8_t addTimestamp(void);
         
     //! Variable : buffer where the frame is created in
-    /*!
-     */ 
     uint8_t buffer[MAX_FRAME+1];
     
     //! Variable : length of the frame
-    /*!
-     */ 
-    uint16_t length;
+    uint16_t length;  
+      
+    //! Variable : number of sensor values within the frame
+    uint8_t numFields;    
+        
+    //! Function: set new tiny frame max length
+    void setTinyLength(uint8_t length);
+    //! Function: generate new frame from internal strcutures
+    uint8_t generateTinyFrame();
     
-    int8_t addTimestamp(void);
+    //! Variable : buffer where the Tiny Frame is created
+    uint8_t bufferTiny[100]; 
+    uint8_t lengthTiny;    
+    uint8_t _maxTinyLength;
+    
+    //! Structure for storing all fields in binary frame
+    struct
+    {
+		uint8_t flag;	// flag to indicate if data has been added ('0':not added; '1' added)
+		uint8_t start;	// index of starting byte of field
+		uint8_t size;	// total size of sensor field: id+data
+	}field[max_fields];
+
 };
 
 extern WaspFrame frame;

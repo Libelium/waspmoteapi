@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation: Manuel Calahorra
  */
@@ -375,7 +375,7 @@ float	WaspSensorCities::readValue(uint16_t sensor, uint8_t type)
 													delay(1);
 												}
 												value = value / 1000;  
-												//value = audioConversion(value);
+												value = audioConversion(value);
 												break;
 		case	SENS_CITIES_HUMIDITY		:	aux = analogRead(ANALOG3);
 												value = humidityConversion(aux);
@@ -515,10 +515,7 @@ uint8_t	WaspSensorCities::loadInt()
 float WaspSensorCities::readTempDS1820()
 {
 	// Select analog 4 as pin to be used
-	// 'false' input means that no 3v3 power supply is managed
-	// So, the Sensor Board and the sensor switch must be 
-	// powered on prior using this function
-	return 	Utils.readTempDS1820( 17, false );
+	return 	Utils.readTempDS1820(17);
 }
 
 

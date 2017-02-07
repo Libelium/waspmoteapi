@@ -1,7 +1,7 @@
 /*! \file WaspWIFI_PRO.cpp
  *  \brief Library for managing WIFI_PRO modules
  *
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -2428,6 +2428,9 @@ uint8_t WaspWIFI_PRO::getURL(char* protocol,
 	// clear buffer
 	memset( url, 0x00, sizeof(url) );
 	
+	// init variable
+	_errorCode = ERROR_CODE_0000;
+	
 	// "\"%s://%s:%s/%s\""
 	strcpy_P( format, (char*)pgm_read_word(&(table_WIFI_FORMAT[10])));
 	
@@ -2469,6 +2472,12 @@ uint8_t WaspWIFI_PRO::getURL(char* protocol,
 		
 		if (status == 0)
 		{
+			// if error was captured return with code
+			if (_errorCode != ERROR_CODE_0000)
+			{
+				return 1;
+			}
+			
 			status =  waitFor( AT_ONLINE, 15000);
 			_errorCode = ERROR_CODE_0000;
 			return 1;
@@ -2596,6 +2605,10 @@ uint8_t WaspWIFI_PRO::post( char* text )
 	// clear buffer
 	memset( aux, 0x00, sizeof(aux) );
 	
+	// init variable
+	_errorCode = ERROR_CODE_0000;
+	
+	
 	// copy text and add ending 
 	strncat( aux, text, strlen(text) );
 	strncat( aux, ending, strlen(ending) );	
@@ -2616,7 +2629,13 @@ uint8_t WaspWIFI_PRO::post( char* text )
 		status = getResponseValue();
 		
 		if (status == 0)
-		{
+		{	
+			// if error was captured return with code
+			if (_errorCode != ERROR_CODE_0000)
+			{
+				return 1;
+			}
+			
 			// wait the module to be ready again
 			status =  waitFor( AT_ONLINE, 15000 );
 			_errorCode = ERROR_CODE_0000;
@@ -2740,6 +2759,10 @@ uint8_t WaspWIFI_PRO::sendFrameToMeshlium(	char* protocol,
 	memset( url, 0x00, sizeof(url) );
 	memset( aux, 0x00, sizeof(aux) );
 	
+	// init variable
+	_errorCode = ERROR_CODE_0000;
+	
+	
 	// compose "<prot>://<host>:<port>/getpost_frame_parser.php?frame="
 	snprintf( url, sizeof(url), host_header, protocol, host, port );
 
@@ -2781,6 +2804,12 @@ uint8_t WaspWIFI_PRO::sendFrameToMeshlium(	char* protocol,
 		
 		if (status == 0)
 		{	
+			// if error was captured return with code
+			if (_errorCode != ERROR_CODE_0000)
+			{
+				return 1;
+			}
+			
 			// error
 			// wait for online message from module
 			status =  waitFor( AT_ONLINE, 15000);
@@ -5150,7 +5179,7 @@ uint8_t WaspWIFI_PRO::closeDownSockets()
 				#if DEBUG_WIFI_PRO > 1
 					PRINT_WIFI_PRO(F("Socket closed with hn:"));
 					USB.println(socket[i].handle);
-					USB.println(F("-----------------------------------"));
+					USB.println(F("--------------------------------"));
 				#endif
 				continue;
 			}
@@ -6113,21 +6142,31 @@ uint8_t WaspWIFI_PRO::setCA(char* ca)
 	serialFlush(_uart);
 	
 	// print "AT+iCA=<ca>\r"
-	printString(AT_I, _uart);
-	printString(cmd_name, _uart);
-	printByte(0x3D, _uart);
+	printString("AT+iCA=", _uart);
 	printString(ca, _uart);
-	printByte(0x0D, _uart);
 	
 	/*
 	 * Wait for different lines until a good o bad answer is received
 	 */
 	status = 3;
-
+	
 	while (status == 3)
 	{
-		status = waitFor( I_OK, AT_ERROR, EOL_CR_LF,1000);
+		status = waitFor(I_OK, AT_ERROR, EOL_CR_LF,100);	
 	}
+	
+	#if DEBUG_WIFI_PRO > 0
+	switch (status)
+		{
+			case 0: PRINT_WIFI_PRO(F("status 0\n")); break;
+			case 1: PRINT_WIFI_PRO(F("status 1\n")); break;
+			case 2: PRINT_WIFI_PRO(F("status 2\n")); break;
+			case 3: PRINT_WIFI_PRO(F("status 3\n")); break;
+			default:PRINT_WIFI_PRO(F("default\n")); break;				
+		}
+	USB.println(_buffer, _length);
+	#endif
+	
 	
 	/// Change Baudrate to 115200 bps
 	error = changeBaudRate(115200);
@@ -6315,11 +6354,6 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 		// copy string
 		strncpy(aux_name, strchr(str_pointer, ':')+1, 7);
 		aux_name[7] = '\0';
-				
-		#if DEBUG_WIFI_PRO > 1
-			PRINT_WIFI_PRO(F("FILE:"));
-			USB.println(aux_name);	
-		#endif
 	}
 	else
 	{
@@ -6352,12 +6386,7 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 		length = strchr(str_pointer, '\n')-1-strchr(str_pointer, ':');
 		strncpy(path, strchr(str_pointer, ':') + 1, length );
 		path[length] = '\0';
-					
-		#if DEBUG_WIFI_PRO > 1
-			PRINT_WIFI_PRO(F("PATH:"));
-			USB.println(path);
-		#endif		
-				
+		
 		// delete actual program	
 		SD.del(aux_name);	
 	}
@@ -6388,11 +6417,6 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 		
 		// converto from string to int
 		aux_size = atol(aux_str);
-		
-		#if DEBUG_WIFI_PRO > 1
-			PRINT_WIFI_PRO(F("SIZE:"));
-			USB.println(aux_size);
-		#endif			
 	}
 	else
 	{
@@ -6421,11 +6445,6 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 		
 		// convert from string to uint8_t
 		aux_version=(uint8_t)atoi(aux_str);
-					
-		#if DEBUG_WIFI_PRO > 1
-			PRINT_WIFI_PRO(F("VERSION:"));
-			USB.println(aux_version,DEC);
-		#endif			
 	}
 	else
 	{	
@@ -6437,6 +6456,18 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 		#endif
 		return 1;
 	}	
+	
+	// print configuration file contents
+	USB.println(F("--------------------------------"));
+	PRINT_WIFI_PRO(F("FILE:"));
+	USB.println(aux_name);
+	PRINT_WIFI_PRO(F("PATH:"));
+	USB.println(path);
+	PRINT_WIFI_PRO(F("SIZE:"));
+	USB.println(aux_size);
+	PRINT_WIFI_PRO(F("VERSION:"));
+	USB.println(aux_version,DEC);
+	USB.println(F("--------------------------------"));
 	
 	// get actual program version
 	uint8_t prog_version = Utils.getProgramVersion();
@@ -6455,12 +6486,10 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 			
 			// if we have specified the same program id and lower/same version 
 			// number, then do not proceed with OTA
-			#if DEBUG_WIFI_PRO > 0
-				PRINT_WIFI_PRO(F("Invalid version: actual="));
-				USB.print(prog_version,DEC);
-				USB.print(F("; new="));
-				USB.println(aux_version,DEC);
-			#endif	
+			PRINT_WIFI_PRO(F("Invalid version: current="));
+			USB.print(prog_version,DEC);
+			USB.print(F("; new="));
+			USB.println(aux_version,DEC);
 			return 1;
 		}
 	}	
@@ -6471,12 +6500,28 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 	// 3. Download binary file 
 	////////////////////////////////////////////////////////////////////////////
 	
-	#if DEBUG_WIFI_PRO > 1
+	// create server file complete path: path + filename
+	char server_file[100];
+	if (path[strlen(path)-1] == '/')
+	{
+		snprintf(server_file, sizeof(server_file), "%s%s", path, aux_name);
+	}
+	else
+	{
+		snprintf(server_file, sizeof(server_file), "%s/%s", path, aux_name);
+	}
+
+	#if DEBUG_WIFI_PRO > 0
 		PRINT_WIFI_PRO(F("Downloading OTA FILE\n"));
+		PRINT_WIFI_PRO(F("Server file:"));
+		USB.println(server_file);
+		PRINT_WIFI_PRO(F("SD file:"));
+		USB.println(aux_name);
 	#endif	
 
+
 	// get binary file
-	error = ftpDownload(handle, (char*)aux_name, aux_name);
+	error = ftpDownload(handle, server_file, aux_name);
 		
 	if (error == 0)
 	{
@@ -6520,8 +6565,105 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 }
 
 
+/* 
+ * name: getFirmwareVersion 
+ * 
+ * @return	'0' if ok, '1' if error 
+ */
+uint8_t WaspWIFI_PRO::getFirmwareVersion()
+{
+	char cmd_name[20];
+	char delimiter[20];
+	int result = 0;	
+	
+	// "RP1"
+	strcpy_P( cmd_name, (char*)pgm_read_word(&(table_WiReach[64])));
+	 
+	// "\r\n"
+	strcpy_P( delimiter, (char*)pgm_read_word(&(table_WIFI_FORMAT[3]))); 
+	
+	// generate "AT+RP1\r"
+	GEN_ATCOMMAND1(cmd_name);
+	
+	// send command
+	uint8_t status = sendCommand(_command, I_OK, I_ERROR, 500);
+
+	if (status == 1)
+	{
+		status = parseString(_firmwareVersion, sizeof(_firmwareVersion), delimiter, 2);
+		
+		if (status == 0)
+		{
+			return 0;				
+		}
+		else
+		{
+			return 1;
+		}
+
+	}
+	else if (status == 2)
+	{
+		getErrorCode();
+		return 1;
+	}
+	else
+	{
+		// timeout error
+		_errorCode = ERROR_CODE_0000;
+		return 1;
+	}
+}
 
 
+
+/* 
+ * name: sslHandshake 
+ * Negotiate the SSL handshake for a given TCP connection by its handle
+ * 
+ * @param uint8_t handle: TCP handle connection
+ * 
+ * @return
+ * 		'0' if ok
+ * 		'1' see errors 
+ * 		
+ */
+uint8_t WaspWIFI_PRO::sslHandshake(uint8_t handle)
+{	
+	char cmd_name[20];	
+	char param1[20];
+	uint8_t status;	
+		
+	// convert to string
+	utoa( (uint16_t) handle, param1, 10 );
+		
+	// "SSL"
+	strcpy_P( cmd_name, (char*)pgm_read_word(&(table_WiReach[65]))); 
+	
+	// generate "AT+iSSL:<handle>\r"
+	GEN_ATCOMMAND1(cmd_name, param1);
+
+	// send command
+	status = sendCommand( _command, I_OK, AT_ERROR, 15000 );
+
+	if (status == 1)
+	{
+		return 0;	
+	}
+	else if (status == 2)
+	{
+		getErrorCode();
+		return 1;
+	}
+	else
+	{
+		// timeout error
+		_errorCode = ERROR_CODE_0000;
+
+		return 1;
+	}
+	
+}
 
 // Preinstantiate Objects /////////////////////////////////////////////////////
 

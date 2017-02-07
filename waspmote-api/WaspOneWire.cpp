@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Jim Studt, Alberto Bielsa, Yuri Carmona ,David Marruedo
  *
@@ -229,13 +229,13 @@ uint8_t WaspOneWire::read_bit(void)
 
 	noInterrupts();
 	DIRECT_MODE_OUTPUT(reg, mask);
-	DIRECT_WRITE_LOW(reg, mask);
-	delayMicroseconds(2);
+	DIRECT_WRITE_LOW(reg, mask);	
+	delayMicroseconds(1);
 	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
-	delayMicroseconds(7);
+	delayMicroseconds(5);
 	r = DIRECT_READ(reg, mask);
 	interrupts();
-	delayMicroseconds(45);
+	delayMicroseconds(50);
 	return r;
 }
 

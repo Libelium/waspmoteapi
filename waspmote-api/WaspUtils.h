@@ -1,7 +1,7 @@
 /*! \file WaspUtils.h
     \brief Library containing useful general functions
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascon
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -349,14 +349,6 @@ class WaspUtils
   \return float: Temperature of DS1820 sensor
    */
   float readTempDS1820( uint8_t pin );  
-  
-  //! It reads the DS1820 temperature sensor
-  /*!
-  \param  uint8_t pin: digital MCU pin used for one wire comm
-  \param  bool is3v3: indicates if 3v3 power supply is needed for powering sensor
-  \return float: Temperature of DS1820 sensor
-   */
-  float readTempDS1820( uint8_t pin, bool is3v3 );
   
   //! It reads the temperature sensor
   /*!

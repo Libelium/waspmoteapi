@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -49,8 +49,14 @@ WaspFrame::WaspFrame()
     // function when using an XBee module
     _maxSize=MAX_FRAME;    
     
+    // Default Sigfox frame size for tiny frame
+    _maxTinyLength = 12;
+    
     // init waspmote ID attribute
-    frame.getID(_waspmoteID);  
+    frame.getID(_waspmoteID);
+    
+    // init encryption flag
+    _encryptionToCloud = false;
 }
 
 
@@ -150,114 +156,123 @@ void WaspFrame::setFrameSize(	uint8_t protocol,
 	_maxSize = MAX_FRAME;
 	
 	switch (protocol)
-	{				
-		/// XBEE_802_15_4 ////////////////	
+	{
 		case XBEE_802_15_4:
 		
-			if( linkEncryption == DISABLED)
-			{							
-				// XBEE_802 & Link Disabled 
-				_maxSize = 100;		
-			}
-			else if( linkEncryption == ENABLED)
-			{
-				if( addressing == UNICAST_16B )
-				{
-					// XBEE_802 & Unicast 16B  & Link Enabled 
-					_maxSize = 98;	
-				}
-				else if( addressing == UNICAST_64B )
-				{
-					// XBEE_802 & Unicast 64B & Link Enabled 
-					_maxSize = 94;	
-				}
-				else if( addressing == BROADCAST_MODE )
-				{	
-					// XBEE_802 & Broadcast & Link Enabled						
-					_maxSize = 95;	
-				}					
-			} 		
-			break;
-		
-		/// ZIGBEE /////////////////////
+							if (linkEncryption == DISABLED)
+							{							
+								// XBEE_802 & Link Disabled 
+								_maxSize = 100;		
+							}
+							else if (linkEncryption == ENABLED)
+							{
+								if (addressing == UNICAST_16B)
+								{
+									// XBEE_802 & Unicast 16B  & Link Enabled 
+									_maxSize = 98;	
+								}
+								else if (addressing == UNICAST_64B)
+								{
+									// XBEE_802 & Unicast 64B & Link Enabled 
+									_maxSize = 94;	
+								}
+								else if (addressing == BROADCAST_MODE)
+								{	
+									// XBEE_802 & Broadcast & Link Enabled
+									_maxSize = 95;	
+								}					
+							} 		
+							break;
+
 		case ZIGBEE:
 		
-			if( linkEncryption == DISABLED)
-			{
-				if( addressing == UNICAST_64B )
-				{
-					// ZIGBEE & Unicast & Link Disabled & AES Disabled 
-					_maxSize = 74;	
-				}
-				else if( addressing == BROADCAST_MODE )
-				{	
-					// ZIGBEE & Broadcast & Link Disabled & AES Disabled 						
-					_maxSize = 92;	
-				}							
-			}
-			else if( linkEncryption == ENABLED)
-			{
-				if( addressing == UNICAST_64B )
-				{
-					// ZIGBEE & Unicast 64B & Link Enabled & AES Disabled 
-					_maxSize = 66;	
-				}
-				else if( addressing == BROADCAST_MODE )
-				{	
-					// ZIGBEE & Broadcast & Link Enabled & AES Disabled 						
-					_maxSize = 84;	
-				}					
-			} 		
-			break;
-		
-		/// DIGIMESH /////////////////////					
+							if (linkEncryption == DISABLED)
+							{
+								if (addressing == UNICAST_64B)
+								{
+									// ZIGBEE & Unicast & Link Disabled & AES Disabled 
+									_maxSize = 74;	
+								}
+								else if (addressing == BROADCAST_MODE)
+								{	
+									// ZIGBEE & Broadcast & Link Disabled & AES Disabled 
+									_maxSize = 92;	
+								}							
+							}
+							else if (linkEncryption == ENABLED)
+							{
+								if (addressing == UNICAST_64B)
+								{
+									// ZIGBEE & Unicast 64B & Link Enabled & AES Disabled 
+									_maxSize = 66;	
+								}
+								else if (addressing == BROADCAST_MODE)
+								{	
+									// ZIGBEE & Broadcast & Link Enabled & AES Disabled 
+									_maxSize = 84;	
+								}					
+							} 		
+							break;
+
 		case DIGIMESH:
-			
-			_maxSize = 73;	
-			break;
-		
-		/// XBEE_900 /////////////////////					
+							_maxSize = 73;
+							break;
+
 		case XBEE_900:
-		
-			if( linkEncryption == DISABLED)
-			{							
-				_maxSize = 100;								
-			}
-			else if( linkEncryption == ENABLED)
-			{
-				_maxSize = 80;						
-			} 
-				
-			break;
-		
-		/// XBEE_868 /////////////////////					
+							if (linkEncryption == DISABLED)
+							{
+								_maxSize = 100;	
+							}
+							else if (linkEncryption == ENABLED)
+							{
+								_maxSize = 80;
+							} 
+							break;
+
 		case XBEE_868:
-			
-			_maxSize = 100;								
-			break;
+							_maxSize = 100;	
+							break;
+		
+		case XBEE_868LP:
+		case XBEE_900HP:
+							_maxSize = 255;	
+							break;
 			
 		default :
-			// No limit
-			_maxSize = MAX_FRAME;
-			break;
+							// No limit
+							_maxSize = MAX_FRAME;
+							break;
 	}			
 	
 	/// AES enabled 
+	/* The encrypted frames for Waspmote v15 is (header = bytes): 
+	*  _____________________________________________________________
+	* |     |            |           |           |                  | 
+	* | <=> | Frame Type | Num Bytes | ID secret |  Encrypted Frame |
+	* |_____|____________|___________|___________|__________________| 
+	* 
+	* The encrypted frames for Waspmote v12 is: 
+	*  ___________________________________________________________________________
+	* |     |            |           |           |          |   |                 | 
+	* | <=> | Frame Type | Num Bytes | ID secret |  Wasp ID | # | Encrypted Frame |
+	* |_____|____________|___________|___________|__________|___|_________________| 
+	*/ 
 	if (AESEncryption == ENABLED)
 	{
 		uint8_t fixed_header_length;
 		
 		if (_boot_version >= 'G')
 		{
-			fixed_header_length = 14;
+			// v15
+			fixed_header_length = 13;
+			_maxSize = ((_maxSize - fixed_header_length)/16)*16;
 		}
 		else
 		{
-			fixed_header_length = 10;			
+			// v12
+			fixed_header_length = 10;
+			_maxSize = ((_maxSize - fixed_header_length - strlen(_waspmoteID))/16)*16;
 		}		
-		
-		_maxSize = ((_maxSize - fixed_header_length - strlen(_waspmoteID))/16)*16;
-		
 	}
 	
 }
@@ -311,6 +326,7 @@ void WaspFrame::createFrame(uint8_t mode)
 	
 	// init buffer
 	memset( buffer, 0x00, sizeof(buffer) );
+	memset( field, 0x00, sizeof(field) );
 	
 	// init counter
 	numFields = 0;	
@@ -533,6 +549,15 @@ void WaspFrame::createFrame(uint8_t mode)
 	}
 }
 
+/* 
+ * encryptionToCloud() - enable/disable encryption 'Device to Cloud'
+ * 
+ * 
+ */
+void WaspFrame::encryptionToCloud(uint8_t flag)
+{
+	_encryptionToCloud = flag;
+}
 
 
 
@@ -541,7 +566,14 @@ void WaspFrame::createFrame(uint8_t mode)
 /* 
  * createEncryptedFrame () - Create encrypted frame from previous created frame
  * The inner 'frame.buffer' is used for encapsulating the new Waspmote frame. 
- * The structure of the encrypted frames is: 
+ * 
+ * The structure of the encrypted frames for Waspmote v15 is: 
+ *  _____________________________________________________________
+ * |     |            |           |           |                  | 
+ * | <=> | Frame Type | Num Bytes | ID secret |  Encrypted Frame |
+ * |_____|____________|___________|___________|__________________| 
+ * 
+ * The structure of the encrypted frames for Waspmote v12 is: 
  *  ___________________________________________________________________________
  * |     |            |           |           |          |   |                 | 
  * | <=> | Frame Type | Num Bytes | ID secret |  Wasp ID | # | Encrypted Frame |
@@ -582,6 +614,13 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	
 	/// Create new frame with the correct structure
 	/***
+	if ENCRYPTED_FRAME_SERIAL_ID_ENABLED is enabled:
+	 _____________________________________________________________
+	|     |            |           |           |                  | 
+	| <=> | Frame Type | Num Bytes | ID secret |  Encrypted Frame |
+	|_____|____________|___________|___________|__________________| 
+	
+	if not:
 	 __________________________________________________________________________
 	|     |            |           |          |          |   |                 | 
 	| <=> | Frame Type | Num Bytes | secretID |  Wasp ID | # | Encrypted Frame |
@@ -597,11 +636,17 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	{
 		switch (keySize)
 		{
-			case AES_128:	frame_type = AES128_ECB_FRAME_V15;
-							break;
-			case AES_192:	frame_type = AES192_ECB_FRAME_V15;
-							break;
-			case AES_256:	frame_type = AES256_ECB_FRAME_V15;
+			case AES_128:	
+			case AES_192:	
+			case AES_256:	
+							if (_encryptionToCloud == ENABLED) 
+							{
+								frame_type = AES_ECB_END_TO_END_V15;
+							}
+							else 
+							{
+								frame_type = AES_ECB_FRAME_V15;
+							}
 							break;
 			default:		return 0;
 				
@@ -611,11 +656,35 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	{
 		switch (keySize)
 		{
-			case AES_128:	frame_type = AES128_ECB_FRAME_V12;
+			case AES_128:	
+							if (_encryptionToCloud == ENABLED) 
+							{
+								frame_type = AES_ECB_END_TO_END_V12;
+							}
+							else 
+							{
+								frame_type = AES128_ECB_FRAME_V12;
+							}
 							break;
-			case AES_192:	frame_type = AES192_ECB_FRAME_V12;
+			case AES_192:	
+							if (_encryptionToCloud == ENABLED) 
+							{
+								frame_type = AES_ECB_END_TO_END_V12;
+							}
+							else 
+							{
+								frame_type = AES192_ECB_FRAME_V12;
+							}
 							break;
-			case AES_256:	frame_type = AES256_ECB_FRAME_V12;
+			case AES_256:	
+							if (_encryptionToCloud == ENABLED) 
+							{
+								frame_type = AES_ECB_END_TO_END_V12;
+							}
+							else 
+							{
+								frame_type = AES256_ECB_FRAME_V12;
+							}
 							break;
 			default:		return 0;
 				
@@ -627,12 +696,13 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	frame.buffer[1] = '=';
 	frame.buffer[2] = '>';
 	frame.buffer[3] = frame_type;
-	frame.buffer[4] = encrypted_length + 5 + strlen(frame._waspmoteID); // length
-	
 	
 	// insert serial ID
 	if (_boot_version >= 'G')
 	{
+		// add length: [serial] + [encrypted_length]
+		frame.buffer[4] = 8 + encrypted_length;
+		
 		frame.buffer[5] = _serial_id[0]; // serial ID
 		frame.buffer[6] = _serial_id[1]; // serial ID
 		frame.buffer[7] = _serial_id[2]; // serial ID
@@ -651,6 +721,9 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 		char val[4]; 
 		memcpy(val, (const void*)&_serial_id[4], 4);
 		
+		// add length: [serial] + [waspmote id] + [0x23] + [encrypted_length]
+		frame.buffer[4] = 4 + strlen(frame._waspmoteID) + 1 + encrypted_length;
+		
 		frame.buffer[5] = val[0];
 		frame.buffer[6] = val[1];
 		frame.buffer[7] = val[2];
@@ -658,23 +731,24 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 		
 		// temporal length of frame
 		temp_length = 9;
+		
+		// Add "Node ID" 
+		// waspmote ID
+		for (uint16_t i = 0; i < strlen(frame._waspmoteID); i++)
+		{
+			frame.buffer[temp_length+i] = frame._waspmoteID[i];
+		}
+		temp_length += strlen(frame._waspmoteID);
+		
+		// separator
+		frame.buffer[temp_length] = '#';
+		temp_length++;
 	}
 	
-	// waspmote ID
-	for(uint16_t i = 0; i < strlen(frame._waspmoteID) ; i++)
-	{
-		frame.buffer[temp_length+i] = frame._waspmoteID[i];
-	}	
-	temp_length += strlen(frame._waspmoteID);
-	
-	// separator
-	frame.buffer[temp_length] = '#';
-	temp_length++;
-	
 	// copy payload: encrypted message
-	for( uint16_t j = 0 ; j < encrypted_length; j++)
+	for (uint16_t j = 0 ; j < encrypted_length; j++)
 	{
-		frame.buffer[temp_length+j] = encrypted_message[j];		
+		frame.buffer[temp_length+j] = encrypted_message[j];
 	}
 	temp_length += encrypted_length;
 	
@@ -749,6 +823,13 @@ void WaspFrame::showFrame(void)
 	printByte( '\r',  0);
 	printByte( '\n',  0);
 	
+	/*
+	printString( "Number of fields:  ",  0);
+	printIntegerInBase(numFields, 10,  0);
+	printByte( '\r',  0);
+	printByte( '\n',  0);	
+	*/
+
 	printString( "Frame Type:  ",  0);	
 	printIntegerInBase(buffer[3], 10,  0);	
 	printByte( '\r',  0);
@@ -885,7 +966,7 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 		}
 		else
 		{
-			config = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type]));		
+			config = (uint8_t)pgm_read_word(&(SENSOR_TYPE_TABLE[type]));
 		}	
 		
 
@@ -902,6 +983,14 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 	        buffer[length-2] = val[0];
 			buffer[length-1] = val[1];
 			buffer[length] = '\0';
+			
+			// add contents to struct
+			if (numFields < max_fields)
+			{			
+				field[numFields].flag = false;
+				field[numFields].start = length-3;
+				field[numFields].size = 3;
+			}
 		}
 		else
 		{
@@ -915,6 +1004,14 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 	        buffer[length-2] = (char)type;
 			buffer[length-1] = val[0];
 			buffer[length] = '\0';
+			
+			// add contents to struct
+			if (numFields < max_fields)
+			{	
+				field[numFields].flag = false;
+				field[numFields].start = length-2;
+				field[numFields].size = 2;
+			}
 		}
 
 		// increment sensor fields counter 
@@ -1046,6 +1143,14 @@ int8_t WaspFrame::addSensor(uint8_t type, uint16_t value)
 	        buffer[length-2] = val[0];
 			buffer[length-1] = val[1];
 			buffer[length] = '\0';
+			
+			// add contents to struct
+			if (numFields < max_fields)
+			{	
+				field[numFields].flag = false;
+				field[numFields].start = length-3;
+				field[numFields].size = 3;
+			}
 		}
 		else
 		{
@@ -1058,7 +1163,15 @@ int8_t WaspFrame::addSensor(uint8_t type, uint16_t value)
 			// concatenate sensor name to frame string
 	        buffer[length-2] = (char)type;
 			buffer[length-1] = val[0];
-			buffer[length] = '\0';
+			buffer[length] = '\0';			
+			
+			// add contents to struct
+			if (numFields < max_fields)
+			{	
+				field[numFields].flag = false;
+				field[numFields].start = length-2;
+				field[numFields].size = 2;
+			}
 		}
 
 		// increment sensor fields counter 
@@ -1182,6 +1295,14 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long value)
         buffer[length-2] = val[2];
 		buffer[length-1] = val[3];
 		buffer[length] = '\0';
+		
+		// add contents to struct
+		if (numFields < max_fields)
+		{
+			field[numFields].flag = false;
+			field[numFields].start = length-5;
+			field[numFields].size = 5;
+		}
 
 		// increment sensor fields counter 
 		numFields++;
@@ -1335,6 +1456,14 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
         buffer[length-2] = val[2];
 		buffer[length-1] = val[3];
 		buffer[length] = '\0';
+		
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-5;
+			field[numFields].size = 5;
+		}
 
 		// increment sensor fields counter 
 		numFields++;
@@ -1461,7 +1590,6 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 		}
 
 		// concatenate sensor name to frame string
-
         int len = length-2-strlen(aux_str);
         buffer[len] = (char)type;
         buffer[len+1] = lng;
@@ -1470,7 +1598,15 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 			buffer[j] = aux_str[j-2-len];
 		}
 		buffer[length] = '\0';
-
+		
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-strlen(str)-2;
+			field[numFields].size = strlen(str)+2;
+		}
+		
 		// increment sensor fields counter 
 		numFields++;
 		// update number of bytes field
@@ -1625,7 +1761,15 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 		buffer[length-3] = valB2[1];
         buffer[length-2] = valB2[2];
 		buffer[length-1] = valB2[3];
-		buffer[length] = '\0';
+		buffer[length] = '\0';		
+			
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-9;
+			field[numFields].size = 9;
+		}
 
 		// increment sensor fields counter 
 		numFields++;
@@ -1755,6 +1899,14 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long val1, unsigned long val2
         buffer[length-2] = valB2[2];
 		buffer[length-1] = valB2[3];
 		buffer[length] = '\0';
+			
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-9;
+			field[numFields].size = 9;
+		}
 
 		// increment sensor fields counter 
 		numFields++;
@@ -1896,6 +2048,14 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
         buffer[length-2] = val2;
         buffer[length-1] = val3;
 		buffer[length] = '\0';
+			
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-4;
+			field[numFields].size = 4;
+		}
 
 		// increment sensor fields counter 
 		numFields++;
@@ -2065,6 +2225,14 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
         buffer[length-2] = val2;
         buffer[length-1] = val3;
 		buffer[length] = '\0';
+			
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-4;
+			field[numFields].size = 4;
+		}
 
 		// increment sensor fields counter 
 		numFields++;
@@ -2212,7 +2380,15 @@ int8_t WaspFrame::addSensor(uint8_t type, int val1,int val2,int val3)
         buffer[length-2] = valC3[0];
 		buffer[length-1] = valC3[1];
 		buffer[length] = '\0';
-
+			
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-7;
+			field[numFields].size = 7;
+		}
+		
 		// increment sensor fields counter 
 		numFields++;
 		// update number of bytes field
@@ -2371,7 +2547,15 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
         buffer[length-2] = valB3[2];
 		buffer[length-1] = valB3[3];
 		buffer[length] = '\0';
-
+			
+		// add contents to struct
+		if (numFields < max_fields)
+		{	
+			field[numFields].flag = false;
+			field[numFields].start = length-13;
+			field[numFields].size = 13;
+		}
+		
 		// increment sensor fields counter 
 		numFields++;
 		// update number of bytes field
@@ -2421,11 +2605,11 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		else
 		{
 			PRINT_FRAME(F("Error sensor type mismatch for index "));
-			USB.print(type, DEC);	
+			USB.print(type, DEC);
 			USB.print(F(": "));	
 			USB.print(config, DEC);
-			USB.print(F(" vs "));			
-			USB.println(typeVal, DEC);			
+			USB.print(F(" vs "));
+			USB.println(typeVal, DEC);
 			return -1;
 		}
 	}
@@ -2437,17 +2621,17 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		}
 		else
 		{
-			PRINT_FRAME(F("Error sensor type mismatch for index "));	
-			USB.print(type, DEC);	
-			USB.print(F(": "));			
+			PRINT_FRAME(F("Error sensor type mismatch for index "));
+			USB.print(type, DEC);
+			USB.print(F(": api says "));
 			USB.print( config, DEC);
-			USB.print(F(" vs "));			
-			USB.println( typeVal, DEC);				
+			USB.print(F(" vs user says "));
+			USB.println( typeVal, DEC);
 			return -1;
 		}
 	}
 
-	// *2* check sensor number of fields	
+	// *2* check sensor number of fields
 	if (_boot_version >= 'G')
 	{
 		nfields =(uint8_t)pgm_read_word(&(FRAME_SENSOR_FIELD_TABLE[type]));
@@ -2464,7 +2648,12 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 	}
 	else
 	{
-		PRINT_FRAME(F("Error sensor type & number of fields mismatch\r\n"));
+		PRINT_FRAME(F("Error sensor type & nfields mismatch for index "));
+		USB.print(type, DEC);
+		USB.print(F(": api says "));
+		USB.print(nfields, DEC);
+		USB.print(F(" vs user says "));
+		USB.println(fields, DEC);
 		return -1;
 	}
 
@@ -2664,12 +2853,108 @@ int8_t WaspFrame::addTimestamp()
 		// increment sensor fields counter 
 		numFields++;
 		// update number of bytes field
-		buffer[4] = frame.length-5;		
+		buffer[4] = frame.length-5;
 
 		return length;
 	}
 
 }
+
+
+
+
+/*
+ * setTinyLength
+ * 
+ */
+void WaspFrame::setTinyLength(uint8_t length)
+{
+	if (length > sizeof(bufferTiny))
+	{
+		_maxTinyLength = sizeof(bufferTiny);
+	}
+	else
+	{
+		_maxTinyLength = length;
+	}
+}
+
+/*
+ * generateTinyFrame
+ * 
+ */
+uint8_t WaspFrame::generateTinyFrame()
+{
+	// clear buffer
+	memset(bufferTiny, 0x00, sizeof(bufferTiny));
+	lengthTiny = 0;
+	
+	// insert data in Sigfox frame with the following format:
+	// [seq]+ [length] + [sensor_1] + ... + [sensor_N]
+	// where [sensor_x] is composed of [id]+[data]
+	bufferTiny[0] = readSequence() - 1;
+	lengthTiny++;
+	
+	// length of sigfox frame
+	bufferTiny[1] = 2;
+	lengthTiny++;
+	
+	// calculate number of remaining fields
+	uint8_t pending_fields = 0;
+	for (int i = 0; i < numFields; i++)
+	{
+		if (field[i].size > _maxTinyLength-2)
+		{
+			// this field does not fit inside any fragment
+			// so it is being unmarked
+			field[i].flag = true;
+		}
+		
+		if (field[i].flag == false)
+		{
+			pending_fields++;
+		}
+	}
+	
+	
+	// iterate through all elements in frame
+	for (int i = 0; i < numFields; i++)
+	{
+		if (pending_fields > 0)
+		{
+			if (field[i].flag == false)
+			{
+				// field size  is less or equal to remaining frame length?
+				if (field[i].size <= (_maxTinyLength-lengthTiny))
+				{
+					// copy sensor field and mark flag
+					memcpy((uint8_t*)&bufferTiny[lengthTiny], (uint8_t*)&frame.buffer[field[i].start], field[i].size);
+					
+					lengthTiny += field[i].size;
+					
+					// mark flag
+					field[i].flag = true;
+					
+					// decrease counter
+					pending_fields--;
+				}
+			}
+		}
+	}
+	
+	// update length field
+	bufferTiny[1] = lengthTiny;
+
+	#if DEBUG_FRAME > 1
+		PRINT_FRAME(F("generated frame:"));
+		USB.printHexln(bufferTiny, lengthTiny);
+	#endif
+	
+	return pending_fields;
+}
+
+
+
 
 /// Preinstantiate Objects /////////////////////////////////////////////////////
 

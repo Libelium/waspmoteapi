@@ -24,6 +24,7 @@ _netmask	KEYWORD2
 _dns1	KEYWORD2
 _dns2	KEYWORD2
 _essid	KEYWORD2
+_firmwareVersion	KEYWORD2
 resetValues	KEYWORD2
 setESSID	KEYWORD2
 setPassword	KEYWORD2
@@ -97,7 +98,8 @@ userAbort	KEYWORD2
 socketAbort	KEYWORD2
 setContentType	KEYWORD2
 reportStatus8	KEYWORD2
-
+getFirmwareVersion	KEYWORD2
+sslHandshake	KEYWORD2
 
 OPEN	LITERAL1
 WEP64	LITERAL1

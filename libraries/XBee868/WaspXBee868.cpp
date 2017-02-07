@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -587,7 +587,7 @@ uint8_t WaspXBee868::getACKerrors()
 uint8_t WaspXBee868::sendXBeePriv(struct packetXBee* packet)
 {
 	// Local variables
-	uint8_t TX[120];
+	uint8_t TX[300];
     uint8_t counter=0;
     uint8_t protegido=0;
     uint8_t tipo=0;

@@ -1,7 +1,7 @@
 /*! \file Wasp4G_WASP4G_CME_ERROR_CODEs.h
   \brief Definition of the possible error codes
     
-  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
   http:// www.libelium.com
  
   This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
   You should have received a copy of the GNU Lesser General Public License
   along with this program. If not, see <http:// www.gnu.org/licenses/>.
  
-  Version:			3.0
+  Version:			3.1
   Design:			David Gascon
   Implementation:	Yuri Carmona
 
@@ -109,6 +109,7 @@
 // FTP related errors
 #define WASP4G_CME_ERROR_0615 615 // FTP not connected
 #define WASP4G_CME_ERROR_0623 623 // FTP write data closed
+#define WASP4G_CME_ERROR_0642 642 // FTP open channel timeout
 #define WASP4G_CME_ERROR_0643 643 // FTP communication timeout
 
 // Network survey errors:
@@ -168,6 +169,7 @@
 #define WASP4G_CME_ERROR_1000 1000 // SSL not activated
 #define WASP4G_CME_ERROR_1001 1001 // SSL certs and keys wrong or not stored
 #define WASP4G_CME_ERROR_1003 1003 // SSL already activated
+#define WASP4G_CME_ERROR_1005 1005 // SSL socket error
 #define WASP4G_CME_ERROR_1008 1008 // SSL not connected
 
 #define WASP4G_ERROR_TIMEOUT 65534 // Timeout error when running a command

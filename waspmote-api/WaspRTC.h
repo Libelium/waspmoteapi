@@ -1,7 +1,7 @@
 /*! \file WaspRTC.h
     \brief Library for managing the RTC
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
     
  	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
@@ -21,7 +21,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	A. Bielsa, D. Cuartielles, M. Yarza, Y. Carmona
 
@@ -43,6 +43,16 @@
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
+
+//! DEBUG_RTC
+/*! Possible values:
+ * 	0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages
+ */
+#define DEBUG_RTC 	0
+#define PRINT_RTC(str)	USB.print(F("[RTC] ")); USB.print(str);
+
 
 // RTC ADDRESSES CONSTANTS
 /*! \def RTC_SECONDS_ADDRESS
@@ -655,7 +665,7 @@ class WaspRTC
 	\sa setAlarm1(uint8_t day_date, uint8_t hour, uint8_t minute, uint8_t second, 
 	uint8_t offset, uint8_t mode), getAlarm1()
 	 */
-	void setAlarm1(const char* time, uint8_t offset, uint8_t mode);
+	uint8_t setAlarm1(const char* time, uint8_t offset, uint8_t mode);
 	
 	//! It sets Alarm1 to the specified time. It also enables the corresponding 
 	//! RTC interruption
@@ -671,12 +681,12 @@ class WaspRTC
 	\return void
 	\sa setAlarm1(const char* time, uint8_t offset, uint8_t mode), getAlarm1()
 	 */
-	void setAlarm1(	uint8_t day_date, 
-					uint8_t hour, 
-					uint8_t minute, 
-					uint8_t second, 
-					uint8_t offset, 
-					uint8_t mode	);
+	uint8_t setAlarm1(	uint8_t day_date, 
+						uint8_t hour, 
+						uint8_t minute, 
+						uint8_t second, 
+						uint8_t offset, 
+						uint8_t mode);
 	
 	//! It gets Alarm1 date and time from the RTC, storing them in the 
 	//! corresponding variables
@@ -695,7 +705,7 @@ class WaspRTC
 		RTC_ALM2_MODE4, RTC_ALM2_MODE5
 	\return void
 	 */
-	void setAlarm2(const char* time, uint8_t offset, uint8_t mode);
+	uint8_t setAlarm2(const char* time, uint8_t offset, uint8_t mode);
 	
 	//! It sets Alarm2 to the specified time. It also enables the corresponding 
 	//! RTC interruption
@@ -709,11 +719,11 @@ class WaspRTC
 	\return void
 	\sa setAlarm2(const char* time, uint8_t offset, uint8_t mode), getAlarm2()
 	 */
-	void setAlarm2(	uint8_t day_date, 
-					uint8_t hour, 
-					uint8_t minute, 
-					uint8_t offset, 
-					uint8_t mode	);
+	uint8_t setAlarm2(	uint8_t day_date, 
+						uint8_t hour, 
+						uint8_t minute, 
+						uint8_t offset, 
+						uint8_t mode);
 	
 	//! It gets Alarm2 date and time from the RTC, storing them in the 
 	//! corresponding variables

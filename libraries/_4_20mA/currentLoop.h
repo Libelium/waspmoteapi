@@ -1,7 +1,7 @@
 /*! \file currentLoop.h
 
 	\brief Library for managing the 4-20mA
-	Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.0
+	Version:		3.1
 	Implementation:	Ahmad Saad
 */
 
@@ -32,10 +32,10 @@
 /***********************************************************************
 * Configuration Selection
 ************************************************************************/	
-#define CHANNEL1 ANALOG1
-#define CHANNEL2 ANALOG2
-#define CHANNEL3 ANALOG5
-#define CHANNEL4 ANALOG6
+#define CHANNEL1 0x01 //ANALOG1
+#define CHANNEL2 0x02 //ANALOG2
+#define CHANNEL3 0x03 //ANALOG5
+#define CHANNEL4 0x04 //ANALOG6
 
 #define SUPPLY12V 12
 #define SUPPLY5V 5
@@ -50,7 +50,7 @@ class currentLoop{
 	
 		//! The constructor of the class
 		currentLoop();
-	
+		
 		//! Powers ON the 4-20mA supply 5V or 12V
 		uint8_t ON(uint8_t powerSupply);
 		
@@ -75,8 +75,8 @@ class currentLoop{
 		
 	private:
 	
-		//! This variable stroes the last value read from th ADC
-		long analogValue;
+		//! This variable stores the last value read from th ADC
+		long _analogValue;
 
 };
 

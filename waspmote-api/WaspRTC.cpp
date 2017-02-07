@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  * 
  * 	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -34,50 +34,52 @@
 
 /// table_RTC /////////////////////////////////////////////////////////////////
 
-const char rtc_string_00[] 	PROGMEM	= 	"Alarm Mode matches "; 	
-const char rtc_string_01[] 	PROGMEM	= 	"[Day:Hours:Minutes:Seconds] --> "; 	
-const char rtc_string_02[] 	PROGMEM = 	"[Date:Hours:Minutes:Seconds] --> ";	
-const char rtc_string_03[] 	PROGMEM = 	"[Hours:Minutes:Seconds] --> ";		
-const char rtc_string_04[] 	PROGMEM = 	"[Minutes:Seconds] --> ";		
-const char rtc_string_05[] 	PROGMEM = 	"[Seconds] --> ";		
-const char rtc_string_06[] 	PROGMEM = 	"Once per second";	
-const char rtc_string_07[] 	PROGMEM = 	"Incorrect alarm mode";	
-const char rtc_string_08[] 	PROGMEM = 	"[%02u:%02u:%02u:%02u]";	
-const char rtc_string_09[] 	PROGMEM = 	"[%02u:%02u:%02u]";	
+const char rtc_string_00[] 	PROGMEM	= 	"Alarm matches ";
+const char rtc_string_01[] 	PROGMEM	= 	"[Day, hh:mm:ss] --> ";
+const char rtc_string_02[] 	PROGMEM = 	"[Date, hh:mm:ss] --> ";
+const char rtc_string_03[] 	PROGMEM = 	"[hh:mm:ss] --> ";
+const char rtc_string_04[] 	PROGMEM = 	"[mm:ss] --> ";
+const char rtc_string_05[] 	PROGMEM = 	"[ss] --> ";
+const char rtc_string_06[] 	PROGMEM = 	"Once per second";
+const char rtc_string_07[] 	PROGMEM = 	"Incorrect alarm mode";
+const char rtc_string_08[] 	PROGMEM = 	"[%02u, %02u:%02u:%02u]";
+const char rtc_string_09[] 	PROGMEM = 	"[%02u, %02u:%02u]";
 const char rtc_string_10[] 	PROGMEM = 	"[%02u:%02u]";
 const char rtc_string_11[] 	PROGMEM = 	"[%02u]";
-const char rtc_string_12[] 	PROGMEM = 	"[Day:Hours:Minutes] --> ";
-const char rtc_string_13[] 	PROGMEM = 	"[Date:Hours:Minutes ] --> ";
-const char rtc_string_14[] 	PROGMEM = 	"[Hours:Minutes] --> ";
-const char rtc_string_15[] 	PROGMEM = 	"[Minutes] --> ";	
-const char rtc_string_16[] 	PROGMEM = 	"Once per minute";	
+const char rtc_string_12[] 	PROGMEM = 	"[Day, hh:mm] --> ";
+const char rtc_string_13[] 	PROGMEM = 	"[Date, hh:mm] --> ";
+const char rtc_string_14[] 	PROGMEM = 	"[hh:mm] --> ";
+const char rtc_string_15[] 	PROGMEM = 	"[mm] --> ";
+const char rtc_string_16[] 	PROGMEM = 	"Once per minute";
 const char rtc_string_17[] 	PROGMEM = 	"%s, %02u/%02u/%02u, %02u:%02u:%02u";
-const char rtc_string_18[] 	PROGMEM = 	"error";	
+const char rtc_string_18[] 	PROGMEM = 	"error";
 const char rtc_string_19[]	PROGMEM =	"%02u%c%02u%c%02u%c%02u%c%02u%c%02u%c%02u";
+const char rtc_string_20[] 	PROGMEM = 	"[%02u:%02u:%02u]";
 
 
-const char* const table_RTC[] PROGMEM = 	  
+const char* const table_RTC[] PROGMEM =
 {
-	rtc_string_00, 		// 0
-	rtc_string_01,		// 1
-	rtc_string_02,		// 2
-	rtc_string_03, 		// 3
-	rtc_string_04,		// 4
-	rtc_string_05,		// 5
-	rtc_string_06, 		// 6
-	rtc_string_07,		// 7
-	rtc_string_08,		// 8
-	rtc_string_09, 		// 9
-	rtc_string_10,		// 10
-	rtc_string_11,		// 11
-	rtc_string_12,		// 12
-	rtc_string_13,		// 13
-	rtc_string_14, 		// 14
-	rtc_string_15,		// 15
-	rtc_string_16,		// 16
-	rtc_string_17,		// 17
-	rtc_string_18,		// 18
-	rtc_string_19,		// 19
+	rtc_string_00,
+	rtc_string_01,
+	rtc_string_02,
+	rtc_string_03,
+	rtc_string_04,
+	rtc_string_05,
+	rtc_string_06,
+	rtc_string_07,
+	rtc_string_08,
+	rtc_string_09,
+	rtc_string_10,
+	rtc_string_11,
+	rtc_string_12,
+	rtc_string_13,
+	rtc_string_14,
+	rtc_string_15,
+	rtc_string_16,
+	rtc_string_17,
+	rtc_string_18,
+	rtc_string_19,
+	rtc_string_20,
 };
 
 
@@ -1098,15 +1100,15 @@ float WaspRTC::getTemperature()
  * This function specifies the time for alarm, sets alarm in RTC
  * and enables interrupt.
  */
-void WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
+uint8_t WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
 {
 	// Define variables
 	uint8_t aux=0, aux2=0;
 	
 	// Check alarm-time string format: "dd:hh:mm:ss"
-	if( strlen(time) != 11)
+	if (strlen(time) != 11)
 	{
-		USB.println(F("Wrong time format. Must be \"dd:hh:mm:ss\""));
+		PRINT_RTC(F("Wrong time format. Must be \"dd:hh:mm:ss\"\n"));
 	}
 	
 	// Parse string contents:
@@ -1120,7 +1122,7 @@ void WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
 	hour_alarm1 = BCD2byte(aux, aux2);
 	// minutes field
 	aux=(uint8_t) time[6] - 48;
-	aux2=(uint8_t) time[7] - 48;		
+	aux2=(uint8_t) time[7] - 48;
 	minute_alarm1 = BCD2byte(aux, aux2);
 	// seconds field
 	aux=(uint8_t) time[9] - 48;
@@ -1128,77 +1130,97 @@ void WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
 	second_alarm1 = BCD2byte(aux, aux2);
 	
 	// if OFFSET mode then add the date to the actual date
-	if( offset == RTC_OFFSET ) 
+	if (offset == RTC_OFFSET) 
 	{
 		// get actual date
 		readRTC(RTC_DATE_ADDRESS_2);
 		
 		// add 'seconds' offset 
 		second_alarm1 += second;
-		if(second_alarm1>=60)
+		if (second_alarm1 >= 60)
 		{
 			// check zero-crossing
 			second_alarm1-=60;
 			minute_alarm1++;
 		}
 		
-		// add 'minutes' offset 		
+		// add 'minutes' offset
 		minute_alarm1+=minute;
-		if(minute_alarm1>=60)
+		if (minute_alarm1 >= 60)
 		{
 			// check zero-crossing
 			minute_alarm1-=60;
 			hour_alarm1++;
 		}
 		
-		// add 'hour' offset 	
+		// add 'hour' offset
 		hour_alarm1+=hour;
-		if(hour_alarm1>=24)
+		if (hour_alarm1 >= 24)
 		{
 			// check zero-crossing
-			hour_alarm1-=24;
+			hour_alarm1 -= 24;
 			day_alarm1++;
 		}
 		
 		// add 'day' offset
 		// RTC_ALM1_MODE1 indicates "dd" field as Day-Of-Week 
 		// Any other indicates "dd" field as Day of Month 
-		if( mode == RTC_ALM1_MODE1 )
+		if (mode == RTC_ALM1_MODE1)
 		{
 			day_alarm1 += day;
-			if( day_alarm1>7 ) day_alarm1-=7;
+			if (day_alarm1 > 7) day_alarm1 -= 7;
 		}
 		else
 		{				
 			day_alarm1+=date;
 			
-			if( month==1||month==3||month==5||month==7||month==8||month==10||month==12 )
+			if (month==1||month==3||month==5||month==7||month==8||month==10||month==12)
 			{
 				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
-				if( day_alarm1>31 ) day_alarm1-=31;
+				if (day_alarm1 > 31) day_alarm1 -= 31;
 			}
-			else if(month==4||month==6||month==9||month==11 )
+			else if (month==4||month==6||month==9||month==11 )
 			{
 				// 30-Day months: Apr, June, Sep and Nov
-				if( day_alarm1>30 ) day_alarm1-=30;
+				if (day_alarm1 > 30) day_alarm1 -= 30;
 			}
-			else if( month==2 )
+			else if (month==2)
 			{	
 				// Leap year condition for february
-				if( LEAP_YEAR(RTC.year) )
+				if (LEAP_YEAR(RTC.year))
 				{					
-					if( day_alarm1>29 ) day_alarm1-=29;
+					if (day_alarm1>29) day_alarm1 -= 29;
 				}
 				else
 				{					
-					if( day_alarm1>28 ) day_alarm1-=28;
+					if (day_alarm1 > 28) day_alarm1 -= 28;
 				}
 			}			
 		}
 	}
+	
+			
+	if ((day_alarm1 > 31) || (hour_alarm1 > 23) || (minute_alarm1 > 59) || (second_alarm1 > 59))
+	{
+		PRINT_RTC(F("Incorrect input parameters\n"));
+		
+		#if DEBUG_WASP4G > 0
+		PRINT_RTC(F("day_alarm1:"));
+		USB.println(day_alarm1, DEC);
+		PRINT_RTC(F("hour_alarm1:"));
+		USB.println(hour_alarm1, DEC);
+		PRINT_RTC(F("minute_alarm1:"));
+		USB.println(minute_alarm1, DEC);
+		PRINT_RTC(F("second_alarm1:"));
+		USB.println(second_alarm1, DEC);
+		#endif
+		return 1;
+	}
+	
 	alarm1Mode = mode;
 	RTC.writeRTCalarm1();
 	RTC.configureAlarmMode(1,mode);
+	return 0;
 }
 
 /* setAlarm1(day_date,_hour,_minute,_second,offset,mode) 
@@ -1215,118 +1237,141 @@ void WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
  * This function specifies the time for alarm, sets alarm in RTC and
  * enables interrupt.
  */
-void WaspRTC::setAlarm1(uint8_t day_date, uint8_t _hour, uint8_t _minute,
-						uint8_t _second, uint8_t offset, uint8_t mode)
+uint8_t WaspRTC::setAlarm1(uint8_t day_date,
+							uint8_t _hour,
+							uint8_t _minute,
+							uint8_t _second,
+							uint8_t offset,
+							uint8_t mode)
 {
-	
 	uint8_t aux=0, aux2=0;
 
-	if(day_date<10)
+	if (day_date<10)
 	{
 		aux=0;
 		aux2=day_date;
 		day_alarm1 = BCD2byte(aux, aux2);
 	}
-	else if(day_date>=10)
+	else if (day_date>=10)
 	{
 		aux2=day_date%10;
 		aux=day_date/10;
 		day_alarm1 = BCD2byte(aux, aux2);
 	}
-	if(_hour<10)
+	if (_hour<10)
 	{
 		aux=0;
 		aux2=_hour;
 		hour_alarm1 = BCD2byte(aux, aux2);
 	}
-	else if(_hour>=10)
+	else if (_hour>=10)
 	{
 		aux2=_hour%10;
 		aux=_hour/10;
 		hour_alarm1 = BCD2byte(aux, aux2);
 	}
-	if(_minute<10)
+	if (_minute<10)
 	{
 		aux=0;
 		aux2=_minute;
 		minute_alarm1 = BCD2byte(aux, aux2);
 	}
-	else if(_minute>=10)
+	else if (_minute>=10)
 	{
 		aux2=_minute%10;
 		aux=_minute/10;
 		minute_alarm1 = BCD2byte(aux, aux2);
 	}
-	if(_second<10)
+	if (_second<10)
 	{
 		aux=0;
 		aux2=_second;
 		second_alarm1 = BCD2byte(aux, aux2);
 	}
-	else if(_second>=10)
+	else if (_second>=10)
 	{
 		aux2=_second%10;
 		aux=_second/10;
 		second_alarm1 = BCD2byte(aux, aux2);
 	}
 	
-	if(offset==RTC_OFFSET) // add the date to the actual date
+	if (offset == RTC_OFFSET) // add the date to the actual date
 	{
 		readRTC(RTC_DATE_ADDRESS_2);
 		second_alarm1+=second;
-		if(second_alarm1>=60)
+		if (second_alarm1 >= 60)
 		{
-			second_alarm1-=60;
+			second_alarm1 -= 60;
 			minute_alarm1++;
 		}
 		minute_alarm1+=minute;
-		if(minute_alarm1>=60)
+		if (minute_alarm1 >= 60)
 		{
-			minute_alarm1-=60;
+			minute_alarm1 -= 60;
 			hour_alarm1++;
 		}
 		hour_alarm1+=hour;
-		if(hour_alarm1>=24)
+		if (hour_alarm1 >= 24)
 		{
-			hour_alarm1-=24;
+			hour_alarm1 -= 24;
 			day_alarm1++;
 		}
-		if(mode==RTC_ALM1_MODE1)
+		if (mode == RTC_ALM1_MODE1)
 		{
 			day_alarm1+=day;
-			if( day_alarm1>7 ) day_alarm1-=7;
+			if (day_alarm1 > 7) day_alarm1 -= 7;
 		}
 		else
 		{	
 			day_alarm1+=date;
 			
-			if( month==1||month==3||month==5||month==7||month==8||month==10||month==12 )
+			if (month==1||month==3||month==5||month==7||month==8||month==10||month==12)
 			{
 				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
 				if( day_alarm1>31 ) day_alarm1-=31;
 			}
-			else if(month==4||month==6||month==9||month==11 )
+			else if (month==4||month==6||month==9||month==11)
 			{
 				// 30-Day months: Apr, June, Sep and Nov
 				if( day_alarm1>30 ) day_alarm1-=30;
 			}
-			else if( month==2 )
+			else if (month==2)
 			{
 				// Leap year condition for february
-				if( LEAP_YEAR(RTC.year) )
+				if (LEAP_YEAR(RTC.year))
 				{
-					if( day_alarm1>29 ) day_alarm1-=29;
+					if (day_alarm1 > 29) day_alarm1 -= 29;
 				}
 				else
 				{
-					if( day_alarm1>28 ) day_alarm1-=28;
+					if (day_alarm1 > 28) day_alarm1 -= 28;
 				}
-			}				
+			}
 		}
 	}
-	alarm1Mode=mode;
+	
+	if ((day_alarm1 > 31) || (hour_alarm1 > 23) || (minute_alarm1 > 59) || (second_alarm1 > 59))
+	{
+		PRINT_RTC(F("Incorrect input parameters\n"));
+		
+		#if DEBUG_WASP4G > 0
+		PRINT_RTC(F("day_alarm1:"));
+		USB.println(day_alarm1, DEC);
+		PRINT_RTC(F("hour_alarm1:"));
+		USB.println(hour_alarm1, DEC);
+		PRINT_RTC(F("minute_alarm1:"));
+		USB.println(minute_alarm1, DEC);
+		PRINT_RTC(F("second_alarm1:"));
+		USB.println(second_alarm1, DEC);
+		#endif
+		return 1;
+	}
+	
+	alarm1Mode = mode;
 	RTC.writeRTCalarm1();
 	RTC.configureAlarmMode(1,mode);
+	
+	return 0;
 }
 
 
@@ -1348,23 +1393,23 @@ char* WaspRTC::getAlarm1()
 	memset(timeStamp, 0x00, sizeof(timeStamp) );
 	
 	// define local buffers
-	char buffer[40];	
-	char buffer_format[40];	
+	char buffer[40];
+	char buffer_format[40];
 	char auxiliar[40];
 			
-	// buffer <-- "Alarm Mode matches "
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_RTC[0]))); 	
+	// buffer: "Alarm matches "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_RTC[0])));
 	strcat(timeStamp,buffer);
 		
 	switch(alarm1Mode)
 	{
-		case RTC_ALM1_MODE1:	
+		case RTC_ALM1_MODE1:
 		
-			// buffer <-- [Day : hours : minutes : seconds]
-			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[1])));			
+			// buffer: "[Day, hh:mm:ss] --> "
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[1])));
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u:%02u:%02u:%02u]"
+			// buffer_format: "[%02u, %02u:%02u:%02u]"
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[8])));
 			
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
@@ -1377,11 +1422,11 @@ char* WaspRTC::getAlarm1()
 			
 		case RTC_ALM1_MODE2:	
 		
-			// buffer <-- "[Date : hours : minutes : seconds]"
+			// buffer: "[Date, hh:mm:ss] --> "
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[2])));
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u:%02u:%02u:%02u]"
+			// buffer_format: "[%02u, %02u:%02u:%02u]"
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[8])));
 			
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
@@ -1394,12 +1439,12 @@ char* WaspRTC::getAlarm1()
 			
 		case RTC_ALM1_MODE3:
 		
-			// buffer <-- "[Hours : minutes : seconds]"
+			// buffer: "[hh:mm:ss] --> "
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[3])));
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u:%02u:%02u]"
-			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
+			// buffer_format: "[%02u:%02u:%02u]"
+			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[20]))); 
 			
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											hour_alarm1,
@@ -1408,16 +1453,16 @@ char* WaspRTC::getAlarm1()
 			strcat(timeStamp, auxiliar);
 			break;
 			
-		case RTC_ALM1_MODE4:	
+		case RTC_ALM1_MODE4:
 		
-			// buffer <-- "[Minutes : seconds]"
+			// buffer: "[mm:ss] --> "
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[4])));
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u:%02u]"
+			// buffer_format: "[%02u:%02u]"
 			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[10])));
 	
-			snprintf(auxiliar, sizeof(auxiliar), buffer_format,												
+			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											minute_alarm1,
 											second_alarm1);
 			strcat(timeStamp, auxiliar);
@@ -1425,11 +1470,11 @@ char* WaspRTC::getAlarm1()
 			
 		case RTC_ALM1_MODE5:
 		
-			// buffer <-- "[Seconds]"
+			// buffer: "[ss] --> "
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[5]))); 
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u]"
+			// buffer_format: "[%02u]"
 			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[11]))); 
 	
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format,	second_alarm1);
@@ -1438,13 +1483,13 @@ char* WaspRTC::getAlarm1()
 			
 		case RTC_ALM1_MODE6:
 			
-			// buffer <-- "Once per second"
+			// buffer: "Once per second"
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[6])));
 			strcat(timeStamp,buffer);	
 			break;	
 					
 		default:
-			// buffer <-- "Incorrect alarm mode"
+			// buffer: "Incorrect alarm mode"
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[7])));
 			snprintf(timeStamp, sizeof(timeStamp), buffer);	
 	}	
@@ -1467,15 +1512,15 @@ char* WaspRTC::getAlarm1()
  * This function specifies the time for alarm, sets alarm in RTC and
  * enables interrupt.
  */
-void WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
+uint8_t WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
 {
 	// Define variables
 	uint8_t aux=0, aux2=0;
 	
 	// Check alarm-time string format: "dd:hh:mm"
-	if( strlen(time) != 8)
+	if (strlen(time) != 8)
 	{
-		USB.println(F("Wrong time format. Must be \"dd:hh:mm\""));
+		PRINT_RTC(F("Wrong time format. Must be \"dd:hh:mm\"\n"));
 	}
 	
 	// Parse string contents:
@@ -1493,23 +1538,23 @@ void WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
 	minute_alarm2 = BCD2byte(aux, aux2);
 	
 	// if OFFSET mode then add the date to the actual date
-	if( offset == RTC_OFFSET )
+	if (offset == RTC_OFFSET)
 	{
 		// get actual date
 		readRTC(RTC_DATE_ADDRESS_2);
 		
 		// add 'minutes' offset 
 		minute_alarm2+=minute;
-		if(minute_alarm2>=60)
+		if (minute_alarm2 >= 60)
 		{
 			// check zero-crossing
-			minute_alarm2-=60;
+			minute_alarm2 -= 60;
 			hour_alarm2++;
 		}
 		
 		// add 'hours' offset 
 		hour_alarm2+=hour;
-		if(hour_alarm2>=24)
+		if (hour_alarm2 >= 24)
 		{
 			// check zero-crossing
 			hour_alarm2-=24;
@@ -1519,41 +1564,59 @@ void WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
 		// add 'day' offset
 		// RTC_ALM2_MODE1 indicates "dd" field as Day-Of-Week 
 		// Any other indicates "dd" field as Day of Month 
-		if( mode == RTC_ALM2_MODE1 )
+		if (mode == RTC_ALM2_MODE1)
 		{
 			day_alarm2 += day;
-			if( day_alarm2 > 7 ) day_alarm2 -= 7;
+			if (day_alarm2 > 7) day_alarm2 -= 7;
 		}
 		else
 		{	
 			day_alarm2+=date;
-			if(month==1||month==3||month==5||month==7||month==8||month==10||month==12)
+			if (month==1||month==3||month==5||month==7||month==8||month==10||month==12)
 			{
 				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
-				if( day_alarm2>31 ) day_alarm2-=31;
+				if (day_alarm2 > 31) day_alarm2 -= 31;
 			}
-			else if(month==4||month==6||month==9||month==11)
+			else if (month==4||month==6||month==9||month==11)
 			{
 				// 30-Day months: Apr, Jun, Sep and Nov
-				if( day_alarm2>30 ) day_alarm2-=30;
+				if (day_alarm2 > 30) day_alarm2 -= 30;
 			}
-			else if( month==2 )
+			else if (month==2)
 			{
 				// Leap year condition for february
-				if( LEAP_YEAR(RTC.year) )
+				if (LEAP_YEAR(RTC.year))
 				{
-					if( day_alarm2>29 ) day_alarm2-=29;
+					if (day_alarm2 > 29) day_alarm2 -= 29;
 				}
 				else
 				{
-					if( day_alarm2>28 ) day_alarm2-=28;
+					if (day_alarm2 > 28) day_alarm2 -= 28;
 				}
-			}			
+			}
 		}
 	}
-	alarm2Mode=mode;
+	
+	if ((day_alarm2 > 31) || (hour_alarm2 > 23) || (minute_alarm2 > 59))
+	{
+		PRINT_RTC(F("Incorrect input parameters\n"));
+		
+		#if DEBUG_WASP4G > 0
+		PRINT_RTC(F("day_alarm2:"));
+		USB.println(day_alarm2, DEC);
+		PRINT_RTC(F("hour_alarm2:"));
+		USB.println(hour_alarm2, DEC);
+		PRINT_RTC(F("minute_alarm2:"));
+		USB.println(minute_alarm2, DEC);
+		#endif
+		return 1;
+	}
+	
+	alarm2Mode = mode;
 	RTC.writeRTCalarm2();
 	RTC.configureAlarmMode(2,mode);
+	
+	return 0;
 }
 
 /* setAlarm2(day_date,_hour,_minute,offset,mode) - sets Alarm2 to the
@@ -1571,97 +1634,118 @@ void WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
  * This function specifies the time for alarm, sets alarm in RTC and
  * enables interrupt.
  */
-void WaspRTC::setAlarm2(uint8_t day_date, uint8_t _hour, uint8_t _minute,
-						uint8_t offset, uint8_t mode)
+uint8_t WaspRTC::setAlarm2(uint8_t day_date,
+							uint8_t _hour,
+							uint8_t _minute,
+							uint8_t offset,
+							uint8_t mode)
 {
 	uint8_t aux=0, aux2=0;
-	if(day_date<10)
+	if (day_date < 10)
 	{
 		aux=0;
 		aux2=day_date;
 		day_alarm2 = BCD2byte(aux, aux2);
 	}
-	else if(day_date>=10)
+	else if (day_date >= 10)
 	{
 		aux2=day_date%10;
 		aux=day_date/10;
 		day_alarm2 = BCD2byte(aux, aux2);
 	}
-	if(_hour<10)
+	if (_hour < 10)
 	{
 		aux=0;
 		aux2=_hour;
 		hour_alarm2 = BCD2byte(aux, aux2);
 	}
-	else if(_hour>=10)
+	else if (_hour >= 10)
 	{
 		aux2=_hour%10;
 		aux=_hour/10;
 		hour_alarm2 = BCD2byte(aux, aux2);
 	}
-	if(_minute<10)
+	if (_minute < 10)
 	{
 		aux=0;
 		aux2=_minute;
 		minute_alarm2 = BCD2byte(aux, aux2);
 	}
-	else if(_minute>=10)
+	else if (_minute >= 10)
 	{
 		aux2=_minute%10;
 		aux=_minute/10;
 		minute_alarm2 = BCD2byte(aux, aux2);
 	}
 	
-	if(offset==RTC_OFFSET) // add the date to the actual date
+	if (offset == RTC_OFFSET) // add the date to the actual date
 	{
 		readRTC(RTC_DATE_ADDRESS_2);
 		minute_alarm2+=minute;
-		if(minute_alarm2>=60)
+		if (minute_alarm2 >= 60)
 		{
 			minute_alarm2-=60;
 			hour_alarm2++;
 		}
 		hour_alarm2+=hour;
-		if(hour_alarm2>=24)
+		if (hour_alarm2 >= 24)
 		{
 			hour_alarm2-=24;
 			day_alarm2++;
 		}
-		if(mode==RTC_ALM2_MODE1)
+		if (mode == RTC_ALM2_MODE1)
 		{
 			day_alarm2+=day;
-			if( day_alarm2>7 ) day_alarm2-=7;
+			if (day_alarm2 > 7) day_alarm2 -= 7;
 		}
 		else
 		{	
 			day_alarm2+=date;
-			if(month==1||month==3||month==5||month==7||month==8||month==10||month==12)
+			if (month==1||month==3||month==5||month==7||month==8||month==10||month==12)
 			{
 				// 31-Day months: Jan, Mar, May, Jul, Aug, Oct and Dec
-				if( day_alarm2>31 ) day_alarm2-=31;
+				if (day_alarm2 > 31) day_alarm2 -= 31;
 			}
-			else if(month==4||month==6||month==9||month==11)
+			else if (month==4||month==6||month==9||month==11)
 			{
 				// 30-Day months: Apr, Jun, Sep and Nov
-				if( day_alarm2>30 ) day_alarm2-=30;
+				if (day_alarm2 > 30) day_alarm2 -= 30;
 			}
-			else if( month==2 )
+			else if (month==2)
 			{
 				// Leap year condition for february
-				if( LEAP_YEAR(RTC.year) )
+				if (LEAP_YEAR(RTC.year))
 				{
-					if( day_alarm2>29 ) day_alarm2-=29;
+					if (day_alarm2 > 29) day_alarm2-=29;
 				}
 				else
 				{
-					if( day_alarm2>28 ) day_alarm2-=28;
+					if (day_alarm2 > 28) day_alarm2-=28;
 				}
-			}			
+			}
 		}
 	}
-	alarm2Mode=mode;
+	
+	if ((day_alarm2 > 31) || (hour_alarm2 > 23) || (minute_alarm2 > 59))
+	{
+		PRINT_RTC(F("Incorrect input parameters\n"));
+		
+		#if DEBUG_WASP4G > 0
+		PRINT_RTC(F("day_alarm2:"));
+		USB.println(day_alarm2, DEC);
+		PRINT_RTC(F("hour_alarm2:"));
+		USB.println(hour_alarm2, DEC);
+		PRINT_RTC(F("minute_alarm2:"));
+		USB.println(minute_alarm2, DEC);
+		#endif
+		return 1;
+	}
+	
+	alarm2Mode = mode;
 	RTC.writeRTCalarm2();
 	RTC.configureAlarmMode(2,mode);
+	
+	return 0;
 }
 
 
@@ -1687,19 +1771,19 @@ char* WaspRTC::getAlarm2()
 	char buffer_format[40];	
 	char auxiliar[40];
 			
-	// buffer <-- "Alarm Mode matches "
-	strcpy_P(buffer, (char*)pgm_read_word(&(table_RTC[0]))); 	
+	// buffer: "Alarm matches "
+	strcpy_P(buffer, (char*)pgm_read_word(&(table_RTC[0])));
 	strcat(timeStamp,buffer);
 			
 	switch(alarm2Mode)
 	{		
-		case RTC_ALM2_MODE1:				
+		case RTC_ALM2_MODE1:
 			
-			// buffer <-- "[Day : hours : minutes ]"
-			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[12])));			
+			// buffer: "[Day, hh:mm] --> "
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[12])));
 			strcat(timeStamp, buffer);
 						
-			// buffer_format <-- "[%02u:%02u:%02u]"			
+			// buffer_format: "[%02u, %02u:%02u]"
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											day_alarm2,
@@ -1710,11 +1794,11 @@ char* WaspRTC::getAlarm2()
 			
 		case RTC_ALM2_MODE2:
 			
-			// buffer <-- "[Date : hours : minutes ]"
-			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[13])));			
+			// buffer: "[Date, hh:mm] --> "
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[13])));
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u:%02u:%02u]"			
+			// buffer_format: "[%02u, %02u:%02u]"
 			strcpy_P(buffer_format,  (char*)pgm_read_word(&(table_RTC[9]))); 
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format,
 											day_alarm2,
@@ -1725,36 +1809,36 @@ char* WaspRTC::getAlarm2()
 			
 		case RTC_ALM2_MODE3:
 			
-			// buffer <-- "[Hours : minutes ]"
-			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[14])));			
+			// buffer: "[hh:mm] --> "
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[14])));
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u:%02u]"
-			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[10])));			
+			// buffer_format: "[%02u:%02u]"
+			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[10])));
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format, hour_alarm2, minute_alarm2);
 			strcat(timeStamp, auxiliar);
 			break;
 			
 		case RTC_ALM2_MODE4:
 			
-			// buffer <-- "[Minutes ]"
-			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[15])));			
+			// buffer: "[mm] --> "
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[15])));
 			strcat(timeStamp, buffer);
 			
-			// buffer_format <-- "[%02u]"
+			// buffer_format: "[%02u]"
 			strcpy_P(buffer_format, (char*)pgm_read_word(&(table_RTC[11]))); 
 			snprintf(auxiliar, sizeof(auxiliar), buffer_format, minute_alarm2);
 			strcat(timeStamp, auxiliar);
 			break;
 			
-		case RTC_ALM2_MODE5:		
-			// buffer <-- "Once per minute"
-			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[16])));			
+		case RTC_ALM2_MODE5:
+			// buffer: "Once per minute"
+			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[16])));
 			strcat(timeStamp, buffer);
 			break;
 			
 		default:
-			// buffer <-- "Incorrect alarm mode"
+			// buffer: "Incorrect alarm mode"
 			strcpy_P(buffer,  (char*)pgm_read_word(&(table_RTC[7])));
 			snprintf(timeStamp, sizeof(timeStamp), buffer);	
 	}	
@@ -2156,10 +2240,10 @@ void WaspRTC::setWatchdog(uint16_t minutesWatchdog)
 {		
 	if (_boot_version < 'H')
 	{
-		USB.println(F("\n***************  WARNING *******************"));
-		USB.println(F("This example is valid only for Waspmote v15."));
-		USB.println(F("Your Waspmote version is v12."));
-		USB.println(F("*******************************************"));
+		PRINT_RTC(F("\n***************  WARNING *******************\n"));
+		PRINT_RTC(F("This example is valid only for Waspmote v15.\n"));
+		PRINT_RTC(F("Your Waspmote version is v12.\n"));
+		PRINT_RTC(F("*******************************************\n"));
 		return (void)0;
 	}
 	

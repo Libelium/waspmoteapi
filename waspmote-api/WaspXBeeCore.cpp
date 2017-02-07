@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -495,7 +495,8 @@ uint8_t WaspXBeeCore::setPAN(uint8_t* PANID)
     if( (protocol == XBEE_802_15_4) 
 	||	(protocol == DIGIMESH) 
 	||	(protocol == XBEE_900) 
-	|| 	(protocol == XBEE_868) 
+	|| 	(protocol == XBEE_868)
+	|| 	(protocol == XBEE_868LP) 
 	|| 	(protocol == XBEE_900HP) ) 
     {
         error_AT=2;
@@ -527,7 +528,8 @@ uint8_t WaspXBeeCore::setPAN(uint8_t* PANID)
 		if( (protocol == XBEE_802_15_4) 
 		||	(protocol == DIGIMESH) 
 		||	(protocol == XBEE_900) 
-		|| 	(protocol == XBEE_868) 
+		|| 	(protocol == XBEE_868)
+		|| 	(protocol == XBEE_868LP) 
 		|| 	(protocol == XBEE_900HP) ) 
 		{
 			PAN_ID[0] = PANID[0];
@@ -578,6 +580,7 @@ uint8_t WaspXBeeCore::getPAN()
 		||	(protocol == DIGIMESH) 
 		||	(protocol == XBEE_900) 
 		|| 	(protocol == XBEE_868) 
+		|| 	(protocol == XBEE_868LP) 
 		|| 	(protocol == XBEE_900HP) ) 
 		{
 			PAN_ID[0] = data[0];
@@ -3616,6 +3619,13 @@ void WaspXBeeCore::gen_data(const char* data, uint8_t* param)
         for( int i=0 ; i<8 ; i++)
         {
             command[inc-9+i]=param[i];
+        }
+    }
+    else if(inc==12)
+    {
+        for(int i=0 ; i<4 ; i++)
+        {
+            command[inc-5+i]=param[i];
         }
     }
     else if(inc==11)

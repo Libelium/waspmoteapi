@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascon
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -707,24 +707,18 @@ unsigned long WaspUtils::getSerialEEPROM()
 }
 
 
-/* readTempDS1820() - reads the DS1820 temperature sensor
- *
- * It reads the DS1820 temperature sensor
- */
-float WaspUtils::readTempDS1820(uint8_t pin)
-{    
-	return readTempDS1820( pin, true);
-}
 
 /* readTempDS1820() - reads the DS1820 temperature sensor
  *
  * It reads the DS1820 temperature sensor
  */
-float WaspUtils::readTempDS1820(uint8_t pin, bool is3v3 )
+float WaspUtils::readTempDS1820(uint8_t pin)
 {
 	// check if it is necessary to turn on 
 	// the generic 3v3 power supply
-	if( is3v3 == true )
+	bool flag = WaspRegister |= REG_3V3;
+	
+	if (flag == false)
 	{
 		PWR.setSensorPower(SENS_3V3,SENS_ON);
 		delay(10);
@@ -776,7 +770,7 @@ float WaspUtils::readTempDS1820(uint8_t pin, bool is3v3 )
         
     // check if it is necessary to turn off 
 	// the generic 3v3 power supply
-	if( is3v3 == true )
+	if (flag == false)
 	{
 		PWR.setSensorPower(SENS_3V3,SENS_OFF);
 	}

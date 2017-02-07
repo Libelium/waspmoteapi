@@ -1,7 +1,7 @@
 /*! \file Wasp4G.cpp
  *  \brief Library for managing Telit LE910
  *
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -6883,6 +6883,7 @@ void Wasp4G::printErrorCode( uint16_t error )
 		case WASP4G_CME_ERROR_0568: USB.println(F("wrong PDP")); break;		
 		case WASP4G_CME_ERROR_0615: USB.println(F("FTP not connected")); break;
 		case WASP4G_CME_ERROR_0623: USB.println(F("FTP write data closed")); break;
+		case WASP4G_CME_ERROR_0642: USB.println(F("FTP open channel timeout")); break;
 		case WASP4G_CME_ERROR_0643: USB.println(F("FTP communication timeout")); break;
 		case WASP4G_CME_ERROR_0657: USB.println(F("Network survey error (No Carrier)*")); break;
 		case WASP4G_CME_ERROR_0658: USB.println(F("Network survey error (Busy)*")); break;
@@ -6927,6 +6928,7 @@ void Wasp4G::printErrorCode( uint16_t error )
 		case WASP4G_CME_ERROR_1000: USB.println(F("SSL not activated")); break;
 		case WASP4G_CME_ERROR_1001: USB.println(F("SSL certs and keys wrong or not stored")); break;
 		case WASP4G_CME_ERROR_1003: USB.println(F("SSL already activated")); break;
+		case WASP4G_CME_ERROR_1005: USB.println(F("SSL socket error")); break;
 		case WASP4G_CME_ERROR_1008: USB.println(F("SSL not connected")); break;		
 		default: USB.println(F("UNKNOWN"));	break;
 	}

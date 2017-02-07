@@ -1,7 +1,7 @@
 /*! \file Wasp485.cpp
     \brief Library for managing RS-485 module.
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0 
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Ahmad Saad
  */
@@ -457,10 +457,7 @@ void Wasp485::reception(bool state)
 //!	Returns: void.
 //!************************************************************* 
 void Wasp485::maxWrite(char address, char data)
-{	
-	// Disable all SPI slaves
-	SPI.setSPISlave(ALL_DESELECTED);
-	delay(1);
+{
 	// Select SX slave
 	SPI.setSPISlave(SOCKET0_SELECT);
 	
@@ -481,9 +478,6 @@ void Wasp485::maxWrite(char address, char data)
 //!*************************************************************
 uint8_t Wasp485::maxRead(char address) 
 {
-	// Disable all SPI slaves
-	SPI.setSPISlave(ALL_DESELECTED);
-	delay(1);
 	// Select SX slave
 	SPI.setSPISlave(SOCKET0_SELECT);
 

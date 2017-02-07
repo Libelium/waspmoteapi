@@ -1,5 +1,5 @@
 /*
- *  Modified for Waspmote by Libelium, 2009-2016
+ *  Modified for Waspmote by Libelium, 2009-2017
  *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * 	Version:	3.0 
+ * 	Version:	3.1
  */
  
 extern "C" {
@@ -174,15 +174,17 @@ uint8_t TwoWire::endTransmission(void)
 // must be called in:
 // slave tx event callback
 // or after beginTransmission(address)
-void TwoWire::send(uint8_t data)
+uint8_t TwoWire::send(uint8_t data)
 {
-	if(transmitting)
+	uint8_t error = 0;
+	
+	if (transmitting)
 	{
 		// in master transmitter mode
 		// don't bother if buffer is full
-		if(txBufferLength >= BUFFER_LENGTH)
+		if (txBufferLength >= BUFFER_LENGTH)
 		{
-			return;
+			return 0;
 		}
 		// put byte in tx buffer
 		txBuffer[txBufferIndex] = data;
@@ -197,21 +199,25 @@ void TwoWire::send(uint8_t data)
 		
 		// in slave send mode
 		// reply to master
-		twi_transmit(&data, 1);
+		error = twi_transmit(&data, 1);
 	}
+	
+	return error;
 }
 
 // must be called in:
 // slave tx event callback
 // or after beginTransmission(address)
-void TwoWire::send(uint8_t* data, uint8_t quantity)
+uint8_t TwoWire::send(uint8_t* data, uint8_t quantity)
 {
-	if(transmitting)
+	uint8_t error = 0;
+	
+	if (transmitting)
 	{
 		// in master transmitter mode
-		for(uint8_t i = 0; i < quantity; ++i)
+		for (uint8_t i = 0; i < quantity; ++i)
 		{
-			send(data[i]);
+			error = send(data[i]);
 		}
 	}
 	else
@@ -221,24 +227,26 @@ void TwoWire::send(uint8_t* data, uint8_t quantity)
 	
 		// in slave send mode
 		// reply to master
-		twi_transmit(data, quantity);
+		error = twi_transmit(data, quantity);
 	}
+	
+	return error;
 }
 
 // must be called in:
 // slave tx event callback
 // or after beginTransmission(address)
-void TwoWire::send(char* data)
+uint8_t TwoWire::send(char* data)
 {
-	send((uint8_t*)data, strlen(data));
+	return send((uint8_t*)data, strlen(data));
 }
 
 // must be called in:
 // slave tx event callback
 // or after beginTransmission(address)
-void TwoWire::send(int data)
+uint8_t TwoWire::send(int data)
 {
-	send((uint8_t)data);
+	return send((uint8_t)data);
 }
 
 // must be called in:
@@ -259,7 +267,7 @@ uint8_t TwoWire::receive(void)
 	uint8_t value = '\0';
   
 	// get each successive byte on each call
-	if(rxBufferIndex < rxBufferLength)
+	if (rxBufferIndex < rxBufferLength)
 	{
 		value = rxBuffer[rxBufferIndex];
 		++rxBufferIndex;
@@ -284,13 +292,13 @@ void TwoWire::onReceiveService(uint8_t* inBytes, int numBytes)
 	// don't bother if rx buffer is in use by a master requestFrom() op
 	// i know this drops data, but it allows for slight stupidity
 	// meaning, they may not have read all the master requestFrom() data yet
-	if(rxBufferIndex < rxBufferLength)
+	if (rxBufferIndex < rxBufferLength)
 	{
 		return;
 	}
 	// copy twi rx buffer into local read buffer
 	// this enables new reads to happen in parallel
-	for(uint8_t i = 0; i < numBytes; ++i)
+	for (uint8_t i = 0; i < numBytes; ++i)
 	{
 		rxBuffer[i] = inBytes[i];    
 	}
@@ -455,7 +463,7 @@ void TwoWire::secureEnd()
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos)
+uint8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos)
 {
 	uint8_t buffer;
 	uint8_t mask;
@@ -514,7 +522,7 @@ int8_t TwoWire::writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length)
+uint8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length)
 {
 	uint8_t buffer;
 	uint8_t mask;
@@ -573,7 +581,7 @@ int8_t TwoWire::writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data)
+uint8_t TwoWire::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data)
 {	
 	return writeBytes(devAddr, regAddr, &data, 1);
 }
@@ -590,7 +598,7 @@ int8_t TwoWire::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data)
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
+uint8_t TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
 {	
     uint8_t error;
 	
@@ -655,7 +663,7 @@ int8_t TwoWire::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos)
+uint8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos)
 {
 	uint8_t buffer, mask;
 	int8_t answer;
@@ -702,7 +710,7 @@ int8_t TwoWire::readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length)
+uint8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length)
 {
 	uint8_t buffer, mask;
 	int8_t answer;
@@ -746,7 +754,7 @@ int8_t TwoWire::readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data)
+uint8_t TwoWire::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data)
 {	
 	return readBytes( devAddr, regAddr, data, 1);
 }
@@ -763,7 +771,7 @@ int8_t TwoWire::readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data)
  *				4 if other twi error (lost bus arbitration, bus error, ..)
  * 				5 if timeout
  */
-int8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
+uint8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length)
 {
     
 	#if DEBUG_I2C > 0

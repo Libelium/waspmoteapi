@@ -1,7 +1,7 @@
 /*! \file ati_generator.h
     \brief Library for generating AT+I commands
         
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascon
     Implementation:	Yuri Carmona
 
@@ -133,6 +133,8 @@ const char str_wireach_60[] PROGMEM	= "FOPS"; 			// 60
 const char str_wireach_61[] PROGMEM	= "STAP"; 			// 61
 const char str_wireach_62[] PROGMEM	= "DPSZ"; 			// 62
 const char str_wireach_63[] PROGMEM	= "---"; 			// 63
+const char str_wireach_64[] PROGMEM	= "RP1"; 			// 64
+const char str_wireach_65[] PROGMEM	= "SSL"; 			// 65
 
 
 const char* const table_WiReach[] PROGMEM= 	  
@@ -201,6 +203,8 @@ const char* const table_WiReach[] PROGMEM=
 	str_wireach_61,
 	str_wireach_62,
 	str_wireach_63,
+	str_wireach_64,
+	str_wireach_65,
 };
 
 

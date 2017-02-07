@@ -18,9 +18,9 @@
   
   Written by Doc Walker (Rx)
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>  
-  Modified for Waspmote by Libelium, 2016
+  Modified for Waspmote by Libelium, 2017
   
-  Version:	3.1
+  Version:	3.2
 */
 
 #include "ModbusMaster.h"
@@ -123,8 +123,14 @@ void ModbusMaster::begin(unsigned long BaudRate , uint8_t socket)
 	
 	if (_protocol == RS232_COM) 
 	{
+		
 		_u8SerialPort = socket;
-		beginSerial(BaudRate, _u8SerialPort);		
+		beginSerial(BaudRate, _u8SerialPort);
+		
+		if (socket == SOCKET0) 	Utils.setMuxSocket0();
+		if (socket == SOCKET1) 	Utils.setMuxSocket1();
+		// power on the socket
+		PWR.powerSocket(socket, HIGH);
 	}
 	else 
 	{

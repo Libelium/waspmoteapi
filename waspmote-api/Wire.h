@@ -123,17 +123,16 @@ class TwoWire
     uint8_t endTransmission(void);    
     uint8_t requestFrom(uint8_t, uint8_t);
     uint8_t requestFrom(int, int);
-    void send(uint8_t);
-    void send(uint8_t*, uint8_t);
-    void send(int);
-    void send(char*);
+    uint8_t send(uint8_t);
+    uint8_t send(uint8_t*, uint8_t);
+    uint8_t send(int);
+    uint8_t send(char*);
     uint8_t available(void);
     uint8_t receive(void);
     void onReceive( void (*)(int) );
     void onRequest( void (*)(void) );
     void close();
-
-	
+    
     void secureBegin();
     void secureEnd();
 	
@@ -151,7 +150,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos);
+	uint8_t writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos);
 	
 	//! This function writes some bits via I2C
 	/*!
@@ -167,7 +166,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length);
+	uint8_t writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t data, uint8_t pos, uint8_t length);
 
 	//! This function writes byte via I2C
 	/*!
@@ -181,7 +180,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data);
+	uint8_t writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data);
 	
 	//! This function writes bytes via I2C
 	/*!
@@ -196,7 +195,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
+	uint8_t writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
 	
 	//! This function reads a bit via I2C
 	/*!
@@ -211,7 +210,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos);
+	uint8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos);
 	
 	//! This function reads some bits via I2C
 	/*!
@@ -227,7 +226,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length);
+	uint8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t pos, uint8_t length);
 	
 	//! This function reads a byte via I2C
 	/*!
@@ -241,7 +240,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data);
+	uint8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data);
 	
 	//! This function reads bytes via I2C
 	/*!
@@ -256,7 +255,7 @@ class TwoWire
 				4 if other twi error (lost bus arbitration, bus error, ..)
  				5 if timeout
 	*/
-	int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
+	uint8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
 
 	
 };

@@ -1,7 +1,7 @@
 /*
  *  Library for managing managing the LoRaWAN module
  * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -661,7 +661,7 @@ uint8_t WaspLoRaWAN::check()
 /*! 
  * @brief	This function is used to reset LoRaWAN configuration and set working band.
  * 
- * @param	char* band: working LoRaWAN band: "433","868" or "900"
+ * @param	char* band: working LoRaWAN band: "433", EU or US
  * 
  * @return		
  * 	@arg	'0' if OK
@@ -1344,7 +1344,7 @@ uint8_t WaspLoRaWAN::setAppSessionKey(char* key)
  * @brief	This function is used to configure the LoRaWAN RF power level 
  * 
  * @param	uint8_t index: power level to be set [0..5] for 433 MHz,
- * 			[1..5] for 868 MHz and [5..10] for 900
+ * 			[1..5] for EU and [5..10] for US
  * 	
  *  @arg	0 -> 20 dBm (if supported)
  * 	@arg	1 -> 14 dBm
@@ -5228,7 +5228,7 @@ uint8_t WaspLoRaWAN::getRadioBW()
 
 
 /*!
- * @brief	This function sets data rate and frecuency used for the 
+ * @brief	This function sets data rate and frequency used for the 
  * 			second receive window.
  * 
  * @remarks	The configuration of the receive window parameters should
