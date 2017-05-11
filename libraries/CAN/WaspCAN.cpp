@@ -1,7 +1,7 @@
 /*! \file WaspCAN.cpp
     \brief  Library for managing CAN Bus modules
  *
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:			3.0
+ *  Version:			3.1
  *  Design:				David Gascon
  *  Implementation:		Luis Antonio Martin Nuez & Ahmad Saad
  */
@@ -506,11 +506,11 @@ unsigned int WaspCAN::getEngineCoolantTemp()
 //!	Name:	getFuelPressure()										
 //!	Description: 	Fuel pressure					
 //!	Param : void							
-//!	Returns: unsigned int: Fuel pressure (0 - 765 Kpa)				
+//!	Returns: uint16_t: Fuel pressure (0 - 765 Kpa)				
 //!*************************************************************
-unsigned int WaspCAN::getFuelPressure()
+uint16_t WaspCAN::getFuelPressure()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(FUEL_PRESSURE);
 	
@@ -530,11 +530,11 @@ unsigned int WaspCAN::getFuelPressure()
 //!	Name:	getIntakeMAPressure()									
 //!	Description: 	Intake manifold absolute pressure 				
 //!	Param : void							
-//!	Returns: unsigned int: absolute pressure 	(0 - 255 Kpa)		
+//!	Returns: uint16_t: absolute pressure 	(0 - 255 Kpa)		
 //!*************************************************************
-unsigned int WaspCAN::getIntakeMAPressure()
+uint16_t WaspCAN::getIntakeMAPressure()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(INTAKE_M_A_PRESSURE);
 	
@@ -556,12 +556,12 @@ unsigned int WaspCAN::getIntakeMAPressure()
 //!	Name:	getEngineRPM()										
 //!	Description: 	Engine RPM					
 //!	Param : void							
-//!	Returns: unsigned int: Engine RPM (0 - 16,383 RPM) 						
+//!	Returns: uint16_t: Engine RPM (0 - 16,383 RPM) 						
 //!*************************************************************
-unsigned int WaspCAN::getEngineRPM()
+uint16_t WaspCAN::getEngineRPM()
 {	
 	
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(ENGINE_RPM);
 	
@@ -583,9 +583,9 @@ unsigned int WaspCAN::getEngineRPM()
 //!	Param : void							
 //!	Returns: unsigned int: Vehicle speed (0 - 255)				
 //!*************************************************************
-unsigned int WaspCAN::getVehicleSpeed()
+uint16_t WaspCAN::getVehicleSpeed()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(VEHICLE_SPEED);
 	
@@ -608,9 +608,9 @@ unsigned int WaspCAN::getVehicleSpeed()
 //!	Param : void							
 //!	Returns: unsigned int: Time (-64 - 63.5)		 							
 //!*************************************************************
-unsigned int WaspCAN::getTimingAdvance()
+uint16_t WaspCAN::getTimingAdvance()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(TIMING_ADVANCE);
 	
@@ -629,11 +629,11 @@ unsigned int WaspCAN::getTimingAdvance()
 //!	Name:	getIntankeAirTemp()										
 //!	Description: 	Intake air temperature					
 //!	Param : void							
-//!	Returns: unsigned int: Intake air temperature(-40 - 215) 
+//!	Returns: uint8_t: Intake air temperature(-40 - 215) 
 //!*************************************************************
-unsigned int WaspCAN::getIntankeAirTemp()
+uint16_t WaspCAN::getIntankeAirTemp()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(INTAKE_AIR_TEMP);
 	
@@ -653,11 +653,11 @@ unsigned int WaspCAN::getIntankeAirTemp()
 //!	Name:	getMAFairFlowRate()										
 //!	Description: 	MAF air flow rate					
 //!	Param : void							
-//!	Returns: unsigned int: air flow rate	(0 - 655.35 g/s) 						
+//!	Returns: uint8_t: air flow rate	(0 - 655.35 g/s) 						
 //!*************************************************************
-unsigned int WaspCAN::getMAFairFlowRate()
+uint16_t WaspCAN::getMAFairFlowRate()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(MAF_AIR_FLOW_RATE);
 	
@@ -669,8 +669,7 @@ unsigned int WaspCAN::getMAFairFlowRate()
 		#endif
 	}
 	
-	return data;
-	
+	return data;	
 }
 
 
@@ -678,11 +677,11 @@ unsigned int WaspCAN::getMAFairFlowRate()
 //!	Name:	getThrottlePosition()									
 //!	Description: 	Throttle position					
 //!	Param : void							
-//!	Returns: unsigned int: Throttle position	(0 - 100%) 		
+//!	Returns: uint8_t: Throttle position	(0 - 100%) 		
 //!*************************************************************
-unsigned int WaspCAN::getThrottlePosition()
+uint8_t WaspCAN::getThrottlePosition()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(THROTTLE_POSITION);
 	
@@ -694,9 +693,7 @@ unsigned int WaspCAN::getThrottlePosition()
 		#endif
 	}
 	
-	return data;
-	
-	
+	return (uint8_t)data;	
 }
 
 
@@ -704,11 +701,11 @@ unsigned int WaspCAN::getThrottlePosition()
 //!	Name:	getFuelLevel()										
 //!	Description: 	Fuel Level Input				
 //!	Param : void							
-//!	Returns: unsigned int: Fuel Level Input (0 - 100%) 							
+//!	Returns: uint8_t: Fuel Level Input (0 - 100%) 							
 //!*************************************************************
-unsigned int WaspCAN::getFuelLevel()
+uint8_t WaspCAN::getFuelLevel()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(FUEL_LEVEL);
 	
@@ -720,7 +717,7 @@ unsigned int WaspCAN::getFuelLevel()
 		#endif
 	}
 	
-	return data;
+	return (uint8_t)data;
 	
 }
 
@@ -729,11 +726,11 @@ unsigned int WaspCAN::getFuelLevel()
 //!	Name:	getBarometricPressure()									
 //!	Description: 	Barometric pressure					
 //!	Param : void							
-//!	Returns: unsigned int: Barometric pressure (0 - 255 Kpa)		
+//!	Returns: uint8_t: Barometric pressure (0 - 255 Kpa)		
 //!*************************************************************
-unsigned int WaspCAN::getBarometricPressure()
+uint8_t WaspCAN::getBarometricPressure()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(BAROMETRIC_PRESSURE);
 	
@@ -745,7 +742,7 @@ unsigned int WaspCAN::getBarometricPressure()
 		#endif
 	}
 	
-	return data;
+	return (uint8_t)data;
 }
 
 
@@ -755,9 +752,9 @@ unsigned int WaspCAN::getBarometricPressure()
 //!	Param : void							
 //!	Returns: unsigned int: Engine fuel rate	 (0 - 3212 L/h)	
 //!*************************************************************
-unsigned int WaspCAN::getEngineFuelRate()
+uint16_t WaspCAN::getEngineFuelRate()
 {
-	unsigned int data;
+	uint16_t data;
 
 	CiARequest(ENGINE_FUEL_RATE);
 	
@@ -769,8 +766,7 @@ unsigned int WaspCAN::getEngineFuelRate()
 		#endif
 	}
 	
-	return data;
-	
+	return data;	
 }
 
 

@@ -7,7 +7,7 @@
  receive data from a device that communicates using the Modbus protocol.
  
  Copyright (C) 2000 Philip Costigan  P.C. SCADA LINK PTY. LTD.
- Modified for Waspmote by Libelium, 2016
+ Modified for Waspmote by Libelium, 2017
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
  paul@pmcrae.freeserve.co.uk (http://www.pmcrae.freeserve.co.uk)
  who wrote a small program to read 100 registers from a modbus slave. 
 
- Version:	3.0 
+ Version:	3.1
   
 */
 
@@ -280,7 +280,7 @@ int ModbusSlave::send_reply(unsigned char *query, unsigned char string_length)
 	{
 		for (i = 0; i < string_length; i++)
 		{
-			printByte(query[i], _socket);
+			W232.send(query[i], BYTE);
 		}
 	}
 	else 
@@ -290,6 +290,9 @@ int ModbusSlave::send_reply(unsigned char *query, unsigned char string_length)
 			W485.send(query[i], BYTE);
 		}
 	}
+
+	//~ USB.print("Slave send: ");
+	//~ USB.printHexln(query, string_length);
 
 	// It does not mean that the write was succesful
 	return i;
@@ -308,11 +311,11 @@ int ModbusSlave::receive_request(unsigned char *received_string)
 	if (_protocol == RS232_COM) 
 	{
 		// FIXME: does Serial.available wait 1.5T or 3.5T before exiting the loop?
-		while (serialAvailable(_socket)) 
+		while (W232.available()) 
 		{
-			received_string[bytes_received] = serialRead(_socket);
+			received_string[bytes_received] = W232.read();
 			bytes_received++;
-			
+			delay(1);
 			if (bytes_received >= MAX_MESSAGE_LENGTH)
 			{
 				// Port error
@@ -335,6 +338,9 @@ int ModbusSlave::receive_request(unsigned char *received_string)
 			}
 		}
 	}
+
+	//~ USB.print("Slave receive: ");
+	//~ USB.printHexln(received_string, bytes_received);
 
 	return (bytes_received);
 }
@@ -376,7 +382,7 @@ int ModbusSlave::modbus_request(unsigned char *data)
 			return NO_REPLY;
 		}
 	}
-	
+
 	return (response_length);
 }
 
@@ -573,9 +579,17 @@ void ModbusSlave::configure(uint8_t _slave, long baud, uint8_t socket)
 
 	if (_protocol == RS232_COM)
 	{
-		//W232.ON(socket);
-		delay(10);
-		beginSerial(baud, socket);
+		//~ W232.ON(socket);
+		//~ delay(10);
+		//~ beginSerial(baud, socket);
+		_socket = socket;
+		W232.ON(_socket);
+		// Configure the baud rate of the module
+		W232.baudRateConfig(baud);
+		// Configure the parity bit as disabled 
+		W232.parityBit(DISABLE);
+		// Use one stop bit configuration 
+		W232.stopBitConfig(1); 
 	}
 	else 
 	{
@@ -625,13 +639,13 @@ int ModbusSlave::update(int *regs, unsigned int regs_size)
 
 	if (_protocol == RS232_COM) 
 	{
-		length = serialAvailable(_socket);
+		length = W232.available();
 	} 
 	else 
 	{
 		length = W485.available();
 	}
-	
+
 	if (length == 0) 
 	{
 		lastBytesReceived = 0;
@@ -644,16 +658,20 @@ int ModbusSlave::update(int *regs, unsigned int regs_size)
 		Nowdt = now + T35;
 		return 0;
 	}
-
+	
 	if (now < Nowdt) 
+	{
 		return 0;
+	}
 
 	lastBytesReceived = 0;
 
 	length = modbus_request(query);
 
 	if (length < 1) 
+	{
 		return length;
+	}
 		 
 		exception = validate_request(query, length, regs_size);
 
@@ -661,7 +679,6 @@ int ModbusSlave::update(int *regs, unsigned int regs_size)
 	{
 		build_error_packet( query[FUNC], exception, errpacket);
 		send_reply(errpacket, EXCEPTION_SIZE);
-		
 		return (exception);
 	} 
 

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -1379,7 +1379,7 @@ uint8_t WaspWIFI_PRO::setPassword(uint8_t n, uint8_t securityMode, char* pass)
 					// generate command name "WKYn"
 					snprintf(gen_cmd_name, sizeof(gen_cmd_name), format, cmd_name, n);	
 					// generate "AT+iWKYn=<pass>\r"
-					GEN_ATCOMMAND1(cmd_name, pass);						
+					GEN_ATCOMMAND1(gen_cmd_name, pass);						
 					break;
 				
 		case WPA:				
@@ -2737,23 +2737,22 @@ uint8_t WaspWIFI_PRO::sendFrameToMeshlium(	char* protocol,
 											uint16_t length )
 {	
 	char cmd_name[20];
-	char host_header[50];
-	char aux[3];
+	char host_header[150];
 	uint8_t status;	
 	uint16_t size = 0;	
 	
 	// "\"%s://%s:%s/getpost_frame_parser.php?frame="
-	strcpy_P( host_header, (char*)pgm_read_word(&(table_WiReach[10]))); 
+	// "<protocol>://<host>:<port>/getpost_frame_parser.php?frame="
+	sprintf_P( host_header, (char*)pgm_read_word(&(table_WiReach[10])), protocol, host, port); 
 	
 	// calculate total size of buffer
-	size = 	strlen(protocol) 
-			+ strlen(host) 
-			+ strlen(port)
-			+ strlen(host_header) 
-			+ length*2;
-	
-	// define buffer
+	size = strlen(host_header) 
+			+ length*2
+			+ 1;
+		
+	// define buffers
 	char url[size];
+	char aux[3];
 	
 	// clear buffer
 	memset( url, 0x00, sizeof(url) );
@@ -2761,10 +2760,9 @@ uint8_t WaspWIFI_PRO::sendFrameToMeshlium(	char* protocol,
 	
 	// init variable
 	_errorCode = ERROR_CODE_0000;
-	
-	
+		
 	// compose "<prot>://<host>:<port>/getpost_frame_parser.php?frame="
-	snprintf( url, sizeof(url), host_header, protocol, host, port );
+	strncat( url, host_header, strlen(host_header));
 
 	// make conversion and concatenate to url
 	for (uint16_t i=0 ; i<length; i++)
@@ -2777,11 +2775,11 @@ uint8_t WaspWIFI_PRO::sendFrameToMeshlium(	char* protocol,
 	
 	// check maximum length for url
 	if (strlen(url) > 256)
-	{
-		#if DEBUG_WIFI_PRO > 0
-			PRINT_WIFI_PRO(F("ERROR. Max URL is 256. Current length: "));
-			USB.println( strlen(url), DEC);
-		#endif
+	{		
+		PRINT_WIFI_PRO(F("Error. Max URL size is 256. Current length: "));
+		USB.println( strlen(url), DEC);		
+		PRINT_WIFI_PRO(F("Current URL: "));
+		USB.println(url);
 		_errorCode = ERROR_CODE_0042;
 		return 1;
 	}
@@ -5572,14 +5570,30 @@ uint8_t WaspWIFI_PRO::scan()
 	// send command manually
 	printString( _command, _uart );
 	
+	// wait for "at+irp20\r\n"
 	status = waitFor( cmd_name, 1000 );
 	status = waitFor( EOL_CR_LF, 1000 );
 	
 	if (status != 1)
 	{
+		#if DEBUG_WIFI_PRO > 0
+			PRINT_WIFI_PRO(F("No response from module\n"));
+		#endif
 		return 1;
 	}
-	delay(500);
+	
+	// check for incoming data while 3 seconds
+	previous = millis();
+	while (serialAvailable(_uart) == 0)
+	{
+		if (millis()-previous > 3000)
+		{
+			break;
+		}
+		
+		// Condition to avoid an overflow (DO NOT REMOVE)
+		if (millis() < previous) previous = millis();
+	}
 	
 	// update time counter
 	previous = millis();
@@ -5614,7 +5628,7 @@ uint8_t WaspWIFI_PRO::scan()
 		}
 		
 		// check elapsed time 
-		if ((millis() - previous) > 10000)
+		if ((millis() - previous) > 5000)
 		{	
 			// abort
 			userAbort();

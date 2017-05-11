@@ -1,7 +1,7 @@
 /*! \file WaspCAN.h
     \brief  Library for managing CAN Bus modules
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:			3.0
+    Version:			3.1
     Design:				David Gascón
     Implementation:		Luis Antonio Martín Nuez & Ahmad Saad
 */
@@ -490,19 +490,19 @@ class WaspCAN
 					CAN in Automation (CiA)
 ***********************************************************************/
 		
-		unsigned int getEngineLoad();
-		unsigned int getEngineCoolantTemp();
-		unsigned int getFuelPressure();
-		unsigned int getIntakeMAPressure();
-		unsigned int getEngineRPM();
-		unsigned int getVehicleSpeed();
-		unsigned int getTimingAdvance();
-		unsigned int getIntankeAirTemp();
-		unsigned int getMAFairFlowRate();
-		unsigned int getThrottlePosition();
-		unsigned int getFuelLevel();
-		unsigned int getBarometricPressure();
-		unsigned int getEngineFuelRate();
+		uint16_t getEngineLoad();
+		uint16_t getEngineCoolantTemp();
+		uint16_t getFuelPressure();
+		uint16_t getIntakeMAPressure();
+		uint16_t getEngineRPM();
+		uint16_t getVehicleSpeed();
+		uint16_t getTimingAdvance();
+		uint16_t getIntankeAirTemp();
+		uint16_t getMAFairFlowRate();
+		uint8_t getThrottlePosition();
+		uint8_t getFuelLevel();
+		uint8_t getBarometricPressure();
+		uint16_t getEngineFuelRate();
 		
 		// General Function
 		void CiARequest(uint8_t PID);

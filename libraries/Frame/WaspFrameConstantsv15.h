@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
@@ -181,10 +181,10 @@
 #define SENSOR_WATER_COND				133
 #define SENSOR_WATER_WT					134
 #define SENSOR_WATER_TURB				135
-#define SENSOR_WATER_PH_				136
-#define SENSOR_WATER_PH_D				137
+#define SENSOR_WATER_PH_A				136
+#define SENSOR_WATER_PH_E				137
 #define SENSOR_WATER_ORP_A				138
-#define SENSOR_WATER_ORP_D				139
+#define SENSOR_WATER_ORP_E				139
 
 
 // Smart Agriculture v30
@@ -230,6 +230,18 @@
 #define SENSOR_4_20_CURRENT_SOCKET_B	176
 #define SENSOR_4_20_CURRENT_SOCKET_C	177
 #define SENSOR_4_20_CURRENT_SOCKET_D	178
+
+// Industrial protocols (ModBus & CAN bus)
+#define SENSOR_MODBUS_COILS				180
+#define SENSOR_MODBUS_DISCRETE_INPUT	181
+#define SENSOR_MODBUS_HOLDING_REGS		182
+#define SENSOR_MODBUS_INPUT_REGS		183
+#define SENSOR_CANBUS_RPM				184
+#define SENSOR_CANBUS_VS				185
+#define SENSOR_CANBUS_FR				186
+#define SENSOR_CANBUS_FL				187
+#define SENSOR_CANBUS_TP				188
+#define SENSOR_CANBUS_FP				189
 
 
 // Common sensors
@@ -425,9 +437,9 @@ const char	str_frame_133[]  PROGMEM = "COND";
 const char	str_frame_134[]  PROGMEM = "WT";   
 const char	str_frame_135[]  PROGMEM = "TURB";   
 const char	str_frame_136[]  PROGMEM = "PH_A";   
-const char	str_frame_137[]  PROGMEM = "PH_D";   
+const char	str_frame_137[]  PROGMEM = "PH_E";   
 const char	str_frame_138[]  PROGMEM = "ORP_A";   
-const char	str_frame_139[]  PROGMEM = "ORP_D";  
+const char	str_frame_139[]  PROGMEM = "ORP_E";  
 const char	str_frame_140[]  PROGMEM = "";      		// reserved 
 const char	str_frame_141[]  PROGMEM = "";      		// reserved 
 const char	str_frame_142[]  PROGMEM = "";      		// reserved 
@@ -474,6 +486,19 @@ const char	str_frame_175[]  PROGMEM = "CUR_A";
 const char	str_frame_176[]  PROGMEM = "CUR_B"; 
 const char	str_frame_177[]  PROGMEM = "CUR_C"; 
 const char	str_frame_178[]  PROGMEM = "CUR_D"; 
+const char	str_frame_179[]  PROGMEM = ""; 
+
+// Industrial protocols: Modbus & CAN bus
+const char	str_frame_180[]  PROGMEM = "MB_COILS"; 
+const char	str_frame_181[]  PROGMEM = "MB_DI"; 
+const char	str_frame_182[]  PROGMEM = "MB_HR"; 
+const char	str_frame_183[]  PROGMEM = "MB_IR"; 
+const char	str_frame_184[]  PROGMEM = "CB_RPM"; 
+const char	str_frame_185[]  PROGMEM = "CB_VS"; 
+const char	str_frame_186[]  PROGMEM = "CB_FR"; 
+const char	str_frame_187[]  PROGMEM = "CB_FL"; 
+const char	str_frame_188[]  PROGMEM = "CB_TP"; 
+const char	str_frame_189[]  PROGMEM = "CB_FP"; 
 
 
 
@@ -665,6 +690,17 @@ const char* const FRAME_SENSOR_TABLE[] PROGMEM=
 	str_frame_176,
 	str_frame_177,
 	str_frame_178,
+	str_frame_179,
+	str_frame_180,
+	str_frame_181,
+	str_frame_182,
+	str_frame_183,
+	str_frame_184,
+	str_frame_185,
+	str_frame_186,
+	str_frame_187,
+	str_frame_188,
+	str_frame_189,
 	
 };
 	
@@ -714,14 +750,14 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2, 		// 21
 	
 	//// reserved
-	0,	// 22
-	0,	// 23
-	0,	// 24
-	0,	// 25
-	0,	// 26
-	0,	// 27
-	0,	// 28
-	0,	// 29
+	0,		// 22
+	0,		// 23
+	0,		// 24
+	0,		// 25
+	0,		// 26
+	0,		// 27
+	0,		// 28
+	0,		// 29
 	
 	//// Gases PRO v30
 	2,		// 30
@@ -732,10 +768,10 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 35
 		
 	//// reserved
-	0,	// 36
-	0,	// 37
-	0,	// 38
-	0,	// 39
+	0,		// 36
+	0,		// 37
+	0,		// 38
+	0,		// 39
 	
 	//// Events v30	
 	2,		// 40
@@ -780,26 +816,26 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 77
 	4,		// 78
 	1,		// 79
-	0,	// 80
-	0,	// 81
-	0,	// 82
-	0,	// 83
-	0,	// 84
-	0,	// 85
-	0,	// 86
-	0,	// 87
-	0,	// 88
+	0,		// 80
+	0,		// 81
+	0,		// 82
+	0,		// 83
+	0,		// 84
+	0,		// 85
+	0,		// 86
+	0,		// 87
+	0,		// 88
 	2,		// 89
 	2,		// 90
 	2,		// 91
 	2,		// 92
 	2,		// 93
 	2,		// 94
-	0,	// 95
-	0,	// 96
-	0,	// 97
-	0,	// 98
-	0,	// 99
+	0,		// 95
+	0,		// 96
+	0,		// 97
+	0,		// 98
+	0,		// 99
 	
 	//// Smart Water Ions
 	2,		// 100
@@ -823,12 +859,12 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 118
 	2,		// 119
 	2,		// 120
-	0,	// 121
-	0,	// 122
+	0,		// 121
+	0,		// 122
 	
 	//// Additional
 	4,		// 123
-	0,	// 124
+	0,		// 124
 	0,		// 125
 	0,		// 126
 	0,		// 127
@@ -848,16 +884,16 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 137
 	2,		// 138
 	2,		// 139
-	0,	// 140
-	0,	// 141
-	0,	// 142
-	0,	// 143
-	0,	// 144
-	0,	// 145
-	0,	// 146
-	0,	// 147
-	0,	// 148
-	0,	// 149
+	0,		// 140
+	0,		// 141
+	0,		// 142
+	0,		// 143
+	0,		// 144
+	0,		// 145
+	0,		// 146
+	0,		// 147
+	0,		// 148
+	0,		// 149
 	
 	//// Smart Agriculture
 	2,		// 150
@@ -879,7 +915,7 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 166
 	2,		// 167
 	2,		// 168
-	0,	// 169
+	0,		// 169
 
 	//// Ambient Control
 	2,		// 170
@@ -893,6 +929,20 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 176
 	2,		// 177
 	2,		// 178
+	0,		// 179
+	
+	//// Industrial protocols (ModBus & CAN bus)
+	1,		// 180
+	1,		// 181
+	1,		// 182
+	1,		// 183
+	1,		// 184
+	1,		// 185
+	1,		// 186
+	0,		// 187
+	0,		// 188
+	1,		// 189
+	
 };
 
 
@@ -1116,6 +1166,19 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 176
 	1,		// 177
 	1,		// 178
+	1,		// 179
+	
+	//// Industrial protocols (ModBus & CAN bus)
+	2,		// 180
+	2,		// 181
+	3,		// 182
+	3,		// 183
+	1,		// 184
+	1,		// 185
+	1,		// 186
+	1,		// 187
+	1,		// 188
+	1,		// 189	
 	
 };
 	
@@ -1336,7 +1399,19 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	3,		// 176
 	3,		// 177
 	3,		// 178
+	0,		// 179
 	
+	//// Industrial protocols (ModBus & CAN bus)
+	0,		// 180
+	0,		// 181
+	0,		// 182
+	0,		// 183
+	0,		// 184
+	0,		// 185
+	0,		// 186
+	0,		// 187
+	0,		// 188
+	0,		// 189
 	
 };
 	

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -1395,7 +1395,7 @@ uint8_t Wasp4G::checkConnection(uint8_t time)
 		if( millis() < previous) previous = millis();		
 	}
 	
-	if (((answer != 1) && (answer != 5)) || ((millis() - previous) > (unsigned long)(time * 1000)))
+	if (((answer != 1) && (answer != 5)) || ((millis() - previous) > (uint32_t) time * 1000))
 	{
 		if (answer == 0)
 		{
@@ -1493,7 +1493,7 @@ uint8_t Wasp4G::checkConnectionEPS(uint8_t time)
 		if (millis() < previous) previous = millis();
 			
 		// check timeout error
-		if ((millis() - previous) > (uint32_t)(time * 1000))
+		if ((millis() - previous) > ((uint32_t)time * 1000))
 		{
 			return status;
 		}		

@@ -20,7 +20,7 @@
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>  
   Modified for Waspmote by Libelium, 2017
   
-  Version:	3.2
+  Version:	3.3
 */
 
 #include "ModbusMaster.h"
@@ -123,14 +123,17 @@ void ModbusMaster::begin(unsigned long BaudRate , uint8_t socket)
 	
 	if (_protocol == RS232_COM) 
 	{
-		
 		_u8SerialPort = socket;
-		beginSerial(BaudRate, _u8SerialPort);
 		
-		if (socket == SOCKET0) 	Utils.setMuxSocket0();
-		if (socket == SOCKET1) 	Utils.setMuxSocket1();
-		// power on the socket
-		PWR.powerSocket(socket, HIGH);
+		// Configure the baud rate of the module
+		W232.setUART(socket);
+		W232.setBaudrate(BaudRate);
+		W232.ON(_u8SerialPort);
+		
+		// Configure the parity bit as disabled 
+		W232.parityBit(DISABLE);
+		// Use one stop bit configuration 
+		W232.stopBitConfig(1); 
 	}
 	else 
 	{
@@ -610,6 +613,9 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	uint8_t u8BytesLeft = 8;
 	uint8_t u8MBStatus = ku8MBSuccess;
 
+	// clear buffer
+	memset(u8ModbusADU, 0x00, sizeof(u8ModbusADU));	
+
 	// assemble Modbus Request Application Data Unit
 	u8ModbusADU[u8ModbusADUSize++] = _u8MBSlave;
 	u8ModbusADU[u8ModbusADUSize++] = u8MBFunction;  
@@ -706,30 +712,40 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	if (_protocol == RS232_COM)
 	{
 		for (i = 0; i < u8ModbusADUSize; i++) {
-			printByte(u8ModbusADU[i], _u8SerialPort);
+			W232.send(u8ModbusADU[i], BYTE);
 		}
 	}
 	else 
 	{
 		for (i = 0; i < u8ModbusADUSize; i++) {
-			W485.send(u8ModbusADU[i], _u8SerialPort);
+			W485.send(u8ModbusADU[i], BYTE);
 		}
 	}
 
-	u8ModbusADUSize = 1;
+	//~ USB.print("Master send:");
+	//~ USB.printHexln(u8ModbusADU, u8ModbusADUSize);
+	
+	// clear buffer
+	memset(u8ModbusADU, 0x00, sizeof(u8ModbusADU));	
 
 	// loop until we run out of time or bytes, or an error occurs
 	u32StartTime = millis();
 
 	int val = 0xFF;
 	long cont = 0;		
-		
+	
+	// wait for correct 'slave address'
 	if (_protocol == RS232_COM) 
 	{	
 		while((val != _u8MBSlave) && (cont < 200)) 
 		{
-			val = serialRead(_u8SerialPort);
-			delay(5);
+			if (W232.available())
+			{				
+				val = W232.read();
+			}			
+			//~ val = W232.read();
+			//~ delay(10);
+			W232.latencyDelay();
 			cont ++;
 		}
 	} 
@@ -742,24 +758,35 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 			cont ++;
 		}		
 	}
-		
-	u8ModbusADU[u8ModbusADUSize] = val;
 	
-  
-	while (u8BytesLeft && !u8MBStatus) 
+	// check slave address
+	if (val != _u8MBSlave)
 	{
-		
+		//~ USB.println("NO slave address found");
+		return 1;
+	}
+	else
+	{
+		u8ModbusADU[0] = val;
+	}
+	
+	u8ModbusADUSize = 1;
+	
+	// receive rest of the packet
+	while (u8BytesLeft && !u8MBStatus) 
+	{		
 		if (_protocol == RS232_COM)
 		{
-			if (serialAvailable(_u8SerialPort)) 
+			if (W232.available()) 
 			{    
-				u8ModbusADU[u8ModbusADUSize] = serialRead(_u8SerialPort);
+				u8ModbusADU[u8ModbusADUSize] = W232.read();
 				u8BytesLeft--;
 				u8ModbusADUSize ++;
 			}
 			else
 			{
-				delay(10);
+				//~ delay(10);
+				W232.latencyDelay();
 			}
 		} 
 		else 
@@ -821,10 +848,13 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 			}
 		}
     
-		if (millis() > (u32StartTime + ku8MBResponseTimeout)) {
+		if (millis() > (u32StartTime + 1000)) {
 			u8MBStatus = ku8MBResponseTimedOut;
 		}
 	}
+    
+	//~ USB.print("Master receive:");
+	//~ USB.printHexln(u8ModbusADU, u8ModbusADUSize);
   
 	// verify response is large enough to inspect further
 	if (!u8MBStatus && u8ModbusADUSize >= 5) {

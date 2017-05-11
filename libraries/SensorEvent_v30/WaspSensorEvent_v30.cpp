@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Carlos Bello
  */
@@ -149,6 +149,8 @@ float WaspSensorEvent_v30::getPressure() {
 		PRINT_EVENT(F("BME280_OVERSAMP_1X"));
 		USB.println(BME280_OVERSAMP_1X);	
 	#endif  	
+	// Switch OFF I2C
+	digitalWrite(I2C_PIN_OE, LOW);
 	// Read the temperature from the BME280 Sensor	
 	return value;	
 }
@@ -193,6 +195,7 @@ void WaspSensorEvent_v30::ON() {
 	// Switch ON 3V3 and 5V for supplying the board
 	PWR.setSensorPower(SENS_5V, SENS_ON);
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
+    delay(500);
 	_intEnabled = true;	
 	
     if (_boot_version < 'H')
@@ -202,7 +205,7 @@ void WaspSensorEvent_v30::ON() {
         USB.println(F("Your Waspmote version is v12."));
         USB.println(F("*******************************************"));
 		return (void)0;  
-    }     	
+    }
 }
 
 //!*********************************************************************
@@ -647,6 +650,8 @@ liquidLevelClass::liquidLevelClass(uint8_t socket){
 //!	Returns: int: 0 or 1																			
 //!*********************************************************************
 uint8_t liquidLevelClass::read(){
+	
+	
 	return readInput(liquidLevelSocket);
 }
 //!*********************************************************************
@@ -732,6 +737,7 @@ liquidPresenceClass::liquidPresenceClass(uint8_t socket){
 uint8_t liquidPresenceClass::read(){
 	return readInput(liquidPresenceSocket);
 }
+
 //!*********************************************************************
 //!	Name:	readliquidPresence()										
 //!	Description: Read digital information about liquid presence
@@ -742,6 +748,91 @@ uint8_t liquidPresenceClass::read(){
 uint8_t liquidPresenceClass::readliquidPresence(){
 	return readInput(liquidPresenceSocket);
 }
+
+//!*********************************************************************
+//!	Name:	readVoltage()										
+//!	Description: Read analog information about liquid presence
+//!	Param : void	
+//!	Returns: float: volts value read																			
+//!*********************************************************************
+float liquidPresenceClass::readVoltage(){
+	
+	int aux = 0;
+	// get actual interruption state flag
+	bool isEnabled = _intEnabled;// disable interruption
+	Events.detachInt();
+	switch (liquidPresenceSocket){
+		case SOCKET_1:
+		case SOCKET_C:
+			aux = analogRead(ANALOG5);
+			#if DEBUG_EVN > 1
+				PRINT_EVENT(F("Read SOCKET_1 or SOCKET_C\r\n"));	
+			#endif	
+		break;
+		case SOCKET_2:
+		case SOCKET_D:
+			aux = analogRead(ANALOG4);
+			#if DEBUG_EVN > 1
+				PRINT_EVENT(F("Read SOCKET_2 or SOCKET_D\r\n"));	
+			#endif				
+		break;
+		case SOCKET_3:
+		case SOCKET_E:
+			aux = analogRead(ANALOG3);
+			#if DEBUG_EVN > 1
+				PRINT_EVENT(F("Read SOCKET_3 or SOCKET_E\r\n"));	
+			#endif				
+		break;
+		case SOCKET_4:
+		case SOCKET_A:
+			aux = analogRead(ANALOG7);
+			#if DEBUG_EVN > 1
+				PRINT_EVENT(F("Read SOCKET_4 or SOCKET_A\r\n"));	
+			#endif				
+		break;	
+		case SOCKET_6:
+			aux = analogRead(ANALOG1);
+			#if DEBUG_EVN > 1
+				PRINT_EVENT(F("Read SOCKET_6\r\n"));	
+			#endif				
+		break;	
+		
+		default:
+			#if DEBUG_EVN > 0
+				PRINT_EVENT(F("Incorrect input\r\n"));	
+			#endif		
+		break;
+	}
+	// re-enable interruption if needed
+	if( isEnabled == true )
+	{	
+		delay(50);
+		Events.attachInt();
+	}	
+	float volts = ((float)aux * 3.3) / 1023.0;
+	return volts;
+}
+
+//!*********************************************************************
+//!	Name:	readResistance()									
+//!	Description: Read the resistance of the sensor
+//!	Param : void													
+//!	Returns:  float: Resistance value read in KOhms
+//!*********************************************************************
+float liquidPresenceClass::readResistance(float volts){
+	
+	if ( volts == 0.0 )
+	{
+		// Max value of resistance can be detected is 10.5 MOhm
+		return 10500.0;
+	}
+	else
+	{
+		float resistance = (( 3.3 / volts ) - 1.0) * 10.0;
+		return resistance;
+	}
+}
+
 
 //!*********************************************************************
 //!	Name:	getInt()										

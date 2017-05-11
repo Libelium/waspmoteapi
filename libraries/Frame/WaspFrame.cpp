@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -2866,12 +2866,22 @@ int8_t WaspFrame::addTimestamp()
 /*
  * setTinyLength
  * 
+ * Set the maximum payload of the tiny frames.
+ * Range: 10 to 100 Bytes
+ * 
  */
 void WaspFrame::setTinyLength(uint8_t length)
 {
+	
 	if (length > sizeof(bufferTiny))
 	{
+		// max range
 		_maxTinyLength = sizeof(bufferTiny);
+	}
+	else if (length < 10)
+	{
+		// min range
+		_maxTinyLength = 10;
 	}
 	else
 	{
@@ -2889,8 +2899,8 @@ uint8_t WaspFrame::generateTinyFrame()
 	memset(bufferTiny, 0x00, sizeof(bufferTiny));
 	lengthTiny = 0;
 	
-	// insert data in Sigfox frame with the following format:
-	// [seq]+ [length] + [sensor_1] + ... + [sensor_N]
+	// insert data in tiny frame with the following format:
+	// S + [sensor_1] + ... + [sensor_N]
 	// where [sensor_x] is composed of [id]+[data]
 	bufferTiny[0] = readSequence() - 1;
 	lengthTiny++;

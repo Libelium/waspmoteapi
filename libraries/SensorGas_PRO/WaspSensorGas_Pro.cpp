@@ -1,7 +1,7 @@
 /*
  *  Library for managing the Gas Pro Sensor Board
  * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -35,9 +35,8 @@
 
 //! Constructors /////////////////////////////////////////////////////////////
 
-/* Function: 	This function owers on the sensor and configures the AFE 
- * Returns: 	1 if OK
- * 				-1 no communication with LMP91000
+/* 
+ * Constructor: This function powers on the sensor and configures the AFE 
  */
 Gas::Gas(int socket)
 {
@@ -171,7 +170,7 @@ Gas::Gas(int socket, uint8_t sensor_type, int power_pin, int I2C_pin, float m_co
 	digitalWrite(ANA1, LOW);
 	
 	memcpy(sensor_config.calibration, calibration_table, sizeof(calibration_table));
-		
+	
 	pwrGasPRORegister = 0;
 }
 
@@ -1480,6 +1479,13 @@ uint8_t Gas::readSensorInfo()
 			#endif
 			return 0;
 		}
+		
+		#if GAS_DEBUG>0
+			USB.print(F("GP.Checksum generated 0x"));
+			USB.printHex(generated_checksum);
+			USB.print(F("; extracted 0x"));
+			USB.printHex(EEPROM_checksum);
+		#endif
 	}
 	
 	return 1;

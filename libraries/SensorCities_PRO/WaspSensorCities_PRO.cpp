@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation: Alejandro Gállego, Ahmad Saad
  */
@@ -82,7 +82,7 @@ void WaspSensorCitiesPRO::ON(uint8_t socket_sensor)
 	if ((WaspRegister & REG_3V3) == 0)
 	{
 		#if CITIES_PRO_DEBUG>0
-			USB.println(F("SCP.3V3 to ON"));
+			PRINTLN_CITIES_PRO(F("3V3 to ON"));
 		#endif
 		PWR.setSensorPower(SENS_3V3, SENS_ON);
 		digitalWrite(SCP_I2C_MAIN_EN, HIGH);	// I2C main pin
@@ -129,13 +129,15 @@ void WaspSensorCitiesPRO::ON(uint8_t socket_sensor)
 			// Set the flags
 			pwrCitiesPRORegister |= 0x10;
 			break;
-
+		
+		default:
+			break;
 	}
 	
 	#if CITIES_PRO_DEBUG>1
-		USB.print(F("SCP.pwrCitiesPRORegister="));
+		PRINT_CITIES_PRO(F("pwrCitiesPRORegister="));
 		USB.println(pwrCitiesPRORegister, BIN);
-		USB.print(F("SCP.pwrGasPRORegister="));
+		PRINT_CITIES_PRO(F("pwrGasPRORegister="));
 		USB.println(pwrGasPRORegister, BIN);
 	#endif	
 	
@@ -157,7 +159,7 @@ void WaspSensorCitiesPRO::ON(uint8_t socket_sensor)
 void WaspSensorCitiesPRO::OFF(uint8_t socket_sensor)
 {
 	uint8_t mask;
-	
+
 	switch(socket_sensor)
 	{	
 
@@ -201,11 +203,13 @@ void WaspSensorCitiesPRO::OFF(uint8_t socket_sensor)
 			pwrCitiesPRORegister &= 0xEF;
 			break;
 
+		default:
+			break;
 	}	
 	#if CITIES_PRO_DEBUG>1
-		USB.print(F("SCP.pwrCitiesPRORegister="));
+		PRINT_CITIES_PRO(F("pwrCitiesPRORegister="));
 		USB.println(pwrCitiesPRORegister, BIN);
-		USB.print(F("SCP.pwrGasPRORegister="));
+		PRINT_CITIES_PRO(F("pwrGasPRORegister="));
 		USB.println(pwrGasPRORegister, BIN);
 	#endif	
 	
@@ -221,10 +225,95 @@ void WaspSensorCitiesPRO::OFF(uint8_t socket_sensor)
 		((WaspRegister & REG_3V3) != 0))
 	{					
 		#if CITIES_PRO_DEBUG>0
-			USB.println(F("SCP.3V3 to OFF"));
+			PRINTLN_CITIES_PRO(F("3V3 to OFF"));
 		#endif	
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
 	}	
+}
+
+
+/*	
+ *  Read BME temperature value
+ *  Return:	temperature value
+ *
+ */
+float WaspSensorCitiesPRO::getTemperature() 
+{
+	float value = 0;
+	//Switch ON I2C
+	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
+	//Configure the BME280 Sensor (Temperature, Humidity and Pressure)
+	BME.ON();
+	delay(100);	
+	value = BME.getTemperature(BME280_OVERSAMP_1X, 0);
+	#if CITIES_PRO_DEBUG>0
+		PRINT_CITIES_PRO(F("Temperature:"));
+		USB.println(value);
+		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
+		USB.println(BME280_OVERSAMP_1X);
+	#endif 	
+	delay(100);
+	// Switch OFF I2C
+	//~ digitalWrite(SCP_I2C_MAIN_EN, LOW);
+	
+	// Read the temperature from the BME280 Sensor
+	return value;
+}
+
+
+/*	
+ *  Read BME humidity value
+ *  Return:	humidity value
+ *
+ */
+float WaspSensorCitiesPRO::getHumidity() {
+	float value = 0;
+	//Switch ON I2C
+	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
+	//Configure the BME280 Sensor (Temperature, Humidity and Pressure)
+	BME.ON();
+	delay(100);	
+	// Read the humidity from the BME280 Sensor
+	value = BME.getHumidity(BME280_OVERSAMP_1X);
+	#if CITIES_PRO_DEBUG>0
+		PRINT_CITIES_PRO(F("Humidity:"));
+		USB.println(value);
+		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
+		USB.println(BME280_OVERSAMP_1X);	
+	#endif    	
+	delay(100);
+	// Switch OFF I2C
+	//~ digitalWrite(SCP_I2C_MAIN_EN, LOW);
+	// Read the temperature from the BME280 Sensor	
+	return value;
+}
+
+
+/*	
+ *  Read BME pressure value
+ *  Return:	pressure value
+ *
+ */
+float WaspSensorCitiesPRO::getPressure() {
+	float value = 0;
+	//Switch ON I2C
+	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
+	//Configure the BME280 Sensor (Temperature, Humidity and Pressure)
+	BME.ON();
+	delay(100);	
+	// Read the pressure from the BME280 Sensor
+	value = BME.getPressure(BME280_OVERSAMP_1X, 0);
+	#if CITIES_PRO_DEBUG>0
+		PRINT_CITIES_PRO(F("Pressure:"));
+		USB.println(value);
+		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
+		USB.println(BME280_OVERSAMP_1X);	
+	#endif  	
+	delay(100);
+	// Switch OFF I2C
+	//~ digitalWrite(SCP_I2C_MAIN_EN, LOW);
+	// Read the temperature from the BME280 Sensor	
+	return value;	
 }
 
 WaspSensorCitiesPRO SensorCitiesPRO=WaspSensorCitiesPRO();

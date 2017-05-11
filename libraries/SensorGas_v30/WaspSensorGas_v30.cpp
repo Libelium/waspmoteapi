@@ -1,7 +1,7 @@
 /*!	\file WaspSensorGas_v30.cpp
  *  \brief Library for managing the Gas Sensor Board v30
  *
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:			3.0
+ *  Version:			3.1
  *  Design:				David Gascón
  *  Implementation:		Ahmad Saad
  */
@@ -633,6 +633,7 @@ void O2SensorClass::setMUX(void)
 CO2SensorClass::CO2SensorClass()
 {
 	// Default gain of the stage
+	socket = SOCKET_2;
 	gain = 1.08;
 }
 
@@ -645,6 +646,7 @@ CO2SensorClass::CO2SensorClass()
 CO2SensorClass::CO2SensorClass(uint8_t _socket)
 {
 	// Default gain of the stage
+	socket = _socket;
 	gain = 1.08;
 }
 
@@ -683,13 +685,13 @@ void CO2SensorClass::ON()
 		{	
 			PRINTLN_GASES("CO2 Sensor configured in the SOCKET_E");
 			
-		} else if (socket == SOCKET_1)
+		} else if (socket == SOCKET_2)
 		{
 			PRINTLN_GASES("CO2 Sensor configured in the SOCKET_2");
 		}
 		else 
 		{
-			PRINTLN_GASES("O2 Sensor wrong configured");
+			PRINTLN_GASES("CO2 Sensor wrong configured");
 			PRINTLN_GASES("Use SOCKET_2 in OEM platform or SOCKET_E in Plug&Sense! platform");
 		}
 	#endif

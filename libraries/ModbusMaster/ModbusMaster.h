@@ -19,9 +19,9 @@
   
   Written by Doc Walker (Rx)
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>
-  Modified for Waspmote by Libelium, 2016
+  Modified for Waspmote by Libelium, 2017
   
-  Version:	3.0 
+  Version:	3.1
   
 */
 
@@ -86,6 +86,7 @@ Macro to generate 32-bit integer from (2) 16-bit words.
 // Functions to calculate Modbus Application Data Unit CRC
 #include <util/crc16.h>
 #include "Wasp485.h"
+#include "Wasp232.h"
 
 //**************************************************************************************************
 // MODBUS MASTER CLASS DEFINITIONS

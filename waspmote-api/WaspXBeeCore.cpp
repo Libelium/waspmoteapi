@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -674,7 +674,7 @@ uint8_t WaspXBeeCore::setAwakeTime(uint8_t* awake)
     int8_t error=2;
     char buffer[23];
         
-    if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) )
+    if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) || (protocol==XBEE_868LP) )
     {
         error_AT=2;
   
@@ -687,7 +687,7 @@ uint8_t WaspXBeeCore::setAwakeTime(uint8_t* awake)
         error=gen_send(buffer);
     }
     
-    if( (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_900HP))
+    if( (protocol==DIGIMESH) || (protocol==XBEE_900) || (protocol==XBEE_900HP) )
     {
         error_AT=2;
         
@@ -702,7 +702,7 @@ uint8_t WaspXBeeCore::setAwakeTime(uint8_t* awake)
     
     if(!error)
     {
-        if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) )
+        if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) || (protocol==XBEE_868LP) )
         {
             awakeTime[0]=awake[0];
             awakeTime[1]=awake[1];
@@ -733,7 +733,7 @@ uint8_t WaspXBeeCore::setSleepTime(uint8_t* sleep)
     int8_t error=2;
     char buffer[23];
     
-    if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) )
+    if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) || (protocol==XBEE_868LP) )
     {
         error_AT=2;
         
@@ -761,7 +761,7 @@ uint8_t WaspXBeeCore::setSleepTime(uint8_t* sleep)
     
     if(!error)
     {
-        if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) )
+        if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_868) || (protocol==XBEE_868LP) )
         {
             sleepTime[0]=sleep[0];
             sleepTime[1]=sleep[1];
@@ -1041,10 +1041,11 @@ uint8_t WaspXBeeCore::setScanningTime(uint8_t* time)
         error=gen_send(buffer);
     }
     
-    if( ( protocol == XBEE_868 )
-	|| 	( protocol == DIGIMESH ) 
-	|| 	( protocol == XBEE_900 ) 
-	||	( protocol == XBEE_900HP ) 	)
+    if( ( protocol == XBEE_868)
+    ||  ( protocol == XBEE_868LP)
+	|| 	( protocol == DIGIMESH) 
+	|| 	( protocol == XBEE_900) 
+	||	( protocol == XBEE_900HP) )
     {
         error_AT=2;
 		// set_scanning_time_DM
@@ -1063,7 +1064,11 @@ uint8_t WaspXBeeCore::setScanningTime(uint8_t* time)
         {
             scanTime[0]=time[0];
         }
-        if( (protocol==DIGIMESH) || (protocol==XBEE_868)|| (protocol==XBEE_900)|| (protocol==XBEE_900HP) )
+        if( (protocol==DIGIMESH) 
+		|| (protocol==XBEE_868)
+		|| (protocol==XBEE_868LP) 
+		|| (protocol==XBEE_900)
+		|| (protocol==XBEE_900HP) )
         {
             scanTime[0]=time[0];
             scanTime[1]=time[1];
@@ -1105,7 +1110,11 @@ uint8_t WaspXBeeCore::getScanningTime()
         {
             scanTime[0]=data[1]; 
         }
-        if( (protocol==DIGIMESH) || (protocol==XBEE_868) || (protocol==XBEE_900)|| (protocol==XBEE_900HP))
+        if( (protocol==DIGIMESH) 
+        || (protocol==XBEE_868)
+        || (protocol==XBEE_868LP) 
+        || (protocol==XBEE_900)
+        || (protocol==XBEE_900HP) )
         {
             scanTime[0]=data[0];
             scanTime[1]=data[1];
@@ -1586,7 +1595,7 @@ uint8_t WaspXBeeCore::getPowerLevel()
 
 /*
  Function: Get the Received Signal Strength Indicator of the last received packet
- Returns: Returns: Integer that determines if there has been any error 
+ Returns: Returns: Integer that determines if there has been any error
    error=2 --> The command has not been executed
    error=1 --> There has been an error while executing the command
    error=0 --> The command has been executed with no errors
@@ -1598,63 +1607,61 @@ uint8_t WaspXBeeCore::getRSSI()
     uint8_t ByteIN[40];
     uint8_t i=0;
     char buffer[20];
-    
+   
     //clear buffer
-    memset( ByteIN, 0x00, sizeof(ByteIN) );    
+    memset( ByteIN, 0x00, sizeof(ByteIN) );   
 
-    if( (protocol == XBEE_802_15_4 ) || (protocol==ZIGBEE) || (protocol==XBEE_900HP) )
+    if( (protocol == XBEE_802_15_4 ) || (protocol==ZIGBEE) || (protocol==XBEE_868LP) || (protocol==XBEE_900HP) )
     {
         error_AT=2;
-		
-		// get_RSSI
+       
+        // get_RSSI
         strcpy_P(buffer, (char*)pgm_read_word(&(table_CORE[33])));
         if(buffer==NULL) return 1;
 
         gen_data(buffer);
         error = gen_send(buffer);
+       
+        if (error == 0)
+        {
+            valueRSSI[0] = data[0];
+        }       
     }
     else if( (protocol== DIGIMESH) || (protocol==XBEE_868) || (protocol==XBEE_900) )
     {
-		delay(200);
-		flush();				
-		printString("+++", uart);
-		delay(2000);
-		flush();	
-		printString("atdb\r\n", uart);
-		delay(1000);
-		error_AT = 2;
-		while(serialAvailable(uart)>0)
-		{
-			ByteIN[i]=serialRead(uart);
-			error = 0;
-			i++;
-			error_AT = 0;
-			if(i>=sizeof(ByteIN)-1)
-			{
-				break;
-			}
-		}
-		printString("atcn\r\n", uart);
-		
-		// in the case only one byte is read, compose a 2-byte hexadecimal
-		if(i==2)
-		{
-			ByteIN[1]=ByteIN[0];			
-			ByteIN[0]=0x30;
-		}
-		ByteIN[i]='\0';	
-		i=0;				
-		valueRSSI[0]=Utils.str2hex(ByteIN);
-
-    }
-    
-    if( error == 0 )
-    {
-        if( (protocol==XBEE_802_15_4) || (protocol==ZIGBEE) || (protocol==XBEE_900HP) )
+        delay(200);
+        flush();               
+        printString("+++", uart);
+        delay(2000);
+        flush();   
+        printString("atdb\r\n", uart);
+        delay(1000);
+        error_AT = 2;
+        while(serialAvailable(uart)>0)
         {
-            valueRSSI[0] = data[0];
-        }    
-    }
+            ByteIN[i]=serialRead(uart);
+            error = 0;
+            i++;
+            error_AT = 0;
+            if(i>=sizeof(ByteIN)-1)
+            {
+                break;
+            }
+        }
+        printString("atcn\r\n", uart);
+       
+        // in the case only one byte is read, compose a 2-byte hexadecimal
+        if(i==2)
+        {
+            ByteIN[1]=ByteIN[0];           
+            ByteIN[0]=0x30;
+        }
+        ByteIN[i]='\0';   
+        i=0;               
+        valueRSSI[0]=Utils.str2hex(ByteIN);
+
+    }   
+
     return error;
 }
 
@@ -1865,7 +1872,8 @@ uint8_t WaspXBeeCore::setSleepOptions(uint8_t soption)
     || ( protocol == DIGIMESH ) 
     || ( protocol == XBEE_900 ) 
     || ( protocol == XBEE_868 )
-    || ( protocol == XBEE_900HP )  )
+    || ( protocol == XBEE_868LP) 
+    || ( protocol == XBEE_900HP ) )
     {
         error_AT = 2;
 
@@ -1910,8 +1918,9 @@ uint8_t WaspXBeeCore::getSleepOptions()
     if(( protocol == ZIGBEE ) 
     || ( protocol == DIGIMESH ) 
     || ( protocol == XBEE_900 ) 
-    || ( protocol == XBEE_868 )
-    || ( protocol == XBEE_900HP )  )
+    || ( protocol == XBEE_868 ) 
+    || ( protocol == XBEE_868LP) 
+    || ( protocol == XBEE_900HP ) )
     {
         error_AT = 2;
         gen_data(buffer);
@@ -2056,7 +2065,8 @@ uint8_t WaspXBeeCore::getDestinationAddress(uint8_t* naD)
 		else if(( protocol == ZIGBEE )
 				|| 	( protocol == DIGIMESH )
 				||  ( protocol == XBEE_900 )
-				||  ( protocol == XBEE_868)
+				||  ( protocol == XBEE_868) 
+				||  ( protocol == XBEE_868LP) 
 				||  ( protocol == XBEE_900HP)	 )
 		{			
 			naD[0]=0x00; 
@@ -3894,7 +3904,7 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
     {
         interval=20000;
         if(protocol==DIGIMESH) interval=40000;
-        else if( (protocol==XBEE_900) || (protocol==XBEE_868) )
+        else if( (protocol==XBEE_900) || (protocol==XBEE_868) || ( protocol == XBEE_868LP) )
         {
             interval=14000;
         }
@@ -4186,6 +4196,7 @@ uint8_t WaspXBeeCore::atCommandResponse(	uint8_t* 	data_in,
 		if( (protocol == DIGIMESH || 
 			 protocol == XBEE_900 || 
 			 protocol == XBEE_868 || 
+			 protocol == XBEE_868LP || 
 			 protocol == XBEE_900HP	) && data_in[start+7]==0x40 )
 		{				
 			// do nothing. it is a valid response because these protocols
@@ -4881,6 +4892,7 @@ void WaspXBeeCore::treatScan()
 			 protocol == DIGIMESH 	|| 
 			 protocol == XBEE_900 	|| 
 			 protocol == XBEE_868	|| 
+			 protocol == XBEE_868LP	|| 
 			 protocol == XBEE_900HP	 )
     { 
 		if (data_length>19)
@@ -5159,7 +5171,7 @@ uint8_t WaspXBeeCore::new_firmware_received()
 		}
 		
 		/// 868 or 900 Multicast or Unicast with new encryption key setting		
-		if( (packet_finished[pos-1]->data_length==63) && (protocol==XBEE_868 || protocol==XBEE_900))
+		if( (packet_finished[pos-1]->data_length==63) && (protocol==XBEE_868 || protocol==XBEE_900 || protocol==XBEE_868LP))
 		{
 			// Copy 'Encryption key' from packet
 			for (it = 0; it < 16;it++) 

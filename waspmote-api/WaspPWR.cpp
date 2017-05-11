@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -96,33 +96,33 @@ void WaspPWR::setSensorPower(uint8_t type, uint8_t mode)
 	pinMode(SENS_PW_3V3,OUTPUT);
 	pinMode(SENS_PW_5V,OUTPUT);
 	
-	switch( type )
+	switch (type)
 	{
 		case SENS_3V3: 	
-						if( mode == SENS_ON ) 
+						if (mode == SENS_ON) 
 						{
-							digitalWrite(SENS_PW_3V3,HIGH);
 							WaspRegister |= REG_3V3;
+							digitalWrite(SENS_PW_3V3,HIGH);
 						}
-						else if( mode == SENS_OFF ) 
+						else if (mode == SENS_OFF) 
 						{
-							digitalWrite(SENS_PW_3V3,LOW);
 							WaspRegister &= ~REG_3V3;
+							digitalWrite(SENS_PW_3V3,LOW);
 							
 						}						
 						break;
 						
 		case SENS_5V:	
-						if( mode == SENS_ON ) 
+						if (mode == SENS_ON) 
 						{
-							digitalWrite(SENS_PW_5V,HIGH);
 							WaspRegister |= REG_5V;
+							digitalWrite(SENS_PW_5V,HIGH);
 							delay(1);
 						}
-						else if( mode == SENS_OFF ) 
+						else if (mode == SENS_OFF) 
 						{
-							digitalWrite(SENS_PW_5V,LOW);
 							WaspRegister &= ~REG_5V;
+							digitalWrite(SENS_PW_5V,LOW);
 						}
 						break;
 						
@@ -288,6 +288,13 @@ void WaspPWR::switchesOFF(uint8_t option)
 	// switch off monitoring pin
 	pinMode(BAT_MONITOR,OUTPUT);
 	digitalWrite(BAT_MONITOR,LOW);
+		
+	// check if an Cities PRO Sensor Board is used. 
+	if (WaspRegisterSensor & REG_CITIES_PRO)
+	{
+		// disable I2C isolator
+		digitalWrite(ANA0, LOW);
+	}
 	
 	// check if a Smart Metering board has been switched and proceed to disable 
 	// the digital pins so as not to waste energy
@@ -711,11 +718,18 @@ float WaspPWR::getBatteryVolts()
 		analogReference(INTERNAL2V56);
 		
 		// enables the ADC
-		sbi(ADCSRA, ADEN);		
-		
+		sbi(ADCSRA, ADEN);	
+
+		// check if it is necessary to turn on the 5v power supply
+		bool flag = WaspRegister & REG_5V;
+  
+		if (!flag)
+		{
+			PWR.setSensorPower(SENS_5V, SENS_ON);
+		}
+
 		// power on the components
 		pinMode(BAT_MONITOR, INPUT);
-   		PWR.setSensorPower(SENS_5V, SENS_ON);
 		pinMode(BAT_MONITOR_PW, OUTPUT);
 		digitalWrite(BAT_MONITOR_PW, HIGH);
 		delay(1);		
@@ -753,8 +767,13 @@ float WaspPWR::getBatteryVolts()
 		//get result
 		result = m;
 		
-		// power off 
-		PWR.setSensorPower(SENS_5V, SENS_OFF);
+		// check if it is necessary to turn off the 5v power supply
+		if (!flag)
+		{
+			PWR.setSensorPower(SENS_5V, SENS_OFF);
+		}
+		
+		//turn off
 		digitalWrite(BAT_MONITOR_PW, LOW);
 		
 		// change to DEFAULT

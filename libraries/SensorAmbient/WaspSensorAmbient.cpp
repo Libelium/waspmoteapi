@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova, Javier Siscart
  * 
@@ -50,7 +50,7 @@ WaspSensorAmbient::WaspSensorAmbient()
 	digitalWrite(SENS_AMBIENT_SENSIRION_DATA,LOW);
 	digitalWrite(SENS_AMBIENT_LDR_GND,LOW);
 	
-
+	WaspRegisterSensor |= REG_AMBIENT;
 }
 
 // Private Methods //////////////////////////////////////////////////////////////

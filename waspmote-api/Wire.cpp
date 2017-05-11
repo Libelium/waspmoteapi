@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * 	Version:	3.1
+ * 	Version:	3.2
  */
  
 extern "C" {
@@ -364,12 +364,13 @@ void TwoWire::secureBegin()
 	
 	// this codeblock belongs to the performance of the I2C bus
 	// check if any Sensor Board (with I2C components) is ON before using I2C
-	if ((WaspRegisterSensor & REG_METERING) 		||
+	if ((WaspRegisterSensor & REG_METERING) 	||
 		(WaspRegisterSensor & REG_AGRICULTURE)	||
-		(WaspRegisterSensor & REG_GASES) 			||
+		(WaspRegisterSensor & REG_GASES) 		||
 		(WaspRegisterSensor & REG_EVENTS) 		||
 		(WaspRegisterSensor & REG_CITIES_V14) 	||
 		(WaspRegisterSensor & REG_CITIES_V15) 	||
+		(WaspRegisterSensor & REG_AMBIENT) 		||
 		(WaspRegisterSensor & REG_PROTOTYPING))
 	{
 		if (Wire.isBoard == false)
@@ -379,7 +380,7 @@ void TwoWire::secureBegin()
 			#endif		
 			// It is necessary to switch on the power supply if the Sensor Board is 
 			// connected to Waspmote so as not to cause intereferences in the I2C bus
-			if ((WaspRegisterSensor & REG_EVENTS) && !_3V3_ON)
+			if (((WaspRegisterSensor & REG_EVENTS)||(WaspRegisterSensor & REG_AMBIENT)) && !_3V3_ON)
 			{
 				PWR.setSensorPower(SENS_3V3, SENS_ON);		
 				delay(50);		
@@ -412,6 +413,7 @@ void TwoWire::secureEnd()
 		(WaspRegisterSensor & REG_EVENTS) 		||
 		(WaspRegisterSensor & REG_CITIES_V14) 	||
 		(WaspRegisterSensor & REG_CITIES_V15) 	||
+		(WaspRegisterSensor & REG_AMBIENT) 		||
 		(WaspRegisterSensor & REG_PROTOTYPING))
 	{
 		// this codeblock belongs to the performance of the SD card
@@ -420,17 +422,17 @@ void TwoWire::secureEnd()
 		{
 			#if DEBUG_I2C > 0
 				PRINT_I2C(F("Sensor Board power OFF\n"));
-			#endif		
+			#endif
 			
 			// switch OFF sensor boards to previous state before 'secureBegin'
-			if (WaspRegisterSensor & REG_EVENTS)
+			if ((WaspRegisterSensor & REG_EVENTS)||(WaspRegisterSensor & REG_AMBIENT))
 			{
-				PWR.setSensorPower(SENS_3V3, SENS_OFF);				
+				PWR.setSensorPower(SENS_3V3, SENS_OFF);
 			}
 			else
 			{
 				PWR.setSensorPower(SENS_3V3, SENS_OFF);
-				PWR.setSensorPower(SENS_5V, SENS_OFF);							
+				PWR.setSensorPower(SENS_5V, SENS_OFF);
 			}
 		}
 		else

@@ -1,7 +1,7 @@
 /*! \file WaspSensorCitiesPRO.h
     \brief Library for managing the Smart Cities PRO Sensor Board
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Alejandro Gállego, Ahmad Saad
 
@@ -36,6 +36,7 @@
  ******************************************************************************/
 #include <inttypes.h>
 #include <WaspConstants.h>
+#include <BME280.h>
 
 
 /******************************************************************************
@@ -111,8 +112,11 @@ class WaspSensorCitiesPRO
 									SENS_CITIES_PRO_GAS2
 	\return void
 	 */
-	void OFF(uint8_t socket_sensor);	
+	void OFF(uint8_t socket_sensor);
 
+	float getTemperature();
+	float getHumidity();
+	float getPressure();
 };
 
 extern WaspSensorCitiesPRO SensorCitiesPRO;
