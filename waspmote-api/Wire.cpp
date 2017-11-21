@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * 	Version:	3.2
+ * 	Version:	3.3
  */
  
 extern "C" {
@@ -853,6 +853,19 @@ uint8_t TwoWire::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint
     return 0;
 }
 
+
+/*
+ * Function: 	This function switches off and on the I2C again
+ * Parameters:	void
+ * Return: 		void
+ * 
+ */
+void TwoWire::recover()
+{
+	Wire.close();
+	delay(1000);
+	Wire.begin();
+}
 
 
 // Preinstantiate Objects //////////////////////////////////////////////////////

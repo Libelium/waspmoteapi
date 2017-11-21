@@ -1,7 +1,7 @@
 /*! \file WaspBLE.h
     \briefLibrary for managing the Bluetooth low energy BLE112
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Javier Siscart
 
@@ -339,7 +339,7 @@ class WaspBLE
     \param int8_t TXPower: TX power used during the scan
     \return '0' if not found. '1' if found, error code otherwise.
 	 */	
-	uint16_t scanDevice(uint8_t* Mac, uint8_t maxTime, uint8_t TXPower);
+	uint16_t scanDevice(uint8_t* Mac, uint32_t maxTime, uint8_t TXPower);
 	
 			
 	/// public methods //////////////////////////
@@ -445,7 +445,7 @@ class WaspBLE
     \param uint8_t TXPower: TX power used during the scan
     \return '0' if not found. '1' if found, error code otherwise.
 	 */
-	uint16_t scanDevice(char* Mac, uint8_t maxTime, uint8_t TXPower);
+	uint16_t scanDevice(char* Mac, uint32_t maxTime, uint8_t TXPower);
 	
 	//! Scans network to find other BLE modules.
     	/*!

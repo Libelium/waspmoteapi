@@ -31,7 +31,7 @@
  paul@pmcrae.freeserve.co.uk (http://www.pmcrae.freeserve.co.uk)
  who wrote a small program to read 100 registers from a modbus slave. 
 
- Version:	3.1
+ Version:	3.2
   
 */
 
@@ -290,11 +290,14 @@ int ModbusSlave::send_reply(unsigned char *query, unsigned char string_length)
 			W485.send(query[i], BYTE);
 		}
 	}
+	
+	#if DEBUG_MODBUS_SLAVE > 1
+		PRINT_MODBUS_SLAVE("Slave send:");
+		USB.printHexln(query, string_length);
+	#endif
 
-	//~ USB.print("Slave send: ");
-	//~ USB.printHexln(query, string_length);
 
-	// It does not mean that the write was succesful
+	// It does not mean that the write was successful
 	return i;
 }
 
@@ -338,9 +341,10 @@ int ModbusSlave::receive_request(unsigned char *received_string)
 			}
 		}
 	}
-
-	//~ USB.print("Slave receive: ");
-	//~ USB.printHexln(received_string, bytes_received);
+	#if DEBUG_MODBUS_SLAVE > 1
+		PRINT_MODBUS_SLAVE("Slave receive:");
+		USB.printHexln(received_string, bytes_received);
+	#endif
 
 	return (bytes_received);
 }
@@ -573,9 +577,10 @@ int ModbusSlave::read_holding_registers(unsigned int start_addr, unsigned char r
  * @param	uint8_t socket: SOCKET_0 or SOCKET_1  for RS-232 protocol
  * @return	void
  */
-void ModbusSlave::configure(uint8_t _slave, long baud, uint8_t socket)
+uint8_t ModbusSlave::configure(uint8_t _slave, long baud, uint8_t socket)
 {
 	slave = _slave;
+	uint8_t answer;
 
 	if (_protocol == RS232_COM)
 	{
@@ -593,8 +598,13 @@ void ModbusSlave::configure(uint8_t _slave, long baud, uint8_t socket)
 	}
 	else 
 	{
-		W485.ON();
-		delay(100);
+		// init module
+		answer = W485.ON();
+		delay(100);		
+		if (answer != 0) 
+		{
+			return 1;
+		}
 
 		// Configure the baud rate of the module
 		W485.baudRateConfig(baud);
@@ -604,7 +614,7 @@ void ModbusSlave::configure(uint8_t _slave, long baud, uint8_t socket)
 		W485.stopBitConfig(1); 
 	}
 	
-	return;
+	return 0;
 }
 
 
@@ -614,9 +624,9 @@ void ModbusSlave::configure(uint8_t _slave, long baud, uint8_t socket)
  * @param	long baud: baudrate in bps (typical values 9600, 19200... 115200)
  * @return	void
  */
-void ModbusSlave::configure(uint8_t _slave, long baud)
+uint8_t ModbusSlave::configure(uint8_t _slave, long baud)
 {
-	configure(_slave, baud, 0);
+	return configure(_slave, baud, 0);
 }
 
 
@@ -649,18 +659,28 @@ int ModbusSlave::update(int *regs, unsigned int regs_size)
 	if (length == 0) 
 	{
 		lastBytesReceived = 0;
+		
+		#if DEBUG_MODBUS_SLAVE > 2
+			PRINTLN_MODBUS_SLAVE("No request from Master1");
+		#endif
 		return 0;
 	}
 
 	if (lastBytesReceived != length)
 	{
 		lastBytesReceived = length;
-		Nowdt = now + T35;
+		Nowdt = now + T35;		
+		#if DEBUG_MODBUS_SLAVE > 2
+			PRINTLN_MODBUS_SLAVE("No request from Master2");
+		#endif
 		return 0;
 	}
 	
 	if (now < Nowdt) 
-	{
+	{		
+		#if DEBUG_MODBUS_SLAVE > 2
+			PRINTLN_MODBUS_SLAVE("No request from Master3");
+		#endif
 		return 0;
 	}
 
@@ -697,7 +717,7 @@ int ModbusSlave::update(int *regs, unsigned int regs_size)
 		case FC_WRITE_REG: 
 			write_single_register(start_addr, query, regs);
 		break;
-	}
+	}		
 }
 
 

@@ -1,7 +1,7 @@
 /*! \file WaspSensorAgr_v30.h
     \brief Library for managing the Agriculture Sensor Board v2.0
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Carlos Bello
 
@@ -168,6 +168,9 @@
 #define	SENS_SA_WDV				25
 #define	SENS_SA_ANE				26
 #define	SENS_SA_PLV				27
+#define	SENS_SA_DD				28
+#define	SENS_SA_DF				29
+#define	SENS_SA_DC3				30
 //**********************************************************************
 //DECLARE VARS
 //**********************************************************************
@@ -280,7 +283,9 @@ class dendrometerClass : public WaspSensorAgr_v30
 {
 	public:
 		dendrometerClass();			
-		float readDendrometer();	
+		dendrometerClass(uint8_t type);			
+		float readDendrometer();
+		uint8_t _dendro;	
 };
 #endif
 //**************************************************************************************************

@@ -120,6 +120,7 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t _version;
 		uint32_t _macStatus;
 		uint8_t _maxPayload;
+		uint8_t _syncWord;
 		
 		// constructor
 		WaspLoRaWAN() {};
@@ -183,7 +184,8 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t setRX1Delay(uint16_t delay);
 		uint8_t getMACStatus();
 		uint8_t showMACStatus();
-				
+		uint8_t setSyncWord(uint8_t sync);
+		uint8_t getSyncWord();
 		// Radio functions
 		uint8_t sendRadio(char * buff);
 		uint8_t receiveRadio(uint32_t timeout);

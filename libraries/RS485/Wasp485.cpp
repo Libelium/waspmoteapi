@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Ahmad Saad
  */
@@ -55,14 +55,14 @@ uint8_t Wasp485::ON()
 {			
 	// Switch ON the module in Socket0
     PWR.powerSocket(SOCKET0, HIGH);
-	
-	// Configure the SS pin and the switch as outputs
-	pinMode(SOCKET0_SS, OUTPUT);
 	SPI.isSocket0 = true;
-
-	// Deselect the MAX chip
+	
+	// Configure the SS pin and Deselect the MAX chip
+	pinMode(SOCKET0_SS, OUTPUT);
 	digitalWrite(SOCKET0_SS, HIGH);
+	SPI.setSPISlave(ALL_DESELECTED);
 	delay(200);
+	
 	
 	//Configure the MISO, MOSI, CS, SPCR.
 	SPI.secureBegin();
@@ -220,7 +220,7 @@ void Wasp485::send (const char *s)
 //!	Name:	baudRateConfig(unsigned long speed)
 //!	Description: It sets the speed of communication.
 //!	Param: unsigned long speed: The baud-rate parameter.
-//!	Returns: void
+//!	Returns: Return 0 if all success. Else return 1. 
 //!*************************************************************
 uint8_t Wasp485::baudRateConfig(unsigned long speed)
 {

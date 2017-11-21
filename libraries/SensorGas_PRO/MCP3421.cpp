@@ -1,7 +1,7 @@
 /*
  *  Library for managing the MCP3421 ADC
  * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -170,11 +170,11 @@ float MCP3421::readADC(uint8_t ADC_addr, uint8_t resolution, uint8_t gain, uint8
 				val2 = Wire.receive();
 				value = val1*256 + val2;
 				config_reg = Wire.receive();
-				Wire.endTransmission();
-			
+				//~ Wire.endTransmission();
+
 				if (conversion == MCP3421_VOLTS)
 				{
-					value /= 16;
+					value /= 16; // value=maxValue*(Vin/Vref(mV))=32768*(Vin/2048)=>Vin=value/16
 					value /= pow(2, gain);
 				}
 			}
@@ -230,7 +230,7 @@ float MCP3421::readADC(uint8_t ADC_addr, uint8_t resolution, uint8_t gain, uint8
 	
 	if ((config_reg & 0x80) != 0)
 	{
-		USB.print("ADC N_RDY");
+		USB.print(F("ADC N_RDY"));
 	}
 	
 	return value;	

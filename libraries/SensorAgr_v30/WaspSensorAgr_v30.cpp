@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Carlos Bello
  */
@@ -137,7 +137,7 @@ float WaspSensorAgr_v30::conversion(byte data_input[3], uint8_t type)
 		if (overflow == 1)
 		{
       //OVERFLOW High
-			val_def = 2;
+			val_def = 1.5;
 		}
 		else
 		{
@@ -150,7 +150,7 @@ float WaspSensorAgr_v30::conversion(byte data_input[3], uint8_t type)
 		if (overflow == 0)
 		{
       //OVERFLOW LOW
-			val_def = -2;
+			val_def = -1.5;
 		}
 		else
 		{
@@ -159,14 +159,17 @@ float WaspSensorAgr_v30::conversion(byte data_input[3], uint8_t type)
 		}
 	}
 
-	if( type==1 ){
+	if( type==1 )
+	{
 		Rx = (Vcc*R2*R3 + val_def*R3*(R1+R2)) / (Vcc*R1 - val_def*(R1+R2));
 		equis = (Rx - 1001.52) / 1351.99;
 		Rx = equis * 1494.46 + 996.04;
 		tempPt = (Rx-1000)/3.9083;
 		return(tempPt);
 	}
-	else if( type==0) return ( (val_def * 11000)/1000.0 );
+	else if (type == SENS_SA_DD) return ( (val_def * 3666.66666)/1000.0 );
+	else if( type == SENS_SA_DF) return ( (val_def * 5000)/1000.0 );
+	else if( type == SENS_SA_DC3) return ( (val_def * 8333.33333)/1000.0 );
 	
 	return 0;
 }
@@ -700,6 +703,16 @@ float pt1000Class::readPT1000(void)
  */
 dendrometerClass::dendrometerClass()
 {
+	_dendro = SENS_SA_DD;
+}
+
+/*	
+ * Class constructor
+ * 
+ */
+dendrometerClass::dendrometerClass(uint8_t type)
+{
+	_dendro = type;
 }
 
 /*	readDendrometer: reads the analog to digital converter input to which is
@@ -755,7 +768,7 @@ float dendrometerClass::readDendrometer(void)
 	PRINT_AGR(F("readDendrometer value conversion:"));
 	USB.println(value_dendro = conversion(data_dendro,0));	
 	#endif	
-	return value_dendro = conversion(data_dendro,0);
+	return value_dendro = conversion(data_dendro,_dendro);
 }
 
 
@@ -801,22 +814,30 @@ float radiationClass::readRadiation(void)
 		data_apogee[i] = Wire.receive();
 		i++;
 	}
+	
 	val = long(data_apogee[1]) + long(data_apogee[0])*256;
-	val_def = (val - 32769)*9;
+	val_def = (val - 32768)*1.8/32768;
+	if( val_def < 0.0 ){
+		val_def = 0.0;
+	}
+	
 	digitalWrite(RADIATION_ON,LOW);	
+	
 	// Switch OFF I2C
 	digitalWrite(I2C_PIN_OE, LOW);
+	
 	#if DEBUG_AGR==1
-	PRINT_AGR(F("readRadiation without conversion:"));
+	PRINT_AGR(F("readRadiation with conversion (volts): "));
 	USB.println(val_def);		
 	#endif
 	#if DEBUG_AGR==2
-	PRINT_AGR(F("readRadiation without conversion:"));
-	USB.println(val_def);
-	PRINT_AGR(F("readRadiation with conversion:"));
-	USB.println(val_def/65535);	
+	PRINT_AGR(F("readRadiation without conversion: "));
+	USB.println(val);
+	PRINT_AGR(F("readRadiation with conversion (volts): "));
+	USB.println(val_def);	
 	#endif			
-	return val_def = val_def/65535;
+
+	return val_def;
 }
 
 

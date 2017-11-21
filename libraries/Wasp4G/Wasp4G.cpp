@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.3
+ *  Version:		3.4
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -253,27 +253,12 @@ uint8_t Wasp4G::checkDataConnection(uint8_t time)
 	
 	//// 7. GPRS Context Activation
 	// "AT#GPRS=1\r"
-	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[31])));
-	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 15000);
-	if (answer != 1)
+	answer = gprsContextActivation(1);	
+	if (answer != 0)
 	{
-		if (answer == 2)
-		{
-			getErrorCode();
-		}
 		return 15;
 	}
 	
-	// delimiters <--- "+IP: \"\r\n"
-	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[32])));
-	
-	// get IP address in response
-	answer = parseString(_ip, sizeof(_ip), command_buffer);
-	
-	if (answer != 0)
-	{
-		return 16;
-	}
 	
 	return 0;
 }
@@ -1521,6 +1506,64 @@ uint8_t Wasp4G::checkConnectionEPS(uint8_t time)
 
 
 
+
+
+
+/* 
+ * 
+ * 
+ */
+uint8_t Wasp4G::gprsContextActivation(uint8_t mode)
+{	
+	uint8_t answer;
+	char command_buffer[20];
+	
+	// "AT#GPRS=<mode>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[31])), mode);
+	
+	// send command
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 15000);
+	
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 1;
+	}
+	
+	
+	#if DEBUG_WASP4G > 1
+		PRINT_LE910(F("GPRS context activation:"));
+		USB.println(mode, DEC);
+	#endif
+	
+	// parse IP address
+	if (mode == 1)
+	{
+		// delimiters <--- "+IP: \"\r\n"
+		strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[32])));
+		
+		// get IP address in response
+		answer = parseString(_ip, sizeof(_ip), command_buffer);
+		
+		if (answer != 0)
+		{
+			return 2;
+		}
+		#if DEBUG_WASP4G > 1
+			PRINT_LE910(F("IP address:"));
+			USB.println(_ip);
+		#endif
+	}
+		
+	return 0;
+}
+
+
+
+
 /* This function manages incoming data from the module
  * Parameters:	wait_time: maximum waiting time in milliseconds
  * Return:	0 if 'OK', 'x' if error
@@ -2381,6 +2424,37 @@ uint8_t Wasp4G::ftpOpenSession(	char* server,
 								char* username,
 								char* password)
 {	
+	return ftpOpenSession(server, port, username, password, Wasp4G::FTP_PASSIVE);
+}
+
+
+/* Function: 	This function configures FTP parameters and opens the connection
+ * Parameters:	server: address of FTP server
+ *				port: port of FTP server
+ *				username: authentication user identification string for FTP
+ *				password: authentication password for FTP
+ * Return:	0 if OK
+ * 			1 not registered, ME is not currently searching for a new operator to register to
+ * 			2 not registered, but ME is currently searching for a new operator to register to
+ * 			3 registration denied
+ * 			4 unknown
+ * 			6 not registered, ME is not currently searching for a new operator to register to
+ * 			8 not registered, but ME is currently searching for a new operator to register to
+ * 			9 registration denied
+ * 			10 unknown
+ * 			12 if error setting APN
+ * 			13 if error setting login
+ * 			14 if error setting password
+ * 			15 if error activating GPRS connection
+ * 			16 if error opening the FTP connection
+ * 			17 if error setting the transfer type
+ */
+uint8_t Wasp4G::ftpOpenSession(	char* server,
+								uint16_t port,
+								char* username,
+								char* password,
+								uint8_t mode)
+{	
 	uint8_t answer;
 	char command_buffer[100];
 
@@ -2400,12 +2474,13 @@ uint8_t Wasp4G::ftpOpenSession(	char* server,
 	#endif
 		
 	// 2. Configure FTP parameters and open the connection
-	// AT#FTPOPEN="<server>:<port>","<username>","<password>",1\r
+	// AT#FTPOPEN="<server>:<port>","<username>","<password>",<mode>\r
 	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[0])),
 			server,
 			port,
 			username,
-			password);
+			password,
+			mode);
 	
 	// send command
 	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, LE910_FTP_CONF_TIMEOUT);
@@ -3769,7 +3844,7 @@ uint8_t Wasp4G::openSocketSSL(	uint8_t socketId,
 uint8_t Wasp4G::closeSocketClient(uint8_t socketId)
 {
 	uint8_t answer;
-	char command_buffer[10];
+	char command_buffer[20];
 				
 	//// 1. Check socket status	
 	answer = getSocketStatus(socketId);
@@ -3850,7 +3925,7 @@ uint8_t Wasp4G::closeSocketClient(uint8_t socketId)
 uint8_t Wasp4G::closeSocketServer(uint8_t socketId, uint8_t protocol)
 {
 	uint8_t answer;
-	char command_buffer[10];
+	char command_buffer[20];
 				
 	//// 1. Check socket status	
 	answer = getSocketStatus(socketId);
@@ -3973,7 +4048,7 @@ uint8_t Wasp4G::closeSocketServer(uint8_t socketId, uint8_t protocol)
 uint8_t Wasp4G::closeSocketSSL(uint8_t socketId)
 {
 	uint8_t answer;
-	char command_buffer[10];
+	char command_buffer[20];
 				
 	//// 1. Check socket status	
 	answer = getSocketStatusSSL(socketId);
@@ -4485,7 +4560,7 @@ uint8_t Wasp4G::receiveSSL(uint8_t socketId, uint32_t timeout)
 	do
 	{
 		// send command to read data from SSL socket
-		answer = sendCommand(command_buffer, answer1, answer2, answer3, LE910_ERROR_CODE, 5000);		
+		answer = sendCommand(command_buffer, answer1, LE910_ERROR_CODE, 5000);		
 	
 		// check timeout with no answer
 		if (answer == 0)
@@ -4499,88 +4574,95 @@ uint8_t Wasp4G::receiveSSL(uint8_t socketId, uint32_t timeout)
 		// check OK response with incoming data, then break
 		if (answer == 1)
 		{
-			break;
-		}
+			// wait for end of response "<nBytes>\r\n"
+			answer = waitFor("\r\n", 1000);
+			
+			if (answer != 1)
+			{
+				#if DEBUG_WASP4G > 0
+					PRINT_LE910(F("Error waiting EOL\n"));
+				#endif
+				return 4;
+			}		
 		
-		// check OK response with incoming data, then break
-		if (answer == 3)
-		{
-			#if DEBUG_WASP4G > 0
-				PRINT_LE910(F("SSL Socket DISCONNECTED\n"));
-			#endif
-			return 2;
-		}
+			// parse <nBytes>
+			answer = parseUint32(&nBytes, " \r\n");	
+			
+			if (answer != 0)
+			{
+				#if DEBUG_WASP4G > 0
+					PRINT_LE910(F("Error parsing nBytes\n"));
+				#endif
+				return 5;
+			}
+			
+			if (nBytes > 0)			
+			{
+				#if DEBUG_WASP4G > 1
+					PRINT_LE910(F("nBytes:"));
+					USB.println(nBytes, DEC);
+				#endif
+				
+				// wait for number of bytes in data received
+				readBufferBytes = readBuffer(nBytes);
+				
+				#if DEBUG_WASP4G > 1
+					PRINT_LE910(F("readBufferBytes:"));
+					USB.println(readBufferBytes, DEC);
+				#endif
+				
+				if (readBufferBytes != nBytes)
+				{
+					#if DEBUG_WASP4G > 0
+						PRINT_LE910(F("Error getting received bytes\n"));
+					#endif
+					return 6;
+				}
+				
+				// update attribute length
+				_length = nBytes;
+	
+				return 0;				
+			}
+			else if (nBytes == 0)
+			{
+				// received "#SSLRECV: 0<CR><LF>" 
+				// search "TIMEOUT" or "DISCONNECTED"
+				answer = waitFor(answer2, answer3, 1000);
+				
+				if (answer == 1)
+				{
+					#if DEBUG_WASP4G > 0
+						PRINT_LE910(F("buffer:"));
+						USB.println((char*)_buffer);
+						PRINT_LE910(F("SSL Socket TIMEOUT\n"));
+					#endif
+					/* 	fix bug because the LE910 module returns TIMEOUT 
+						when it listening to incoming data. So do not
+						return error until the connection is disconnected
+					 */
+					//~ return 2;
+				}
+				else if (answer == 2)
+				{
+					#if DEBUG_WASP4G > 0
+						PRINT_LE910(F("SSL Socket DISCONNECTED\n"));
+					#endif
+					return 3;
+				}				
+			}
+		}	
 		
-		// check error code
-		if (answer == 4)
-		{
-			getErrorCode();
-			return 3;
-		}
-		
+		// wait 500 ms for the next attempt
 		delay(500);
 	}
 	while ((millis()-previous < timeout));
 
 
-	//// 2. If bytes have been received, then proceed to read them
-	if (answer == 1)
-	{
-		// wait for end of response "<nBytes>\r\n"
-		answer = waitFor("\r\n", 1000);
-		
-		if (answer != 1)
-		{
-			#if DEBUG_WASP4G > 0
-				PRINT_LE910(F("Error waiting EOL\n"));
-			#endif
-			return 4;
-		}
-		
-		// parse <nBytes>
-		answer = parseUint32(&nBytes, " \r\n");	
-		
-		if (answer != 0)
-		{
-			#if DEBUG_WASP4G > 0
-				PRINT_LE910(F("Error parsing nBytes\n"));
-			#endif
-			return 5;
-		}
-		
-		#if DEBUG_WASP4G > 1
-			PRINT_LE910(F("nBytes:"));
-			USB.println(nBytes, DEC);
-		#endif
-		
-		// wait for number of bytes in data received
-		readBufferBytes = readBuffer(nBytes);
-		
-		#if DEBUG_WASP4G > 1
-			PRINT_LE910(F("readBufferBytes:"));
-			USB.println(readBufferBytes, DEC);
-		#endif
-		
-		if (readBufferBytes != nBytes)
-		{
-			#if DEBUG_WASP4G > 0
-				PRINT_LE910(F("Error getting received bytes\n"));
-			#endif
-			return 6;
-		}
-	}
-	else
-	{
-		#if DEBUG_WASP4G > 0
-			PRINT_LE910(F("Error waiting LE910_OK\n"));
-		#endif
-		return 7;		
-	}
-	
-	// update attribute length
-	_length = nBytes;
-	
-	return 0;
+	#if DEBUG_WASP4G > 0
+		PRINT_LE910(F("Error waiting LE910_OK\n"));
+	#endif
+	return 7;
 }
 
 
@@ -4903,50 +4985,29 @@ uint8_t Wasp4G::gpsStart(uint8_t gps_mode, uint8_t reset_mode)
 	}
 	else if ((gps_mode == Wasp4G::GPS_MS_ASSISTED) || (gps_mode == Wasp4G::GPS_MS_BASED))
 	{		
-		//// 4. setup NETWORK_UTRAN
+		//// 4. Set NETWORK_UTRAN (3G/2G)
 		answer = setWirelessNetwork(Wasp4G::NETWORK_UTRAN);
 		if (answer != 0)
 		{
 			return 4;
 		}
 		
-		//// 5. Define PDP Context
-		// AT+CGDCONT=1,"IP","<APN>"\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[29])), _apn);
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
-		if (answer != 1)
+		//// 5. Deactivate current context
+		answer = gprsContextActivation(0);
+		if (answer != 0)
 		{
 			return 5;
-		}		
+		}	
 		
-		//// 6. Set Authentication User ID
-		// AT#USERID="<login>"\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[5])), _apn_login);
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
-		if (answer != 1)
+		//// 6. Socket configuration
+		// AT#SCFG=1,1,300,90,600,50\r		
+		answer = socketConfiguration(1, 1, 300, 90, 600, 50);
+		if (answer != 0)
 		{
 			return 6;
-		}		
-		
-		//// 7. Set Authentication Password
-		// AT#PASSW="<pass>"\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[6])), _apn_password);
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
-		if (answer != 1)
-		{
-			return 7;
 		}
 		
-		//// 8. 
-		// AT#SCFG=1,1,300,90,600,50\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[2])), 1, 1, 300, 90, 600, 50);
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
-		if (answer != 1)
-		{
-			return 8;
-		}
-		
-		//// 9. Set QoS for GPS:
+		//// 7. Set QoS for GPS:
 		// 	horiz_accuracy  = 5
 		// 	vertic_accuracy = 5
 		// 	rsp_time = 100
@@ -4954,25 +5015,26 @@ uint8_t Wasp4G::gpsStart(uint8_t gps_mode, uint8_t reset_mode)
 		// 	location_type = 0 (current location)
 		// 	nav_profile = 0 Car navigation profile (default)
 		// 	velocity_request = TRUE
+		// AT$GPSQOS=5,5,100,0,0,0,1\r
 		answer = gpsSetQualityOfService(5, 5, 100, 0, 0, 0, 1);
 		
 		if (answer != 0)
 		{
-			return 9;
+			return 7;
 		}
 		
-		//// 10. Set SLP server
+		//// 8. Set SLP server
 		// AT$SLP=1,"supl.nokia.com:7275"\r
 		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[21])));
 		
 		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
 		if (answer != 1)
 		{
-			return 10;
+			return 8;
 		}
 		
-		//// 11. Set the version of supported SUPL
-		// AT$SUPLV=%u\r
+		//// 9. Set the version of supported SUPL
+		// AT$SUPLV=1\r
 		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[20])), 1);
 		
 		// send command
@@ -4983,12 +5045,32 @@ uint8_t Wasp4G::gpsStart(uint8_t gps_mode, uint8_t reset_mode)
 			{
 				getErrorCode();
 			}
+			return 9;
+		}
+
+		//// 10. Update terminal information
+		// AT$LCSTER=1,,,1\r
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[22])));
+		
+		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+		if (answer != 1)
+		{
+			return 10;
+		}
+		
+		//// 11. Enable unsolicited response 
+		// AT$LICLS=1\r
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[23])));
+		
+		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+		if (answer != 1)
+		{
 			return 11;
 		}
 		
-		//// 12. Update terminal information
-		// AT$LCSTER=1,,,1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[22])));
+		//// 12. Lock context for LCS use
+		// AT$LCSLK=1,1\r
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[24])));
 		
 		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
 		if (answer != 1)
@@ -4996,9 +5078,9 @@ uint8_t Wasp4G::gpsStart(uint8_t gps_mode, uint8_t reset_mode)
 			return 12;
 		}
 		
-		//// 13. Enable unsolicited response 
-		// AT$LICLS=1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[23])));
+		//// 13. Enable GNSS (or GLONASS)
+		// AT$GPSGLO=1\r
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[25])));
 		
 		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
 		if (answer != 1)
@@ -5006,34 +5088,11 @@ uint8_t Wasp4G::gpsStart(uint8_t gps_mode, uint8_t reset_mode)
 			return 13;
 		}
 		
-		//// 14. Lock context for LCS use
-		// AT$LCSLK=1,1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[24])));
-		
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
-		if (answer != 1)
-		{
-			return 14;
-		}
-		
-		//// 15. Enable GNSS (or GLONASS)
-		// AT$GPSGLO=1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[25])));
-		
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
-		if (answer != 1)
-		{
-			return 15;
-		}
-		
-		//// 16. GPS Start Location Service Request:
+		//// 14. GPS Start Location Service Request:
 		// AT$GPSSLSR=<transport_protocol>,<gps_mode>,,,,,1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[1])),
-					1, 
-					gps_mode,
-					1);
+		// AT$GPSSLSR=1,<gps_mode>,,,,,1\r
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[1])), 1, gps_mode, 1);
 
-		// send command
 		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 1000);		
 		if (answer != 1)
 		{
@@ -5041,14 +5100,69 @@ uint8_t Wasp4G::gpsStart(uint8_t gps_mode, uint8_t reset_mode)
 			{
 				getErrorCode();
 			}
-			return 16;
-		}	
+			return 14;
+		}
 		
-		// check connection
+		/* check for Supl session not successfully completed
+		 * it will be stopped and unsolicited indication reports the error 
+		 * cause in the following formats:
+		 *  0 - Phone Offline
+		 *	1 - No servcie
+		 *	2 - No connection with PDE
+		 *	3 - No data available
+		 *	4 - Session Manager Busy
+		 *	5 - Phone is CDMA locked
+		 *	6 - Phone is GPS locked
+		 *	7 - Connection failure with PDE
+		 *	8 - PDSM Ended session because of Error condition
+		 *	9 - User ended the session
+		 *	10 - End key pressed from UI
+		 *	11 - Network Session was ended
+		 *	12 - Timeout (viz., for GPS Search)
+		 *	13 - Conflicting request for session and level of privacy
+		 *	14 - Could not connect to the Network
+		 *	15 - Error in Fix
+		 *	16 - Reject from PDE
+		 *	17 - Ending session due to TC exit
+		 *	18 - Ending session due to E911 call
+		 *	19 - Added protocol specific error type
+		 *	20 - Ending because BS info is stale
+		 *	21 - VX lcs agent auth fail
+		 *	22 - Unknown System Error
+		 *	23 - Unsupported Service
+		 *	24 - Subscription Violation
+		 *	25 - The desired fix method failed
+		 *	26 - Antenna switch
+		 *	27 - No fix reported due to no tx confirmation rcvd
+		 *	28 - Network indicated a Normal ending of the session
+		 *	29 - No error specified by the network
+		 */		
+		answer = waitFor("SUPL ERROR,",500);
+		
+		if (answer == 1)
+		{				
+			// wait for " <err>\r\n"
+			answer = waitFor((char*)"\r\n", 3000);
+			
+			#if DEBUG_WASP4G > 0
+				if (answer == 1)
+				{
+					parseUint8(&answer, " \r\n");	
+				}			
+				
+				PRINT_LE910(F("SUPL ERROR:"));
+				USB.println(answer, DEC);
+			#endif
+			
+			return 14;
+		}
+		
+		
+		// 15. check data connection
 		answer = checkDataConnection(60);
 		if (answer != 0)
 		{
-			return 17;
+			return 15;
 		}
 		
 		// return OK
@@ -5090,6 +5204,141 @@ uint8_t Wasp4G::gpsStop()
 	return 0;
 	
 }
+
+
+/* Function: It performs a HTTP request to AGPS server.
+ * Return:	'0' if OK; '1' error
+ */
+uint8_t Wasp4G::gpsSendHttpRequest()
+{
+	uint8_t answer;
+	char command_buffer[40];
+	char answer1[20];
+	char answer2[20];	
+	char* pch;
+		
+	// get current wireless network settings
+	// only 2G/3G is needed for this operation
+	answer = getWirelessNetwork();
+	
+	if (answer != 0)
+	{
+		return 1;
+	}
+	
+	// check if NETWORK_UTRAN network is selected, if not then
+	// deactivate the GPRS context to init it again in NETWORK_UTRAN wireless
+	if (_wirelessNetwork != Wasp4G::NETWORK_UTRAN)
+	{	
+		// deactivate context
+		answer = gprsContextActivation(0);
+		if (answer != 0)
+		{
+			return 2;
+		}
+		
+		// set 2G/3G network
+		answer = setWirelessNetwork(Wasp4G::NETWORK_UTRAN);
+		if (answer != 0)
+		{
+			return 3;
+		}		
+	}
+		
+	//// 1. Check data connection
+	answer = checkDataConnection(60);
+	if (answer != 0)
+	{
+		return 4;	
+	}
+	
+	
+	//// AT#AGPSSND
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[26])));
+	
+	// send command
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);		
+	
+	// check answer
+	if (answer == 1)
+	{
+		answer = waitFor("#AGPSMPRRING:", 10000);
+		
+		if (answer == 1)
+		{
+			// divide response into different tokens
+			pch = strtok( (char*)_buffer, " ,\r\n");
+	
+			if (pch == NULL)
+			{
+				return 1;
+			}
+			
+			// iterate to next element
+			pch = strtok(NULL, " ,\r\n");
+			
+			if (pch == NULL)
+			{
+				return 1;
+			}			
+			//// parse http code
+			answer = strtoul( pch, NULL, 10);
+			
+			
+			// iterate to next element
+			pch = strtok(NULL, " ,\r\n");
+			
+			if (pch == NULL)
+			{
+				return 1;
+			}			
+			//// parse latitude
+			memset(_latitude, 0x00, sizeof(_latitude));
+			strncpy(_latitude, pch, sizeof(_latitude)-1);
+			
+			
+			// iterate to next element
+			pch = strtok(NULL, " ,\r\n");
+			
+			if (pch == NULL)
+			{
+				return 1;
+			}			
+			//// parse longitude
+			memset(_longitude, 0x00, sizeof(_longitude));
+			strncpy(_longitude, pch, sizeof(_longitude)-1);
+	
+			#if DEBUG_WASP4G > 1
+				PRINT_LE910(F("http code:"));
+				USB.println(answer, DEC);
+				PRINT_LE910(F("Latitude:"));
+				USB.println(_latitude);
+				PRINT_LE910(F("Longitude:"));
+				USB.println(_longitude);
+			#endif
+			
+			// check for 200 OK in AGPSRING response
+			if (answer == 200)
+			{
+				return 0;
+			}
+		}
+		
+		return 5;
+	}
+	else 
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 6;
+	}
+	
+	return 7;
+	
+}
+
 
 /* Function: 	Checks the GPS and parses GPS data if the sats are fixed
  * Return:	'0' if OK; 'x' error
@@ -5602,6 +5851,12 @@ uint8_t Wasp4G::gpsSetQualityOfService(	uint32_t horiz_accuracy,
 		return 1;
 	}
 	
+	
+	#if DEBUG_WASP4G > 1
+		PRINT_LE910(F("gps QoS:"));
+		USB.println(command_buffer);
+	#endif
+	
 	return 0;	
 }
 
@@ -5981,6 +6236,43 @@ int8_t Wasp4G::getInfo(uint8_t info_req)
 
 
 
+/*
+ * 
+ * 
+ */
+uint8_t Wasp4G::socketConfiguration(uint8_t  connId,
+									uint8_t  cid,
+									uint16_t pktSz,
+									uint16_t maxTo,
+									uint16_t connTo,
+									uint16_t txTo)
+{
+	uint8_t answer;
+	char command_buffer[40];
+	
+	// AT#SCFG=<connId>,<cid>,<pktSz>,<maxTo>,<connTo>,<txTo>
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[2])), connId, cid, pktSz, maxTo, connTo, txTo);
+		
+	// send command
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 2000);
+	
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 1;
+	}
+	
+	#if DEBUG_WASP4G > 1
+		PRINT_LE910(F("Socket configuration:"));
+		USB.println(command_buffer);
+	#endif
+		
+	return 0;
+}
+
 
 /*
  * This function selects the cellular network (Wireless Data Service, WDS) to 
@@ -6017,8 +6309,67 @@ uint8_t Wasp4G::setWirelessNetwork(uint8_t n)
 		return 1;
 	}
 	
+	// deactivate current context
+	answer = gprsContextActivation(0);
+	
 	return 0;
 }
+
+
+
+
+/*
+ * This function selects the cellular network (Wireless Data Service, WDS) to 
+ * operate with the TA (WDS-Side Stack Selection).
+ * 
+ * 		NETWORK_GSM	
+ * 		NETWORK_UTRAN 
+ * 		NETWORK_3GPP
+ * 		NETWORK_EUTRAN_ONLY
+ * 		NETWORK_GERAN_UTRAN
+ * 		NETWORK_GERAN_EUTRAN
+ * 		NETWORK_UTRAN_EUTRAN
+ * 
+ * @return '0' if OK; '1' if error
+ * 
+ */
+uint8_t Wasp4G::getWirelessNetwork()
+{
+	uint8_t answer;
+	char command_buffer[20];
+	
+	// "AT+WS46?\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[43])));
+	
+	// send command
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 2000);
+	
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 1;
+	}
+	
+	// if OK was received, let's parse "\r\n+WS46: <wsd>\r\n\r\nOK\r\n"
+	answer = parseUint8(&_wirelessNetwork, " \r\n", 2);
+	
+	// check error
+	if (answer != 0)
+	{
+		return 1;
+	}
+
+	#if DEBUG_WASP4G > 1
+		PRINT_LE910(F("Wireless network:"));
+		USB.println(_wirelessNetwork, DEC);
+	#endif
+	
+	return 0;
+}
+
 
 
 
@@ -6445,7 +6796,6 @@ uint8_t Wasp4G::emailSave()
 
 
 
-
 /* 
  * requestOTA 
  *
@@ -6457,6 +6807,22 @@ uint8_t Wasp4G::requestOTA(	char* ftp_server,
 							uint16_t ftp_port, 
 							char* ftp_user, 
 							char* ftp_pass)
+{
+	return requestOTA(ftp_server, ftp_port, ftp_user, ftp_pass, Wasp4G::FTP_PASSIVE);
+}
+
+/* 
+ * requestOTA 
+ *
+ * This function downloads a new OTA file if OTA is necessary
+ *
+ * Returns 'x' if error
+ */
+uint8_t Wasp4G::requestOTA(	char* ftp_server,
+							uint16_t ftp_port, 
+							char* ftp_user, 
+							char* ftp_pass,
+							uint8_t ftp_mode)
 {
 
 	uint8_t error;
@@ -6512,7 +6878,7 @@ uint8_t Wasp4G::requestOTA(	char* ftp_server,
 	////////////////////////////////////////////////////////////////////////////
 	// 2. Open FTP session and download config file
 	////////////////////////////////////////////////////////////////////////////
-	error = ftpOpenSession(ftp_server, ftp_port, ftp_user, ftp_pass);
+	error = ftpOpenSession(ftp_server, ftp_port, ftp_user, ftp_pass, ftp_mode);
 		
 	if (error == 0)
 	{

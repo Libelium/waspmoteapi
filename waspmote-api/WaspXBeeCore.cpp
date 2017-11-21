@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.3
+ *  Version:		3.4
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -6879,21 +6879,18 @@ void WaspXBeeCore::gen_escaped_frame(	uint8_t* TX,
 */
 int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 {
-	unsigned long previous;
-	uint16_t i=0;
-	uint16_t length = 0;
-	bool restart = false;
-	bool doneStep1 = false;
-	bool doneStep2 = false;
-	bool doneStep3 = false;
-	bool pendingEscaped = false;
+	uint32_t previous;
+	uint16_t frame_length = 0;
+	uint16_t packet_length = 0; // Packet length with escaped bytes converted
+	uint16_t i = 0;
 	uint8_t c;	
+	bool escape_pending = false;
+	bool packet_completed = false;
 	uint8_t frameType = 0;	
 	uint8_t buffer[MAX_DATA] = {0};	
-	uint8_t checksum = 0;
 
 	// clear packet structure
-	memset( &_payload, 0x00, sizeof(_payload) );
+	memset( _payload, 0x00, sizeof(_payload) );
 	memset( buffer, 0x00, sizeof(buffer) );
 	
 	// init previous
@@ -6901,310 +6898,126 @@ int8_t WaspXBeeCore::receivePacketTimeout( uint32_t timeout)
 	
 	// Perform the different steps within a given timeout
 	while( (millis()-previous) < timeout )
-	{		
-		/// check the need to restart from the beginning
-		if( restart == true ) 
+	{
+		// Read char
+		if( available() )
 		{
-			restart = false;
-			buffer[0] = 0x7E;
-			i = 1;
-			length = 0;
-			doneStep1 = true;
-			doneStep2 = false;
-			doneStep1 = false;
-			doneStep1 = false;			
-		}		
-		
-		/// STEP 1: search start delimiter 0x7E and drop any other byte
-		if( !doneStep1 )
-		{
-			int nBytes = available();
-			for (int k = 0; k < nBytes; k++)			
-			{
-				c = serialRead(uart);	
-						
-				if( c == 0x7E )
-				{
-					i = 0;
-					memset( buffer, 0x00, sizeof(buffer) );
-					buffer[i] = c;			
-					i++;
-					doneStep1 = true;					
-					break;
-				}
-				else
-				{
-					// keep searching
-				}
-			}
-		}
-		
-		/// STEP 2: get the packet length and frame type
-		if( doneStep1 && !doneStep2 )
-		{
-			if( available() >= 3 )
-			{
-				// get following bytes with frame length and frame type:
-				c = serialRead(uart);
+			c = serialRead(uart);	
 			
-				// check for incoming new message
-				if( c == 0x7E )
-				{
-					restart = true;
-					continue;
-				}
-				
-				// sum to length field
-				length += (uint16_t)((c & 0x00FF) << 8);
-				
-				// read new byte from UART
-				c = serialRead(uart);
-			
-				// check for incoming new message
-				if( c == 0x7E )
-				{
-					restart = true;
-					continue;
-				}		
-				// sum to length field
-				length += (uint16_t)(c & 0x00FF);		
-				
-				// read new byte from UART
-				frameType = serialRead(uart);				
-				
-				// check for incoming new message
-				if( frameType == 0x7E )
-				{
-					restart = true;
-					continue;
-				}
-				
-				// check frame type
-				if( (frameType == 0x80) 
-				|| 	(frameType == 0x81)   
-				|| 	(frameType == 0x90)   
-				|| 	(frameType == 0x91))
-				{					
-					buffer[i] = (length>>8)&0xFF;
-					i++;		
-					buffer[i] = length&0xFF;
-					i++;		
-					buffer[i] = frameType;
-					i++;
-					doneStep2 = true;							
-				}
-				else
-				{
-					// start searching again
-					doneStep1 = false;
-					
-					// init length field
-					length = 0;
-					
-					// clear buffer and index
-					memset( buffer, 0x00, sizeof(buffer) );
-					i = 0;
-				}	
-			}
-		}
-		
-		/// STEP 3: get all packet bytes performing the API=2 conversion		
-		if( doneStep1 && doneStep2 && !doneStep3)
-		{	
-			int nBytes = available();
-			for (int k = 0; k < nBytes; k++)			
+			// Frame init detected
+			if( c == 0x7E ) 
 			{
-				c = serialRead(uart);		
-							
-				// check for incoming new message
-				if( c == 0x7E )
-				{
-					restart = true;
-					continue;
-				}
-					
-				// check if escaped char
-				if( c == 0x7D )
-				{	
-					pendingEscaped = true;	
-					if( available() > 0 )
-					{
-						buffer[i] = serialRead(uart) xor 0x20;						
-						i++;
-						k++;
-						pendingEscaped = false;	
-						if( i >= sizeof(buffer) )
-						{
-							// ERROR: Not enough memory space				
-							return 7;
-						}
-					}			
-				}
-				else
-				{
-					if( pendingEscaped == true )
-					{
-						buffer[i] = c xor 0x20;	
-						i++;
-						pendingEscaped = false;
-						if( i >= sizeof(buffer) )
-						{
-							// ERROR: Not enough memory space				
-							return 7;
-						}
-					}
-					else
-					{
-						buffer[i] = c;
-						i++;
-						pendingEscaped = false;
-						if( i >= sizeof(buffer) )
-						{
-							// ERROR: Not enough memory space				
-							return 7;
-						}
-					}	
-				}	
-				
-				if( i >= (length+3) )
-				{
-					doneStep3 = true;									
-					_length = i; // not including escaped chars		
-					break;
-				}	
+				i = 0;
+				escape_pending = false;	
 			}
-		}
-		
-		/// STEP 4: Checksum and copy payload
-		if( doneStep1 && doneStep2 && doneStep3 )
-		{
-			if( available() )
+			else if ( c == 0x7D )
 			{
-				c = serialRead(uart);		
-				
-				// check for incoming new message
-				if( c == 0x7E )
+				escape_pending = true;
+				continue;
+			}
+			else 
+			{
+				if (escape_pending == true)
 				{
-					restart = true;
-					continue;
+					c = c xor 0x20;
+					escape_pending = false;
 				}
-				
-				// check if escaped char
-				if( c == 0x7D )
-				{				
-					if( available() )
-					{
-						checksum = serialRead(uart) xor 0x20;							
-					}
-					else
-					{
-						// ERROR: Error escaping character
-						return 5;
-					}					
-				}
-				else
-				{
-					checksum = c;		
-				}					
+			}
+			buffer[i++] = c;
 
-				// generate checksum from buffer
-				uint8_t gen_checksum = getChecksum(buffer);
-				
-				// check checksum
-				if( gen_checksum == checksum )
-				{		
-					// Checksum is correct
-				}	
-				else
-				{	
-					// ERROR: Checksum is not correct					
-					return 4;
-				}		
-			}
-			else
-			{
-				// ERROR: Checksum byte not available	
-				return 3;
-			}
-			
-			// Depending on frame type extract payload and 
-			// calculate paylaod length
-			if( frameType == 0x80 )
-			{
-				rxPacket80_t* received = (rxPacket80_t*) buffer;
-				
-				// substract header size
-				_length = _length - 14 ; 
-				
-				// copy payload
-				memcpy( _payload, received->data, _length);
-				
-				// copy source mac address
-				memcpy( _srcMAC, received->macS, sizeof(_srcMAC));		
+			// Compute length
+			if (i == 3) frame_length = (uint16_t)(buffer[1] << 8) + (uint16_t)c;
 
-				// get rssi level
-				_rssi = (int)received->rssi*(-1);		
-			}
-			else if (frameType == 0x81) 
-			{
-				rxPacket81_t* received = (rxPacket81_t*) buffer;
-				
-				// substract header size
-				_length = _length - 8 ;
-				
-				// copy payload
-				memcpy( _payload, received->data, _length);
-				
-				// copy source Network Address (MY)
-				memcpy( _srcNA, received->naS, sizeof(_srcNA));			
-
-				// get rssi level
-				_rssi = (int)received->rssi*(-1);		
-			}  
-			else if (frameType == 0x90) 
-			{
-				rxPacket90_t* received = (rxPacket90_t*) buffer;
-				
-				// substract header size
-				_length = _length - 15 ;
-				
-				// copy payload
-				memcpy( _payload, received->data, _length);	
-				
-				// copy source mac address
-				memcpy( _srcMAC, received->macS, sizeof(_srcMAC));	
-			}  
-			else if (frameType == 0x91)
-			{
-				rxPacket91_t* received = (rxPacket91_t*) buffer;
-				
-				// substract header size
-				_length = _length - 21 ;
-				
-				// copy payload
-				memcpy( _payload, received->data, _length);
-				
-				// copy source mac address
-				memcpy( _srcMAC, received->macS, sizeof(_srcMAC));	
-			}
-			else
-			{
-				// ERROR: frameType not valid
-				return 2;
-			}
-	
-			// return OK
-			return 0;
-		}
-		
-		//avoid millis overflow problem
-		if( millis() < previous ) previous = millis(); 
+			// Check if we have a complete packet
+			else if (i == (frame_length + 4)) 
+			{ 
+				packet_completed = true;
+				packet_length = i;
+				break;
+			}		
+			// Check if there is still room
+			else if (i >= sizeof(buffer)) return 7; 	
+		}	
 	}
+
+	// Check if we got a complete packet
+	if (!packet_completed)  return 1;
 	
-	// ERROR: timeout when receiving answer
-	return 1;
+	// We have a complete packet
+	// Verify checksum
+	if (getChecksum(buffer) != buffer[packet_length-1])  return 4;
 	
+	// Depending on frame type extract payload and 
+	frameType = buffer[3];
+
+	// calculate paylaod length
+	if( frameType == 0x80 )
+	{
+		rxPacket80_t* received = (rxPacket80_t*) buffer;
+		
+		// substract header size
+		_length = packet_length - 15 ; 
+		
+		// copy payload
+		memcpy( _payload, received->data, _length);
+		
+		// copy source mac address
+		memcpy( _srcMAC, received->macS, sizeof(_srcMAC));		
+
+		// get rssi level
+		_rssi = (int)received->rssi*(-1);		
+	}
+	else if (frameType == 0x81) 
+	{
+		rxPacket81_t* received = (rxPacket81_t*) buffer;
+		
+		// substract header size
+		_length = packet_length - 9 ;
+		
+		// copy payload
+		memcpy( _payload, received->data, _length);
+		
+		// copy source Network Address (MY)
+		memcpy( _srcNA, received->naS, sizeof(_srcNA));			
+
+		// get rssi level
+		_rssi = (int)received->rssi*(-1);		
+	}  
+	else if (frameType == 0x90) 
+	{
+		rxPacket90_t* received = (rxPacket90_t*) buffer;
+		
+		// substract header size
+		_length = packet_length - 16 ;
+		
+		// copy payload
+		memcpy( _payload, received->data, _length);	
+		
+		// copy source mac address
+		memcpy( _srcMAC, received->macS, sizeof(_srcMAC));	
+	}  
+	else if (frameType == 0x91)
+	{
+		rxPacket91_t* received = (rxPacket91_t*) buffer;
+		
+		// substract header size
+		_length = packet_length - 22 ;
+		
+		// copy payload
+		memcpy( _payload, received->data, _length);
+		
+		// copy source mac address
+		memcpy( _srcMAC, received->macS, sizeof(_srcMAC));	
+	}
+	else
+	{
+		// ERROR: frameType not valid
+		return 2;
+	}
+
+	return 0;
 }
+
 
 
 

@@ -1,7 +1,7 @@
 /*! \file LMP91000.h
     \brief Library for managing the LMP91000 AFE 
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -137,11 +137,11 @@
 #define LMP91000_MODEC_REG_PWR_MODE__LEN					3
 
 #define LMP91000_MODEC_REG_PWR_MODE_DEEP_SLEEP				0
-#define LMP91000_MODEC_REG_PWR_MODE_2_LEAD_GALVANIC		1
+#define LMP91000_MODEC_REG_PWR_MODE_2_LEAD_GALVANIC			1
 #define LMP91000_MODEC_REG_PWR_MODE_STAND_BY				2
-#define LMP91000_MODEC_REG_PWR_MODE_3_LEAD_AMPERIOMETRIC	3
+#define LMP91000_MODEC_REG_PWR_MODE_3_LEAD_AMPEROMETRIC		3
 #define LMP91000_MODEC_REG_PWR_MODE_TEMP_TIA_OFF			6
-#define LMP91000_MODEC_REG_PWR_MODE_TEMP_TIA_ON			7
+#define LMP91000_MODEC_REG_PWR_MODE_TEMP_TIA_ON				7
 #define LMP91000_MODEC_REG_PWR_MODE_NO_CHANGE				8
 
 
@@ -336,7 +336,7 @@ class LMP91000
 						LMP91000_MODEC_REG_PWR_MODE_DEEP_SLEEP
 						LMP91000_MODEC_REG_PWR_MODE_2_LEAD_GALVANIC
 						LMP91000_MODEC_REG_PWR_MODE_STAND_BY
-						LMP91000_MODEC_REG_PWR_MODE_3_LEAD_AMPERIOMETRIC
+						LMP91000_MODEC_REG_PWR_MODE_3_LEAD_AMPEROMETRIC
 						LMP91000_MODEC_REG_PWR_MODE_TEMP_TIA_OFF
 						LMP91000_MODEC_REG_PWR_MODE_TEMP_TIA_ON
 						LMP91000_MODEC_REG_PWR_MODE_NO_CHANGE

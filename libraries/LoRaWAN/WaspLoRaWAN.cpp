@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -120,6 +120,9 @@
  const char command_87[]	PROGMEM	= 	"mac get rxdelay1\r\n";
  const char command_88[]	PROGMEM	= 	"mac get rxdelay2\r\n";
  const char command_89[]	PROGMEM	= 	"mac get rx2 %s\r\n";
+ const char command_90[]	PROGMEM	= 	"mac get rx2\r\n";
+ const char command_91[]	PROGMEM	= 	"mac set sync %u\r\n";
+ const char command_92[]	PROGMEM	= 	"mac get sync\r\n";
 
  
 
@@ -214,7 +217,10 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
 	command_86,
 	command_87,
 	command_88,
-	command_89
+	command_89,
+	command_90,
+	command_91,
+	command_92
 };
 
 /******************************************************************************
@@ -5766,9 +5772,10 @@ uint8_t WaspLoRaWAN::getRX2Delay()
 
 
 /*! 
- * @brief	This function is used to set the automatic reply status from module
+ * @brief	This function is used to set second receiving window 
+ * 			parameters depending on the working band
  * 
- * @param	char* state: "on"/"off"
+ * @param	char* band: "868", "433" or "900"
  * 
  * @return		
  * 	@arg	'0' if OK
@@ -5782,47 +5789,88 @@ uint8_t WaspLoRaWAN::getRX2Parameters(char* band)
 	char ans1[15];
 	char ans2[15];
 
-	// check state
-	if ((strcmp(band, "868")) && (strcmp(band, "433"))) return LORAWAN_INPUT_ERROR;
-	
 	memset(_command,0x00,sizeof(_command));
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 	
-	// create "mac set ar" command
-	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[89])),band);
-	// create "\r\n" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
-	// create "invalid_param" answer
-	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// check state
+	if ((strcmp(band, "868")) && (strcmp(band, "433")) && (strcmp(band, "900"))) return LORAWAN_INPUT_ERROR;
 	
-	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,500);
-		
-	if (status == 1)
+	if (_version == RN2483_MODULE)
 	{
-		char * pch;	
-		pch = strtok((char*) _buffer," \r\n");
-		if (pch != NULL)
+		// create "mac get rx2" command
+		sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[89])),band);
+		// create "\r\n" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+		// create "invalid_param" answer
+		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+		
+		//send command and wait for ans
+		status = sendCommand(_command,ans1,ans2,500);
+			
+		if (status == 1)
 		{
-			_rx2DataRate = strtoul(pch,NULL, 10);
-			pch = strtok(NULL,"\r\n");
+			char * pch;	
+			pch = strtok((char*) _buffer," \r\n");
 			if (pch != NULL)
 			{
-				_rx2Frequency = strtoul(pch,NULL, 10);
-				return LORAWAN_ANSWER_OK;
+				_rx2DataRate = strtoul(pch,NULL, 10);
+				pch = strtok(NULL,"\r\n");
+				if (pch != NULL)
+				{
+					_rx2Frequency = strtoul(pch,NULL, 10);
+					return LORAWAN_ANSWER_OK;
+				}
+				return LORAWAN_ANSWER_ERROR;
 			}
 			return LORAWAN_ANSWER_ERROR;
 		}
-		return LORAWAN_ANSWER_ERROR;
+		else if (status == 2)
+		{
+			return LORAWAN_ANSWER_ERROR;
+		}
+		else
+		{
+			return LORAWAN_NO_ANSWER;
+		}
 	}
-	else if (status == 2)
+	else if (_version == RN2903_MODULE)
 	{
-		return LORAWAN_ANSWER_ERROR;
-	}
-	else
-	{
-		return LORAWAN_NO_ANSWER;
+		// create "mac get rx2" command
+		sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[90])));
+		// create "\r\n" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+		// create "invalid_param" answer
+		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+		
+		//send command and wait for ans
+		status = sendCommand(_command,ans1,ans2,500);
+			
+		if (status == 1)
+		{
+			char * pch;	
+			pch = strtok((char*) _buffer," \r\n");
+			if (pch != NULL)
+			{
+				_rx2DataRate = strtoul(pch,NULL, 10);
+				pch = strtok(NULL,"\r\n");
+				if (pch != NULL)
+				{
+					_rx2Frequency = strtoul(pch,NULL, 10);
+					return LORAWAN_ANSWER_OK;
+				}
+				return LORAWAN_ANSWER_ERROR;
+			}
+			return LORAWAN_ANSWER_ERROR;
+		}
+		else if (status == 2)
+		{
+			return LORAWAN_ANSWER_ERROR;
+		}
+		else
+		{
+			return LORAWAN_NO_ANSWER;
+		}
 	}
 }
 
@@ -5896,6 +5944,85 @@ uint8_t WaspLoRaWAN::getMaxPayload()
 	}
 	
 	return 0;
+}
+
+/*!
+ * @brief	This function is used to configure the synchronization word
+ *			for the LoRaWAN communication. 
+ * 
+ * @param	uint8_t sync: one byte long hexadecimal number that represents
+ * 			the synchronization word
+ */
+uint8_t WaspLoRaWAN::setSyncWord(uint8_t sync)
+{
+	uint8_t status;	
+	char ans1[15];
+	char ans2[15];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	// create "mac set sync" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[91])), sync);
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,100);
+
+	if (status == 1)
+	{
+		_syncWord = sync;
+		return LORAWAN_ANSWER_OK;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*!
+ * @brief	This function is used to configure the synchronization word
+ *			for the LoRaWAN communication. 
+ * 
+ * @param	uint8_t sync: one byte long hexadecimal number that represents
+ * 			the synchronization word
+ */
+uint8_t WaspLoRaWAN::getSyncWord()
+{
+	uint8_t status;	
+	char ans1[15];
+	char ans2[15];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	// create "mac set sync" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[92])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,100);
+
+	if (status == 1)
+	{
+		_syncWord = parseIntValue();
+		return LORAWAN_ANSWER_OK;
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

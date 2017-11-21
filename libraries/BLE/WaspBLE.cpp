@@ -1,7 +1,7 @@
 /*
  *  Library for managing the Bluetooth low energy BLE112
  * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -867,7 +867,7 @@ uint16_t WaspBLE::scanDevice(char * Mac)
 	power: Allowed TX power levels
  Values: 
 */
-uint16_t WaspBLE::scanDevice(char* Mac, uint8_t maxTime, uint8_t TXPower)
+uint16_t WaspBLE::scanDevice(char* Mac, uint32_t maxTime, uint8_t TXPower)
 {
 	uint8_t macByteArray[6];
 	
@@ -894,7 +894,7 @@ uint16_t WaspBLE::scanDevice(char* Mac, uint8_t maxTime, uint8_t TXPower)
 	power: Allowed TX power levels
  Values: 
 */
-uint16_t WaspBLE::scanDevice(uint8_t* Mac, uint8_t maxTime, uint8_t TXPower)
+uint16_t WaspBLE::scanDevice(uint8_t* Mac, uint32_t maxTime, uint8_t TXPower)
 {
 	uint8_t found = 0;
 	numberOfDevices = 0;

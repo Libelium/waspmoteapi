@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -223,10 +223,10 @@ void WaspPWR::switchesOFF(uint8_t option)
 	digitalWrite(RTC_SLEEP, LOW);
 		
 	// unset I2C bus        
-    pinMode(I2C_SDA,OUTPUT);
-	digitalWrite(I2C_SDA,LOW);
-	pinMode(I2C_SCL,OUTPUT);
-	digitalWrite(I2C_SCL,LOW);
+    //~ pinMode(I2C_SDA,OUTPUT);
+	//~ digitalWrite(I2C_SDA,LOW);
+	//~ pinMode(I2C_SCL,OUTPUT);
+	//~ digitalWrite(I2C_SCL,LOW);
 	Wire.isON = false;
 	
 	// switch Analog to Digital Converter OFF
@@ -347,13 +347,11 @@ void WaspPWR::switchesON(uint8_t option)
 	// switch Analog to Digital Converter ON
 	sbi(ADCSRA, ADEN);        		
 
-	if ((option == ALL_OFF) || (option == SENS_OFF) || (option == SOCKET0_ON))
+	// check if an Cities PRO Sensor Board is used. 
+	if ((WaspRegisterSensor & REG_CITIES_PRO) && ((option == SENSOR_ON) || (option == ALL_ON)))
 	{
-		pinMode(SENS_PW_3V3,OUTPUT);
-		digitalWrite(SENS_PW_3V3,HIGH);	
-		pinMode(SENS_PW_5V,OUTPUT);
-		digitalWrite(SENS_PW_5V,HIGH);
-		delay(50);
+		// enable I2C isolator
+		digitalWrite(ANA0, HIGH);
 	}
 }
 
@@ -446,7 +444,10 @@ void WaspPWR::sleep(uint8_t	timer, uint8_t option)
 		RTC.ON();
 		RTC.clearAlarmFlag();
 		RTC.OFF();
-	}	
+	}
+	
+	// re-activate what is needed
+	switchesON(option);
 }
 
 
@@ -529,7 +530,8 @@ void WaspPWR::deepSleep(const char* time2wake,
 	{
 		RTC.disableAlarm1();
 		RTC.OFF();
-		USB.println("[PWR] deepSleep RTC error");
+		Wire.recover();
+		USB.println(F("[PWR] deepSleep RTC error"));
 		return (void)0;
 	}
     RTC.OFF();
@@ -554,7 +556,7 @@ void WaspPWR::deepSleep(const char* time2wake,
 	else
 	{
 		USB.ON();
-		USB.println("[PWR] Noise in Interruption line");		
+		USB.println(F("[PWR] Noise in Interruption line"));
 	}
 	// wake up here
 	sleep_disable();
@@ -568,6 +570,9 @@ void WaspPWR::deepSleep(const char* time2wake,
 	RTC.disableAlarm1();
 	RTC.clearAlarmFlag();
 	RTC.OFF();
+	
+	// re-activate what is needed
+	switchesON(option);
 	
 	//SPI.setSPISlave(ALL_DESELECTED);
 }

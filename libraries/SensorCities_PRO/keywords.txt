@@ -44,6 +44,9 @@ readNoise	KEYWORD2
 getSPLA	KEYWORD2
 SPLA	KEYWORD2
 noiseSensor	KEYWORD2
+bmeCitiesSensor	KEYWORD2
+ultrasoundCitiesSensor	KEYWORD2
+luxesCitiesSensor	KEYWORD2
 
 SensorCitiesPRO	KEYWORD1
 noise	KEYWORD1

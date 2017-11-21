@@ -21,7 +21,7 @@
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>
   Modified for Waspmote by Libelium, 2017
   
-  Version:	3.1
+  Version:	3.2
   
 */
 
@@ -30,13 +30,21 @@
 #define	_MODBUSMASTER_H_INCLUDED
 
 
-/***********************************************************************
-@def __MODBUSMASTER_DEBUG__ (1).
-Set to 1 to enable debugging features within class:
-  - pin 4 cycles for each byte read in the Modbus response
-  - pin 5 cycles for each millisecond timeout during the Modbus response
-***********************************************************************/
-#define __MODBUSMASTER_DEBUG__ (1)
+/*******************************************************************************
+ * Definitions 
+ ******************************************************************************/
+
+/*! 
+ * \def DEBUG_MODBUS_MASTER 
+ * \brief Possible values:
+ * 	0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages
+ */
+#define DEBUG_MODBUS_MASTER	0
+#define PRINT_MODBUS_MASTER(str)	USB.print(F("[MB_MASTER] ")); USB.print(str);
+#define PRINTLN_MODBUS_MASTER(str)	USB.print(F("[MB_MASTER] ")); USB.println(str);
+
 
 //**********************************************************************
 //	STANDARD INCLUDES
@@ -103,9 +111,9 @@ class ModbusMaster
 		ModbusMaster(uint8_t);
 		ModbusMaster(uint8_t, uint8_t);
 
-		void begin();
-		void begin(unsigned long);
-		void begin(unsigned long, uint8_t);
+		uint8_t begin();
+		uint8_t begin(unsigned long);
+		uint8_t begin(unsigned long, uint8_t);
 		
 		void idle(void (*)());
 		

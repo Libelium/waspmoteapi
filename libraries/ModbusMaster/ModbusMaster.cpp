@@ -20,7 +20,7 @@
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>  
   Modified for Waspmote by Libelium, 2017
   
-  Version:	3.3
+  Version:	3.4
 */
 
 #include "ModbusMaster.h"
@@ -84,11 +84,10 @@ Call once class has been instantiated, typically within setup().
 
 @ingroup setup
 ***********************************************************************/
-void ModbusMaster::begin(void)
+uint8_t ModbusMaster::begin(void)
 {
 	_u8SerialPort = 0;
-	begin(9600, _u8SerialPort);
-
+	return begin(9600, _u8SerialPort);
 }
 
 
@@ -99,10 +98,10 @@ Call once class has been instantiated, typically within setup().
 
 @ingroup setup
 ***********************************************************************/
-void ModbusMaster::begin(unsigned long BaudRate)
+uint8_t ModbusMaster::begin(unsigned long BaudRate)
 {
 	_u8SerialPort = 0;
-	begin(BaudRate, _u8SerialPort);
+	return begin(BaudRate, _u8SerialPort);
 }
 
 
@@ -115,8 +114,10 @@ Call once class has been instantiated, typically within setup().
 @param u16BaudRate baud rate, in standard increments (300..115200)
 @ingroup setup
 ***********************************************************************/
-void ModbusMaster::begin(unsigned long BaudRate , uint8_t socket)
+uint8_t ModbusMaster::begin(unsigned long BaudRate , uint8_t socket)
 {
+	uint8_t answer;
+	
 	// txBuffer = (uint16_t*) calloc(ku8MaxBufferSize, sizeof(uint16_t));
 	_u8TransmitBufferIndex = 0;
 	u16TransmitBufferLength = 0;
@@ -137,8 +138,13 @@ void ModbusMaster::begin(unsigned long BaudRate , uint8_t socket)
 	}
 	else 
 	{
-		W485.ON();
-		delay(100);
+		// init module
+		answer = W485.ON();
+		delay(100);		
+		if (answer != 0) 
+		{
+			return 1;
+		}
 
 		// Configure the baud rate of the module
 		W485.baudRateConfig(BaudRate);
@@ -147,6 +153,8 @@ void ModbusMaster::begin(unsigned long BaudRate , uint8_t socket)
 		// Use one stop bit configuration 
 		W485.stopBitConfig(1);  
 	}
+	
+	return 0;
 }
 
 
@@ -721,9 +729,11 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 			W485.send(u8ModbusADU[i], BYTE);
 		}
 	}
-
-	//~ USB.print("Master send:");
-	//~ USB.printHexln(u8ModbusADU, u8ModbusADUSize);
+	
+	#if DEBUG_MODBUS_MASTER > 1
+		PRINT_MODBUS_MASTER("Master send:");
+		USB.printHexln(u8ModbusADU, u8ModbusADUSize);
+	#endif
 	
 	// clear buffer
 	memset(u8ModbusADU, 0x00, sizeof(u8ModbusADU));	
@@ -762,7 +772,9 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	// check slave address
 	if (val != _u8MBSlave)
 	{
-		//~ USB.println("NO slave address found");
+		#if DEBUG_MODBUS_MASTER > 1
+			PRINTLN_MODBUS_MASTER("No slave address found");
+		#endif
 		return 1;
 	}
 	else
@@ -853,8 +865,11 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 		}
 	}
     
-	//~ USB.print("Master receive:");
-	//~ USB.printHexln(u8ModbusADU, u8ModbusADUSize);
+   	#if DEBUG_MODBUS_MASTER > 1
+		PRINT_MODBUS_MASTER("Master receive:");
+		USB.printHexln(u8ModbusADU, u8ModbusADUSize);
+	#endif
+    
   
 	// verify response is large enough to inspect further
 	if (!u8MBStatus && u8ModbusADUSize >= 5) {

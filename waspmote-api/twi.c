@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
- *  Revised for Waspmote by Libelium, 2014-2016
+ *  Revised for Waspmote by Libelium, 2014-2017
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- *  Version:		3.0
+ *  Version:		3.1
  *  Implementation:	N. Zambetti, A. Bielsa, Y. Carmona
  */
  
@@ -44,7 +44,7 @@
 #include "twi.h"
 
 static volatile uint8_t twi_state;
-static uint8_t twi_slarw;
+static volatile uint8_t twi_slarw;
 
 static void (*twi_onSlaveTransmit)(void);
 static void (*twi_onSlaveReceive)(uint8_t*, int);

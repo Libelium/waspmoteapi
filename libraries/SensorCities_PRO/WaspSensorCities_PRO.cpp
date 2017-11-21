@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation: Alejandro Gállego, Ahmad Saad
  */
@@ -29,27 +29,44 @@
   
 // Constructors ///////////////////////////////////////////////////////////
 
-/*	Constructor: 	Sets the mode of the digital pins and initializes them
- * 
+/*!
+ * @brief It initializes the different digital pins
+ * @param void
+ * @return void
  */
 WaspSensorCitiesPRO::WaspSensorCitiesPRO()
 {	
-	pinMode(SCP_I2C_MAIN_EN, OUTPUT);	// I2C main pin
-	
-	pinMode(SCP_PWR_SOCKET_1, OUTPUT);	// PWR pin socket 1
-	pinMode(SCP_PWR_SOCKET_2, OUTPUT);	// PWR pin socket 2
-	pinMode(SCP_PWR_SOCKET_3, OUTPUT);	// PWR pin socket 3
-	pinMode(SCP_PWR_SOCKET_4, OUTPUT);	// PWR pin socket 4
-	pinMode(SCP_PWR_SOCKET_5, OUTPUT);	// PWR pin socket 5
+	// I2C main pin	
+	pinMode(SCP_I2C_MAIN_EN, OUTPUT);
+	digitalWrite(SCP_I2C_MAIN_EN, LOW);
 
+	// switch off socket 3v3/i2c isolators
+	pinMode(SCP_PWR_3V3_SOCKET_1_C, OUTPUT);
+	pinMode(SCP_PWR_3V3_SOCKET_2_E, OUTPUT);
+	pinMode(SCP_PWR_3V3_SOCKET_3_F, OUTPUT);
+	pinMode(SCP_PWR_3V3_SOCKET_4_A, OUTPUT);
+	pinMode(SCP_PWR_3V3_SOCKET_5_B, OUTPUT);
+	digitalWrite(SCP_PWR_3V3_SOCKET_1_C, LOW);
+	digitalWrite(SCP_PWR_3V3_SOCKET_2_E, LOW);
+	digitalWrite(SCP_PWR_3V3_SOCKET_3_F, LOW);
+	digitalWrite(SCP_PWR_3V3_SOCKET_4_A, LOW);
+	digitalWrite(SCP_PWR_3V3_SOCKET_5_B, LOW);
 	
-	digitalWrite(SCP_I2C_MAIN_EN, LOW);	// I2C main pin
+	// disable probe i2c lines			
+	pinMode(SCP_I2C_SOCKET_1_C, OUTPUT);	
+	pinMode(SCP_I2C_SOCKET_3_F, OUTPUT); 	
+	pinMode(SCP_I2C_SOCKET_5_B, OUTPUT); 	
+	digitalWrite(SCP_I2C_SOCKET_1_C, LOW);
+	digitalWrite(SCP_I2C_SOCKET_3_F, LOW);
+	digitalWrite(SCP_I2C_SOCKET_5_B, LOW);
 	
-	digitalWrite(SCP_PWR_SOCKET_1, LOW);	// PWR pin socket 1
-	digitalWrite(SCP_PWR_SOCKET_2, LOW);	// PWR pin socket 2
-	digitalWrite(SCP_PWR_SOCKET_3, LOW);	// PWR pin socket 3
-	digitalWrite(SCP_PWR_SOCKET_4, LOW);	// PWR pin socket 4
-	digitalWrite(SCP_PWR_SOCKET_5, LOW);	// PWR pin socket 5
+	// switch off all probe power lines 
+	pinMode(SCP_PWR_SOCKET_1_C, OUTPUT);
+	pinMode(SCP_PWR_SOCKET_3_F, OUTPUT);
+	pinMode(SCP_PWR_SOCKET_5_B, OUTPUT);
+	digitalWrite(SCP_PWR_SOCKET_1_C, HIGH);
+	digitalWrite(SCP_PWR_SOCKET_3_F, HIGH);
+	digitalWrite(SCP_PWR_SOCKET_5_B, HIGH);	
 	
 	// update Waspmote Control Register
 	WaspRegisterSensor |= REG_CITIES_PRO;
@@ -62,26 +79,28 @@ WaspSensorCitiesPRO::WaspSensorCitiesPRO()
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-/*	Turns ON the sensor/socket
- *	Parameters:	socket_sensor:	SOCKET_1
- *								SOCKET_2
- * 								SOCKET_3
- * 								SOCKET_4
- * 								SOCKET_5
- * 								SOCKET_A
- * 								SOCKET_B
- * 								SOCKET_C
- * 								SOCKET_E
- * 								SOCKET_F
- *  Return:	void
+
+/*!
+ * @brief Turns ON the sensor/socket
+ * @param uint8_t socket_sensor:
+ * 		@arg SOCKET_1
+ * 		@arg SOCKET_2
+ * 		@arg SOCKET_3
+ * 		@arg SOCKET_4
+ * 		@arg SOCKET_5
+ * 		@arg SOCKET_A
+ * 		@arg SOCKET_B
+ * 		@arg SOCKET_C
+ * 		@arg SOCKET_E
+ * 		@arg SOCKET_F
+ * @return void
  */
 void WaspSensorCitiesPRO::ON(uint8_t socket_sensor)
 {
-	
 	// Power on 3V3 and/or 5V if necessary	
 	if ((WaspRegister & REG_3V3) == 0)
 	{
-		#if CITIES_PRO_DEBUG>0
+		#if DEBUG_CITIES_PRO>0
 			PRINTLN_CITIES_PRO(F("3V3 to ON"));
 		#endif
 		PWR.setSensorPower(SENS_3V3, SENS_ON);
@@ -92,49 +111,39 @@ void WaspSensorCitiesPRO::ON(uint8_t socket_sensor)
 	{
 		case SOCKET_1:
 		case SOCKET_C:
-			digitalWrite(SCP_PWR_SOCKET_1, HIGH);
-			
-			// Set the flags
-			pwrCitiesPRORegister |= 0x01;
+			pwrCitiesPRORegister |= (1 << 0x01);
+			digitalWrite(SCP_PWR_3V3_SOCKET_1_C, HIGH);			
 			break;
 			
 		case SOCKET_2:
 		case SOCKET_E:
-			digitalWrite(SCP_PWR_SOCKET_2, HIGH);
-			
-			// Set the flags
-			pwrCitiesPRORegister |= 0x02;
+			pwrCitiesPRORegister |= (1 << 0x02);
+			digitalWrite(SCP_PWR_3V3_SOCKET_2_E, HIGH);			
 			break;
 			
 		case SOCKET_3:
 		case SOCKET_F:
-			digitalWrite(SCP_PWR_SOCKET_3, HIGH);
-			
-			// Set the flags
-			pwrCitiesPRORegister |= 0x04;
+			pwrCitiesPRORegister |= (1 << 0x03);
+			digitalWrite(SCP_PWR_3V3_SOCKET_3_F, HIGH);			
 			break;
 			
 		case SOCKET_4:
 		case SOCKET_A:
-			digitalWrite(SCP_PWR_SOCKET_4, HIGH);
-			
-			// Set the flags
-			pwrCitiesPRORegister |= 0x08;
+			pwrCitiesPRORegister |= (1 << 0x04);
+			digitalWrite(SCP_PWR_3V3_SOCKET_4_A, HIGH);			
 			break;
 			
 		case SOCKET_5:
 		case SOCKET_B:
-			digitalWrite(SCP_PWR_SOCKET_5, HIGH);
-			
-			// Set the flags
-			pwrCitiesPRORegister |= 0x10;
+			pwrCitiesPRORegister |= (1 << 0x05);
+			digitalWrite(SCP_PWR_3V3_SOCKET_5_B, HIGH);			
 			break;
 		
 		default:
 			break;
 	}
 	
-	#if CITIES_PRO_DEBUG>1
+	#if DEBUG_CITIES_PRO>1
 		PRINT_CITIES_PRO(F("pwrCitiesPRORegister="));
 		USB.println(pwrCitiesPRORegister, BIN);
 		PRINT_CITIES_PRO(F("pwrGasPRORegister="));
@@ -143,75 +152,24 @@ void WaspSensorCitiesPRO::ON(uint8_t socket_sensor)
 	
 }
 
-/*	Turns OFF the sensor/socket
- *	Parameters:	socket_sensor:	SOCKET_1
- *								SOCKET_2
- * 								SOCKET_3
- * 								SOCKET_4
- * 								SOCKET_5
- * 								SOCKET_A
- * 								SOCKET_B
- * 								SOCKET_C
- * 								SOCKET_E
- * 								SOCKET_F
- *  Return:	void
+/*!
+ * @brief Turns OFF the sensor/socket
+ * @param uint8_t socket_sensor:
+ * 		@arg SOCKET_1
+ * 		@arg SOCKET_2
+ * 		@arg SOCKET_3
+ * 		@arg SOCKET_4
+ * 		@arg SOCKET_5
+ * 		@arg SOCKET_A
+ * 		@arg SOCKET_B
+ * 		@arg SOCKET_C
+ * 		@arg SOCKET_E
+ * 		@arg SOCKET_F
+ * @return void
  */
 void WaspSensorCitiesPRO::OFF(uint8_t socket_sensor)
 {
 	uint8_t mask;
-
-	switch(socket_sensor)
-	{	
-
-		case SOCKET_1:
-		case SOCKET_C:
-			digitalWrite(SCP_PWR_SOCKET_1, LOW);
-			
-			// Set the flags
-			pwrCitiesPRORegister &= 0xFE;
-			break;
-			
-		case SOCKET_2:
-		case SOCKET_E:
-			digitalWrite(SCP_PWR_SOCKET_2, LOW);
-			
-			// Set the flags
-			pwrCitiesPRORegister &= 0xFD;
-			break;
-			
-		case SOCKET_3:
-		case SOCKET_F:
-			digitalWrite(SCP_PWR_SOCKET_3, LOW);
-			
-			// Set the flags
-			pwrCitiesPRORegister &= 0xFB;
-			break;
-			
-		case SOCKET_4:
-		case SOCKET_A:
-			digitalWrite(SCP_PWR_SOCKET_4, LOW);
-			
-			// Set the flags
-			pwrCitiesPRORegister &= 0xF7;
-			break;
-			
-		case SOCKET_5:
-		case SOCKET_B:
-			digitalWrite(SCP_PWR_SOCKET_5, LOW);
-			
-			// Set the flags
-			pwrCitiesPRORegister &= 0xEF;
-			break;
-
-		default:
-			break;
-	}	
-	#if CITIES_PRO_DEBUG>1
-		PRINT_CITIES_PRO(F("pwrCitiesPRORegister="));
-		USB.println(pwrCitiesPRORegister, BIN);
-		PRINT_CITIES_PRO(F("pwrGasPRORegister="));
-		USB.println(pwrGasPRORegister, BIN);
-	#endif	
 	
 	// Check I2C isolator
 	if ((pwrCitiesPRORegister == 0) && ((pwrGasPRORegister & 0xFE) == 0))
@@ -220,100 +178,68 @@ void WaspSensorCitiesPRO::OFF(uint8_t socket_sensor)
 		digitalWrite(SCP_I2C_MAIN_EN, LOW);
 	}
 	
+	switch(socket_sensor)
+	{	
+
+		case SOCKET_1:
+		case SOCKET_C:
+			digitalWrite(SCP_PWR_3V3_SOCKET_1_C, LOW);
+			
+			// Set the flags
+			pwrCitiesPRORegister &= ~(1 << 0x01);
+			break;
+			
+		case SOCKET_2:
+		case SOCKET_E:
+			digitalWrite(SCP_PWR_3V3_SOCKET_2_E, LOW);
+			
+			// Set the flags
+			pwrCitiesPRORegister &= ~(1 << 0x02);
+			break;
+			
+		case SOCKET_3:
+		case SOCKET_F:
+			digitalWrite(SCP_PWR_3V3_SOCKET_3_F, LOW);
+			
+			// Set the flags
+			pwrCitiesPRORegister &= ~(1 << 0x03);
+			break;
+			
+		case SOCKET_4:
+		case SOCKET_A:
+			digitalWrite(SCP_PWR_3V3_SOCKET_4_A, LOW);
+			
+			// Set the flags
+			pwrCitiesPRORegister &= ~(1 << 0x04);
+			break;
+			
+		case SOCKET_5:
+		case SOCKET_B:
+			digitalWrite(SCP_PWR_3V3_SOCKET_5_B, LOW);
+			
+			// Set the flags
+			pwrCitiesPRORegister &= ~(1 << 0x05);
+			break;
+
+		default:
+			break;
+	}	
+	#if DEBUG_CITIES_PRO>1
+		PRINT_CITIES_PRO(F("pwrCitiesPRORegister="));
+		USB.println(pwrCitiesPRORegister, BIN);
+		PRINT_CITIES_PRO(F("pwrGasPRORegister="));
+		USB.println(pwrGasPRORegister, BIN);
+	#endif
+	
 	if ((pwrGasPRORegister == 0x00) && 
 		(pwrCitiesPRORegister == 0x00) && 
 		((WaspRegister & REG_3V3) != 0))
 	{					
-		#if CITIES_PRO_DEBUG>0
+		#if DEBUG_CITIES_PRO>0
 			PRINTLN_CITIES_PRO(F("3V3 to OFF"));
 		#endif	
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
 	}	
-}
-
-
-/*	
- *  Read BME temperature value
- *  Return:	temperature value
- *
- */
-float WaspSensorCitiesPRO::getTemperature() 
-{
-	float value = 0;
-	//Switch ON I2C
-	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
-	//Configure the BME280 Sensor (Temperature, Humidity and Pressure)
-	BME.ON();
-	delay(100);	
-	value = BME.getTemperature(BME280_OVERSAMP_1X, 0);
-	#if CITIES_PRO_DEBUG>0
-		PRINT_CITIES_PRO(F("Temperature:"));
-		USB.println(value);
-		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
-		USB.println(BME280_OVERSAMP_1X);
-	#endif 	
-	delay(100);
-	// Switch OFF I2C
-	//~ digitalWrite(SCP_I2C_MAIN_EN, LOW);
-	
-	// Read the temperature from the BME280 Sensor
-	return value;
-}
-
-
-/*	
- *  Read BME humidity value
- *  Return:	humidity value
- *
- */
-float WaspSensorCitiesPRO::getHumidity() {
-	float value = 0;
-	//Switch ON I2C
-	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
-	//Configure the BME280 Sensor (Temperature, Humidity and Pressure)
-	BME.ON();
-	delay(100);	
-	// Read the humidity from the BME280 Sensor
-	value = BME.getHumidity(BME280_OVERSAMP_1X);
-	#if CITIES_PRO_DEBUG>0
-		PRINT_CITIES_PRO(F("Humidity:"));
-		USB.println(value);
-		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
-		USB.println(BME280_OVERSAMP_1X);	
-	#endif    	
-	delay(100);
-	// Switch OFF I2C
-	//~ digitalWrite(SCP_I2C_MAIN_EN, LOW);
-	// Read the temperature from the BME280 Sensor	
-	return value;
-}
-
-
-/*	
- *  Read BME pressure value
- *  Return:	pressure value
- *
- */
-float WaspSensorCitiesPRO::getPressure() {
-	float value = 0;
-	//Switch ON I2C
-	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
-	//Configure the BME280 Sensor (Temperature, Humidity and Pressure)
-	BME.ON();
-	delay(100);	
-	// Read the pressure from the BME280 Sensor
-	value = BME.getPressure(BME280_OVERSAMP_1X, 0);
-	#if CITIES_PRO_DEBUG>0
-		PRINT_CITIES_PRO(F("Pressure:"));
-		USB.println(value);
-		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
-		USB.println(BME280_OVERSAMP_1X);	
-	#endif  	
-	delay(100);
-	// Switch OFF I2C
-	//~ digitalWrite(SCP_I2C_MAIN_EN, LOW);
-	// Read the temperature from the BME280 Sensor	
-	return value;	
 }
 
 WaspSensorCitiesPRO SensorCitiesPRO=WaspSensorCitiesPRO();
@@ -424,4 +350,364 @@ void noiseSensor::configure()
 noiseSensor noise = noiseSensor();
 
 
+
+
+
+
+//******************************************************************************
+// BME Sensor Class functions
+//******************************************************************************
+
+/*!
+ * @brief	Constructor of the class
+ * @param 	void
+ * @return	void
+ */
+bmeCitiesSensor::bmeCitiesSensor(uint8_t socket)
+{
+	_socket = socket;
+}
+
+
+
+/*!
+ * @brief	switch on the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void bmeCitiesSensor::ON()
+{
+	WaspSensorCitiesPRO::ON(_socket);
+	
+	// switch ON I2C
+	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
+	
+	// init BME
+	BME.ON();
+}
+
+
+
+/*!
+ * @brief	switch off the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void bmeCitiesSensor::OFF()
+{
+	WaspSensorCitiesPRO::OFF(_socket);
+	delay(100);
+}
+
+
+/*!
+ *  @brief Read BME temperature value
+ *  @return	temperature value
+ *
+ */
+float bmeCitiesSensor::getTemperature()
+{
+	float value = 0;
+	uint8_t error;
+	uint8_t retries;
+	
+	// switch ON I2C
+	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
+	
+	///////////////////////////////////////////////////////////////////
+	// configure the BME280 Sensor (Temperature, Humidity and Pressure)
+	///////////////////////////////////////////////////////////////////
+	retries = 3;
+	do
+	{
+		error = BME.ON();
+		retries--;
+		
+		if (error != 1)
+		{
+			Wire.recover();
+		}
+	} while ((error != 1) && (retries > 0));		
+	
+	delay(100);	
+	
+	///////////////////////////////////////////////////////////////////
+	// read temperature	from the BME280 Sensor
+	///////////////////////////////////////////////////////////////////
+	retries = 3;
+	do
+	{		
+		value = BME.getTemperature(BME280_OVERSAMP_1X, 0);
+		retries--;
+		
+		if (value == -1000.0)
+		{
+			Wire.recover();
+		}
+	} while ((value != -1000.0) && (retries > 0));	
+	
+	#if DEBUG_CITIES_PRO>0
+		PRINT_CITIES_PRO(F("Temperature:"));
+		USB.println(value);
+		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
+		USB.println(BME280_OVERSAMP_1X);
+	#endif
+	
+	delay(100);	
+	
+	return value;
+}
+
+
+/*!	
+ *  @brief Read BME humidity value
+ *  @return	humidity value
+ *
+ */
+float bmeCitiesSensor::getHumidity() 
+{
+	float value = 0;
+	uint8_t error;
+	uint8_t retries;
+	
+	// switch ON I2C
+	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
+	
+	///////////////////////////////////////////////////////////////////
+	// configure the BME280 Sensor (Temperature, Humidity and Pressure)
+	///////////////////////////////////////////////////////////////////
+	retries = 3;
+	do
+	{
+		error = BME.ON();
+		retries--;
+		
+		if (error != 1)
+		{
+			Wire.recover();
+		}
+	} while ((error != 1) && (retries > 0));
+	
+	delay(100);	
+	
+	///////////////////////////////////////////////////////////////////
+	// read the humidity from the BME280 Sensor
+	///////////////////////////////////////////////////////////////////	
+	retries = 3;
+	do
+	{		
+		value = BME.getHumidity(BME280_OVERSAMP_1X);
+		retries--;
+		
+		if (value == -1000.0)
+		{
+			Wire.recover();
+		}
+	} while ((value != -1000.0) && (retries > 0));	
+	
+	#if DEBUG_CITIES_PRO>0
+		PRINT_CITIES_PRO(F("Humidity:"));
+		USB.println(value);
+		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
+		USB.println(BME280_OVERSAMP_1X);	
+	#endif    	
+	delay(100);
+		
+	return value;
+}
+
+
+/*!	
+ *  @brief Read BME pressure value
+ *  @return	pressure value
+ *
+ */
+float bmeCitiesSensor::getPressure() 
+{
+	float value = 0;
+	uint8_t error;
+	uint8_t retries;
+	
+	// switch ON I2C
+	digitalWrite(SCP_I2C_MAIN_EN, HIGH);
+	
+	///////////////////////////////////////////////////////////////////
+	// configure the BME280 Sensor (Temperature, Humidity and Pressure)
+	///////////////////////////////////////////////////////////////////
+	retries = 3;
+	do
+	{
+		error = BME.ON();
+		retries--;
+		
+		if (error != 1)
+		{
+			Wire.recover();
+		}
+	} while ((error != 1) && (retries > 0));		
+	
+	delay(100);	
+	
+	///////////////////////////////////////////////////////////////////
+	// read the pressure from the BME280 Sensor
+	///////////////////////////////////////////////////////////////////	
+	retries = 3;
+	do
+	{		
+		value = BME.getPressure(BME280_OVERSAMP_1X, 0);
+		retries--;
+		
+		if (value == -1000.0)
+		{
+			Wire.recover();
+		}
+	} while ((value != -1000.0) && (retries > 0));	
+	
+	
+	#if DEBUG_CITIES_PRO>0
+		PRINT_CITIES_PRO(F("Pressure:"));
+		USB.println(value);
+		PRINT_CITIES_PRO(F("BME280_OVERSAMP_1X"));
+		USB.println(BME280_OVERSAMP_1X);	
+	#endif 
+	
+	delay(100);	
+	
+	return value;	
+}
+
+
+
+
+
+
+//******************************************************************************
+// Ultrasound Sensor Class functions
+//******************************************************************************
+
+/*!
+ * @brief	Constructor of the class
+ * @param 	void
+ * @return	void
+ */
+ultrasoundCitiesSensor::ultrasoundCitiesSensor(uint8_t socket)
+{
+	_socket = socket;
+}
+
+
+
+/*!
+ * @brief	switch on the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void ultrasoundCitiesSensor::ON()
+{
+	WaspSensorCitiesPRO::ON(_socket);	
+}
+
+
+
+/*!
+ * @brief	switch off the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void ultrasoundCitiesSensor::OFF()
+{
+	WaspSensorCitiesPRO::OFF(_socket);
+	delay(100);
+}
+
+
+/*!
+ * @brief 	This function performs a distance measurement
+ * @return 	distance in cm.
+ * 		  	9000 if error reading the distance
+ * 			10000 if error reading the sensor
+ */
+uint16_t ultrasoundCitiesSensor::getDistance()
+{
+	return Ultrasound.getDistance();
+}
+
+
+
+
+
+
+//******************************************************************************
+// Luxes Sensor Class functions
+//******************************************************************************
+
+/*!
+ * @brief	Constructor of the class
+ * @param 	void
+ * @return	void
+ */
+luxesCitiesSensor::luxesCitiesSensor(uint8_t socket)
+{
+	_socket = socket;
+}
+
+
+
+/*!
+ * @brief	switch on the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void luxesCitiesSensor::ON()
+{
+	WaspSensorCitiesPRO::ON(_socket);
+	delay(100);
+	
+	// init luxes sensor
+	TSL.ON();
+}
+
+
+
+/*!
+ * @brief	switch off the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void luxesCitiesSensor::OFF()
+{
+	WaspSensorCitiesPRO::OFF(_socket);
+	
+	// switch off delay for better preformance before 
+	// entering sleep mode after calling this function
+	delay(100);
+}
+
+
+/*!
+ * @brief 	This function performs a distance measurement
+ * @return 	luxes if ok 
+ * 			-1 if error
+ */
+uint32_t luxesCitiesSensor::getLuminosity()
+{
+	uint8_t error;
+	uint8_t retries = 3;
+	
+	do
+	{
+		// get luminosity
+		error = TSL.getLuminosity();	
+		
+		if (error == 0)
+		{
+			return TSL.lux;
+		}
+		retries--;
+		Wire.recover();
+	}
+	while(retries > 0);
+	
+	return (uint32_t)-1;
+}
 

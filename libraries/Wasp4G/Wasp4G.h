@@ -1,7 +1,7 @@
 /*! \file Wasp4G.h
     \brief Library for managing Telit LE910
         
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	A. Gállego, Y. Carmona
 
@@ -226,6 +226,7 @@ public:
 	SocketInfo_t socketInfo[6];
 	SocketStatus_t socketStatus[6];
 	SocketStatusSSL_t socketStatusSSL[1];
+	uint8_t _wirelessNetwork;
 	
 	//! Profile definition for multiple sockets
 	enum ProfileSocketEnum
@@ -346,6 +347,13 @@ public:
 		SSL_TYPE_RSA		= 2,
 	};
 
+	//! FTP Session mode (Active or Passive)
+	enum FtpSessionMode
+	{
+		FTP_ACTIVE		= 0,
+		FTP_PASSIVE		= 1,
+	};
+
 
 	//! class constructor
     /*!
@@ -440,6 +448,36 @@ public:
 			15 if error activating GPRS connection
 	*/
 	uint8_t checkDataConnection(uint8_t time);
+	
+	/*!
+	\brief	This function deactivates/activates the GPRS context, eventually 
+			proceeding with the authentication with the parameters given with 
+			#PASSW and #USERID
+	\param	uint8_t mode: GPRS context activation mode 
+				\arg	0 - GPRS context deactivation request
+				\arg	1 - GPRS context activation request
+	\return 0 if OK
+			1 if error checking socket status	
+	*/
+	uint8_t gprsContextActivation(uint8_t mode);
+	
+	/*!
+	\brief	This function sets the socket configuration parameters
+	\param	uint8_t connId: socket connection identifier
+	\param	uint8_t cid: PDP context identifier
+	\param	uint16_t pktSz: packet size to be used by the TCP/UDP/IP stack for data sending
+	\param	uint16_t maxTo: exchange timeout
+	\param	uint16_t connTo: connection timeout if we can’t establish a connection
+	\param	uint16_t txTo: data sending timeout	
+	\return 0 if OK
+			1 if error checking socket status	
+	*/
+	uint8_t socketConfiguration(uint8_t  connId,
+								uint8_t  cid,
+								uint16_t pktSz,
+								uint16_t maxTo,
+								uint16_t connTo,
+								uint16_t txTo);
 	
 	
 	/*!
@@ -634,36 +672,61 @@ public:
 
 	/*!
 	\brief	This function configures FTP parameters and opens the connection
-	\param	uint8_t method: selected HTTP method:	Wasp4G::HTTP_GET
-													Wasp4G::HTTP_HEAD
-													Wasp4G::HTTP_DELETE
-													Wasp4G::HTTP_POST
-													Wasp4G::HTTP_PUT
-													Wasp4G::HTTP_POST_FRAME
 	\param	char* server: address of FTP server
 	\param	uint16_t port: port of FTP server
 	\param	char* username: authentication user identification string for FTP
 	\param	char* password: authentication password for FTP
-	\return		0 if OK
-				1 not registered, ME is not currently searching for a new operator to register to
-				2 not registered, but ME is currently searching for a new operator to register to
-				3 registration denied
-				4 unknown
-				6 not registered, ME is not currently searching for a new operator to register to
-				8 not registered, but ME is currently searching for a new operator to register to
-				9 registration denied
-				10 unknown
-				12 if error setting APN
-				13 if error setting login
-				14 if error setting password
-				15 if error activating GPRS connection
-				16 if error opening the FTP connection
-				17 if error setting the transfer type
+	\return	0 if OK
+			1 not registered, ME is not currently searching for a new operator to register to
+			2 not registered, but ME is currently searching for a new operator to register to
+			3 registration denied
+			4 unknown
+			6 not registered, ME is not currently searching for a new operator to register to
+			8 not registered, but ME is currently searching for a new operator to register to
+			9 registration denied
+			10 unknown
+			12 if error setting APN
+			13 if error setting login
+			14 if error setting password
+			15 if error activating GPRS connection
+			16 if error opening the FTP connection
+			17 if error setting the transfer type
 	*/	
 	uint8_t ftpOpenSession(	char* server,
 							uint16_t port,
 							char* username,
-							char* password);	
+							char* password);
+		
+	/*!
+	\brief	This function configures FTP parameters and opens the connection
+	\param	char* server: address of FTP server
+	\param	uint16_t port: port of FTP server
+	\param	char* username: authentication user identification string for FTP
+	\param	char* password: authentication password for FTP
+	\param	uint8_t mode: FTP session mode 
+			\arg Wasp4G::FTP_ACTIVE
+			\arg Wasp4G::FTP_PASSIVE
+	\return	0 if OK
+			1 not registered, ME is not currently searching for a new operator to register to
+			2 not registered, but ME is currently searching for a new operator to register to
+			3 registration denied
+			4 unknown
+			6 not registered, ME is not currently searching for a new operator to register to
+			8 not registered, but ME is currently searching for a new operator to register to
+			9 registration denied
+			10 unknown
+			12 if error setting APN
+			13 if error setting login
+			14 if error setting password
+			15 if error activating GPRS connection
+			16 if error opening the FTP connection
+			17 if error setting the transfer type
+	*/						
+	uint8_t ftpOpenSession(	char* server,
+							uint16_t port,
+							char* username,
+							char* password,
+							uint8_t mode);
 	
 	/*!
 	\brief	This function closes the FTP connection
@@ -739,10 +802,10 @@ public:
 	
 	/*!
 	\brief 	This function requests OTA
-	\param	char* OTA_server: address of FTP server with OTA files
-	\param	uint16_t OTA_port: port of FTP server with OTA files
-	\param	char* OTA_username: authentication user identification string for FTP
-	\param	char* OTA_password: authentication password for FTP
+	\param	char* ftp_server: address of FTP server with OTA files
+	\param	uint16_t ftp_port: port of FTP server with OTA files
+	\param	char* ftp_user: authentication user identification string for FTP
+	\param	char* ftp_pass: authentication password for FTP
 	\return	0 if OK
 			1 if SD not present
 			2 if error downloading LE910_OTA_FILE (UPGRADE.TXT)
@@ -773,6 +836,46 @@ public:
 						uint16_t OTA_port,
 						char* OTA_username,
 						char* OTA_password);
+	/*!
+	\brief 	This function requests OTA
+	\param	char* ftp_server: address of FTP server with OTA files
+	\param	uint16_t ftp_port: port of FTP server with OTA files
+	\param	char* ftp_user: authentication user identification string for FTP
+	\param	char* ftp_pass: authentication password for FTP
+	\param	uint8_t ftp_mode: FTP session mode: 
+			\arg Wasp4G::FTP_ACTIVE
+			\arg  Wasp4G::FTP_PASSIVE
+	\return	0 if OK
+			1 if SD not present
+			2 if error downloading LE910_OTA_FILE (UPGRADE.TXT)
+			3 if error opening FTP session
+			4 if filename is different to 7 bytes
+			5 if no "FILE" pattern found
+			6 if "NO_FILE" is the filename
+			7 if no "PATH" pattern found
+			8 if no "SIZE" pattern found
+			9 if no "VERSION" pattern found
+			10 if invalid program version number
+			11 if file size does not match in UPGRADE.TXT and server
+			12 if error downloading binary file: server file size is zero	
+			13 if error downloading binary file: reading the file size
+			14 if error downloading binary file: SD not present
+			15 if error downloading binary file: error creating the file in SD
+			16 if error downloading binary file: error opening the file
+			17 if error downloading binary file: error setting the pointer of the file
+			18 if error downloading binary file: error opening the GET connection
+			19 if error downloading binary file: error module returns error code after requesting data
+			20 if error downloading binary file: error  getting packet size
+			21 if error downloading binary file: packet size mismatch
+			22 if error downloading binary file: error writing SD
+			23 if error downloading binary file: no more retries getting data 
+			24 if error downloading binary file: size mismatch	
+	*/	
+	uint8_t requestOTA(	char* ftp_server,
+						uint16_t ftp_port, 
+						char* ftp_user, 
+						char* ftp_pass,
+						uint8_t ftp_mode);
 	
 	
 	/*!
@@ -1216,6 +1319,13 @@ public:
 	 */
 	int8_t checkGPS();
 	
+	/*!
+	\brief Performs a HTTP request to AGPS server.
+	\return '0' if OK
+			'x' if error		
+	 */
+	uint8_t gpsSendHttpRequest();
+	
 	//! It converts from the NMEA message and indicator to degrees
 	float convert2Degrees(char* input, char indicator);
 	
@@ -1304,6 +1414,22 @@ public:
 				Wasp4G::NETWORK_UTRAN_EUTRAN
 	 */
 	uint8_t setWirelessNetwork(uint8_t n);
+	
+	/*!
+	\brief 	This function gets the current Wireless Network.
+			The _wirelessNetwork parameter will store the WDS-Side Stack 
+			used by the TA:
+				Wasp4G::NETWORK_GSM
+				Wasp4G::NETWORK_UTRAN
+				Wasp4G::NETWORK_3GPP
+				Wasp4G::NETWORK_EUTRAN_ONLY
+				Wasp4G::NETWORK_GERAN_UTRAN
+				Wasp4G::NETWORK_GERAN_EUTRAN
+				Wasp4G::NETWORK_UTRAN_EUTRAN
+	\return	0 if OK
+			1 if error
+	 */
+	uint8_t getWirelessNetwork();
 	
 	
 	/*!

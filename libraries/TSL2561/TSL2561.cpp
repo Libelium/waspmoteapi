@@ -1,7 +1,7 @@
 /*
  *  Library for managing the TSL2561 sensor (luxes accuray)
  * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -314,7 +314,10 @@ int8_t TSL2561::getFullLuminosity ()
 */
 boolean TSL2561::ON(void) 
 {	
-	
+	if (!Wire.isON) 
+	{
+		Wire.begin();
+	}
 	delay(100);
 	
 	if (checkID() == 0)

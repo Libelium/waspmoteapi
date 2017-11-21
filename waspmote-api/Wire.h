@@ -1,8 +1,8 @@
 /*!
  *  @file 		Wire.h 
- *  @version	3.1
+ *  @version	3.2
  *
- *  Modified for Waspmote by Libelium, 2009-2016
+ *  Modified for Waspmote by Libelium, 2009-2017
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -257,6 +257,8 @@ class TwoWire
 	*/
 	uint8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t length);
 
+	//! This function switches off and on the I2C again
+	void recover();
 	
 };
 

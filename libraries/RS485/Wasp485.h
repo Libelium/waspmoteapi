@@ -1,7 +1,7 @@
 /*! \file Wasp485.h
     \brief Library for managing RS-485 module.
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Ahmad Saad
 
@@ -25,6 +25,23 @@
  
 #ifndef Wasp485_h
 #define Wasp485_h
+
+
+/*******************************************************************************
+ * Definitions 
+ ******************************************************************************/
+
+/*! 
+ * \def DEBUG_RS485 
+ * \brief Possible values:
+ * 	0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages
+ */
+#define DEBUG_RS485	0
+#define PRINT_RS485(str)	USB.print(F("[RS485] ")); USB.print(str);
+#define PRINTLN_RS485(str)	USB.print(F("[RS485] ")); USB.println(str);
+
 
 
 /******************************************************************************

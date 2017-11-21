@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascon
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -316,7 +316,7 @@ void WaspSPI::secureBegin()
 	// this codeblock belongs to the performance of the SD card:
 	// -> check if Semtech module was not powered on before using the SD card
 	// -> check if RS485 module was not powered on before using the SD card
-	if ((WaspRegister & REG_SX) || (WaspRegister & REG_RS485))
+	if (((WaspRegister & REG_SX) || (WaspRegister & REG_RS485)) && !(WaspRegister & REG_SOCKET0))
 	{
 		if (SPI.isSocket0 == false)
 		{
@@ -360,7 +360,7 @@ void WaspSPI::secureEnd()
 	// this codeblock belongs to the performance of the SD card
 	// -> switch off the SX module if it was not powered on 
 	// -> switch off the RS485 module if it was not powered on 
-	if ((WaspRegister & REG_SX) || (WaspRegister & REG_RS485))
+	if (((WaspRegister & REG_SX) || (WaspRegister & REG_RS485)) && !(WaspRegister & REG_SOCKET0))
 	{
 		if (SPI.isSocket0 == false)
 		{			

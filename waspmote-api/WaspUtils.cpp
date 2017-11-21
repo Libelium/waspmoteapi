@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascon
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -716,7 +716,7 @@ float WaspUtils::readTempDS1820(uint8_t pin)
 {
 	// check if it is necessary to turn on 
 	// the generic 3v3 power supply
-	bool flag = WaspRegister |= REG_3V3;
+	bool flag = WaspRegister & REG_3V3;
 	
 	if (flag == false)
 	{

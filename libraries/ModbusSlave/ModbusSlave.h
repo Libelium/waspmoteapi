@@ -8,7 +8,7 @@
  * receive data from a device that communicates using the Modbus protocol.
  * 
  * Copyright (C) 2000 Philip Costigan  P.C. SCADA LINK PTY. LTD.
- * Modified for Waspmote by Libelium, 2016
+ * Modified for Waspmote by Libelium, 2017
  * 
  * This file is part of ModbusSlave.
  * 
@@ -35,12 +35,29 @@
  * http://www.modbus.org/docs/PI_MBUS_300.pdf
  * 
  * 
- *  Version:	3.0
+ *  Version:	3.1
  * 
  ****************************************************************************/
 
 #define		RS485_COM	0x01
 #define		RS232_COM	0x02
+
+
+/*******************************************************************************
+ * Definitions 
+ ******************************************************************************/
+
+/*! 
+ * \def DEBUG_MODBUS_SLAVE 
+ * \brief Possible values:
+ * 	0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages
+ */
+#define DEBUG_MODBUS_SLAVE	0
+#define PRINT_MODBUS_SLAVE(str)	USB.print(F("[MB_SLAVE] ")); USB.print(str);
+#define PRINTLN_MODBUS_SLAVE(str)	USB.print(F("[MB_SLAVE] ")); USB.println(str);
+
 
 /****************************************************************************
  * BEGIN MODBUS RTU SLAVE FUNCTIONS
@@ -64,8 +81,8 @@ class ModbusSlave
 		ModbusSlave(uint8_t, uint8_t);
 
 		// Configure the communication parameters
-		void configure(uint8_t, long);
-		void configure(uint8_t, long, uint8_t );
+		uint8_t configure(uint8_t, long);
+		uint8_t configure(uint8_t, long, uint8_t );
 		// Update the registers
 		int update(int *regs, unsigned int regs_size); 
 		

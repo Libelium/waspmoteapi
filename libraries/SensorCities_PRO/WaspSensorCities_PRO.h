@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascón
     Implementation:	Alejandro Gállego, Ahmad Saad
 
@@ -37,17 +37,34 @@
 #include <inttypes.h>
 #include <WaspConstants.h>
 #include <BME280.h>
+#include <UltrasoundSensor.h>
+#include <TSL2561.h>
 
+#ifndef WaspSensorGas_Pro_h
+#include <WaspSensorGas_Pro.h>
+#endif
 
 /******************************************************************************
  * Definitions & Declarations
  ******************************************************************************/
-#define SCP_PWR_SOCKET_1	ANA2
-#define SCP_PWR_SOCKET_2	DIGITAL5
-#define SCP_PWR_SOCKET_3	ANA5
-#define SCP_PWR_SOCKET_4	ANA6
-#define SCP_PWR_SOCKET_5	ANA1
-#define SCP_I2C_MAIN_EN		ANA0
+// I2C pins (sockets prepared for I2C connection)
+#define SCP_I2C_MAIN_EN		ANA0 		// GP_I2C_MAIN_EN 
+#define SCP_I2C_SOCKET_1_C	DIGITAL4	// GP_I2C_SOCKET_1_C
+#define SCP_I2C_SOCKET_3_F	DIGITAL8	// GP_I2C_SOCKET_3_F
+#define SCP_I2C_SOCKET_5_B	ANA3		// GP_I2C_SOCKET_5_B
+
+// PWR pins (sockets prepared for I2C connection)
+#define SCP_PWR_SOCKET_1_C	DIGITAL3	// GP_PWR_SOCKET_1_C
+#define SCP_PWR_SOCKET_3_F	DIGITAL7	// GP_PWR_SOCKET_3_F
+#define SCP_PWR_SOCKET_5_B	ANA4		// GP_PWR_SOCKET_5_B
+
+// PWR pins (to give power supply to socket)
+#define SCP_PWR_3V3_SOCKET_1_C	ANA2	
+#define SCP_PWR_3V3_SOCKET_2_E	DIGITAL5
+#define SCP_PWR_3V3_SOCKET_3_F	ANA5
+#define SCP_PWR_3V3_SOCKET_4_A	ANA6
+#define SCP_PWR_3V3_SOCKET_5_B	ANA1
+
 
 
 //! DEBUG MODE
@@ -55,7 +72,7 @@
  * 	1: debug mode enabled for error output messages
  * 	2: debug mode enabled for both error and ok messages 
  */
-#define DEBUG_CITIES_PRO		1
+#define DEBUG_CITIES_PRO		0
 
 #define PRINT_CITIES_PRO(str)			USB.print(F("[CITIES_PRO] ")); USB.print(str);
 #define PRINT_CITIES_PRO_VAL(val)		USB.print(float(val));
@@ -70,53 +87,23 @@ extern volatile uint8_t	pwrGasPRORegister;
  * Class
  ******************************************************************************/
  
- //! WaspSensorCitiesPRO Class
+//! WaspSensorCitiesPRO Class
 /*!
-	WaspSensorCitiesPRO Class defines all the variables and functions used for managing the Smart Cities PRO Sensor Board
+	WaspSensorCitiesPRO Class defines all the variables and functions used for
+	managing the Smart Cities PRO Sensor Board
  */
 class WaspSensorCitiesPRO
-{
-	private:
-
-	public:
-
-	//! class constructor
-  	/*!
-		It initializes the different digital pins
-	\param void
-	\return void
-	 */
-	WaspSensorCitiesPRO();
+{	
 	
-	
-	//! Turns ON the sensor/socket
-  	/*!
-	\param uint8_t socket_sensor:	SENS_CITIES_PRO_NOISE
-									SENS_CITIES_PRO_POLI1
-									SENS_CITIES_PRO_GAS1
-									SENS_CITIES_PRO_DUST
-									SENS_CITIES_PRO_POLI2
-									SENS_CITIES_PRO_GAS2
-	\return void
-	 */
+private:
+
+public:
+
+	WaspSensorCitiesPRO();		
+
 	void ON(uint8_t socket_sensor);
-	
-	
-	//! Turns OFF the sensor/socket
-  	/*!
-	\param uint8_t socket_sensor:	SENS_CITIES_PRO_NOISE
-									SENS_CITIES_PRO_POLI1
-									SENS_CITIES_PRO_GAS1
-									SENS_CITIES_PRO_DUST
-									SENS_CITIES_PRO_POLI2
-									SENS_CITIES_PRO_GAS2
-	\return void
-	 */
 	void OFF(uint8_t socket_sensor);
 
-	float getTemperature();
-	float getHumidity();
-	float getPressure();
 };
 
 extern WaspSensorCitiesPRO SensorCitiesPRO;
@@ -124,6 +111,11 @@ extern WaspSensorCitiesPRO SensorCitiesPRO;
 #endif
 
 
+
+
+/******************************************************************************
+ * Class
+ ******************************************************************************/
 #ifndef NOISESENSOR_H
 
 #define FAST_MODE	0x00
@@ -150,6 +142,85 @@ class noiseSensor : WaspUART
 };
 
 extern noiseSensor noise;
+
+#endif
+
+
+
+
+/******************************************************************************
+ * Class
+ ******************************************************************************/
+#ifndef BME_CITIES_SENSOR_H
+
+class bmeCitiesSensor: WaspSensorCitiesPRO
+{		
+	private:
+	public: 
+	
+		uint8_t _socket;
+	
+		// Constructor 
+		bmeCitiesSensor(uint8_t socket);
+		
+		void ON();
+		void OFF();
+		
+		float getTemperature();
+		float getHumidity();
+		float getPressure();
+};
+
+
+#endif
+
+
+
+/******************************************************************************
+ * Class
+ ******************************************************************************/
+#ifndef ULTRASOUND_CITIES_SENSOR_H
+
+class ultrasoundCitiesSensor: WaspSensorCitiesPRO
+{		
+	private:
+	public: 
+	
+		uint8_t _socket;
+	
+		// Constructor 
+		ultrasoundCitiesSensor(uint8_t socket);
+		
+		void ON();
+		void OFF();
+		uint16_t getDistance();
+};
+
+
+#endif
+
+
+
+/******************************************************************************
+ * Class
+ ******************************************************************************/
+#ifndef LUXES_CITIES_SENSOR_H
+
+class luxesCitiesSensor: WaspSensorCitiesPRO
+{		
+	private:
+	public: 
+	
+		uint8_t _socket;
+	
+		// Constructor 
+		luxesCitiesSensor(uint8_t socket);
+		
+		void ON();
+		void OFF();
+		uint32_t getLuminosity();
+};
+
 
 #endif
 

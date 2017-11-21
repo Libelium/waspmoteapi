@@ -1,32 +1,32 @@
 /*! \file WaspSensorGas_Pro.h
-    \brief Library for managing the Gas Pro Sensor Board
-    
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
-    http://www.libelium.com
- 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 2.1 of the License, or
-    (at your option) any later version.
-   
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-  
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.1
-    Design:			David Gascón
-    Implementation:	Alejandro Gállego
+\brief Library for managing the Gas Pro Sensor Board
+
+Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+http://www.libelium.com
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 2.1 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Version:		4.0
+Design:			David Gascón
+Implementation:	Alejandro Gállego & Ahmad Saad
 
 */
 
 /*! \def WaspSensorGas_Pro_h
-    \brief The library flag
-    
- */
+\brief The library flag
+
+*/
 #ifndef WaspSensorGas_Pro_h
 #define WaspSensorGas_Pro_h
 
@@ -34,7 +34,7 @@
 //!***************************************************************************
 //! Includes
 //!***************************************************************************
- 
+
 #include <inttypes.h>
 #include <avr/pgmspace.h>
 
@@ -43,13 +43,49 @@
 #include <LMP91000.h>
 #include <BME280.h>
 
-#define GAS_DEBUG 0
-// #define GAS_DEBUG 1
-// #define GAS_DEBUG 2
-//#define GAS_PRO_AUTOGAIN_DEBUG
-// #define CALIBRATION_MODE
 
-// #define I_DEBUG 1
+
+/******************************************************************************
+ * Definitions & Declarations
+ ******************************************************************************/
+// Probe I2C pins
+#define GP_I2C_MAIN_EN		ANA0 
+#define GP_I2C_SOCKET_1_C	DIGITAL4
+#define GP_I2C_SOCKET_2_E	DIGITAL6
+#define GP_I2C_SOCKET_3_F	DIGITAL8
+#define GP_I2C_SOCKET_4_A	ANA5
+#define GP_I2C_SOCKET_5_B	ANA3
+#define GP_I2C_SOCKET_6		ANA1
+
+// Probe PWR pins
+#define GP_PWR_SOCKET_1_C	DIGITAL3
+#define GP_PWR_SOCKET_2_E	DIGITAL5
+#define GP_PWR_SOCKET_3_F	DIGITAL7
+#define GP_PWR_SOCKET_4_A	ANA6
+#define GP_PWR_SOCKET_5_B	ANA4
+#define GP_PWR_SOCKET_6		ANA2
+
+
+
+//! DEBUG MODE
+/*! 0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages
+ */
+#define DEBUG_GASES_PRO		0
+
+#define PRINT_GASES_PRO(str)		USB.print(F("[GASES PRO] ")); USB.print(str);
+#define PRINT_GASES_PRO_VAL(val)	USB.printFloat(float(val), 3);
+
+#define PRINTLN_GASES_PRO(str)		USB.print(F("[GASES PRO] ")); USB.println(str);
+#define PRINTLN_GASES_PRO_VAL(val)	USB.printFloat(float(val), 3); USB.println();
+
+#define PRINT_GASES_PRO_DATA(str1, val, str2) 	\
+	USB.print(F("[GASES PRO] "));				\
+	USB.print(F(str1));							\
+	USB.printFloat(val, 3);						\
+	USB.println(F(str2));
+
 
 //!***************************************************************************
 //!	EEPROM defines
@@ -76,11 +112,13 @@
 #define CAL_WE_EXT_REG		0x20	// 16 Bytes
 #define CAL_AE_EXT_REG		0x28	// 16 Bytes
 #define AE_OFFSET_REG		0x30	// 4 Bytes
+#define OFFSET_AUX_ELEC	 	0x38	// 4 Bytes used
+#define OFFSET_WRK_ELEC		0x40	// 4 Bytes used
+#define ZERO_POINT_OK		0x44	// 1 Byte
 
 // pellistor/CO2 board
 #define CAL_1_REG			0x10	// 4 Bytes
 #define CAL_2_REG			0x18	// 4 Bytes
-
 
 //!***************************************************************************
 //!	MCP4146 defines
@@ -103,10 +141,10 @@
 #define EEPROM_8_REG		0xE0
 #define EEPROM_9_REG		0xF0
 
-#define WRITE_COMMAND		0x00
-#define INC_COMMAND			0x04
-#define DEC_COMMAND			0x08
-#define READ_COMMAND		0x0C
+#define WRITE_COMMAND	0x00
+#define INC_COMMAND		0x04
+#define DEC_COMMAND		0x08
+#define READ_COMMAND	0x0C
 
 #define MCP_GAIN_0		0
 #define MCP_GAIN_1		20000
@@ -132,7 +170,7 @@
 #define NH3_SS			7	// OK
 #define NO_SS			8	// OK
 #define NO2_SS_CLE		9	// OK
-#define O2_SS			10	// OK	Vbias: -600mV
+#define O2_SS			10 	// OK	Vbias: -600mV
 #define PH3_SS			11	// OK
 #define SO2_SS			12	// OK
 
@@ -145,8 +183,7 @@
 #define CO_AS			19	// 4 electrode Vbias: 0V
 
 // SOLIDSENSE NDIR
-#define NDIR_CO2_SS	15	// CO2 NDIR
-
+#define NDIR_CO2_SS		15	// CO2 NDIR
 
 #define CALIBRATION_NDIR	251
 #define CALIBRATION_3E		252
@@ -154,14 +191,12 @@
 #define CALIBRATION_PEL		254
 #define UNDEFINED_SENSOR	255
 
-
 //!***************************************************************************
 //!	Miscelaneus defines
 //!***************************************************************************
 #define WORKING_ELECTRODE		0
 #define AUXILIARY_ELECTRODE		1
 #define COMPENSATED				2
-
 
 //!***************************************************************************
 //!	AutoGain function defines
@@ -178,11 +213,10 @@
 #define MAX_RANGE_FACTOR	0.85
 #define MIN_RANGE_FACTOR	0.15
 
-
-//!Compensation values for baseline
+//!Compensation values for baseline (ppm baseline vs temperature)
 //-20 ºC	20ºC	40ºC	50ºC
 const float table_baseline_temp_comp[][4] PROGMEM =
-{   
+{
 	{0,0,-0.05,-0.3},			// CL2_SS
 	{-0.3,0,0,-0.3},			// CO_SS_CLE
 	{-1,0,2.66,5},				// ETO_SS
@@ -205,10 +239,10 @@ const float table_baseline_temp_comp[][4] PROGMEM =
 	{0,-0.025,-0.075,-0.150}	// CO_AS
 };
 
-//!Compensation values for sensitivity
+//!Compensation values for sensitivity (%Output vs temperature)
 //-20 ºC	0ºC		20ºC	40ºC	50ºC
-const float table_sensitivity_temp_comp[][5] PROGMEM = 	  
-{   
+const float table_sensitivity_temp_comp[][5] PROGMEM =
+{
 	{0.92,0.96,1,0.97,0.95},	// CL2_SS
 	{0.7,0.9,1,1.09,1},			// CO_SS_CLE
 	{0.4,0.7,1,1.15,1.25},		// ETO_SS
@@ -226,15 +260,15 @@ const float table_sensitivity_temp_comp[][5] PROGMEM =
 	{0.7,0.92,1,1,0.92},		// O3_AS
 	{1,1,1,1,1},				// NDIR_CO2_SS
 	{0.7,0.77,1,1.1,1.13},		// NO2_AS
-	{0.4,0.8,1,1.2,1.3},		// NO_AS	
+	{0.4,0.8,1,1.2,1.3},		// NO_AS
 	{0.83,0.95,1,0.99,0.96},	// SO2_AS
 	{0.52,0.8,1,1.12,1.18}		// CO_AS
 };
 
 //!Compensation values for sensitivity
 //-20 ºC	0ºC		20ºC	40ºC	50ºC
-const float table_ppm2ugm3[] PROGMEM = 	  
-{   
+const float table_ppm2ugm3[] PROGMEM =
+{
 	2900,	// CL2_SS
 	1230,	// CO_SS_CLE
 	1984,	// ETO_SS
@@ -257,154 +291,161 @@ const float table_ppm2ugm3[] PROGMEM =
 	1230	// CO_AS
 };
 
-
 extern volatile uint8_t	pwrGasPRORegister;
+extern volatile uint8_t	pwrCitiesPRORegister;
 
-#define I2C_MAIN_EN	ANA0
 
 
 /******************************************************************************
- * Class
- ******************************************************************************/
- 
+* Class
+******************************************************************************/
+
 //! WaspSensorGas_Pro Class
 /*!
-	WaspSensorGas_Pro Class defines all the variables and functions used to manage the AFE modules and the base board
- */
+WaspSensorGas_Pro Class defines all the variables and functions used to manage the AFE modules and the base board
+*/
 
 class Gas
 {
-	private:
-		
-	//! This struct includes all the data necessary to manage the AFE modules for each sensor 
+	
+private:
+	bool initDone = false;
+	
+protected:
+
+	//! This struct includes all the data necessary to manage the AFE modules for each sensor
 	struct sensor_conf
 	{
-		uint8_t socket;			// Board socket
+		uint8_t socket;				// Board socket
 		uint8_t sensor_type;		// Gas sensor number
-		int power_pin;				// GPIO asociated to the power pin
-		int I2C_pin;				// GPIO asociated to the I2C pin
-		float m_conc;				// nA/ppm or mV/% 
-		float baseline;			// nA or mV
-		float aux_baseline;		// nA, offset for auxiliary electrode
+		uint8_t power_pin;			// GPIO asociated to the power pin
+		uint8_t i2c_pin;			// GPIO asociated to the I2C pin
+		uint8_t cities_3v3_pin;		// GPIO asociated to the 3V3 pin in Cities PRO board
+		float m_conc;				// nA/ppm or mV/%
+		float baseline;				// nA or mV
+		float aux_baseline;			// nA, offset for auxiliary electrode
 		float OX_NO2_sens;			// nA/ppm
 		float calibration[8][2];	// compensation values for AFE modules
-		uint32_t tempo;			// timer
+		//uint32_t tempo;			// timer
 		uint8_t AFE_ver;			// AFE board version
+		float AFE_offset;
+		float auxiliar_offset;
+		float working_offset;
+		uint8_t zeroPointOK;
 	} sensor_config;
 
-	
 	//! This function generates the baseline compensation for the temperature in ppm
 	/*!
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
-	\return		ppm value for compensation   
+	\return		ppm value for compensation
 	*/
 	float getBaselineTempComp(float temperature);
-	
+
 	//! This function generates the output current compensation for the temperature
 	/*!
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
 	\return		compensation factor
 	*/
 	float getSensitivityTempComp(float temperature);
-	
+
 	//! ONLY FOR 4-ELECTRODE AMPERIOMETRIC BOARD
 	//! This function sets the resistance to an specific digipot
 	/*!
 	\param bool electrode: electrode asociated to each digipot
-						WORKING_ELECTRODE
-						AUXILIARY_ELECTRODE
+	WORKING_ELECTRODE
+	AUXILIARY_ELECTRODE
 	\param float resistor: resistor value to set in Ohms
 	\return		nothing
 	*/
 	void setAmplifier(bool electrode, float resistor);
-	
+
 	//! This function gets the resistance from an specific digipot
 	/*!
 	\param bool electrode: electrode asociated to each digipot
-						WORKING_ELECTRODE
-						AUXILIARY_ELECTRODE
+	WORKING_ELECTRODE
+	AUXILIARY_ELECTRODE
 	\return		resistor value in Ohms
 	*/
 	float getAmplifier(bool electrode);
-	
+
 	//! Specific function to read 3 electrode sensors
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
 	\return		The concetration value in ppm
 	*/
 	float read3ElectrodeSensor(uint8_t resolution, float temperature);
-	
+
 	//! Specific function to read pellistor sensors
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
 	\return		The concetration value %LEL
 	*/
 	float readPellistorSensor(uint8_t resolution, float temperature);
-	
+
 	//! Specific function to read NDIR sensors
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
 	\return		The concetration value in ppm
 	*/
-	float readNDIR(uint8_t resolution, float temperature);
-	
+	float readNDIR(uint8_t resolution);
+
 	//! Specific function to read O3 sensors (v12 sensors)
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
 	\return		The concetration value in ppm
 	*/
 	float read4ElectrodeSensorv100(uint8_t resolution, float temperature);
-	
+
 	//! Specific function to read 4 electrode sensors
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
 	\param float NO2_conc: NO2 concentration in ppm to compensate the cross-sensitivity. Only for O3 sensor, for other sensors use 0.0 value
 	\return		The concetration value in ppm
 	*/
 	float read4ElectrodeSensorv301(uint8_t resolution, float temperature, float NO2_conc);
-	
+
 	//! This function reads the sensor information from EEPROM
 	/*!
 	\return		nothing
 	*/
 	uint8_t readSensorInfo();
-	
-	
-	public:
+
+
+public:
 	//! class constructor (basic)
-  	/*!
+	/*!
 	\param int socket: number of the socket where the sensor is attached
 	\return 	nothing
-  	 */
+	*/
 	Gas(int socket);
-	
+
 	//! class constructor (manual configuration)
-  	/*!
+	/*!
 	\param uint8_t sensor_type: number of the socket where the sensor is attached
 	\param int power_pin: pin to manage the power switch of the AFE board
 	\param int I2C_pin: pin to manage the I2C switch of the AFE board
@@ -413,14 +454,14 @@ class Gas
 	\param float aux_var: sensibility for auxiliary electrode (nA/ppm)
 	\param float calibration_table[7][2]: adjustment parameters
 	\return 	nothing
-  	 */
+	*/
 	Gas(int socket, uint8_t sensor_type, int power_pin, int I2C_pin, float m_conc, float baseline, float aux_var, float calibration_table[7][2]);
-	
-		
-	bool over_limit;
-	bool low_conc;
-	
-	
+
+
+	//bool over_limit;
+	//bool low_conc;
+
+
 	//! POWER AND CONFIGURATION FUNCTIONS
 	//! This function turns on the AFE board and selects a default gain for transimpendance amplifier
 	/*!
@@ -428,7 +469,7 @@ class Gas
 	* 			-1 no communication with LMP91000
 	*/
 	int8_t ON();
-	
+
 	//! This function turns on the AFE board and selects a gain for transimpendance amplifier
 	/*!
 	\param float R_gain: gain for transimpendance amplifier
@@ -436,29 +477,29 @@ class Gas
 	* 			-1 no communication with LMP91000
 	*/
 	int8_t ON(float R_gain);
-	
+
 	//! This function turns off the AFE board
 	/*!
 	\return 	pwrGasRegister
 	*/
 	uint8_t OFF();
-	
+
 	//! This function turns off the AFE board and enables the shorting FET for 3 electrode boards
 	/*!
 	\param uint8_t enable_FET: '1' to enable the FET, 'FET_NOT_SHORTED' if not
 	\return 	pwrGasRegister
 	*/
 	uint8_t OFF(uint8_t enable_FET);
-	
+
 	//! This function sets the power mode of LMP91000
 	/*!
 	\param uint8_t power_mode: 	MODE_DEEP_SLEEP
-								MODE_2_LEAD_GALVANIC
-								MODE_STAND_BY
-								MODE_3_LEAD_AMPERIOMETRIC
-								MODE_TEMP_TIA_OFF
-								MODE_TEMP_TIA_ON
-								MODE_NO_CHANGE	
+	MODE_2_LEAD_GALVANIC
+	MODE_STAND_BY
+	MODE_3_LEAD_AMPERIOMETRIC
+	MODE_TEMP_TIA_OFF
+	MODE_TEMP_TIA_ON
+	MODE_NO_CHANGE
 	\return 	1 if OK
 	*/
 	int8_t setPowerMode(uint8_t power_mode);
@@ -470,106 +511,113 @@ class Gas
 	* 			-1 no communication with LMP91000
 	*/
 	int8_t configureAFE(float R_gain);
-			
-	
+
+
 	//! MEASURING FUNCTIONS
 	//! This function reads temperature
 	/*!
 	\return 	The temperature, -1000 if error
 	*/
-	float getTemp();	
-	
+	float getTemp();
+
 	//! This function reads temperature
 	/*!
 	\param bool sensor: '0' for LMP91000, '1' for BME280
 	\return 	The temperature, -1000 if error
 	*/
-	float getTemp(bool sensor);	
-	
+	float getTemp(bool sensor);
+
 	//! This function reads relative humidity from BME280
 	/*!
 	\return 	The relative humidity, -1000 if error
 	*/
-	float getHumidity();	
-	
+	float getHumidity();
+
 	//! This function reads pressure from BME280
 	/*!
 	\return		The pressure, -1000 if error
 	*/
 	float getPressure();
-	
+
 	//! This function reads concentration value with default parameters (16bit ADC, BME280 temperature and compensated meassure for O3 sensor)
 	/*!
 	\return		The concetration value in ppm / %LEL, -1000 if error.
 	*/
 	float getConc();
-	
+
 	//! This function reads concentration value  with default parameters (BME280 temperature and compensated meassure for O3 sensor)
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\return		The concetration value in ppm / %LEL, -1000 if error.
 	*/
 	float getConc(uint8_t resolution);
-	
+
+	//! This function reads concentration value with default parameters
+	/*!
+	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
+	\return		The concetration value in ppm / %LEL, -1000 if error.
+	*/
+	float getConc(float temperature);
+
 	//! This function reads concentration value
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float NO2_conc: NO2 concentration in ppm to compensate the cross-sensitivity. Only for O3 sensor
 	\return		The concetration value in ppm / %LEL, -1000 if error.
 	*/
 	float getConc(uint8_t resolution, float NO2_conc);
-	
+
 	//! This function reads concentration value
 	/*!
-	\param uint8_t resolution: resolution value for ADC 
-						MCP3421_RES_12_BIT or MCP3421_LOW_RES
-						MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-						MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-						MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
+	\param uint8_t resolution: resolution value for ADC
+	MCP3421_RES_12_BIT or MCP3421_LOW_RES
+	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
+	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
+	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
 	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
 	\param float NO2_conc: NO2 concentration in ppm to compensate the cross-sensitivity. Only for O3 sensor
 	\return		The concetration value in ppm / %LEL, -1000 if error.
 	*/
 	float getConc(uint8_t resolution, float temperature, float NO2_conc);
-	
+
 	//! This function changes the gain and the Vref of the AFE module
 	/*!
 	\return		high nibble: steps changed in Vref
-				low nibble: steps changed in Rgain
+	low nibble: steps changed in Rgain
 	*/
-	int8_t autoGain();	
-	
+	int8_t autoGain();
+
 	//! This function converts concentration in ppm to %
 	/*!
 	\param float ppm_conc: concentration in ppm
 	\return		The concetration value in %
-	*/	
+	*/
 	float ppm2perc(float ppm_conc);
-	
+
 	//! This function converts concentration in ppm to ugm3
 	/*!
 	\param float ppm_conc: concentration in ppm
 	\return		The concetration value in ugm3
-	*/	
+	*/
 	float ppm2ugm3(float ppm_conc);
-	
+
 	//! This function converts temperature in Celsius degrees to Fahrenheit degrees
 	/*!
 	\param temp: concentration in Celsius degrees
 	\return		The concetration value in Fahrenheit degrees
-	*/	
+	*/
 	float Celsius2Fahrenheit(float temp);
 
-	
-	//! MISCELANEUS	
+
+	//! MISCELANEUS
 	//! This function shows the information about the sensor
 	/*!
 	\return		nothing
@@ -583,19 +631,24 @@ class Gas
 	\return		Value from working electrode
 	*/
 	float readWorkingElectrode3E();
-	
+
 	//! This function reads the value for working electrode
 	/*!
 	\return		Value from working electrode
 	*/
 	float readWorkingElectrode4E();
-	
+
 	//! This function reads the value for auxiliary electrode
 	/*!
 	\return		Value from auxiliary electrode
 	*/
 	float readAuxiliaryElectrode4E();
-	
-	
-}; 
+
+	uint8_t disableCommSockets();
+
+	void zeroPointSet();
+
+};
 #endif
+
+
