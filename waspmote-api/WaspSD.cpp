@@ -499,7 +499,7 @@ uint8_t WaspSD::init()
 	// initialize a FAT volume
 	if(!volume.init(&card))
 	{
-		flag = INIT_FAILED;
+		flag = VOLUME_FAILED;
 		return 0;
 	}
 	
