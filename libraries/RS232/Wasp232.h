@@ -1,7 +1,7 @@
 /*! \file Wasp232.h
     \brief Library for managing RS-232 module
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Ahmad Saad
 
@@ -98,6 +98,9 @@ class Wasp232 : public WaspUART
 
 		//!Sends data through the UART. It prints a long number in the specified base. 
 		void send (long n, int base);
+		
+		//!Sends data through the UART. It sends an array of bytes given the length as input
+		void send(uint8_t *s, uint16_t length);
 
 		//!Get the number of bytes (characters) available for reading from the serial port.
 		int available(void);

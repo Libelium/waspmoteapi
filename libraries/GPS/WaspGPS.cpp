@@ -1,7 +1,7 @@
 /*
  *  Library for managing the GPS v2.0 JN3 receiver
  * 
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -2611,31 +2611,47 @@ int8_t WaspGPS::loadEphems(const char* filename)
 	// Now change to Binary OSP mode
 	setCommMode(OSP_MODE);
 	
-	// set SD on
-	SD.ON();
-		
+	
+	bool sd_on = (WaspRegister & REG_SD);
+	if (!sd_on)
+	{
+		SD.ON();
+	}
+
 	// check if the card is there or not
 	if (!SD.isSD())
-	{		
+	{
+		if (!sd_on)
+		{
+			SD.OFF();
+		}		
 		return -1;
 	}
 	
 	// check if file exists
-	if( SD.isFile(filename) != 1 )
+	if (SD.isFile(filename) != 1)
 	{	
+		if (!sd_on)
+		{
+			SD.OFF();
+		}		
 		// file does not exist
 		return -2;
 	}
 	
 	// Look on SD file for Ephemerids data and send it to the module
 	unsigned long previous = millis();
-	while((!end) && (millis() - previous < 10000) )
+	while ((!end) && (millis() - previous < 10000) )
 	{
 		SD.catBin(filename,offset,1);
 		
 		// check if there is SD error
-		if(SD.flag != 0)
+		if (SD.flag != 0)
 		{
+			if (!sd_on)
+			{
+				SD.OFF();
+			}	
 			return 0;
 		}			
 		if (SD.bufferBin[0] == 0xA0)
@@ -2644,8 +2660,12 @@ int8_t WaspGPS::loadEphems(const char* filename)
 			SD.catBin(filename, offset, 1);
 			
 			// check if there is SD error
-			if(SD.flag != 0)
+			if (SD.flag != 0)
 			{
+				if (!sd_on)
+				{
+					SD.OFF();
+				}	
 				return 0;
 			}			
 			if (SD.bufferBin[0] == 0xA2)
@@ -2657,6 +2677,10 @@ int8_t WaspGPS::loadEphems(const char* filename)
 				// check if there is SD error
 				if(SD.flag != 0)
 				{
+					if (!sd_on)
+					{
+						SD.OFF();
+					}	
 					return 0;
 				}			
 				
@@ -2694,6 +2718,10 @@ int8_t WaspGPS::loadEphems(const char* filename)
 		// check if there is SD error
 		if(SD.flag != 0)
 		{
+			if (!sd_on)
+			{
+				SD.OFF();
+			}	
 			return 0;
 		}		
 		
@@ -2716,7 +2744,10 @@ int8_t WaspGPS::loadEphems(const char* filename)
 	}
 	
 	// turn OFF SD card
-	SD.OFF();
+	if (!sd_on)
+	{
+		SD.OFF();
+	}	
 	
 	// Now change to NMEA mode
 	setCommMode(NMEA_MODE);

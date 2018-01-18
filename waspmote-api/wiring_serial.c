@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2005-2006 David A. Mellis
- *  Modified for Waspmote by Libelium, 2016
+ *  Modified for Waspmote by Libelium, 2018
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * 	Version:	3.0 
+ * 	Version:	3.1
  */
  
 
@@ -155,7 +155,7 @@ void serialFlush(uint8_t portNum)
 	}
 }
 
-SIGNAL(USART0_RX_vect)
+ISR(USART0_RX_vect)
 {
 		unsigned char c = UDR0;
 		
@@ -171,7 +171,7 @@ SIGNAL(USART0_RX_vect)
 		}
 }
 
-SIGNAL(USART1_RX_vect)
+ISR(USART1_RX_vect)
 {
 		unsigned char c = UDR1;
 

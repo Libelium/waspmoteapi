@@ -1,7 +1,7 @@
 /*! \file Wasp4G.cpp
  *  \brief Library for managing Telit LE910
  *
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.4
+ *  Version:		3.5
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -386,7 +386,10 @@ uint8_t Wasp4G::httpRequest(uint8_t method,
 		if (answer != 1)
 		{
 			return 2;
-		}
+		}				
+		
+		// wait a little bit
+		delay(100);
 		
 		// 2b. Send POST/PUT data
 		answer = sendCommand((char*)data, LE910_OK ,LE910_ERROR, 5000);
@@ -416,6 +419,9 @@ uint8_t Wasp4G::httpRequest(uint8_t method,
 		{
 			return 2;
 		}
+			
+		// wait a little bit
+		delay(100);	
 		
 		// Add "frame="
 		strcpy_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[6])));		
@@ -1900,7 +1906,7 @@ uint8_t Wasp4G::configureSMS()
 */
 uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 {
-	char command_buffer[50];
+	char command_buffer[100];
 	uint8_t answer;
 	
 		
@@ -1914,18 +1920,23 @@ uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 		return answer;
 	}	
 	
+	// delay to wait for operational SIM
+	delay(3000);
 	
 	//// 2. Send SMS
 	// AT+CMGS="<phone_number>"	
 	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SMS[4])), phone_number);
 	
 	// send command
-	answer = sendCommand(command_buffer, ">");
+	answer = sendCommand(command_buffer, ">", 5000);
 	
 	// check answer
 	if (answer != 1)
 	{
 		printByte(0x1B, 1); //ESC ASCII
+		#if DEBUG_WASP4G > 0
+			PRINT_LE910(F("Error sending sms at command\n"));
+		#endif
 		return 5;
 	}
 	
@@ -2896,7 +2907,7 @@ uint8_t Wasp4G::ftpUpload( char* ftp_file, char* sd_file)
 		#if DEBUG_WASP4G > 0
 			PRINT_LE910(F("Remains: "));
 			USB.print(file_size);
-			USB.println(F("Bytes"));
+			USB.println(F(" bytes"));
 		#endif
 	}
 		
@@ -7106,8 +7117,44 @@ uint8_t Wasp4G::requestOTA(	char* ftp_server,
 	#endif
 
 
+
 	////////////////////////////////////////////////////////////////////////////
-	// 4. Download binary file 
+	// 4. Reopen FTP connection to fix v2 module behavior
+	////////////////////////////////////////////////////////////////////////////	
+	error = ftpCloseSession();
+		if (error == 0)
+	{
+		#if DEBUG_WASP4G > 1
+			PRINT_LE910(F("Close FTP session OK\n"));
+		#endif		
+	}
+	else
+	{
+		#if DEBUG_WASP4G > 0
+			PRINT_LE910(F("Close FTP session ERROR\n")); 
+		#endif
+		return 25;
+	}
+	
+	
+	error = ftpOpenSession(ftp_server, ftp_port, ftp_user, ftp_pass, ftp_mode);
+		
+	if (error == 0)
+	{
+		#if DEBUG_WASP4G > 1
+			PRINT_LE910(F("Open FTP session OK\n"));
+		#endif		
+	}
+	else
+	{
+		#if DEBUG_WASP4G > 0
+			PRINT_LE910(F("Open FTP session ERROR\n")); 
+		#endif
+		return 26;
+	}
+
+	////////////////////////////////////////////////////////////////////////////
+	// 5. Download binary file 
 	////////////////////////////////////////////////////////////////////////////
 	
 	#if DEBUG_WASP4G > 1

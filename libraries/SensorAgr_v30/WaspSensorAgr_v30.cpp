@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.3
+ *  Version:		3.4
  *  Design:			David Gascón
  *  Implementation:	Carlos Bello
  */
@@ -771,6 +771,125 @@ float dendrometerClass::readDendrometer(void)
 	return value_dendro = conversion(data_dendro,_dendro);
 }
 
+
+/*	readDendrometer: reads the analog to digital converter input to which is
+ * 					 connected the dendrometer through the I2C and converts its
+ * 					 value into mm
+ *	Parameters: void
+ *  Return:	float value : trunk diameter read by the dendrometer in mm
+ * 
+ */
+void dendrometerClass::setReference(void)
+{
+	const byte dendro_channel = B10100001;
+	byte data_dendro[3] = {0,0,0};
+	uint8_t signo;
+	uint8_t overflow;
+	digitalWrite(DEN_PT1000_ON,HIGH);	
+	//Switch ON I2C
+	digitalWrite(I2C_PIN_OE, HIGH);	
+	
+	delay(300);
+  
+	Wire.beginTransmission(I2C_ADDRESS_AGR_DENDROMETER);
+	Wire.send(dendro_channel);
+	Wire.send(B01010101);
+	Wire.endTransmission();
+
+	delay(300);
+  
+	Wire.requestFrom(I2C_ADDRESS_AGR_DENDROMETER, 3);
+  
+	int i=0;
+	while (Wire.available())
+	{
+		data_dendro[i]=Wire.receive();
+		i++;
+	}
+	/*
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
+		PWR.closeI2C();
+		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
+	}
+	*/
+	digitalWrite(DEN_PT1000_ON,LOW);	
+  	// Switch OFF I2C
+	digitalWrite(I2C_PIN_OE, LOW);
+	#if DEBUG_AGR==1
+	PRINT_AGR(F("readDendrometer value without conversion:"));
+	USB.println(value_dendro);		
+	#endif
+	#if DEBUG_AGR==2
+	PRINT_AGR(F("readDendrometer value without conversion:"));
+	USB.println(value_dendro);
+	PRINT_AGR(F("readDendrometer value conversion:"));
+	USB.println(value_dendro = conversion(data_dendro,0));	
+	#endif	
+
+	_reference = conversion(data_dendro,_dendro);
+	
+	return;
+}
+
+/*	readDendrometer: reads the analog to digital converter input to which is
+ * 					 connected the dendrometer through the I2C and converts its
+ * 					 value into mm
+ *	Parameters: void
+ *  Return:	float value : trunk diameter read by the dendrometer in mm
+ * 
+ */
+float dendrometerClass::readGrowth(void)
+{
+	const byte dendro_channel = B10100001;
+	byte data_dendro[3] = {0,0,0};
+	float value_dendro = 0;
+	digitalWrite(DEN_PT1000_ON,HIGH);	
+	//Switch ON I2C
+	digitalWrite(I2C_PIN_OE, HIGH);	
+	
+	delay(300);
+  
+	Wire.beginTransmission(I2C_ADDRESS_AGR_DENDROMETER);
+	Wire.send(dendro_channel);
+	Wire.send(B01010101);
+	Wire.endTransmission();
+
+	delay(300);
+  
+	Wire.requestFrom(I2C_ADDRESS_AGR_DENDROMETER, 3);
+  
+	int i=0;
+	while (Wire.available())
+	{
+		data_dendro[i]=Wire.receive();
+		i++;
+	}
+	/*
+	if (Wire.isON && !ACC.isON && RTC.isON!=1)
+	{
+		PWR.closeI2C();
+		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
+	}
+	*/
+	digitalWrite(DEN_PT1000_ON,LOW);	
+  	// Switch OFF I2C
+	digitalWrite(I2C_PIN_OE, LOW);
+	#if DEBUG_AGR==1
+	PRINT_AGR(F("readDendrometer value without conversion:"));
+	USB.println(value_dendro);		
+	#endif
+	#if DEBUG_AGR==2
+	PRINT_AGR(F("readDendrometer value without conversion:"));
+	USB.println(value_dendro);
+	PRINT_AGR(F("readDendrometer value conversion:"));
+	USB.println(value_dendro = conversion(data_dendro,0));	
+	#endif	
+		  
+	value_dendro = conversion(data_dendro,_dendro);
+	
+	return value_dendro - _reference;
+}
 
 /*	
  * Class constructor
