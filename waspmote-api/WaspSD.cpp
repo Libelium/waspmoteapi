@@ -476,8 +476,8 @@ void WaspSD::setMode(uint8_t mode)
  * - NOTHING_FAILED = 0
  * - CARD_NOT_PRESENT = 1
  * - INIT_FAILED = 2
- * - VOLUME_FAILED = 3
- * - ROOT_FAILED = 4
+ * - VOLUME_FAILED = 4
+ * - ROOT_FAILED = 8
  *  
  */
 uint8_t WaspSD::init()
