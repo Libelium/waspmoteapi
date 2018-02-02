@@ -18,9 +18,9 @@
   
   Written by Doc Walker (Rx)
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>  
-  Modified for Waspmote by Libelium, 2017
+  Modified for Waspmote by Libelium, 2018
   
-  Version:	3.4
+  Version:	3.5
 */
 
 #include "ModbusMaster.h"
@@ -719,9 +719,7 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 
 	if (_protocol == RS232_COM)
 	{
-		for (i = 0; i < u8ModbusADUSize; i++) {
-			W232.send(u8ModbusADU[i], BYTE);
-		}
+			W232.send(u8ModbusADU,u8ModbusADUSize);
 	}
 	else 
 	{

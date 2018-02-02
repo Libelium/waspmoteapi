@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			Ahmad Saad
  */
 
@@ -77,15 +77,16 @@ void adcClass::begin(void)
 //!*************************************************************************************
 void adcClass::configure(uint8_t CHANNEL)
 {
-	// Setup the AD7705
-	digitalWrite(CS_AD7705,LOW);  // enable device
+	// Selet the ADC		
+	SPI.setSPISlave(SMART_IONS_SELECT);
 	
 	SPI.transfer(CHANNEL|WRITE|CLOCK_REG);  // Select channel 1, setup write to clock reg.
 	SPI.transfer(CLKDIS|CLKDIV|CLK|FILTER);  // 5MHz Clock, 50MHz output rate
 	SPI.transfer(CHANNEL|WRITE|SETUP_REG);  // Select channel 1, setup write to setup reg.
 	SPI.transfer(GAIN_1|UNIPOLAR|BUF_OFF|FSYNC_CLR|OP_SELF_CAL);  // gain=1, bipolar mode, buffer off, clear FSYNC and perform a Self Calibration
 
-	digitalWrite(CS_AD7705,HIGH);
+	// Unselect all
+	SPI.setSPISlave(ALL_DESELECTED);
 }
 
 //!*************************************************************************************

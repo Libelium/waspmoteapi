@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -2324,10 +2324,12 @@ bool WaspSD::format()
 
 	// constants for file system structure
 	uint16_t const BU16 = 128;
-
+	uint16_t const BU32 = 8192;
+	
 	//  strings needed in file system structures
 	char noName[] = "NO NAME    ";
 	char fat16str[] = "FAT16   ";
+	char fat32str[] = "FAT32   ";
 	//---------------------------------------------------------------	
 
 	//! initialization process  
@@ -2435,7 +2437,7 @@ bool WaspSD::format()
 			numberOfHeads = 255;
 		}
 		
-	if (card.type() != SD_CARD_TYPE_SDHC) 
+	if (volume.fatType() == 16) 
 	{
 		#ifdef SD_DEBUG
 		USB.print(F("FAT16\n"));
@@ -2627,7 +2629,238 @@ bool WaspSD::format()
 			return 0;
 		}
 	} 	
+	else if (volume.fatType() == 32)
+	{
+		#ifdef SD_DEBUG
+		USB.print(F("FAT32\n"));
+		#endif
+		
+		/*start makeFat32()*/
+		uint32_t nc;
+		relSector = BU32;
+		
+		for (dataStart = 2 * BU32;; dataStart += BU32) 
+		{
+			nc = (cardSizeBlocks - dataStart)/sectorsPerCluster;
+			fatSize = (nc + 2 + 127)/128;
+			uint32_t r = relSector + 9 + 2 * fatSize;
+			if (dataStart >= r) {
+			  break;
+			}
+		}
+		
+		  // error if too few clusters in FAT32 volume
+		if (nc < 65525) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("Bad cluster count"));
+			#endif
+		}
+		reservedSectors = dataStart - relSector - 2 * fatSize;
+		fatStart = relSector + reservedSectors;
+		partSize = nc * sectorsPerCluster + dataStart - relSector;
+		// type depends on address of end sector
+		// max CHS has lbn = 16450560 = 1024*255*63
+		if ((relSector + partSize) <= 16450560) {
+		// FAT32
+		partType = 0X0B;
+		} else {
+		// FAT32 with INT 13
+		partType = 0X0C;
+		}
+		
+		// write MBR
+		/*start writeMbr()*/
+		/*start clearCache(true)*/		
+		memset(&cache, 0, sizeof(cache));
+		cache.mbr.mbrSig0 = BOOTSIG0;
+		cache.mbr.mbrSig1 = BOOTSIG1;		
+		/*end clearCache(true)*/
+		part_t* p = cache.mbr.part;
+		p->boot = 0;
+		// get cylinder number for a logical block number
+		//~ uint16_t c = lbnToCylinder(relSector);
+		uint16_t c = relSector / (numberOfHeads * sectorsPerTrack);
+		if (c > 1023)
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("error MBR CHS"));
+			#endif
+			return 0;
+		}
+		p->beginCylinderHigh = c >> 8;
+		p->beginCylinderLow = c & 0XFF;
+		//get head number for a logical block number
+		//~ p->beginHead = lbnToHead(relSector);
+		p->beginHead = (relSector % (numberOfHeads * sectorsPerTrack)) / sectorsPerTrack;
+		//get sector number for a logical block number
+		//~ p->beginSector = lbnToSector(relSector);
+		p->beginSector = (relSector % sectorsPerTrack) + 1;
+		p->type = partType;
+		uint32_t endLbn = relSector + partSize - 1;
+		//get cylinder number for a logical block number
+		//~ c = lbnToCylinder(endLbn);
+		c = endLbn / (numberOfHeads * sectorsPerTrack);
+		if (c <= 1023) {
+			p->endCylinderHigh = c >> 8;
+			p->endCylinderLow = c & 0XFF;
+			//get head number for a logical block number
+			//~ p->endHead = lbnToHead(endLbn);		
+			p->endHead = (endLbn % (numberOfHeads * sectorsPerTrack)) / sectorsPerTrack;	
+			//get sector number for a logical block number
+			//~ p->endSector = lbnToSector(endLbn);	
+			p->endSector = (endLbn % sectorsPerTrack) + 1;
+			//get sector number for a logical block number
+			//~ p->endSector = lbnToSector(endLbn);	
+			p->endSector = (endLbn % sectorsPerTrack) + 1;
+		} else {
+			// Too big flag, c = 1023, h = 254, s = 63
+			p->endCylinderHigh = 3;
+			p->endCylinderLow = 255;
+			p->endHead = 254;
+			p->endSector = 63;
+		}
+		p->firstSector = relSector;
+		p->totalSectors = partSize;
+		//~ if (!writeCache(0)) 
+		if (!card.writeBlock(0, cache.data)) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("error write MBR"));
+			#endif
+			return 0;
+		}
+			
+		/*start clearCache(true)*/		
+		memset(&cache, 0, sizeof(cache));
+		cache.mbr.mbrSig0 = BOOTSIG0;
+		cache.mbr.mbrSig1 = BOOTSIG1;		
+		/*end clearCache(true)*/
 
+		fat32_boot_t* pb = &cache.fbs32;
+		pb->jump[0] = 0XEB;
+		pb->jump[1] = 0X00;
+		pb->jump[2] = 0X90;
+		for (uint8_t i = 0; i < sizeof(pb->oemId); i++) {
+		pb->oemId[i] = ' ';
+		}
+		pb->bytesPerSector = 512;
+		pb->sectorsPerCluster = sectorsPerCluster;
+		pb->reservedSectorCount = reservedSectors;
+		pb->fatCount = 2;
+		pb->mediaType = 0XF8;
+		pb->sectorsPerTrack = sectorsPerTrack;
+		pb->headCount = numberOfHeads;
+		pb->hidddenSectors = relSector;
+		pb->totalSectors32 = partSize;
+		pb->sectorsPerFat32 = fatSize;
+		pb->fat32RootCluster = 2;
+		pb->fat32FSInfo = 1;
+		pb->fat32BackBootBlock = 6;
+		pb->driveNumber = 0X80;
+		pb->bootSignature = EXTENDED_BOOT_SIG;
+		//pb->volumeSerialNumber = volSerialNumber();
+		pb->volumeSerialNumber = (cardSizeBlocks << 8) + millis();
+		memcpy(pb->volumeLabel, noName, sizeof(pb->volumeLabel));
+		memcpy(pb->fileSystemType, fat32str, sizeof(pb->fileSystemType));
+		
+		// write partition boot sector and backup
+		//if (!card.writeBlock(0, cache.data) || !writeCache(relSector + 6)) 
+		if(	!card.writeBlock(relSector, cache.data) || 
+			!card.writeBlock(relSector + 6, cache.data) ) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("FAT32 write PBS failed"));
+			#endif
+		}
+		/*start clearCache(true)*/		
+		memset(&cache, 0, sizeof(cache));
+		cache.mbr.mbrSig0 = BOOTSIG0;
+		cache.mbr.mbrSig1 = BOOTSIG1;		
+		/*end clearCache(true)*/
+		
+		// write extra boot area and backup
+		//if (!writeCache(relSector + 2) || !writeCache(relSector + 8)) 
+		if(	!card.writeBlock(relSector + 2, cache.data) || 
+			!card.writeBlock(relSector + 8, cache.data) ) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("FAT32 PBS ext failed"));
+			#endif
+		}
+		fat32_fsinfo_t* pf = &cache.fsinfo;
+		pf->leadSignature = FSINFO_LEAD_SIG;
+		pf->structSignature = FSINFO_STRUCT_SIG;
+		pf->freeCount = 0XFFFFFFFF;
+		pf->nextFree = 0XFFFFFFFF;
+		
+		// write FSINFO sector and backup
+		//if (!writeCache(relSector + 1) || !writeCache(relSector + 7)) 
+		if(	!card.writeBlock(relSector + 1, cache.data) || 
+			!card.writeBlock(relSector + 7, cache.data) ) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("FAT32 FSINFO failed"));
+			#endif
+		}
+		//clearFatDir(fatStart, 2 * fatSize + sectorsPerCluster);
+		
+		// clear FAT and root directory
+		/* start clearFatDir(fatStart, dataStart - fatStart);*/			
+		/*start clearCache(false)*/		
+		memset(&cache, 0, sizeof(cache));
+		/*end clearCache(false)*/
+		if (!card.writeStart(fatStart, 2 * fatSize + sectorsPerCluster)) {
+			#ifdef SD_DEBUG
+			USB.println(F("Clear FAT/DIR writeStart failed"));
+			#endif			
+			return 0;
+		}
+		for (uint32_t i = 0; i < 2 * fatSize + sectorsPerCluster; i++) 
+		{
+			if ((i & 0XFF) == 0) 
+			{
+				#ifdef SD_DEBUG
+				USB.print(F("."));
+				#endif
+			}
+			if (!card.writeData(cache.data)) 
+			{
+				#ifdef SD_DEBUG
+				USB.println(F("Clear FAT/DIR writeData failed"));
+				#endif
+				return 0;
+			}
+		}
+		if (!card.writeStop()) 
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("Clear FAT/DIR writeStop failed"));
+			#endif
+			return 0;
+		}		
+		#ifdef SD_DEBUG
+		USB.println();
+		#endif
+		/* end clearFatDir(fatStart, dataStart - fatStart);*/	
+		
+		/*start clearCache(false)*/		
+		memset(&cache, 0, sizeof(cache));
+		/*end clearCache(false)*/
+		cache.fat32[0] = 0x0FFFFFF8;
+		cache.fat32[1] = 0x0FFFFFFF;
+		cache.fat32[2] = 0x0FFFFFFF;
+		
+		// write first block of FAT and backup for reserved clusters
+		//if (!writeCache(fatStart) || !writeCache(fatStart + fatSize))
+		if(	!card.writeBlock(fatStart, cache.data) || 
+			!card.writeBlock(fatStart + fatSize, cache.data) )  
+		{
+			#ifdef SD_DEBUG
+			USB.println(F("FAT32 reserve failed"));
+			#endif
+		}
+	}
 	// print info
 	#ifdef SD_DEBUG
 	USB.print(F("partStart: "));   USB.println(relSector,DEC);

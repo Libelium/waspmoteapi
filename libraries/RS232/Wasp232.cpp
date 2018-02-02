@@ -1,7 +1,7 @@
 /*! \file Wasp232.cpp
     \brief Library for managing RS-232 module
     
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascon
     Implementation:	Ahmad Saad
 
@@ -136,6 +136,25 @@ void Wasp232::send(uint8_t n)
 {
 	printByte(n, _uart);
 }
+
+
+
+//!*************************************************************
+//!	Name: send()
+//!	Description: It sends an array of bytes
+//!	Param : uint8_t *s: pointer to array
+//!	Param : uint16_t length: length of array
+//!	Returns: void
+//!*************************************************************
+void Wasp232::send(uint8_t *s, uint16_t length) 
+{
+	for (uint16_t i=0; i < length; i++)
+	{
+		printByte(s[i], _uart);
+	}
+	delay(_delay);
+}
+
 
 
 //!*************************************************************

@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
- *  Revised for Waspmote by Libelium, 2014-2017
+ *  Revised for Waspmote by Libelium, 2014-2018
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- *  Version:		3.1
+ *  Version:		3.2
  *  Implementation:	N. Zambetti, A. Bielsa, Y. Carmona
  */
  
@@ -423,17 +423,22 @@ uint8_t twi_tout(uint8_t ini)
 
 ISR(TWI_vect)
 {
+	/* http://www.nongnu.org/avr-libc/user-manual/group__util__twi.html
+	 * #define TW_STATUS   (TWSR & TW_STATUS_MASK)
+	 * #define TW_STATUS_MASK (_BV(TWS7)|_BV(TWS6)|_BV(TWS5)|_BV(TWS4)|_BV(TWS3))
+	 */
+	
 	switch(TW_STATUS)
 	{
 		/// All Master
-		case TW_START:     // sent start condition
-		case TW_REP_START: // sent repeated start condition
+		case TW_START:     // start condition transmitted
+		case TW_REP_START: // repeated start condition transmitted
 			// copy device address and r/w bit to output register and ack
 			TWDR = twi_slarw;
 			twi_reply(1);
 			break;
 
-		/// Master Transmitter
+		/// Master Transmitter - TW_MT_xxx 
 		case TW_MT_SLA_ACK:  // slave receiver acked address
 		case TW_MT_DATA_ACK: // slave receiver acked data
 			// if there is data to send, send it, otherwise stop 
@@ -461,7 +466,7 @@ ISR(TWI_vect)
 			twi_releaseBus();
 			break;
 
-		/// Master Receiver
+		/// Master Receiver - TW_MR_xxx
 		case TW_MR_DATA_ACK: // data received, ack sent
 			// put byte into buffer
 			twi_masterBuffer[twi_masterBufferIndex++] = TWDR;
@@ -484,7 +489,7 @@ ISR(TWI_vect)
 			break;
 		// TW_MR_ARB_LOST handled by TW_MT_ARB_LOST case
 
-		/// Slave Receiver
+		/// Slave Receiver - TW_SR_xxx
 		case TW_SR_SLA_ACK:   // addressed, returned ack
 		case TW_SR_GCALL_ACK: // addressed generally, returned ack
 		case TW_SR_ARB_LOST_SLA_ACK:   // lost arbitration, returned ack
@@ -529,7 +534,7 @@ ISR(TWI_vect)
 			twi_reply(0);
 			break;
     
-		/// Slave Transmitter
+		/// Slave Transmitter - TW_ST_xxx
 		case TW_ST_SLA_ACK:          // addressed, returned ack
 		case TW_ST_ARB_LOST_SLA_ACK: // arbitration lost, returned ack
 			// enter slave transmitter mode

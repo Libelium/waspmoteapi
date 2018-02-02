@@ -1,5 +1,5 @@
 /*
- *  Modified for Waspmote by Libelium, 2009-2017
+ *  Modified for Waspmote by Libelium, 2009-2018
  *
  *  Copyright (c) 2006 Nicholas Zambetti.  All right reserved.
  *
@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * 	Version:	3.3
+ * 	Version:	3.4
  */
  
 extern "C" {
@@ -380,10 +380,13 @@ void TwoWire::secureBegin()
 			#endif		
 			// It is necessary to switch on the power supply if the Sensor Board is 
 			// connected to Waspmote so as not to cause intereferences in the I2C bus
-			if (((WaspRegisterSensor & REG_EVENTS)||(WaspRegisterSensor & REG_AMBIENT)) && !_3V3_ON)
+			if ((WaspRegisterSensor & REG_EVENTS) || (WaspRegisterSensor & REG_AMBIENT))
 			{
-				PWR.setSensorPower(SENS_3V3, SENS_ON);		
-				delay(50);		
+				if (!_3V3_ON)
+				{
+					PWR.setSensorPower(SENS_3V3, SENS_ON);
+					delay(50);
+				}		
 			}
 			else if (!_5V_ON || !_3V3_ON)
 			{
