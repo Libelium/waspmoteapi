@@ -117,6 +117,7 @@ getUpCounter	KEYWORD2
 setDownCounter	KEYWORD2
 getDownCounter	KEYWORD2
 setLinkCheck	KEYWORD2
+showFirmwareVersion	KEYWORD2
 _port	KEYWORD2
 _data	KEYWORD2
 _dataReceived	KEYWORD2

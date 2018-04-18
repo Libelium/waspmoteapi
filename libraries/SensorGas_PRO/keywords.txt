@@ -238,3 +238,6 @@ MCP3421	KEYWORD2
 readADC	KEYWORD2
 
 
+bmeGasesSensor	KEYWORD2
+ultrasoundGasesSensor	KEYWORD2
+luxesGasesSensor	KEYWORD2

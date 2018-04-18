@@ -1,30 +1,30 @@
 /*! \file WaspSensorAgr_v30.h
     \brief Library for managing the Agriculture Sensor Board v2.0
-    
+
     Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.2
+
+    Version:		3.3
     Design:			David Gascón
     Implementation:	Carlos Bello
 
  */
 
  /*! \def WaspSensorAgr_v30_h
-    \brief The library flag    
+    \brief The library flag
   */
 #ifndef WaspSensorAgr_v30_h
 #define WaspSensorAgr_v30_h
@@ -45,7 +45,7 @@
  * 	1: debug 1
  * 	2: debug 2
  */
-#define DEBUG_AGR 0	
+#define DEBUG_AGR 0
 
 // define print message
 #define PRINT_AGR(str)	USB.print(F("[AGR] ")); USB.print(str);
@@ -90,49 +90,49 @@
 // DEFINES WIND VANE DIRECTIONS
 //**********************************************************************
 /*! \def SENS_AGR_VANE_N
-    \brief Vane : North Direction    
+    \brief Vane : North Direction
  */
 /*! \def SENS_AGR_VANE_NNE
-    \brief Vane : North-NorthEast Direction    
+    \brief Vane : North-NorthEast Direction
  */
 /*! \def SENS_AGR_VANE_NE
-    \brief Vane : NorthEast Direction    
+    \brief Vane : NorthEast Direction
  */
 /*! \def SENS_AGR_VANE_ENE
-    \brief Vane : East-NorthEast Direction    
+    \brief Vane : East-NorthEast Direction
  */
 /*! \def SENS_AGR_VANE_E
-    \brief Vane : East Direction    
+    \brief Vane : East Direction
  */
 /*! \def SENS_AGR_VANE_ESE
-    \brief Vane : East-SouthEast Direction    
+    \brief Vane : East-SouthEast Direction
  */
 /*! \def SENS_AGR_VANE_SE
-    \brief Vane : SouthEast Direction    
+    \brief Vane : SouthEast Direction
  */
 /*! \def SENS_AGR_VANE_SSE
-    \brief Vane : South-SouthEast Direction    
+    \brief Vane : South-SouthEast Direction
  */
 /*! \def SENS_AGR_VANE_S
-    \brief Vane : South Direction    
+    \brief Vane : South Direction
  */
 /*! \def SENS_AGR_VANE_SSW
-    \brief Vane : South-SouthWest Direction    
+    \brief Vane : South-SouthWest Direction
  */
 /*! \def SENS_AGR_VANE_SW
-    \brief Vane : SouthWest Direction    
+    \brief Vane : SouthWest Direction
  */
 /*! \def SENS_AGR_VANE_WSW
-    \brief Vane : West-SouthWest Direction    
+    \brief Vane : West-SouthWest Direction
  */
 /*! \def SENS_AGR_VANE_W
-    \brief Vane : West Direction    
+    \brief Vane : West Direction
  */
 /*! \def SENS_AGR_VANE_WNW
-    \brief Vane : West-Northwest Direction    
+    \brief Vane : West-Northwest Direction
  */
 /*! \def SENS_AGR_VANE_NW
-    \brief Vane : NorthWest Direction    
+    \brief Vane : NorthWest Direction
  */
 /*! \def SENS_AGR_VANE_NNW
     \brief Vane : North-NorthWest Direction
@@ -181,7 +181,7 @@
 		uint16_t	pulses;
 	};
 //**************************************************************************************************
-//  Smart Agriculture Board Class 
+//  Smart Agriculture Board Class
 //**************************************************************************************************
 class WaspSensorAgr_v30
 {
@@ -196,27 +196,28 @@ class WaspSensorAgr_v30
 		float getHumidity();
 		float getPressure();
 		uint16_t getDistance();
-		uint32_t getLuxes(uint8_t);		
-		uint16_t readUltrasoundSensor();
+		uint32_t getLuxes();
+		uint32_t getLuxes(bool gain);
+		uint32_t getLuxes(bool gain, uint8_t res);	
 		void sleepAgr(const char*, uint8_t, uint8_t, uint8_t);
-		void sleepAgr(const char*, uint8_t, uint8_t, uint8_t, uint8_t);				
+		void sleepAgr(const char*, uint8_t, uint8_t, uint8_t, uint8_t);
 		friend class watermarkClass;
 		friend class leafWetnessClass;
-		friend class ds18b20Class;						
+		friend class ds18b20Class;
 		friend class pt1000Class;
 		friend class dendrometerClass;
-		friend class radiationClass;	
-		friend class weatherStationClass;						
+		friend class radiationClass;
+		friend class weatherStationClass;
 	private:
-	
+
 	protected:
-		float conversion(byte[], uint8_t);		
+		float conversion(byte[], uint8_t);
 };
 extern WaspSensorAgr_v30 Agriculture;
 #endif
 
 //**************************************************************************************************
-// watermark class 
+// watermark class
 //**************************************************************************************************
 #ifndef watermarkClass_h
 #define watermarkClass_h
@@ -232,7 +233,7 @@ class watermarkClass
 #endif
 
 //**************************************************************************************************
-// Leaf Wetness class 
+// Leaf Wetness class
 //**************************************************************************************************
 #ifndef leafWetnessClass_h
 #define leafWetnessClass_h
@@ -240,14 +241,14 @@ class watermarkClass
 class leafWetnessClass
 {
 	public:
-		leafWetnessClass();		
-		float getLeafWetness();	
+		leafWetnessClass();
+		float getLeafWetness();
 };
 
 #endif
 
 //**************************************************************************************************
-// DS18B20 class 
+// DS18B20 class
 //**************************************************************************************************
 #ifndef ds18b20Class_h
 #define ds18b20Class_h
@@ -255,13 +256,13 @@ class leafWetnessClass
 class ds18b20Class
 {
 	public:
-		ds18b20Class();		
-		float readDS18b20();	
+		ds18b20Class();
+		float readDS18b20();
 };
 #endif
 
 //**************************************************************************************************
-// PT1000 class 
+// PT1000 class
 //**************************************************************************************************
 #ifndef pt1000Class_h
 #define pt1000Class_h
@@ -269,12 +270,12 @@ class ds18b20Class
 class pt1000Class : public WaspSensorAgr_v30
 {
 	public:
-		pt1000Class();				
-		float readPT1000();	
+		pt1000Class();
+		float readPT1000();
 };
 #endif
 //**************************************************************************************************
-// Dendrometer sensor class 
+// Dendrometer sensor class
 //**************************************************************************************************
 #ifndef dendrometerClass_h
 #define dendrometerClass_h
@@ -282,17 +283,17 @@ class pt1000Class : public WaspSensorAgr_v30
 class dendrometerClass : public WaspSensorAgr_v30
 {
 	public:
-		dendrometerClass();			
-		dendrometerClass(uint8_t type);			
+		dendrometerClass();
+		dendrometerClass(uint8_t type);
 		float readDendrometer();
 		float readGrowth();
 		void setReference(void);
-		uint8_t _dendro;	
+		uint8_t _dendro;
 		float _reference;
 };
 #endif
 //**************************************************************************************************
-// Radiation class 
+// Radiation class
 //**************************************************************************************************
 #ifndef radiationClass_h
 #define radiationClass_h
@@ -300,12 +301,12 @@ class dendrometerClass : public WaspSensorAgr_v30
 class radiationClass
 {
 	public:
-		radiationClass();		
-		float readRadiation();	
+		radiationClass();
+		float readRadiation();
 };
 #endif
 //**************************************************************************************************
-// Weather Station class 
+// Weather Station class
 //**************************************************************************************************
 #ifndef weatherStationClass_h
 #define weatherStationClass_h
@@ -313,20 +314,20 @@ class radiationClass
 class weatherStationClass : public WaspSensorAgr_v30
 {
 	public:
-		weatherStationClass();		
+		weatherStationClass();
 		float readAnemometer();
 		void getVaneFiltered(void);
 		uint8_t readVaneDirection();
 		float readPluviometerHour();
 		float readPluviometerCurrent();
 		float readPluviometerDay();
-		uint16_t readPluviometer(void);		
-		float readPluviometer(uint8_t, int);		
+		uint16_t readPluviometer(void);
+		float readPluviometer(uint8_t, int);
 		uint8_t vaneDirection;
 		void attachPluvioInt(void);
-		void detachPluvioInt(void);				
-		void storePulse();	
-		float gustWind;	
+		void detachPluvioInt(void);
+		void storePulse();
+		float gustWind;
 		pluviometer_st plv_array[24];
 		void getVaneDirection(float);
 };

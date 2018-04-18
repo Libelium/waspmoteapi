@@ -1,23 +1,23 @@
 /*! \file WaspCAN.h
     \brief  Library for managing CAN Bus modules
-    
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:			3.1
+
+    Version:			3.2
     Design:				David Gascón
     Implementation:		Luis Antonio Martín Nuez & Ahmad Saad
 */
@@ -35,11 +35,17 @@
  * Definitions & Declarations
  ***********************************************************************/
 
+ #define DEBUGMODE 0
+
+ // define print message
+ #define PRINT_CAN(str)	USB.print(F("[CAN] ")); USB.print(str);
+
+
 #define CAN_CS		34
 #define CAN_INT		45
 
 //**********************************************************************
-// MCP2515 Opcodes 
+// MCP2515 Opcodes
 //**********************************************************************
 
 #define SPI_RESET			0xC0
@@ -219,10 +225,10 @@
 #define RXB1D6                  0x7C
 #define RXB1D7                  0x7D
 //**********************************************************************
-//Control registers 
+//Control registers
 //**********************************************************************
 //!*************************************************************
-//! BFPCTRL 
+//! BFPCTRL
 //!*************************************************************
 #define B1BFS		5
 #define B0BFS		4
@@ -241,7 +247,7 @@
 #define B1RTSM		1
 #define B0RTSM		0
 //!*************************************************************
-//! CANSTAT 
+//! CANSTAT
 //!*************************************************************
 #define OPMOD2		7
 #define OPMOD1		6
@@ -250,7 +256,7 @@
 #define ICOD1		2
 #define ICOD0		1
 //!*************************************************************
-//! CANCTRL 
+//! CANCTRL
 //!*************************************************************
 #define REQOP2		7
 #define REQOP1		6
@@ -260,7 +266,7 @@
 #define CLKPRE1		1
 #define CLKPRE0		0
 //!*************************************************************
-//! CNF3 
+//! CNF3
 //!*************************************************************
 #define SOF			7
 #define WAKFIL		6
@@ -268,7 +274,7 @@
 #define PHSEG21		1
 #define PHSEG20		0
 //!*************************************************************
-//! CNF2 
+//! CNF2
 //!*************************************************************
 #define BTLMODE		7
 #define SAM			6
@@ -279,7 +285,7 @@
 #define PHSEG1		1
 #define PHSEG0		0
 //!*************************************************************
-//! CNF1 
+//! CNF1
 //!*************************************************************
 #define SJW1		7
 #define SJW0		6
@@ -290,7 +296,7 @@
 #define BRP1		1
 #define BRP0		0
 //!*************************************************************
-//! CANINTE 
+//! CANINTE
 //!*************************************************************
 #define MERRE		7
 #define WAKIE		6
@@ -301,7 +307,7 @@
 #define RX1IE		1
 #define RX0IE		0
 //!*************************************************************
-//! CANINTF 
+//! CANINTF
 //!*************************************************************
 #define MERRF		7
 #define WAKIF		6
@@ -312,7 +318,7 @@
 #define RX1IF		1
 #define RX0IF		0
 //!*************************************************************
-//! EFLG 
+//! EFLG
 //!*************************************************************
 #define RX1OVR		7
 #define RX0OVR		6
@@ -323,7 +329,7 @@
 #define RXWAR		1
 #define EWARN		0
 //!*************************************************************
-//! TXBnCTRL (n = 0, 1, 2) 
+//! TXBnCTRL (n = 0, 1, 2)
 //!*************************************************************
 #define ABTF		6
 #define MLOA		5
@@ -332,7 +338,7 @@
 #define TXP1		1
 #define TXP0		0
 //!*************************************************************
-//! RXB0CTRL 
+//! RXB0CTRL
 //!*************************************************************
 #define RXM1		6
 #define RXM0		5
@@ -341,17 +347,17 @@
 #define BUKT1		1
 #define FILHIT0		0
 //!*************************************************************
-//! RXB1CTRL 
+//! RXB1CTRL
 //!*************************************************************
 #define RSM1		6
 #define FILHIT2		2
 #define FILHIT1		1
 //!*************************************************************
-//! TXBnSIDL (n = 0, 1) 
+//! TXBnSIDL (n = 0, 1)
 //!*************************************************************
 #define EXIDE		3
 //!*************************************************************
-//! RXBnSIDL (n = 0, 1) 
+//! RXBnSIDL (n = 0, 1)
 //!*************************************************************
 #define SRR		4
 #define IDE		3
@@ -367,7 +373,7 @@
 //!*************************************************************
 //!					CAN in Automation (CiA)
 //!*************************************************************
- 
+
 //**********************************************************************
 // Standard OBD requests and responses
 //**********************************************************************
@@ -434,33 +440,33 @@ class WaspCAN
 		// Write a register of the MCP2515 using SPI
 		void writeRegister( char direction, char data );
 		// Read a register of the MCP2515 using SPI
-		char readRegister(char direction);		
+		char readRegister(char direction);
 		// Modify a bit of the MCP2515 using SPI
 		void bitModify(char direction, char mask, char data);
-		// Check the status of the MCP2515 registers 
+		// Check the status of the MCP2515 registers
 		char readStatus(char type);
 		// Check if the buffers are empty
-		bool checkFreeBuffer(void);	
+		bool checkFreeBuffer(void);
 		// Reset MCP2515
 		void reset(void);
-		
+
 
 	public:
-	
+
 /***********************************************************************
 					Data structure
  ***********************************************************************/
 		typedef struct{
 				unsigned int id;
 				struct
-				{ 
+				{
 				  char rtr : 1;
 				  char length : 4;
 				}header;
-			
+
 				uint8_t data[8];
 		}messageCAN;
-	
+
 		// Receive buffer
 		messageCAN messageRx;
 		// Trasmit buffer
@@ -489,7 +495,7 @@ class WaspCAN
 /***********************************************************************
 					CAN in Automation (CiA)
 ***********************************************************************/
-		
+
 		uint16_t getEngineLoad();
 		uint16_t getEngineCoolantTemp();
 		uint16_t getFuelPressure();
@@ -503,7 +509,7 @@ class WaspCAN
 		uint8_t getFuelLevel();
 		uint8_t getBarometricPressure();
 		uint16_t getEngineFuelRate();
-		
+
 		// General Function
 		void CiARequest(uint8_t PID);
 };
@@ -511,4 +517,3 @@ class WaspCAN
 extern WaspCAN CAN;
 
 #endif
-

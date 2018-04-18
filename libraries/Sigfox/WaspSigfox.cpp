@@ -1,10 +1,10 @@
 /*! 
  * @file 	WaspSigfox.cpp
  * @author	Libelium Comunicaciones Distribuidas S.L.
- * @version	3.1
+ * @version	3.2
  * @brief 	Library for managing Sigfox modules TD1207 & TD1508
  *
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -536,7 +536,7 @@ uint8_t WaspSigfox::defaultConfiguration()
 	uint8_t answer;	
 	
 	answer = sendCommand("ATZ\r", AT_OK, AT_ERROR, 1000);
-	if( answer == 1 )
+	if (answer == 1)
 	{
 		delay(2000);
 	
@@ -545,7 +545,7 @@ uint8_t WaspSigfox::defaultConfiguration()
 	
 		return answer;
 	}
-	else if( answer == 2 )
+	else if (answer == 2)
 	{	
 		// error
 		return SIGFOX_ANSWER_ERROR;
@@ -1793,7 +1793,108 @@ uint8_t WaspSigfox::getDownFreqOffset()
 }
 
 
+/*!
+ * @brief	set frequency and save settings
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ * 
+ */
+uint8_t WaspSigfox::setRegionRC4()
+{
+	uint8_t status;	
+	
+	status = factorySettings();
+	if (status)
+	{
+		// error
+		return status;
+	}
 
+	status = defaultConfiguration();
+	if (status)
+	{
+		// error
+		return status;
+	}
+	
+	// set specific Australia channel configuration
+	status = setMacroChannelBitmask("00000000C00000000000007F");
+	
+	if (status)
+	{
+		// error
+		return status;
+	}
+
+	// start channel
+	status = setMacroChannel(63);
+	
+	if (status)
+	{
+		// error
+		return status;
+	}
+	
+	// offset definitino for downlink mode
+	status = setDownFreqOffset(1500000);
+	
+	if (status)
+	{
+		// error
+		return status;
+	}
+	
+	// save settings in memory
+	status = saveSettings();
+	
+	if (status)
+	{
+		// error
+		return status;
+	}
+	
+	
+	status = defaultConfiguration();
+	
+	if (status)
+	{
+		// error
+		return status;
+	}
+	
+}
+
+
+
+/*!
+ * @brief	set frequency and save settings
+ * @return	
+ * 	@arg	'SIGFOX_ANSWER_OK' if OK
+ * 	@arg	'SIGFOX_ANSWER_ERROR' if error 
+ * 	@arg	'SIGFOX_NO_ANSWER' if no answer 
+ * 
+ */
+uint8_t WaspSigfox::setRegionRC2()
+{
+	uint8_t status;	
+	
+	status = factorySettings();
+	if (status)
+	{
+		// error
+		return status;
+	}
+	
+	status = defaultConfiguration();
+	if (status)
+	{
+		// error
+		return status;
+	}
+		
+}
 
 // Preinstantiate Objects /////////////////////////////////////////////////////
 

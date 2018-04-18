@@ -32,6 +32,8 @@ setMacroChannel	KEYWORD2
 getMacroChannel	KEYWORD2
 setDownFreqOffset	KEYWORD2
 getDownFreqOffset	KEYWORD2
+setRegionRC4	KEYWORD2
+setRegionRC2	KEYWORD2
 
 _buffer	KEYWORD2
 _length	KEYWORD2

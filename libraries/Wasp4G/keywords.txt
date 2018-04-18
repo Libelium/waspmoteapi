@@ -15,6 +15,7 @@ getOperator	KEYWORD2
 setTimeFrom4G	KEYWORD2
 configureSMS	KEYWORD2
 http	KEYWORD2
+httpSetContentType	KEYWORD2
 ftpOpenSession	KEYWORD2
 ftpUpload	KEYWORD2
 ftpCloseSession	KEYWORD2

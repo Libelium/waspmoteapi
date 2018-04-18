@@ -1,23 +1,23 @@
 /*! \file WaspSensorEvent_v30.h
     \brief Library for managing the Events Sensor Board
-    
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.2
+
+    Version:		3.3
     Design:			David Gascón
     Implementation:	Carlos Bello
 
@@ -25,7 +25,7 @@
 
  /*! \def WaspSensorGas_h
     \brief The library flag
-    
+
   */
 #ifndef WaspSensorEvent_v30_h
 #define WaspSensorEvent_v30_h
@@ -33,7 +33,7 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
- 
+
 #include <inttypes.h>
 #include "UltrasoundSensor.h"
 #include <TSL2561.h>
@@ -68,7 +68,7 @@
 #define	SENS_INT_DO			DIGITAL1	// PE3
 #define	SENS_INT_ENABLE		DIGITAL8	// PC5
 #define	SENS_INT_CLK_INH	DIGITAL3	// PA4
-#define SENS_INT_FLOW_EN	DIGITAL4	
+#define SENS_INT_FLOW_EN	DIGITAL4
 //**********************************************************************
 // DEFINES FLOW SENSORS
 //**********************************************************************
@@ -81,12 +81,12 @@
 
 
 //**************************************************************************************************
-//  Smart Agriculture Board Class 
+//  Smart Agriculture Board Class
 //**************************************************************************************************
 class WaspSensorEvent_v30
 {
 	public:
-		
+
 		WaspSensorEvent_v30();
 		void ON(void);
 		void OFF(void);
@@ -98,7 +98,9 @@ class WaspSensorEvent_v30
 		float getHumidity();
 		float getPressure();
 		uint16_t getDistance();
-		uint32_t getLuxes(uint8_t);
+    uint32_t getLuxes();
+    uint32_t getLuxes(bool gain);
+		uint32_t getLuxes(bool gain, uint8_t res);
 		friend class relayClass;
 		friend class flowClass;
 		friend class hallSensorClass;
@@ -106,7 +108,7 @@ class WaspSensorEvent_v30
 		friend class liquidLevelClass;
 		friend class liquidPresenceClass;
 		bool _intEnabled;
-		
+
 		// Interruption Inputs Vars
 		bool input1Flag;
 		bool input2Flag;
@@ -192,7 +194,7 @@ class liquidPresenceClass : public WaspSensorEvent_v30
 };
 #endif
 //**************************************************************************************************
-// Relay class 
+// Relay class
 //**************************************************************************************************
 #ifndef relayClass_h
 #define relayClasss_h
@@ -205,12 +207,12 @@ class relayClass : public WaspSensorEvent_v30
 		uint8_t readInRel();
 		void relayON();
 		void relayOFF();
-		bool getInt();		
+		bool getInt();
 };
 #endif
 
 //**************************************************************************************************
-// flowReadingClass class 
+// flowReadingClass class
 //**************************************************************************************************
 #ifndef flowClass_h
 #define flowClass_h
@@ -225,6 +227,6 @@ class flowClass : public WaspSensorEvent_v30
 		void enableFlowInt();
 		void disableFlowInt();
 	private:
-		uint8_t _model;		
+		uint8_t _model;
 };
 #endif

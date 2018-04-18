@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -400,13 +400,18 @@ void  WaspUART::sendCommand( uint8_t* command, uint16_t length )
 
 /*
  * 
- * name: sendCommand
- * @param	char* command: command to be sent
+ * name: waitFor
+ * @brief	This function waits for one of the answers during a certain period 
+ * 			of time. The result is stored in '_buffer'.
  * @param	char* ans1: expected answer
- * @param	bool flush: flush needed before sending command (1: flush; 0: not)
+ * @param	char* ans2: expected answer
+ * @param	char* ans3: expected answer
+ * @param	char* ans4: expected answer
  * @return 	'0' if timeout error, 
- * 			'1' if ans1
- * 
+ * 			'1' if ans1 is found
+ * 			'2' if ans2 is found
+ * 			'3' if ans3 is found
+ * 			'4' if ans4 is found
  */
 uint8_t WaspUART::waitFor(	char* ans1 )
 {
@@ -461,22 +466,6 @@ uint8_t WaspUART::waitFor(	char* ans1,
 }		
 
 
-/*
- * 
- * name: waitFor
- * @brief	This function waits for one of the answers during a certain period 
- * 			of time. The result is stored in '_buffer'.
- * @param	char* command: command to be sent
- * @param	char* ans1: expected answer
- * @param	char* ans2: expected answer
- * @param	char* ans3: expected answer
- * @param	char* ans4: expected answer
- * @return 	'0' if timeout error, 
- * 			'1' if ans1
- * 			'2' if ans2
- * 			'3' if ans3
- * 			'4' if ans4
- */
 uint8_t  WaspUART::waitFor( char* ans1, 
 							char* ans2, 
 							char* ans3, 

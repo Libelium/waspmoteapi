@@ -1,25 +1,25 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
  *  (at your option) any later version.
-   
+
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
-  
+
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
-  
+
 
 #ifndef __WPROGRAM_H__
   #include "WaspClasses.h"
@@ -117,8 +117,8 @@ const char GET_TIME[]			PROGMEM	= "+CCLK?";			//63
 const char GET_TIME_RES[]		PROGMEM	= "+CCLK: ";		//64
 
 
-const char* const  table_MISC[] PROGMEM = 
-{   
+const char* const  table_MISC[] PROGMEM =
+{
 	//Power constants
 	POWER_FULL,				//0
 	POWER_RF_OFF,			//1
@@ -140,7 +140,7 @@ const char* const  table_MISC[] PROGMEM =
 	GET_IMEI,				//13
 	GET_IMEI_R,				//14
 	GET_IMSI,				//15
-	
+
 	//File system functions
 	CHANGE_DIR,				//16
 	CHANGE_DIR_BACK,		//17
@@ -189,26 +189,26 @@ const char* const  table_MISC[] PROGMEM =
 	CHECK,					//54
 	CHECK_RES,				//55
 	ROAMING,				//56
-	
+
 	//manageIncomingData
 	INCOMING_CALL,			//57
-	INCOMING_SMS,			//58	
-	
+	INCOMING_SMS,			//58
+
 	CHANGE_PIN,				//59
-	
+
 	XMODEM_SEND,			//60
-	
+
 	CHECK_GPRS,				//61
 	CHECK_GPRS_RES,			//62
 
-	GET_TIME,				//63	
+	GET_TIME,				//63
 	GET_TIME_RES,			//64
 };
 
 
 
 //Call and SMS constants
-#if GSM_FUSE	
+#if GSM_FUSE
 const char CALL[]			PROGMEM	= "D";				//0
 const char LINE_ID[]		PROGMEM	= "+CLIP=1";		//1
 const char HANG_CALL[]		PROGMEM	= "+CHUP";			//2
@@ -234,22 +234,22 @@ const char SMS_DELETE[]		PROGMEM	= "+CMGD="; 		//18
 const char NO_CARRIER[]		PROGMEM = "NO CARRIER";		//19
 const char BEGIN[]			PROGMEM = "BEGIN";			//20
 const char CONNECT[]		PROGMEM = "CONNECT";		//21
-	
-const char* const table_GSM[] PROGMEM = 
-{   
+
+const char* const table_GSM[] PROGMEM =
+{
 	CALL,			//0
 	LINE_ID,		//1
 	HANG_CALL,		//2
 	AUTO_ANSWER,	//3
 	CALL_ASNWER,	//4
-	
+
 	TONE,			//5
 	MUTE_RINGER,	//6
 	LVL_RINGER,		//7
 	LINE_ID_PRES,	//8
 	LINE_ID_REST,	//9
 	PHONE_ACT,		//10
-	
+
 	SMS_MODE,		//11
 	SEND_SMS,		//12
 	SMS_INFO,		//13
@@ -263,8 +263,8 @@ const char* const table_GSM[] PROGMEM =
 
 //Camera constants
 #if CAMERA_FUSE
-	
-	#define VH_PIN				ANA6 
+
+	#define VH_PIN				ANA6
 	#define VL_PIN				DIGITAL1
 	#define FILTER_ENABLE		DIGITAL3
 	#define POWER_LED			DIGITAL8
@@ -274,7 +274,7 @@ const char* const table_GSM[] PROGMEM =
 	#define THRESHOLD_LIGHT_1	350
 	#define THRESHOLD_LIGHT_2	150
 	#define THRESHOLD_IR		400
-	
+
 const char CAM_START[]			PROGMEM	= "+CCAMS";			//0
 const char CAM_STOP[]			PROGMEM	= "+CCAME";			//1
 const char CAM_DIM[]			PROGMEM	= "+CCAMSETD=";		//2
@@ -323,10 +323,10 @@ const char V_SETUP[]			PROGMEM	= "VPSETUP";		//39
 const char V_CONNECTED[]		PROGMEM	= "VPCONNECTED";	//40
 const char V_END[]				PROGMEM	= "VPEND";			//41
 const char V_INCOMING[]			PROGMEM	= "VPINCOM";		//42
-	
-	
-const char* const table_CAMERA[] PROGMEM = 
-{   
+
+
+const char* const table_CAMERA[] PROGMEM =
+{
 	CAM_START,			//0
 	CAM_STOP,			//1
 	CAM_DIM,			//2
@@ -353,21 +353,21 @@ const char* const table_CAMERA[] PROGMEM =
 	CAM_STOP_VIDEO,		//23
 	CAMA_MODE,			//24
 	CAMA_CH,			//25
-	
+
 	CAM_NO_SENSOR,		//26
 	CAM_INVALID_STATE,	//27
 	CAM_NO_MEM,			//28
 	CAM_NO_START,		//29
 	CAM_EP,				//30
 	CAM_EV,				//31
-	
+
 	//Videocall related constants
 	V_CALL_START,	//32
 	V_CALL_END,		//33
 	V_DMTF,			//34
 	V_RECORD,		//35
 	V_QUALITY,		//36
-	
+
 	V_ACCEPTED,		//37
 	V_RECV,			//38
 	V_SETUP,		//39
@@ -379,7 +379,7 @@ const char* const table_CAMERA[] PROGMEM =
 
 //FTP constants
 #if FTP_FUSE
-	
+
 const unsigned long FTP_TIMEOUT = 120000;
 const unsigned long TRANSFER_BASE_TIME = 30000;
 
@@ -414,10 +414,10 @@ const char FTPS_PUT_FILE_RES_SIO[]	PROGMEM	= "+CFTPSPUT: BEGIN";	//25
 const char FTP_LIST[]				PROGMEM	= "+CFTPLIST";			//26
 const char FTP_LIST_RES[]			PROGMEM	= "+CFTPLIST: DATA,";	//27
 const char FTP_LIST_END[]			PROGMEM	= "+CFTPLIST: 0";		//28
-	
 
-const char* const table_FTP[] PROGMEM = 
-{   
+
+const char* const table_FTP[] PROGMEM =
+{
 	FTP_SERVER,				//0
 	FTP_PORT,				//1
 	FTP_MODE,				//2
@@ -432,7 +432,7 @@ const char* const table_FTP[] PROGMEM =
 	FTP_PUT_FILE_RES,		//11
 	FTP_PUT_FILE_SIO,		//12
 	FTP_PUT_FILE_RES_SIO,	//13
-	
+
 	ACQUIRE_SSL_STACK,		//14
 	RELEASE_SSL_STACK,		//15
 	FTPS_LOGIN,				//16
@@ -445,7 +445,7 @@ const char* const table_FTP[] PROGMEM =
 	FTPS_PUT_FILE_RES,		//23
 	FTPS_PUT_FILE_SIO,		//24
 	FTPS_PUT_FILE_RES_SIO,	//25
-	
+
 	FTP_LIST,				//26
 	FTP_LIST_RES,			//27
 	FTP_LIST_END,			//28
@@ -477,10 +477,10 @@ const char POP3_HEADER[]	PROGMEM	= "+POP3HDR=";		//14
 const char POP3_GET[]		PROGMEM	= "+POP3GET=";		//15
 const char POP3_DEL[]		PROGMEM	= "+POP3DEL=";		//16
 const char POP3_SUCCESS[]	PROGMEM	= "+POP3: SUCCESS";	//17
-	
 
-const char* const table_MAIL[] PROGMEM = 
-{   
+
+const char* const table_MAIL[] PROGMEM =
+{
 	SMTP_SERVER,	//0
 	SMTP_AUTH,		//1
 	SMTP_FROM,		//2
@@ -490,7 +490,7 @@ const char* const table_MAIL[] PROGMEM =
 	SMTP_ATTACH,	//6
 	SMTP_SEND,		//7
 	SMTP_SEND_R,	//8
-	
+
 	POP3_SERVER,	//9
 	POP3_IN,		//10
 	POP3_OUT,		//11
@@ -505,7 +505,7 @@ const char* const table_MAIL[] PROGMEM =
 
 //HTTP constants
 #if HTTP_FUSE
-	
+
 
 const unsigned long HTTP_TIMEOUT = 45000;		// Timeout for HTTP and HTTPS functions in miliseconds
 const unsigned long HTTP_CONF_TIMEOUT = 15000;	// Timeout for HTTP and HTTPS functions in miliseconds
@@ -537,8 +537,8 @@ const char HTP_UPDATE_RES[]	PROGMEM	= "+CHTPUPDATE: ";	//20
 
 
 
-const char* const table_HTTP[] PROGMEM = 
-{   
+const char* const table_HTTP[] PROGMEM =
+{
 	HTTP_ACT,		//0
 	HTTP_ACT_REQ,	//1
 	HTTP_ACT_DATA,	//2
@@ -551,7 +551,7 @@ const char* const table_HTTP[] PROGMEM =
 	HTTPS_RCV,		//8
 	HTTPS_DATA,		//9
 	HTTPS_EVENT,	//10
-	
+
 	HTTP_GET,		//11
 	HTTP_POST,		//12
 	HTTP_FRAME_1,	//13
@@ -559,7 +559,7 @@ const char* const table_HTTP[] PROGMEM =
 	HTTP_FRAME_3,	//15
 	HTTP_END_GET,	//16
 	HTTP_END_POST,	//17
-	
+
 	HTP_SERVER,	//18
 	HTP_UPDATE,	//19
 	HTP_UPDATE_RES,	//20
@@ -580,8 +580,8 @@ const char ENABLE_AUTO_GPS[]	PROGMEM	= "+CGPSAUTO=1";	//8
 const char DISABLE_AUTO_GPS[]	PROGMEM	= "+CGPSAUTO=0";	//9
 
 
-const char* const table_GPS[] PROGMEM = 
-{   
+const char* const table_GPS[] PROGMEM =
+{
 	START_GPS,			//0
 	START_GPS_COLD,		//1
 	START_GPS_HOT,		//2
@@ -602,7 +602,7 @@ const unsigned long IP_TIMEOUT = 30000;
 
 	#define RETRIES				10
 	#define DELAY_SEND			0
-	
+
 const char IP_OPEN[]			PROGMEM	= "+NETOPEN=";		//0
 const char IP_CLOSE[]			PROGMEM	= "+NETCLOSE";		//1
 const char IP_APP_MODE[]		PROGMEM	= "+CIPMODE=";		//2
@@ -637,44 +637,44 @@ const char IPDATAMODE_FAIL[]	PROGMEM	= "NO CARRIER";		//23
 const char INCOMING_IP[]		PROGMEM = "RECV FROM:";		//24
 const char IP_DATA_SINGLE[]		PROGMEM = "+IPD";			//25
 const char IP_DATA_MULTI[]		PROGMEM = "+RECEIVE,";		//26
-	
-	
-const char* const table_IP[] PROGMEM = 
-{   
+
+
+const char* const table_IP[] PROGMEM =
+{
 	IP_OPEN,				//0
 	IP_CLOSE,				//1
 	IP_APP_MODE,			//2
 	GET_IP,					//3
 	GET_IP_R,				//4
-	
+
 	TCP_CONNECT,			//5
 	TCP_SEND,				//6
 	UDP_SEND,				//7
 	IP_SERVER,				//8
-	
+
 	MULTI_OPEN,				//9
 	MULTI_SEND,				//10
 	MULTI_CLOSE,			//11
 	TCP_SEND_OK,			//12
 	UDP_SEND_OK,			//13
-	
+
 	SERVER_LIST,			//14
 	SERVER_LIST_R,			//15
 	SERVER_OPEN_CLIENT,		//16
 	SERVER_CLOSE_CLIENT,	//17
-	
+
 	CONFIGURE_IP,			//18
-	
+
 	IPFROMDOM,				//19
 	DOMFROMIP,				//20
-	
+
 	IPDATAMODE,				//21
 	IPDATAMODE_R,			//22
 	IPDATAMODE_FAIL,		//23
 	INCOMING_IP,			//24
 	IP_DATA_SINGLE,			//25
 	IP_DATA_MULTI,			//26
-	
+
 };
 #endif
 
@@ -690,14 +690,14 @@ Wasp3G::Wasp3G(){
 	_socket=1;
 	ready=0;
 	IP_flags=0;
-	
+
 	memset(_apn, '\0', sizeof(_apn));
 	memset(_apn_login, '\0', sizeof(_apn_login));
 	memset(_apn_password, '\0', sizeof(_apn_password));
 	strncpy(_apn, _3G_APN, min(sizeof(_apn), strlen(_3G_APN)));
 	strncpy(_apn_login, _3G_LOGIN, min(sizeof(_apn_login), strlen(_3G_LOGIN)));
 	strncpy(_apn_password, _3G_PASSW, min(sizeof(_apn_password), strlen(_3G_PASSW)));
-	
+
 }
 
 
@@ -738,19 +738,19 @@ void Wasp3G::getIfReady(){
  * and '-4' if the state is unknown
 */
 int8_t Wasp3G::check3Gconnection(unsigned long time){
-	
+
 	unsigned long previous;
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[61])));	//CHECK_GPRS
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[62])));	//CHECK_GPRS_RES
-	
+
 	previous = millis();
-	
-	do{	
+
+	do{
 		// Sends the command and waits for the answer (0,1 for home network and 0,5 for roaming)
 		answer = sendCommand1(str_aux1, str_aux2, 3000, 1);
-		
+
 		if (answer == 1)
 		{
 			answer = serialRead(_socket) - 0x30;
@@ -762,9 +762,9 @@ int8_t Wasp3G::check3Gconnection(unsigned long time){
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
 	}while (((answer == 2) || (answer == 4) || (answer == 0) || (answer == -1)) && ((millis() - previous) < (time * 1000)));
-	 
+
 	#if _3G_debug_mode>0
-		USB.print(F("Network status: "));
+		PRINT_3G(F("Network status: "));
 		USB.println(answer, DEC);
 	#endif
 
@@ -776,18 +776,18 @@ int8_t Wasp3G::check3Gconnection(unsigned long time){
 	{
 		return -1;
 	}
-	
+
 	return 1;
 }
 
-/* check3Gattach() - checks if 3G connection is attached or not 
+/* check3Gattach() - checks if 3G connection is attached or not
  *
  * This function checks if 3G connection is  attached or not
  *
  * Returns '1' if attached, '2' if not attached and '0' if error
 */
 uint8_t Wasp3G::check3Gattach(){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[5])));	//AT_3G_CHECK
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[6])));	//AT_3G_CHECK_ON
 	strcpy_P(str_aux3, (char*)pgm_read_word(&(table_MISC[7])));	//AT_3G_CHECK_OFF
@@ -795,16 +795,16 @@ uint8_t Wasp3G::check3Gattach(){
 }
 
 uint8_t Wasp3G::getXModemCheckSum(uint8_t* data){
-	
+
 	uint8_t aux=0;
-	
+
 	for (int x=0; x < 128; x++)
 	{
 		aux+=data[x];
 	}
-	
+
 	return aux;
-	
+
 
 }
 
@@ -849,10 +849,10 @@ uint16_t Wasp3G::sendXModemCheckSum(char* ptr){
  * '-15' if error setting APN, username and password with CME_error code available
 */
 int8_t Wasp3G::initHTTP()
-{	
+{
 	int8_t answer;
 	int16_t count;
-		
+
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
@@ -864,8 +864,8 @@ int8_t Wasp3G::initHTTP()
 	if (count == 0)
 	{
 		return -1;
-	}	
-	
+	}
+
 	// Sets username and password
 	if (strlen(_apn_login) == 0)
 	{
@@ -875,7 +875,7 @@ int8_t Wasp3G::initHTTP()
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 	}
 	count = 5;
 	do{
@@ -890,9 +890,9 @@ int8_t Wasp3G::initHTTP()
 	{
 		return -15;
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* sendHTTPrequest(const char*,	uint16_t,uint8_t*,int,uint8_t) - Sends the HTTP request to the server
@@ -911,13 +911,13 @@ int8_t Wasp3G::sendHTTPrequest(		const char* url,
 									uint16_t length,
 									uint8_t method )
 {
-	
-	int8_t answer;		
+
+	int8_t answer;
 	char aux_conv[3];
-	memset( aux_conv, 0x00, sizeof(aux_conv) );	
-	
+	memset( aux_conv, 0x00, sizeof(aux_conv) );
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, url, port);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[1])));	//HTTP_ACT_REQ
@@ -930,129 +930,129 @@ int8_t Wasp3G::sendHTTPrequest(		const char* url,
 	{
 		return -16;
 	}
-	
+
 	// Sends the request with the frame to the server
-	
+
 	switch(method)
 	{
 		case GET:
 			// GET /getpost_frame_parser.php?frame=
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[11])));	//HTTP_GET
-			printString(str_aux3, _socket);				
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
+				PRINT_3G(str_aux3);
 			#endif
-				
+
 			for (uint16_t x=0 ; x < length; x++)
 			{
 				Utils.hex2str(&data[x], aux_conv, 1);
 				printByte(aux_conv[0], _socket);
-				printByte(aux_conv[1], _socket); 
+				printByte(aux_conv[1], _socket);
 				#if _3G_debug_mode>0
 					USB.print(aux_conv[0]);
 					USB.print(aux_conv[1]);
 				#endif
 			}
-			
-			//  HTTP/1.1\r\nHost: 
+
+			//  HTTP/1.1\r\nHost:
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[13])));	//HTTP_FRAME_1
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
+				PRINT_3G(str_aux3);
 			#endif
-	
+
 			printString(url, _socket);
 			#if _3G_debug_mode>0
-				USB.print(url);
+				PRINT_3G(url);
 			#endif
-				
-			// \r\nContent-Length: 
+
+			// \r\nContent-Length:
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[15])));	//HTTP_FRAME_3
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
+				PRINT_3G(str_aux3);
 			#endif
-			
+
 			// 0\r\n\r\n
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[16])));	//HTTP_END_GET
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
-			#endif	
-			
+				PRINT_3G(str_aux3);
+			#endif
+
 			break;
-		
+
 		case POST:
 			// POST /getpost_frame_parser.php
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[12])));	//HTTP_POST
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
+				PRINT_3G(str_aux3);
 			#endif
-			
-			//  HTTP/1.1\r\nHost: 
+
+			//  HTTP/1.1\r\nHost:
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[13])));	//HTTP_FRAME_1
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
+				PRINT_3G(str_aux3);
 			#endif
-	
+
 			printString(url, _socket);
 			#if _3G_debug_mode>0
-				USB.print(url);
+				PRINT_3G(url);
 			#endif
-				
+
 			// \r\nContent-Type: application/x-www-form-urlencoded
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[14])));	//HTTP_FRAME_2
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
+				PRINT_3G(str_aux3);
 			#endif
-				
-			// \r\nContent-Length: 
+
+			// \r\nContent-Length:
 			strcpy_P(str_aux3, (char*)pgm_read_word(&(table_HTTP[15])));	//HTTP_FRAME_3
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);
+				PRINT_3G(str_aux3);
 			#endif
-				
+
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[17])));	//HTTP_END_POST
 			sprintf(str_aux3, "%d%s", (length * 2) + 6, str_aux1);
-			printString(str_aux3, _socket);	
+			printString(str_aux3, _socket);
 			#if _3G_debug_mode>0
-				USB.print(str_aux3);	
+				PRINT_3G(str_aux3);
 			#endif
-				
+
 			for (uint16_t x=0 ; x < length; x++)
 			{
 				Utils.hex2str(&data[x], aux_conv, 1);
 				printByte(aux_conv[0], _socket);
-				printByte(aux_conv[1], _socket); 
+				printByte(aux_conv[1], _socket);
 				#if _3G_debug_mode>0
 					USB.print(aux_conv[0]);
 					USB.print(aux_conv[1]);
 				#endif
-			}	
-				
+			}
+
 			break;
-			
+
 		default:
 			break;
 	}
-	
-	
-	
+
+
+
 	printByte(0x1A, _socket);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[2])));	//HTTP_ACT_DATA
-	answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);	
+	answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);
 	if (answer != 1)
 	{
 		return -3;
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* readHTTPresponse(int8_t) - Reads the response from the server
@@ -1075,20 +1075,20 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 	unsigned long previous;
 	char* aux_ptr;
 	uint8_t len;
-	
-	
+
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	count = 0;
 	aux = serialRead(_socket);
 	while (aux == 'D')
 	{	// Data received
-	
+
 		serialRead(_socket);	// A
 		serialRead(_socket);	// T
 		serialRead(_socket);	// A
 		serialRead(_socket);	// ,
-		
+
 		HTTP_data = 0;
 		aux = serialRead(_socket);
 		// Gets the length of the first data string
@@ -1097,45 +1097,45 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 			HTTP_data += aux - 0x30;
 			aux = serialRead(_socket);
 		}while (aux != '\r');
-		
+
 		serialRead(_socket); // Skips '\n'
-		
+
 		// Reads the incoming bytes
 		previous = millis();
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("HTTP data: "));
+			PRINT_3G(F("HTTP data: "));
 			USB.println(HTTP_data, DEC);
 		#endif
-		
+
 		do{
 			aux = serialRead(_socket);
 			if (aux != -1)
-			{	
+			{
 				if (count < _3G_BUFFER_SIZE)
 				{
 					buffer_3G[count] = aux;
 					count++;
 				}
 				HTTP_data--;
-			}	
+			}
 			else
 			{
 				delay(1);
-			}			
-			
+			}
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((HTTP_data > 0) && ((millis() - previous) < 10000));
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("Count remainder: "));
+			PRINT_3G(F("Count remainder: "));
 			USB.println(HTTP_data, DEC);
 		#endif
-		
+
 		// Waits for new data or the end of the request
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[2])));	//HTTP_ACT_DATA
 		answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);
@@ -1144,11 +1144,11 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 			aux = serialRead(_socket);
 		}
 		else
-		{	
+		{
 			aux = 0;
 		}
 	}
-	
+
 	if (aux == '0')
 	{
 		// No more data
@@ -1157,7 +1157,7 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 		// Changes to default baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 		snprintf(str_aux2, sizeof(str_aux2), "%s%ld", str_aux1, _baudRate);
-		answer=sendCommand2(str_aux2, OK_RESPONSE, ERROR);	
+		answer=sendCommand2(str_aux2, OK_RESPONSE, ERROR);
 		if (answer == 2)
 		{
 			return -4;
@@ -1166,17 +1166,17 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 		{
 			beginSerial(_baudRate, _socket);
 		}
-		
+
 		if(parse == 1)
 		{
 			//EXTRAAAAA, parseo de la info. Quita cabecera y deja sólo datos
 			// checks if the response is OK
 			if (strstr(buffer_3G, "200 ok") == NULL)
 			{
-				// url response its not OK 
+				// url response its not OK
 				return -17;
 			}
-			
+
 			// finds the data length
 			aux_ptr = strstr(buffer_3G, "content-length: ");
 			if (aux_ptr == NULL)
@@ -1184,9 +1184,9 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 				// content-length field not found
 				return -18;
 			}
-			
+
 			aux_ptr += strlen("content-length: ");
-			
+
 			strncpy(str_aux1, aux_ptr, strchr(aux_ptr, '\r') - aux_ptr);
 			sscanf(str_aux1, "%d", &len);
 			aux_ptr = strstr(buffer_3G, "\r\n\r\n");
@@ -1196,13 +1196,13 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 				return -19;
 			}
 			aux_ptr = aux_ptr + 4;
-			
+
 			strncpy(buffer_3G, aux_ptr, len);
-			
+
 			buffer_3G[len] = '\0';
-			
+
 		}
-		
+
 		return 1;
 	}
 	else if (aux == 0)
@@ -1219,16 +1219,16 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 			HTTP_data += aux - 0x30;
 			aux = serialRead(_socket);
 		}while (aux != '\r');
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("HTTP error: "));
+			PRINT_3G(F("HTTP error: "));
 			USB.println(HTTP_data, DEC);
 		#endif
-		
+
 		HTTP_data -= 215;
-		
+
 		changeBaudrate(_baudRate);
-		
+
 		return -HTTP_data;
 	}
 }
@@ -1241,19 +1241,19 @@ int8_t Wasp3G::readHTTPresponse(int8_t parse)
 //functions with one answer
 uint8_t Wasp3G::sendCommand1( const char* theText,
 							  const char* expectedAnswer1)
-{	
+{
     return sendCommand1(theText, expectedAnswer1, DEFAULT_TIMEOUT, SEND_DEFAULT);
 }
 
-uint8_t Wasp3G::sendCommand1(	const char* theText, 
-								const char* expectedAnswer1, 
-								unsigned long max_timeout, 
+uint8_t Wasp3G::sendCommand1(	const char* theText,
+								const char* expectedAnswer1,
+								unsigned long max_timeout,
 								int num_tries)
-{	
+{
     unsigned long timeout = 0;
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Send command with 1 answer: "));
+		PRINT_3G(F("Send command with 1 answer: "));
 		USB.print(F("AT"));
 		USB.println(theText);
 	#endif
@@ -1273,35 +1273,35 @@ uint8_t Wasp3G::sendCommand1(	const char* theText,
         }
         delay(DELAY_ON_SEND);
     }
-	
+
     int answer= waitForData( expectedAnswer1, expectedAnswer1, expectedAnswer1, expectedAnswer1, max_timeout, timeout, 0, 1);
-    
+
 	#if _3G_debug_mode>0
-		USB.print(F("Answer: "));
+		PRINT_3G(F("Answer: "));
 		USB.println(answer, DEC);
 	#endif
-	
+
     return answer;
 }
 
 //functions with two answers
-uint8_t Wasp3G::sendCommand2(	const char* theText, 
-								const char* expectedAnswer1, 
+uint8_t Wasp3G::sendCommand2(	const char* theText,
+								const char* expectedAnswer1,
 								const char* expectedAnswer2)
-{	
+{
     return sendCommand2(theText, expectedAnswer1, expectedAnswer2, DEFAULT_TIMEOUT, SEND_DEFAULT);
 }
 
-uint8_t Wasp3G::sendCommand2(	const char* theText, 
-								const char* expectedAnswer1, 
-								const char* expectedAnswer2, 
-								unsigned long max_timeout, 
+uint8_t Wasp3G::sendCommand2(	const char* theText,
+								const char* expectedAnswer1,
+								const char* expectedAnswer2,
+								unsigned long max_timeout,
 								int num_tries)
-{	
+{
     unsigned long timeout = 0;
-	
+
     #if _3G_debug_mode>0
-	    USB.print(F("Send command with 2 answers: "));
+	    PRINT_3G(F("Send command with 2 answers: "));
 	    USB.print(F("AT"));
 	    USB.println(theText);
     #endif
@@ -1321,29 +1321,29 @@ uint8_t Wasp3G::sendCommand2(	const char* theText,
         }
         delay(DELAY_ON_SEND);
     }
-	
+
     int answer= waitForData( expectedAnswer1, expectedAnswer2, expectedAnswer2, expectedAnswer2, max_timeout, timeout, 0, 2);
-    
+
     #if _3G_debug_mode>0
-	    USB.print(F("Answer: "));
+	    PRINT_3G(F("Answer: "));
 	    USB.println(answer, DEC);
     #endif
-	
+
     return answer;
 }
 
 //function with three answers
-uint8_t Wasp3G::sendCommand3(	const char* theText, 
-								const char* expectedAnswer1, 
-								const char* expectedAnswer2, 
-								const char* expectedAnswer3, 
-								unsigned long max_timeout, 
+uint8_t Wasp3G::sendCommand3(	const char* theText,
+								const char* expectedAnswer1,
+								const char* expectedAnswer2,
+								const char* expectedAnswer3,
+								unsigned long max_timeout,
 								int num_tries)
-{	
+{
     unsigned long timeout = 0;
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Send command with 3 answers: "));
+		PRINT_3G(F("Send command with 3 answers: "));
 		USB.print(F("AT"));
 		USB.println(theText);
 	#endif
@@ -1367,30 +1367,30 @@ uint8_t Wasp3G::sendCommand3(	const char* theText,
         }
         delay(DELAY_ON_SEND);
     }
-	
+
     int answer= waitForData( expectedAnswer1, expectedAnswer2, expectedAnswer3, expectedAnswer3, max_timeout, timeout, 0, 3);
-    
+
 	#if _3G_debug_mode>0
-		USB.print(F("Answer: "));
+		PRINT_3G(F("Answer: "));
 		USB.println(answer, DEC);
 	#endif
-	
+
     return answer;
 }
 
 //function with four answers
-uint8_t Wasp3G::sendCommand4(	const char* theText, 
-								const char* expectedAnswer1, 
-								const char* expectedAnswer2, 
-								const char* expectedAnswer3, 
-								const char* expectedAnswer4, 
-								unsigned long max_timeout, 
+uint8_t Wasp3G::sendCommand4(	const char* theText,
+								const char* expectedAnswer1,
+								const char* expectedAnswer2,
+								const char* expectedAnswer3,
+								const char* expectedAnswer4,
+								unsigned long max_timeout,
 								int num_tries)
-{	
+{
     unsigned long timeout = 0;
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Send command with 4 answers: "));
+		PRINT_3G(F("Send command with 4 answers: "));
 		USB.print(F("AT"));
 		USB.println(theText);
 	#endif
@@ -1410,29 +1410,29 @@ uint8_t Wasp3G::sendCommand4(	const char* theText,
         }
         delay(DELAY_ON_SEND);
     }
-	
+
     int answer= waitForData( expectedAnswer1, expectedAnswer2, expectedAnswer3, expectedAnswer4, max_timeout, timeout, 0, 4);
-    
+
 	#if _3G_debug_mode>0
-		USB.print(F("Answer: "));
+		PRINT_3G(F("Answer: "));
 		USB.println(answer, DEC);
 	#endif
-	
+
     return answer;
 }
 
 //function to wait an specific answer
-uint8_t Wasp3G::waitForData(	const char* expectedAnswer1, 
-								unsigned long max_timeout, 
+uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
+								unsigned long max_timeout,
 								unsigned long timeout,
 								int seconds)
 {
-	return (waitForData( expectedAnswer1, expectedAnswer1, expectedAnswer1, expectedAnswer1, max_timeout, timeout, 0, 1));	
+	return (waitForData( expectedAnswer1, expectedAnswer1, expectedAnswer1, expectedAnswer1, max_timeout, timeout, 0, 1));
 }
 
 uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
-								const char* expectedAnswer2, 
-								unsigned long max_timeout, 
+								const char* expectedAnswer2,
+								unsigned long max_timeout,
 								unsigned long timeout,
 								int seconds)
 {
@@ -1440,26 +1440,26 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 }
 
 uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
-								const char* expectedAnswer2, 
-								const char* expectedAnswer3, 
-								unsigned long max_timeout, 
+								const char* expectedAnswer2,
+								const char* expectedAnswer3,
+								unsigned long max_timeout,
 								unsigned long timeout,
 								int seconds)
 {
 	return (waitForData( expectedAnswer1, expectedAnswer2, expectedAnswer3, expectedAnswer3, max_timeout, timeout, 0, 1));
 }
 
-uint8_t Wasp3G::waitForData(	const char* expectedAnswer1, 
-								const char* expectedAnswer2, 
-								const char* expectedAnswer3, 
-								const char* expectedAnswer4, 
-								unsigned long max_timeout, 
+uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
+								const char* expectedAnswer2,
+								const char* expectedAnswer3,
+								const char* expectedAnswer4,
+								unsigned long max_timeout,
 								unsigned long timeout,
-								int seconds, 
+								int seconds,
 								int n_answers)
 {
 	char theCommand[100];
-	
+
 	memset(theCommand, '\0', sizeof(theCommand));
 
 	int theLength = 0;
@@ -1468,13 +1468,13 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 	int it=0;
 	uint8_t first=1;
 	char aux;
-	
-	
+
+
 	// Gets the maximum length and the minimum length of the all strings
 	theLength=strlen(expectedAnswer1);
 	minLength=theLength;
 	maxLength=theLength;
-	
+
 	if (n_answers > 1)
 	{
 		theLength=strlen(expectedAnswer2);
@@ -1485,7 +1485,7 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 		if(maxLength<theLength)
 		{
 			maxLength=theLength;
-		}	
+		}
 	}
 	if (n_answers > 2)
 	{
@@ -1497,7 +1497,7 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 		if(maxLength<theLength)
 		{
 			maxLength=theLength;
-		}	
+		}
 	}
 	if (n_answers > 3)
 	{
@@ -1509,9 +1509,9 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 		if(maxLength<theLength)
 		{
 			maxLength=theLength;
-		}	
+		}
 	}
-	
+
 	// if there is a heating time, then wait to see if you got
 	// any data from the serial port
 	while (seconds > 0)
@@ -1519,17 +1519,17 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 		delay(1000);
 		seconds--;
 	}
-	
+
 	while ((millis() - timeout) < max_timeout)
 	{
 		while (!serialAvailable(_socket) && ((millis() - timeout) < max_timeout))
 		{
 			delay(10);
-			
+
 			// Condition to avoid an overflow (DO NOT REMOVE)
 			if( millis() < timeout) timeout = millis();
 		}
-		
+
 		while (serialAvailable(_socket))
 		{
 			if ( first == 1 )	// Gets data from serial port until 'minLength'
@@ -1539,9 +1539,9 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 					theCommand[it] = serialRead(_socket);
 					delay(20);
 					#if _3G_debug_mode>1
-						USB.print(F("Command answer1: "));
+						PRINT_3G(F("Command answer1: "));
 						USB.println(theCommand);
-						USB.print(F("Length: "));
+						PRINT_3G(F("Length: "));
 						USB.println(strlen(theCommand), DEC);
 					#endif
 				}
@@ -1563,9 +1563,9 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 					theCommand[it]=serialRead(_socket);
 					delay(20);
 					#if _3G_debug_mode>1
-						USB.print(F("Command answer2: "));
+						PRINT_3G(F("Command answer2: "));
 						USB.println(theCommand);
-						USB.print(F("Length: "));
+						PRINT_3G(F("Length: "));
 						USB.println(strlen(theCommand), DEC);
 					#endif
 				}
@@ -1585,25 +1585,25 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 					theCommand[it-1] = serialRead(_socket);
 					delay(20);
 					#if _3G_debug_mode>1
-						USB.print(F("Command answer3: "));
+						PRINT_3G(F("Command answer3: "));
 						USB.println(theCommand);
-						USB.print(F("Length: "));
+						PRINT_3G(F("Length: "));
 						USB.println(strlen(theCommand), DEC);
 					#endif
 				}
 			}
-			
+
 			if (strstr(theCommand, expectedAnswer1) != NULL)
 			{
 				if ((strcmp(expectedAnswer1, ERROR_CME) == 0) || (strcmp(expectedAnswer1, ERROR_CMS) == 0))
 				{
 					#if _3G_debug_mode>0
-						USB.print(F("special error "));
+						PRINT_3G(F("special error "));
 					#endif
 					while (serialRead(_socket) != ' ');
 					CME_CMS_code=0;
 					aux=serialRead(_socket);
-					
+
 					do{ // Gets the length of the data string
 						CME_CMS_code*=10;
 						CME_CMS_code+=aux-0x30;
@@ -1621,7 +1621,7 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 				if ((strcmp(expectedAnswer2, ERROR_CME) == 0) || (strcmp(expectedAnswer2, ERROR_CMS) == 0))
 				{
 					#if _3G_debug_mode>0
-						USB.print(F("special error "));
+						PRINT_3G(F("special error "));
 					#endif
 					while  (serialRead(_socket) != ' ');
 					CME_CMS_code=0;
@@ -1643,7 +1643,7 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 				if ((strcmp(expectedAnswer3, ERROR_CME) == 0) || (strcmp(expectedAnswer3, ERROR_CMS) == 0))
 				{
 					#if _3G_debug_mode>0
-						USB.print(F("special error "));
+						PRINT_3G(F("special error "));
 					#endif
 					while  (serialRead(_socket) != ' ');
 					CME_CMS_code=0;
@@ -1665,7 +1665,7 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 				if ((strcmp(expectedAnswer4, ERROR_CME) == 0) || (strcmp(expectedAnswer4, ERROR_CMS) == 0))
 				{
 					#if _3G_debug_mode>0
-						USB.print(F("special error "));
+						PRINT_3G(F("special error "));
 					#endif
 					while  (serialRead(_socket) != ' ');
 					CME_CMS_code=0;
@@ -1681,13 +1681,13 @@ uint8_t Wasp3G::waitForData(	const char* expectedAnswer1,
 				}
 				return 4;
 			}
-  			
+
 		}
-		
+
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < timeout) timeout = millis();
 	}
-	
+
 	return 0;
 }
 
@@ -1715,7 +1715,7 @@ uint8_t Wasp3G::ON(){
 		RTC.clearAlarmFlag();
 	}
 	begin();
-	
+
 	#if CAMERA_FUSE
 		pinMode(VH_PIN,OUTPUT); // Configures pins for IR cut filter and LED light
 		pinMode(VL_PIN,OUTPUT);
@@ -1730,14 +1730,14 @@ uint8_t Wasp3G::ON(){
 		pinMode(GPS_PW,OUTPUT);
 		digitalWrite(GPS_PW,LOW);
 	#endif
-	
+
 	#if _3G_debug_mode==1
-		USB.println(F("Debug mode 1"));
+		PRINT_3G(F("Debug mode 1\n"));
 	#endif
 	#if _3G_debug_mode==2
-		USB.println(F("Debug mode 2"));
+		PRINT_3G(F("Debug mode 2\n"));
 	#endif
-	
+
 
 	return(setMode(_3G_ON));
 }
@@ -1773,19 +1773,19 @@ void Wasp3G::close(){
  * Returns '1' on success and '0' if error
 */
 uint8_t Wasp3G::OFF(){
-	
+
 	uint8_t answer;
-	
+
     answer=setMode(_3G_POWER_OFF);
-	
+
 	close();
-	
+
 	if (RTC.isON == 2)
 	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
 	}
-	
+
 	return(answer);
 }
 
@@ -1799,17 +1799,17 @@ uint8_t Wasp3G::OFF(){
  * Returns '1' on success , '0' if error and '-2' if error with CME error response.
 */
 uint8_t Wasp3G::setMode(uint8_t pwrMode){
-	
+
 	int8_t answer=0;
 	uint8_t battery_level;
 	uint8_t counter, global_counter;
-	
+
 	switch(pwrMode)
-	{		
+	{
 		case _3G_ON:
-			
+
 			battery_level = PWR.getBatteryLevel();
-			
+
 			if (_pwrMode == _3G_SLEEP)
 			{
 				begin();
@@ -1821,7 +1821,7 @@ uint8_t Wasp3G::setMode(uint8_t pwrMode){
 			digitalWrite(GPRS_PW, HIGH);
 			getIfReady();
 			#if _3G_debug_mode>0
-				USB.print(F("Module status: "));
+				PRINT_3G(F("Module status: "));
 				USB.println(ready,DEC);
 			#endif
 			global_counter = 3;
@@ -1831,14 +1831,14 @@ uint8_t Wasp3G::setMode(uint8_t pwrMode){
 				delay(500);
 				getIfReady();
 				#if _3G_debug_mode>0
-					USB.print(F("Module status: "));
+					PRINT_3G(F("Module status: "));
 					USB.println(ready,DEC);
 				#endif
 				counter--;
 				if (counter == 0)
 				{
 					#if _3G_debug_mode>0
-						USB.println(F("Retry start"));
+						PRINT_3G(F("Retry start\n"));
 					#endif
 					digitalWrite(GPRS_PW, LOW);
 					delay(3000);
@@ -1847,26 +1847,26 @@ uint8_t Wasp3G::setMode(uint8_t pwrMode){
 					global_counter--;
 				}
 			}
-			
+
 			if (global_counter != 0)
-			{			
+			{
 				// For all versions
 				// Enables numeric error codes:
 				sendCommand1("+CMEE=1",OK_RESPONSE);
 				// Disables command echoes:
 				sendCommand1("E0",OK_RESPONSE);
-				
+
 				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[0])));	//POWER_FULL
 				answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR_CME);
-				
+
 				if (battery_level < 30)
-				{	
-					USB.println(F("********************"));
-					USB.println(F("Danger! Low battery!"));
-					USB.println(F("********************"));
+				{
+					PRINT_3G(F("********************\n"));
+					PRINT_3G(F("Danger! Low battery!\n"));
+					PRINT_3G(F("********************\n"));
 					answer = 3;
 				}
-			
+
 			}
 			else
 			{
@@ -1878,19 +1878,19 @@ uint8_t Wasp3G::setMode(uint8_t pwrMode){
 			if (_pwrMode == _3G_SLEEP)
 			{
 				#if _3G_debug_mode>0
-					USB.println(F("Reactivating UART"));
+					PRINT_3G(F("Reactivating UART\n"));
 				#endif
 				begin();
 			}
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[0])));	//POWER_FULL
 			answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR_CME);
 			break;
-			
+
 		case _3G_RF_OFF:
 			if (_pwrMode == _3G_SLEEP)
 			{
 				#if _3G_debug_mode>0
-					USB.println(F("Reactivating UART"));
+					PRINT_3G(F("Reactivating UART\n"));
 				#endif
 				begin();
 			}
@@ -1902,22 +1902,22 @@ uint8_t Wasp3G::setMode(uint8_t pwrMode){
 			if (_pwrMode == _3G_SLEEP)
 			{
 				#if _3G_debug_mode>0
-					USB.println(F("Reactivating UART"));
+					PRINT_3G(F("Reactivating UART\n"));
 				#endif
 				begin();
 			}
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[2])));	//POWER_MIN
 			answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR_CME);
 			break;
-			
+
 		case _3G_SLEEP:
 			//answer=sendCommand2(POWER_MIN, OK_RESPONSE, ERROR_CME);
 			//close();
-			
+
 			closeSerial(_socket);
 			answer = 1;
 			break;
-		
+
 		case _3G_POWER_OFF:
 
 			digitalWrite(GPRS_PW, LOW);
@@ -1931,19 +1931,19 @@ uint8_t Wasp3G::setMode(uint8_t pwrMode){
 			{
 				answer = 0;
 			}
-			
-			break;	
-	}	
-	
+
+			break;
+	}
+
 	if (answer == 1)
-	{ 
+	{
 		_pwrMode=pwrMode;
 	}
 	else if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	return answer;
 }
 
@@ -1968,19 +1968,19 @@ uint8_t	Wasp3G::getMode(){
  * and '-4' if the state is unknown
 */
 int8_t Wasp3G::check(unsigned long time){
-	
+
 	unsigned long previous;
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[54])));	//CHECK
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[55])));	//CHECK_RES
-	
+
 	previous = millis();
-	
-	do{	
+
+	do{
 		// Sends the command and waits for the answer (0,1 for home network and 0,5 for roaming)
 		answer = sendCommand1(str_aux1, str_aux2, 3000, 1);
-		
+
 		if (answer == 1)
 		{
 			answer = serialRead(_socket) - 0x30;
@@ -1988,9 +1988,9 @@ int8_t Wasp3G::check(unsigned long time){
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
 	}while (((answer == 2) || (answer == 4) || (answer == 0)) && ((millis() - previous) < (time * 1000)));
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Network status: "));
+		PRINT_3G(F("Network status: "));
 		USB.println(answer, DEC);
 	#endif
 
@@ -1998,7 +1998,7 @@ int8_t Wasp3G::check(unsigned long time){
 	{
 		return -answer;
 	}
-	
+
 	return 1;
 }
 
@@ -2007,20 +2007,20 @@ int8_t Wasp3G::check(unsigned long time){
 * Returns '1' on success , '0' if error and '-2' if error with CME error response.
 */
 uint8_t Wasp3G::setTime(){
-	
+
 	bool RTC_ant=false;
 	int8_t answer;
-	
+
 	RTC.ON();
-	
+
 	if (RTC.isON == 0) // Checks if the RTC is on
 	{
 		RTC_ant = true;
 		RTC.ON();
 	}
-		
+
 	RTC.getTime(); //Gets time from RTC
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
 
@@ -2028,9 +2028,9 @@ uint8_t Wasp3G::setTime(){
 	{
 		RTC.OFF();
 	}
-	
+
 	answer = sendCommand2( buffer_3G, OK_RESPONSE, ERROR);
-	
+
 	if (answer == 2)
 	{
 		return -answer;
@@ -2049,18 +2049,18 @@ uint8_t Wasp3G::setTime(){
  * Returns '1' on success, '0' or '-3' if error and '-2' if error with CME code
 */
 int8_t	Wasp3G::setPIN(const char* pin){
-	
+
 	int8_t answer=0;
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[12])));	//SET_PIN
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, pin);
 	answer=sendCommand3(buffer_3G, OK_RESPONSE, ERROR_CME, ERROR, 2000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	return answer;
 }
 
@@ -2073,11 +2073,11 @@ int8_t	Wasp3G::setPIN(const char* pin){
 uint8_t Wasp3G::changePIN(const char* old_pin, const char* new_pin){
 
 	uint8_t answer = 0;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[59])));	//CHANGE_PIN
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"SC\",\"%s\",\"%s\"", str_aux1, old_pin, new_pin);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-	
+
 	if (answer == 1)
 	{
 		return 1;
@@ -2086,9 +2086,9 @@ uint8_t Wasp3G::changePIN(const char* old_pin, const char* new_pin){
 	{
 		return -1;
 	}
-	
+
 	return 0;
-	
+
 }
 
 /* getIMEI() - gets the IMEI from the 3G module
@@ -2106,7 +2106,7 @@ int8_t Wasp3G::getIMEI(){
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[13])));	//GET_IMEI
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[14])));	//GET_IMEI_R
 	answer=sendCommand2(str_aux1, str_aux2, ERROR);
-	
+
 	if (answer == 1)
 	{
 		counter=0;
@@ -2119,29 +2119,29 @@ int8_t Wasp3G::getIMEI(){
 				{
 					previous = millis();
 				}
-			
+
 			}
 			buffer_3G[counter]=serialRead(_socket);
 			if ((buffer_3G[counter] != '\r') && (buffer_3G[counter] != '\n'))
 			{
 				counter++;
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
 		}while ((buffer_3G[counter] != '\r') && ((millis()-previous) <= 2000));
-		
+
 		if (buffer_3G[counter] == '\r')
 		{
 			buffer_3G[counter] = '\0';
 			return 1;
-		}			
+		}
 	}
-	
+
 	return 0;
-		
+
 }
 
 /* getIMSI() - gets the IMSI from the SIM card
@@ -2154,7 +2154,7 @@ int8_t Wasp3G::getIMSI(){
 
 	unsigned long previous;
 	int8_t counter=0;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[15])));	//GET_IMSI
 	sendCommand1(str_aux1, "\r\n");
@@ -2169,24 +2169,24 @@ int8_t Wasp3G::getIMSI(){
 			}
 		}
 		buffer_3G[counter] = serialRead(_socket);
-		
+
 		if ((buffer_3G[counter] != '\r') && (buffer_3G[counter] != '\n'))
 		{
 			counter++;
 		}
-		
+
 		if (millis() < previous)
 		{
 			previous = millis();
-		}		
+		}
 	}while ((((buffer_3G[counter] != '\r') && (buffer_3G[counter] != '\n')) || (counter == 0)) && ((millis()-previous) < 3000));
-		
+
 	if (buffer_3G[counter] == '\r')
 	{
 		buffer_3G[counter] = '\0';
 		return 1;
-	}			
-		
+	}
+
 	return 0;
 }
 
@@ -2205,22 +2205,25 @@ int8_t	Wasp3G::manageIncomingData(){
 	return manageIncomingData(20000);
 }
 int8_t	Wasp3G::manageIncomingData(unsigned long waiting_time){
-	
+
 	int16_t a;		 //counter and auxiliar variable
 	unsigned long previous = 0;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	a=0;	
-	
+	a=0;
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[57])));	//INCOMING_CALL
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[58])));	//INCOMING_SMS
-	
+
 	#if IP_FUSE==1
 		strcpy_P(str_aux3, (char*)pgm_read_word(&(table_IP[24])));		//INCOMING_IP
 	#endif
 	// Wait for data
 	serialFlush(_socket);
 	previous = millis();
+  #if _3G_debug_mode>0
+    PRINT_3G(F(""));
+  #endif
 	while (((millis()-previous) < waiting_time) && (a < _3G_BUFFER_SIZE) && (a >= 0))
 	{
 		if (serialAvailable(_socket) != 0)
@@ -2230,14 +2233,14 @@ int8_t	Wasp3G::manageIncomingData(unsigned long waiting_time){
 				USB.print(char(buffer_3G[a]));
 			#endif
 			a++;
-			
+
 			// Check the received data
 			if ((strstr(buffer_3G, str_aux1)) != NULL)
 			{
 				#if _3G_debug_mode>0
-					USB.println(F("Incoming call"));
+					PRINT_3G(F("\nIncoming call\n"));
 				#endif
-					
+
 				#if GSM_FUSE==1
 				if (readCall() == 1)
 				{
@@ -2255,9 +2258,9 @@ int8_t	Wasp3G::manageIncomingData(unsigned long waiting_time){
 			else if ((strstr(buffer_3G, str_aux2)) != NULL)
 			{
 				#if _3G_debug_mode>0
-					USB.println(F("Incoming SMS"));
+					PRINT_3G(F("\nIncoming SMS\n"));
 				#endif
-				
+
 				#if GSM_FUSE==1
 				a = incomingSMS();
 				if(a != 0)
@@ -2278,9 +2281,9 @@ int8_t	Wasp3G::manageIncomingData(unsigned long waiting_time){
 			else if ((strstr(buffer_3G, str_aux3)) != NULL)
 			{
 				#if _3G_debug_mode>0
-					USB.println(F("Incoming IP data"));
+					PRINT_3G(F("\nIncoming IP data\n"));
 				#endif
-								
+
 				a = readIPdata();
 				if(a != 0)
 				{
@@ -2297,18 +2300,18 @@ int8_t	Wasp3G::manageIncomingData(unsigned long waiting_time){
 		{
 			delay(100);
 		}
-		
+
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
 	}
-	
+
 	if (a == 0)
 	{
 		return 0;
 	}
 
 	return -a;
-	
+
 }
 
 //GSM functions
@@ -2328,13 +2331,13 @@ int8_t Wasp3G::makeCall(const char* tlfNumber){
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s;", str_aux1, tlfNumber);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[19])));	//NO_CARRIER
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, str_aux1);
-	
+
 	if (answer == 2)
 	{
 		return -2;
 	}
-	
-	return answer;	
+
+	return answer;
 }
 
 /* makelostCall(const char*, uint8_t) - makes a lost call to the seleted telephone number
@@ -2352,7 +2355,7 @@ int8_t Wasp3G::makeLostCall(const char* tlfNumber, uint8_t timeCall){
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s;", str_aux1, tlfNumber);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[19])));	//NO_CARRIER
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, str_aux1);
-	
+
 	if (answer == 1)
 	{
 		for (int a=0; a < timeCall ; a++)
@@ -2364,9 +2367,9 @@ int8_t Wasp3G::makeLostCall(const char* tlfNumber, uint8_t timeCall){
 	}
 	else if (answer == 2)
 	{
-		return -2;	
+		return -2;
 	}
-	
+
 	return answer;
 }
 
@@ -2381,12 +2384,12 @@ int8_t	Wasp3G::setInfoIncomingCall(){
 
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[1])));		//LINE_ID
 	answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR_CME);
-	
+
 	if (answer == 2)
 	{
 		return -2;
 	}
-	
+
 	return answer;
 }
 
@@ -2401,11 +2404,11 @@ int8_t	Wasp3G::setInfoIncomingCall(){
 int8_t	Wasp3G::readCall(){
 	uint8_t a = 0;
 	unsigned long previous;
-	
-	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);	
-	
+
+	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
+
 	previous = millis();
-	
+
 	// Reads up to the phone number
 	do{
 		while (!serialAvailable(_socket) && ((millis()-previous) < 2000))
@@ -2413,46 +2416,49 @@ int8_t	Wasp3G::readCall(){
 			// Condition to avoid an overflow (DO NOT REMOVE)
 			if( millis() < previous) previous = millis();
 		}
-	
+
 		buffer_3G[0] = serialRead(_socket);	// Reads a byte
-		
+
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
 	}while ((buffer_3G[0] != '"') && ((millis() - previous) < 2000));
-	
+
 	if ((millis() - previous) > 2000)
 	{
 		return 0;
 	}
-	
+
 	// Stores in buffer_3G the phone number
 	#if _3G_debug_mode>0
-		USB.print(F("Phone number: "));
+		PRINT_3G(F("Phone number: "));
 	#endif
 	previous = millis();
+  #if _3G_debug_mode>0
+    PRINT_3G("");
+  #endif
 	do{
 		while (!serialAvailable(_socket) && ((millis()-previous) < 2000))
 		{
 			// Condition to avoid an overflow (DO NOT REMOVE)
 			if( millis() < previous) previous = millis();
 		}
-	
+
 		buffer_3G[a] = serialRead(_socket);	// Reads a byte
 		#if _3G_debug_mode>0
 			USB.print(char(buffer_3G[a]));
-		#endif		
+		#endif
 		a++;
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
 	}while ((buffer_3G[a-1] != '"') && ((millis() - previous) < 2000));
-	
+
 	buffer_3G[a - 1] = '\0';
-	
+
 	if ((millis() - previous) > 2000)
 	{
 		return 0;
 	}
-	
+
 	return 1;
 
 }
@@ -2464,7 +2470,7 @@ int8_t	Wasp3G::readCall(){
  * Returns '1' on success and '0' if error
 */
 int8_t Wasp3G::hangUp(){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[2])));		//HANG_CALL
 	return (sendCommand1(str_aux1, OK_RESPONSE));
 
@@ -2480,7 +2486,7 @@ int8_t Wasp3G::hangUp(){
 */
 int8_t Wasp3G::autoAnswer(uint8_t rings){
 
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[3])));		//AUTO_ANSWER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, rings);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
@@ -2494,15 +2500,15 @@ int8_t Wasp3G::autoAnswer(uint8_t rings){
  * Returns '1' on success, '0' if error and '-2' if there isn't a incoming call
 */
 int8_t Wasp3G::answerCall(){
-	
+
 	uint8_t answer=0;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[4])));		//CALL_ASNWER
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_GSM[19])));	//NO_CARRIER
 	strcpy_P(str_aux3, (char*)pgm_read_word(&(table_GSM[20])));	//BEGIN
 	strcpy_P(str_aux4, (char*)pgm_read_word(&(table_GSM[21])));	//CONNECT
 	answer = sendCommand3(str_aux1, str_aux2, str_aux3, str_aux4, 4000, SEND_ONCE);
-	
+
 	if (answer == 3)
 	{
 		return -2;
@@ -2511,18 +2517,18 @@ int8_t Wasp3G::answerCall(){
 	{
 		return 1;
 	}
-	
+
 	return 0;
 }
 
 /* generateTone(uint8_t) - Generates a DTMF tone
  *
- * This function generates a DTMF tone 
+ * This function generates a DTMF tone
  *
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::generateTone(uint8_t tone){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[5])));		//TONE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, tone);
 	return sendCommand1(buffer_3G, OK_RESPONSE);
@@ -2530,16 +2536,16 @@ int8_t Wasp3G::generateTone(uint8_t tone){
 
 /* ringerLevel(uint8_t) - Controls the ringer level of the loudspeaker
  *
- * This function controls the ringer level of the loudspeaker. 
+ * This function controls the ringer level of the loudspeaker.
  *
  * 'level' values: '0' for mute and '1' to '5' for volume level
  *
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::ringerLevel(uint8_t level){
-	
+
 	uint8_t answer=0;
-	
+
 	if (level == 0)	// If level is '0' enables the silent mode
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[6])));		//MUTE_RINGER
@@ -2558,30 +2564,30 @@ int8_t Wasp3G::ringerLevel(uint8_t level){
 			return sendCommand1(buffer_3G, OK_RESPONSE);
 		}
 	}
-	
+
 	return 0;
 }
 
-/* setCLIPresentation(uint8_t) - Enables or disables the presentation of the incoming call 
+/* setCLIPresentation(uint8_t) - Enables or disables the presentation of the incoming call
  *
  * This function enables or disables the presentation of the incoming call
  *
  * Returns '1' on success, '0' if error and '-2' if error with CME error code available
 */
 int8_t Wasp3G::setCLIPresentation(uint8_t mode){
-	
-	int8_t answer=0;	
-	
+
+	int8_t answer=0;
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[8])));		//LINE_ID_PRES
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-	
+
 	if (answer == 2)
 	{
 		return -2;
 	}
 	return answer;
-	
+
 }
 
 /* setCLIRestriction(uint8_t) - Restricts or enables the presentation of the CLI to the called party when originating a call.
@@ -2593,19 +2599,19 @@ int8_t Wasp3G::setCLIPresentation(uint8_t mode){
  * Returns '1' on success, '0' if error and '-2' if error with CME error code available
 */
 int8_t Wasp3G::setCLIRestriction(uint8_t mode){
-	
+
 	int8_t answer=0;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[9])));		//LINE_ID_REST
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CME);
-	
+
 	if (answer == 2)
 	{
 		return -2;
 	}
 	return answer;
-	
+
 }
 
 /* getPhoneStatus() - Gets the phone activity status
@@ -2615,13 +2621,13 @@ int8_t Wasp3G::setCLIRestriction(uint8_t mode){
  *Return '0' for error, '1'= Ready, '2'= Unknown,'3'= Ringing, '4'= Call in progress
 */
 int8_t Wasp3G::getPhoneActStatus(){
-	
+
 	int8_t answer=0;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[10])));	//PHONE_ACT
 	snprintf(str_aux2, sizeof(str_aux2), "%s: ", str_aux1);
 	answer = sendCommand1(str_aux1, str_aux2);
-	
+
 	if (answer == 1)
 	{
 		answer = serialRead(_socket) - 0x30;
@@ -2629,7 +2635,7 @@ int8_t Wasp3G::getPhoneActStatus(){
 		{
 			answer = 1;
 		}
-	}	
+	}
 	return answer;
 }
 
@@ -2654,16 +2660,16 @@ int8_t Wasp3G::setTextModeSMS(){
  *  Returns '1' on success,'0' if error and -2 if error with CMS error code available
 */
 int8_t Wasp3G::sendSMS(const char* smsText, const char* tlfNumber){
-	
+
 	int8_t answer=0;
 
 	setTextModeSMS();
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[12])));	//SEND_SMS
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, tlfNumber);
-	
+
 	answer=sendCommand2(buffer_3G, ">", ERROR_CMS);
-	
+
 	if (answer == 2)
 	{
 		return -2;
@@ -2672,12 +2678,12 @@ int8_t Wasp3G::sendSMS(const char* smsText, const char* tlfNumber){
 	{
 		return 0;
 	}
-	
+
 	printString(smsText, _socket);
 	printByte(0x1A, _socket);
-	
+
 	answer = waitForData( OK_RESPONSE, 10000, millis(), 0);
-	
+
 	return answer;
 }
 
@@ -2688,13 +2694,13 @@ int8_t Wasp3G::sendSMS(const char* smsText, const char* tlfNumber){
  * Returns '1' on success, '0' if error, '-2' if error with CMS error code, '-3' if error setting the memory and '-4' if error setting the memory with CMS error code.
  */
 int8_t Wasp3G::setInfoIncomingSMS(){
-	
+
 	uint8_t answer=0;
-	
+
 	setTextModeSMS();
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[13])));	//SMS_INFO
-	answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR_CMS);	
+	answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR_CMS);
 	if (answer == 0)
 	{
 		return 0;
@@ -2703,11 +2709,11 @@ int8_t Wasp3G::setInfoIncomingSMS(){
 	{
 		return -2;
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[16])));	//SMS_MEMORY
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"SM\",\"SM\",\"SM\"", str_aux1);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[17])));	//SMS_MEMORY_R
-	answer=sendCommand2(buffer_3G, str_aux1, ERROR_CMS);	
+	answer=sendCommand2(buffer_3G, str_aux1, ERROR_CMS);
 	if (answer == 0)
 	{
 		return -3;
@@ -2716,8 +2722,8 @@ int8_t Wasp3G::setInfoIncomingSMS(){
 	{
 		return -4;
 	}
-	
-	return 1;	
+
+	return 1;
 }
 
 /* readSMS() - set in 'tlfIN' and 'sms' variables the tlf number and text of the incoming SMS
@@ -2727,21 +2733,21 @@ int8_t Wasp3G::setInfoIncomingSMS(){
  * Returns '1' on success and '0' if error
 */
 int8_t Wasp3G::readSMS(uint8_t index){
-	
+
 	int8_t answer = 0;
 	unsigned long previous;
 	int counter = 0;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[14])));	//SMS_READ
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, index-1);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[15])));	//SMS_READ_R
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CMS);
-	
+
 	if (answer == 1)
 	{
 		counter = 0;
 		previous = millis();
-		
+
 		// reads up to the sender phone number
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 2000))
@@ -2754,19 +2760,22 @@ int8_t Wasp3G::readSMS(uint8_t index){
 			if (serialRead(_socket) == '"'){
 				counter++;
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-				
+
 		}while ((counter < 3) && ((millis() - previous) < 2000));
-		
+
 		// stores in 'tlfNumber' the sender phone number
 		#if _3G_debug_mode>0
-			USB.println(F("Phone number"));
+			PRINT_3G(F("Phone number\n"));
 		#endif
-		counter = 0;		
+		counter = 0;
+    #if _3G_debug_mode>0
+      PRINT_3G("");
+    #endif
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 2000))
 			{
@@ -2780,17 +2789,17 @@ int8_t Wasp3G::readSMS(uint8_t index){
 				USB.print(char(tlfNumber[counter]));
 			#endif
 			counter++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
-		}while ((tlfNumber[counter-1] != '"') && ((millis() - previous) < 2000));		
+
+		}while ((tlfNumber[counter-1] != '"') && ((millis() - previous) < 2000));
 		tlfNumber[counter-1] = '\0';
-		
+
 		// reads up to the message text
-		counter = 0;		
+		counter = 0;
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 2000))
 			{
@@ -2799,20 +2808,21 @@ int8_t Wasp3G::readSMS(uint8_t index){
 					previous = millis();
 				}
 			}
-			
+
 			buffer_3G[0] = serialRead(_socket);
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[0] != '\n') && ((millis() - previous) < 2000));
-		
+
 		// stores the message text in 'buffer_3G'
 		#if _3G_debug_mode>0
-			USB.println(F(""));
-			USB.println(F("SMS body"));
+			USB.println();
+			PRINT_3G(F("SMS body\n"));
+      PRINT_3G(F(""));
 		#endif
 		counter = 0;
 		do{
@@ -2828,26 +2838,26 @@ int8_t Wasp3G::readSMS(uint8_t index){
 				USB.print(char(buffer_3G[counter]));
 			#endif
 			counter++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((strstr(buffer_3G, "OK\r\n") == NULL) && ((millis() - previous) < 2000) && (counter < _3G_BUFFER_SIZE));
 		buffer_3G[counter-6] = '\0';
 		#if _3G_debug_mode>0
-			USB.println(F(""));
+			USB.println();
 		#endif
-		
-		return 1;	
-	
+
+		return 1;
+
 	}
 	else if (answer == 2)
 	{
 		return -2;
 	}
-	
+
 	return 0;
 }
 
@@ -2860,31 +2870,31 @@ int8_t Wasp3G::readSMS(uint8_t index){
 int8_t Wasp3G::getTotalSMS(){
 
 	int8_t answer, count;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[16])));	//SMS_MEMORY
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"SM\",\"SM\",\"SM\"", str_aux1);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[17])));	//SMS_MEMORY_R
 	answer=sendCommand2(buffer_3G, str_aux1, ERROR_CMS);
-	
+
 	if (answer == 1)
 	{
 		count=serialRead(_socket);
-		answer=0;	
-		
+		answer=0;
+
 		// Gets the number of SMS in the memory
 		do{
 			answer*=10;
 			answer+=count-0x30;
 			count=serialRead(_socket);
 		}while (count != ',');
-		
+
 		return answer;
 	}
 	else if (answer == 2)
 	{
 		return -2;
 	}
-	
+
 	return -1;
 }
 
@@ -2897,7 +2907,7 @@ int8_t Wasp3G::getTotalSMS(){
 int8_t Wasp3G::deleteSMS(uint8_t sms_index){
 
 	int8_t answer;
-    
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GSM[18])));	//SMS_DELETE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, sms_index - 1);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_CMS);
@@ -2922,11 +2932,11 @@ int8_t Wasp3G::deleteSMS(uint8_t sms_index){
  * Returns the index of SMS, '0' if error
 */
 int8_t Wasp3G::incomingSMS(){
-	
+
 	unsigned long previous;
 	int count;
-	
-	previous = millis();	
+
+	previous = millis();
 	do{
 
 		while (((millis() - previous) < 1000) && (serialAvailable(_socket) == 0))
@@ -2937,33 +2947,33 @@ int8_t Wasp3G::incomingSMS(){
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
 	}while (((millis() - previous) < 1000) && (serialRead(_socket) != ','));
-	
+
 	count = 0;
 	previous = millis();
 	do{
 		buffer_3G[count] = serialRead(_socket);
 		count++;
-		
+
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
 	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 1000) && (count < _3G_BUFFER_SIZE));
-	
+
 	buffer_3G[count-1] = '\0';
-	
+
 	count = atoi(buffer_3G);
 	//index 0 --> 1
 	count++;
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("SMS index: "));
+		PRINT_3G(F("SMS index: "));
 		USB.println(count, DEC);
 	#endif
-	
+
 	if ((millis() - previous) > 1200)
 	{
 		return 0;
 	}
-	
+
 	return count;
 }
 
@@ -2976,23 +2986,23 @@ int8_t Wasp3G::incomingSMS(){
  *
  * Returns '1' on success , '0' if error, '-2' if camera not detected, '-3' if camera is already started.
 */
-int8_t Wasp3G::startCamera(){	
-	
+int8_t Wasp3G::startCamera(){
+
 	int8_t answer;
-	
+
 	PWR.setSensorPower(SENS_3V3, SENS_ON); // Powers analog circuit of the camera
 	selectFilter(1); // Enables IR cut filter
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[0])));		//CAM_START
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[26])));		//CAM_NO_SENSOR
 	strcpy_P(str_aux3, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	answer=sendCommand3(str_aux1, OK_RESPONSE, str_aux2, str_aux3, 5000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	return answer;
 }
 
@@ -3000,26 +3010,26 @@ int8_t Wasp3G::startCamera(){
  *
  * Returns '1' on success , '0' if error, '-2' if camera not started
 */
-int8_t Wasp3G::stopCamera(){	
-	
+int8_t Wasp3G::stopCamera(){
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[1])));		//CAM_STOP
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	answer=sendCommand2(str_aux1, OK_RESPONSE, str_aux2, 5000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);
-	
+
 	return answer;
 }
 
 /* takePicture(void) - takes a picture and saves it.
- * 
+ *
  * 'buffer_3G' contains the picture name.
  *
  * Returns '1' on success, '0' if error, '-2' if camera not started,
@@ -3028,25 +3038,25 @@ int8_t Wasp3G::stopCamera(){
 int8_t Wasp3G::takePicture(){
 
 	int8_t answer;
-	int8_t count;	
+	int8_t count;
 	unsigned long previous;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	digitalWrite(FILTER_ENABLE, LOW);
-	delay(500);	
-	
-	// Takes the picture	
+	delay(500);
+
+	// Takes the picture
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[16])));		//CAM_TAKE_PIC
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[30])));		//CAM_EP
 	strcpy_P(str_aux3, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	strcpy_P(str_aux4, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	strcpy_P(str_aux5, (char*)pgm_read_word(&(table_CAMERA[28])));		//CAM_NO_MEM
-	
+
 	answer = sendCommand4(str_aux1, str_aux2, str_aux3, str_aux4, str_aux5, 10000, SEND_ONCE);
 
 	digitalWrite(FILTER_ENABLE, HIGH);
-	
+
 	count = 0;
 	if(answer == 1) // If answer is OK gets the name of the video and saves it in 'buffer_3G'
 	{
@@ -3061,31 +3071,31 @@ int8_t Wasp3G::takePicture(){
 			}
 			buffer_3G[count] = serialRead(_socket);
 			count++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
 		}while ((buffer_3G[count-1] != '\r') && ((millis()-previous) < 1000));
 		buffer_3G[count-1] = '\0';
-		
+
 		// Waits the OK response
 		waitForData(OK_RESPONSE, DEFAULT_TIMEOUT, millis(), 0);
-		
+
 		return 1;
 	}
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	return 0;
 
 }
 
 /* startVideo() - Starts video capture
- * 
+ *
  *'buffer_3G' contains the picture name.
  *
  * Returns '1' on success , '0' if error, '-2' if camera not started,
@@ -3096,11 +3106,11 @@ int8_t Wasp3G::startVideo(){
 	int8_t answer;
 	uint8_t count;
 	unsigned long previous;
-	
+
 	//autoLight();
 	digitalWrite(FILTER_ENABLE, LOW);
 	delay(200);
-	
+
 	// Starts capture video:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[20])));		//CAM_START_VIDEO
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[31])));		//CAM_EV
@@ -3108,7 +3118,7 @@ int8_t Wasp3G::startVideo(){
 	strcpy_P(str_aux4, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	strcpy_P(str_aux5, (char*)pgm_read_word(&(table_CAMERA[28])));		//CAM_NO_MEM
 	answer=sendCommand4(str_aux1, str_aux2, str_aux3, str_aux4, str_aux5, 5000, SEND_ONCE);
-	
+
 	count=0;
 	if (answer == 1) // If answer is OK gets the name of the video and saves it in 'buffer_3G'
 	{
@@ -3123,10 +3133,10 @@ int8_t Wasp3G::startVideo(){
 	}
 	else if (answer > 1)
 	{
-		digitalWrite(FILTER_ENABLE, HIGH);		
+		digitalWrite(FILTER_ENABLE, HIGH);
 		return -answer;
 	}
-	
+
 	return 0;
 
 }
@@ -3136,21 +3146,21 @@ int8_t Wasp3G::startVideo(){
  * Returns '1' on success , '0' if error, '-2' if camera not started, '-3' if camera is in invalid state
 */
 int8_t Wasp3G::pauseVideo(){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[21])));		//CAM_PAUSE_VIDEO
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	strcpy_P(str_aux3, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	answer=sendCommand3(str_aux1, OK_RESPONSE, str_aux2, str_aux3, 2000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	digitalWrite(FILTER_ENABLE, HIGH);
-	
+
 	return answer;
 }
 
@@ -3159,24 +3169,24 @@ int8_t Wasp3G::pauseVideo(){
  * Returns '1' on success , '0' if error, '-2' if camera not started, '-3' if camera is in invalid state
 */
 int8_t Wasp3G::resumeVideo(){
-	
+
 	int8_t answer;
-	
+
 	digitalWrite(FILTER_ENABLE, LOW);
 	delay(200);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[22])));		//CAM_RESUME_VIDEO
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	strcpy_P(str_aux3, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	answer=sendCommand3(str_aux1, OK_RESPONSE, str_aux2, str_aux3, 2000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		digitalWrite(FILTER_ENABLE, HIGH);
-		
+
 		return -answer;
 	}
-	
+
 	return answer;
 }
 
@@ -3185,60 +3195,60 @@ int8_t Wasp3G::resumeVideo(){
  * Returns '1' on success , '0' if error, '-2' if camera not started, '-3' if camera is in invalid state
 */
 int8_t Wasp3G::stopVideo(){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[23])));		//CAM_STOP_VIDEO
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	strcpy_P(str_aux3, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	answer=sendCommand3(str_aux1, OK_RESPONSE, str_aux2, str_aux3, 1000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	digitalWrite(FILTER_ENABLE, HIGH);
-	
+
 	return answer;
 }
 
 /* cameraRotation(const char*) - Sets the camera rotation
- * 
+ *
  * Allowed values: "0" degrees, "90" degrees, "180" degrees and "270" degrees
  *
  * Returns '1' on success , '0' if error,'-2' if camera not started and '-3' if camera is in invalid state
 */
 int8_t Wasp3G::cameraRotation(const char* rotation){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[11])));		//CAM_ROT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, rotation);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
 	answer=sendCommand3(buffer_3G, OK_RESPONSE, str_aux1, str_aux2, 1000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	return answer;
 
 }
 
 /* cameraResolution(uint8_t) - Sets camera resolution
- * 
+ *
  * '0' for STAMP, '1' for QQVGA, '2' for QCIF, '3' for QVGA, '4' for CIF, '5' for VGA and '6' for XGA
  *
  * Returns '1' on success , '0' if error, '-2' if camera not detected and '-3' if camera not started
 */
 int8_t Wasp3G::cameraResolution(uint8_t resolution){
-	
+
 	int8_t answer;
-	
+
 	switch(resolution)
 	{
 		case 0:
@@ -3274,24 +3284,24 @@ int8_t Wasp3G::cameraResolution(uint8_t resolution){
 			strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[6])));	//RES_QVGA
 			break;
 	}
-	
+
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, str_aux2);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[26])));		//CAM_NO_SENSOR
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 	answer=sendCommand3(buffer_3G, OK_RESPONSE, str_aux1, str_aux2, 2000, SEND_ONCE);
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	return answer;
 
 }
 
 /* cameraFPS(uint8_t) - Sets FPS
- * 
+ *
  * Sets the Frames Per Second: '0' for 7.5 fps, '1' for 10 fps and '2' for 15 fps
  *
  * Returns '1' on success , '0' if error,'-2' if camera not started, '-3' if camera is in invalid state
@@ -3300,14 +3310,14 @@ int8_t Wasp3G::cameraFPS(uint8_t fps){
 
 	int8_t answer;
 	uint8_t count;
-	
-	
+
+
 	// Sets the frames per second
 	count = 5;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[10])));		//CAM_FPS
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, fps);
-	
+
 	do{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
 		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[27])));		//CAM_INVALID_STATE
@@ -3318,25 +3328,25 @@ int8_t Wasp3G::cameraFPS(uint8_t fps){
 		}
 		count--;
 	}while ((answer == 2) && (count != 0));
-	
+
 	if (answer > 1)
 	{
 		return -answer;
 	}
-	
+
 	return answer;
 }
 
 /* cameraBrightness(uint8_t) - Sets camera brightness
- * 
+ *
  * Allowed values: 0 to 6 (0 is the lowest, 6 is the highest)
  *
  * Returns '1' on success , '0' if error,'-2' if camera not started, '-3' if camera is in invalid state
 */
 int8_t Wasp3G::cameraBrightness(uint8_t mode){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[14])));		//CAM_BRIGHT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[29])));		//CAM_NO_START
@@ -3347,19 +3357,19 @@ int8_t Wasp3G::cameraBrightness(uint8_t mode){
 	{
 		return -answer;
 	}
-	
+
 	return answer;
 
 }
 
 /* pictureName(const char*) - sets picture name format
- * 
- * The length max for name is 20. 'name' is only a part of the whole name; the whole name is 'name'xxxx.  
+ *
+ * The length max for name is 20. 'name' is only a part of the whole name; the whole name is 'name'xxxx.
  *
  * Returns '1' on success and '0' if error
 */
 int8_t Wasp3G::pictureName(const char* name){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[18])));		//CAM_NAME_PIC
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, name);
 
@@ -3367,49 +3377,49 @@ int8_t Wasp3G::pictureName(const char* name){
 }
 
 /* pictureTimeStamp(uint8_t) - adds date frame on the picture.
- * 
+ *
  * The function activates or deactivates to add date frame on the picture
  *
  * Returns '1' on success and '0' if error
 */
 int8_t Wasp3G::pictureTimeStamp(uint8_t state){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[19])));		//CAM_TIME_STAMP
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, state);
 
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 
 }
- 
+
 /* autoLevel(void) - Rotates the camera to take a not rotated picture
  *
  * This function reads the accelerometer and rorates the camera in the correct position
  *
- * Returns '1' if success, '0' if error, '-2' if error with the accelerometer 
+ * Returns '1' if success, '0' if error, '-2' if error with the accelerometer
  * and '-3'  if error with rotation function
 */
 int8_t Wasp3G::autoLevel(void){
 
 	int x_acc,y_acc;
-	
+
 	ACC.ON();
 	// a little delay
 	delay(50);
-	
+
 	if (ACC.check() == 0x32)
-	{	 
+	{
 		x_acc = ACC.getX();
 		y_acc = ACC.getY();
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("X value: "));
+			PRINT_3G(F("X value: "));
 			USB.println(x_acc, DEC);
-			USB.print(F("Y value: "));
+			PRINT_3G(F("Y value: "));
 			USB.println(y_acc, DEC);
 		#endif
-		
+
 		ACC.OFF();
-		
+
 		if (abs(x_acc) > abs(y_acc))
 		{
 			if (x_acc >= 0)
@@ -3434,9 +3444,9 @@ int8_t Wasp3G::autoLevel(void){
 					return -3;
 				}
 			}
-		
+
 		}
-		else 
+		else
 		{
 			if (y_acc >= 0)
 			{
@@ -3467,9 +3477,9 @@ int8_t Wasp3G::autoLevel(void){
 		ACC.OFF();
 		return -2;
 	}
-	
+
 	return 0;
-	
+
 }
 
 /* powerIRLED(int8_t) - Powers the IR LEDs of the Video Camera Sensor Board
@@ -3497,7 +3507,7 @@ void Wasp3G::powerIRLED(int8_t blockIR){
 		case 3:
 			digitalWrite(POWER_LED, HIGH);
 			digitalWrite(POWER_LED2, HIGH);
-			break;	
+			break;
 	}
 
 }
@@ -3512,18 +3522,18 @@ void Wasp3G::powerIRLED(int8_t blockIR){
 void Wasp3G::autoLight(void){
 
 	int aux=analogRead(SENS_LDR);
-	
-	aux=analogRead(SENS_LDR);	
-	
+
+	aux=analogRead(SENS_LDR);
+
 	#if _3G_debug_mode>0
-		USB.print(F("LDR value: "));
+		PRINT_3G(F("LDR value: "));
 		USB.println(aux,DEC);
 	#endif
-	
+
 	if ((aux > THRESHOLD_LIGHT_2) && (THRESHOLD_LIGHT_1 > aux))
-	{	
+	{
 		#if _3G_debug_mode>0
-			USB.println(F("Level 1"));
+			PRINT_3G(F("Level 1\n"));
 		#endif
 		selectFilter(0);
 		powerIRLED(1);
@@ -3531,37 +3541,37 @@ void Wasp3G::autoLight(void){
 	else if (aux < THRESHOLD_LIGHT_2)
 	{
 		#if _3G_debug_mode>0
-			USB.println(F("Level 2"));
+			PRINT_3G(F("Level 2\n"));
 		#endif
 		selectFilter(0);
 		powerIRLED(3);
 	}
 	else
 	{
-		
+
 		aux=analogRead(SENS_IR);
 		aux=analogRead(SENS_IR);
 		#if _3G_debug_mode>0
-			USB.print(F("IR value: "));
+			PRINT_3G(F("IR value: "));
 			USB.println(aux,DEC);
 		#endif
-		
+
 		if (THRESHOLD_IR < aux)
 		{
 			selectFilter(1);
 			#if _3G_debug_mode>0
-				USB.println(F("Level 0. IR filter disabled"));
+				PRINT_3G(F("Level 0. IR filter disabled\n"));
 			#endif
 		}
 		else
 		{
 			selectFilter(0);
 			#if _3G_debug_mode>0
-				USB.println(F("Level 0. IR filter enabled"));
+				PRINT_3G(F("Level 0. IR filter enabled\n"));
 			#endif
 		}
 		powerIRLED(0);
-	}	
+	}
 }
 
 /*selectFilter(int8_t) - select a filter for the lens
@@ -3592,13 +3602,13 @@ void Wasp3G::enablePIRInterrupt(void){
 
 	// Powers off the mux of UART1 to enters in sleep mode:
 	close();
-	
+
 	// Powers on the PIR
 	pinMode(GPS_PW,OUTPUT);
 	digitalWrite(GPS_PW,HIGH);
 	pinMode(PIR_3G_PIN_MON,INPUT);
 	delay(3000);
-	
+
 	// Waits for PIR
 	while (digitalRead(PIR_3G_PIN_MON) == 1);
 	delay(1000);
@@ -3614,11 +3624,11 @@ void Wasp3G::enablePIRInterrupt(void){
 */
 void Wasp3G::disablePIRInterrupt(int8_t PIRstate){
 
-	
+
 	disableInterrupts(PIR_3G_INT);
-	
+
 	begin();
-	
+
 	if (PIRstate == 1)
 	{
 		pinMode(PIR_3G_PIN_MON,OUTPUT);
@@ -3630,30 +3640,30 @@ void Wasp3G::disablePIRInterrupt(int8_t PIRstate){
 		pinMode(PIR_3G_PIN_MON,OUTPUT);
 		digitalWrite(PIR_3G_PIN_MON,LOW);
 	}
-	
+
 	//intFlag &= ~(PIR_3G_INT);
 	//while (getIfReady() == 0);
     Utils.setMuxSocket1();
 	ready=1;
 	//while (ready == 0);
 }
- 
+
 /* makeVideoCall(const char*, int8_t) - Makes a videocall
  *
  * This function makes a videocall
  *
- * Returns '1' if success, '0' if error, '-1' if error connecting to the other party, '-2' if error with setup or the other party hangs the call 
+ * Returns '1' if success, '0' if error, '-1' if error connecting to the other party, '-2' if error with setup or the other party hangs the call
  * '-3'  if error connecting the videocall and '-4' if error recording the call (videocall is active)
 */
 int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 
 	int answer;
-	
+
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[32])));		//V_CALL_START
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, phone_number);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[37])));		//V_ACCEPTED
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[41])));		//V_END
 	answer = sendCommand2(buffer_3G, str_aux1, str_aux2);
@@ -3664,7 +3674,7 @@ int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
 		return 0;
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[38])));		//V_RECV
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[41])));		//V_END
 	answer = waitForData(str_aux1, str_aux2, 30000, millis(), 0);
@@ -3680,7 +3690,7 @@ int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
 		return -1;
 	}
-	
+
 	answer = waitForData(V_SETUP, V_END, 30000, millis(), 0);
 	if (answer == 0)
 	{
@@ -3694,9 +3704,9 @@ int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
 		return -2;
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[40])));
-	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[41])));	
+	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[41])));
 	answer = waitForData(str_aux1, str_aux2, 30000, 0, 0);
 	if (answer == 0)
 	{
@@ -3710,10 +3720,10 @@ int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 		return -3;
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[35])));		//V_RECORD
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, record);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_CAMERA[37])));		//V_ACCEPTED
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_CAMERA[41])));		//V_END
 	answer = sendCommand2(buffer_3G, str_aux1, str_aux2);
@@ -3721,8 +3731,8 @@ int8_t Wasp3G::makeVideoCall(const char* phone_number, int8_t record){
 	{
 		return -4;
 	}
-	
-	
+
+
 	return 1;
 }
 
@@ -3739,11 +3749,11 @@ int8_t Wasp3G::hangVideoCall(){
 	{
 		return 0;
 	}
-		
+
 	return 1;
 }
 
-/* VideoCallQuality(int8_t) - Sets the video quality 
+/* VideoCallQuality(int8_t) - Sets the video quality
  *
  * This function sets the video quality. 5 for high quality image or 15 for high motion profile.
  *
@@ -3757,7 +3767,7 @@ int8_t Wasp3G::VideoCallQuality(int8_t VideoQuality){
 	{
 		return 0;
 	}
-		
+
 	return 1;
 }
 
@@ -3775,7 +3785,7 @@ int8_t Wasp3G::VideoCallDMTF(const char* DMTF_str){
 	{
 		return 0;
 	}
-		
+
 	return 1;
 }
 
@@ -3804,10 +3814,10 @@ int8_t Wasp3G::configureFTP(const char* server,
 							uint8_t mode,
 							const char* type)
 {
-	
+
 	int8_t answer;
 	int8_t count;
-	
+
 	// Sets connection parameters (apn, user_name, password)
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
@@ -3820,7 +3830,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	{
 		return -2;
 	}
-	
+
 	// Sets username and password
 	if (strlen(_apn_login) == 0)
 	{
@@ -3830,7 +3840,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 	}
 	count = 5;
 	do{
@@ -3845,7 +3855,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 	{
 		return 0;
 	}
-		
+
 	// Sets FTP server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[0])));		//FTP_SERVER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, server);
@@ -3865,7 +3875,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 			return -3;
 		}
 	}
-	
+
 	// Sets FTP port
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[1])));		//FTP_PORT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, port);
@@ -3885,7 +3895,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 			return -4;
 		}
 	}
-	
+
 	// Sets FTP mode
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[2])));		//FTP_MODE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, mode);
@@ -3900,12 +3910,12 @@ int8_t Wasp3G::configureFTP(const char* server,
 		{
 			return -15;
 		}
-		else 
+		else
 		{
 			return -5;
 		}
 	}
-	
+
 	// Sets FTP type
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[3])));		//FTP_TYPE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, type);
@@ -3925,7 +3935,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 			return -6;
 		}
 	}
-	
+
 	// Sets FTP user name
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[4])));		//FTP_UN
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, user_name);
@@ -3945,7 +3955,7 @@ int8_t Wasp3G::configureFTP(const char* server,
 			return -7;
 		}
 	}
-	
+
 	// Sets FTP password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[5])));		//FTP_UN
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, password);
@@ -3956,18 +3966,18 @@ int8_t Wasp3G::configureFTP(const char* server,
 	}while ((answer != 1) && (count > 0));
 	if (count == 0)
 	{
-		if (answer == 2) 
+		if (answer == 2)
 		{
 			return -18;
 		}
-		else 
+		else
 		{
 			return -8;
 		}
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* uploadFile(uint8_t, const char*) - Uploads a file from 3G board to FTP server
@@ -3993,7 +4003,7 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 	uint8_t count;
 	unsigned long previous;
 	long file_size;
-	
+
 	// first get the file size to calculates a aproximated upload time
 	switch (origin)
 	{
@@ -4030,7 +4040,7 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 			cd("Audio");
 			break;
 	}
-	
+
 	if ((strchr(destination_path, '/')) == NULL)
 	{
 		file_size = getFileSize(destination_path);
@@ -4039,17 +4049,17 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 	{
 		file_size = getFileSize(strchr(destination_path, '/'));
 	}
-	
+
 	if (file_size == -2)
 	{
 		return -3;
 	}
-	
-	// Then, restart 3G+GPS connection:	
+
+	// Then, restart 3G+GPS connection:
 	count = 10;
-	
-	if (check3Gattach() == 1) 
-	{	
+
+	if (check3Gattach() == 1)
+	{
 		// Dettachs 3G:
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[9])));	//AT_3G_ATT_OFF
 		do{
@@ -4057,7 +4067,7 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 			count--;
 		}while ((count != 0) && (answer != 1));
 		if (answer == 0)
-		{	
+		{
 			return -2;
 		}
 		else if (answer == 2)
@@ -4065,23 +4075,23 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 			return -10;
 		}
 	}
-	
+
 	// Now attaches connection:
-	count = 10;	
+	count = 10;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[8])));	//AT_3G_ATT_ON
 	do{
 		answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR_CME);
 		count--;
 	}while ((count != 0) && (answer != 1));
 	if (answer == 0)
-	{	
+	{
 		return -3;
 	}
 	else if (answer == 2)
 	{
 		return -11;
 	}
-	
+
 	// Waits for connection:
 	previous = millis();
 	while ((check3Gattach() != 1) && ((millis()-previous) < 30000))
@@ -4097,14 +4107,14 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 		return -4;
 	}
 
-	
+
 	answer = check3Gconnection(90);
-	
+
 	if (answer != 1)
 	{
 		return 0;
 	}
-	
+
 	// Send the file and selects the origin location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[10])));	//FTP_PUT_FILE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, destination_path, origin);
@@ -4115,8 +4125,8 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 		answer = sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, (file_size / 10) + 10000, SEND_ONCE);
 		count--;
 	}while ((answer != 1) && (count > 0));
-	
-	
+
+
 	if (count == 0)
 	{
 		if (answer == 2)	// If CME error code is available returns -2
@@ -4131,38 +4141,38 @@ int8_t Wasp3G::uploadFile(uint8_t origin, const char* destination_path){
 	else
 	{
 		previous = millis();
-		count = serialRead(_socket);	
-		answer = 0;	
-		
+		count = serialRead(_socket);
+		answer = 0;
+
 		// Gets the answer (a number in ASCII), if the number is 0 the transfer is OK, if is a number, it is an FTP error code
 		do{
 			answer *= 10;
 			answer += count-0x30;
 			count = serialRead(_socket);
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < (file_size / 10)))
-			{			
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
-				}			
+				}
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((count != '\r') && ((millis() - previous) < (file_size / 10)));
-		
+
 		if (answer != 0)
 		{
 			CME_CMS_code = answer;
 			return -2;
 		}
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* downloadFile(const char*, uint8_t, int) - Downloads a file from FTP server to 3G board
@@ -4185,27 +4195,27 @@ int8_t Wasp3G::downloadFile(const char* origin_path, uint8_t destination, unsign
 
 	uint8_t answer;
 	uint8_t count;
-	
+
 	answer = check3Gconnection(90);
-	
+
 	if (answer != 1)
 	{
 		return -3;
 	}
-	
-	
+
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	// Request the file and selects the destination location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[6])));		//FTP_GET_FILE
 	if (strchr(origin_path, '/') == strrchr(origin_path, '/'))
 	{
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path + 1, destination);	
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path + 1, destination);
 	}
 	else
 	{
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path, destination);	
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path, destination);
 	}
-	
+
 	count = 3;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[7])));		//FTP_GET_FILE_RES
 	do{
@@ -4213,7 +4223,7 @@ int8_t Wasp3G::downloadFile(const char* origin_path, uint8_t destination, unsign
 		answer = sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, max_time*1000, SEND_ONCE);
 		count--;
 	}while ((answer != 1) && (count > 0));
-	
+
 	if(count == 0)
 	{
 		if (answer == 2)	// If CME error code is available returns -2
@@ -4227,9 +4237,9 @@ int8_t Wasp3G::downloadFile(const char* origin_path, uint8_t destination, unsign
 	}
 	else
 	{
-		count = serialRead(_socket);	
-		answer = 0;	
-		
+		count = serialRead(_socket);
+		answer = 0;
+
 		// Gets the answer (a number in ASCII), if the number is 0 the transfer is OK, if is a number, it is an FTP error code
 		do{
 			answer *= 10;
@@ -4237,16 +4247,16 @@ int8_t Wasp3G::downloadFile(const char* origin_path, uint8_t destination, unsign
 			count = serialRead(_socket);
 			while(serialAvailable(_socket) == 0);
 		}while (count != '\r');
-		
+
 		if(answer != 0)
 		{
 			CME_CMS_code = answer;
 			return -2;
 		}
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* uploadData(const char*, const char*) - Uploads data from Waspmote to FTP server
@@ -4263,27 +4273,27 @@ int8_t Wasp3G::uploadData(const char* SD_file, const char* FTP_destination_path)
 	int8_t answer;
 	int i;
 	unsigned long previous, file_time;
-	
+
 	answer = sendXModemFile(SD_file, strrchr(FTP_destination_path, '/') + 1);
-	
+
 	SD.ON();
 	file_time = SD.getFileSize(SD_file) + TRANSFER_BASE_TIME;
 	SD.OFF();
-	
+
 	#if _3G_debug_mode>0
-		USB.print("Max upload time: ");
+		PRINT_3G("Max upload time: ");
 		USB.println(file_time, DEC);
 	#endif
-	
+
 	if (answer == 1)
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[10])));	//FTP_PUT_FILE
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",0", str_aux1, FTP_destination_path);
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[11])));	//FTP_PUT_FILE_RES
 		answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, file_time, SEND_ONCE);
-		
+
 		previous = millis();
-		
+
 		if (answer == 1)
 		{
 			//Reads the FTP code
@@ -4298,18 +4308,18 @@ int8_t Wasp3G::uploadData(const char* SD_file, const char* FTP_destination_path)
 				}
 				buffer_3G[i] = serialRead(_socket);
 				i++;
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
-				}		
+				}
 			}while ((buffer_3G[i-1] != '\r') && ((millis()-previous) < 3000));
 
 			buffer_3G[i-1] = '\0';
 			i = atoi(buffer_3G);
-			
+
 			del(strrchr(FTP_destination_path, '/') + 1);
-			
+
 			if (i == 0)
 			{
 				return 1;
@@ -4318,13 +4328,13 @@ int8_t Wasp3G::uploadData(const char* SD_file, const char* FTP_destination_path)
 			{
 				return (190 - i);
 			}
-			
+
 		}
-		
+
 	}
-	
+
 	return answer;
-	
+
 }
 
 /* downloadData(const char*, const char*) - Downloads data from FTP server to Waspmote
@@ -4340,10 +4350,10 @@ int8_t Wasp3G::downloadData(const char* FTP_file, const char* SD_destination_pat
 
 	uint8_t answer=1;
 	unsigned long file_time;
-	
+
 	//Gets the file size from the FTP
 	file_time = getFTPsize(FTP_file);
-	
+
 	if (long(file_time) == -1)
 	{
 		file_time = TRANSFER_BASE_TIME;
@@ -4352,17 +4362,17 @@ int8_t Wasp3G::downloadData(const char* FTP_file, const char* SD_destination_pat
 	{
 		file_time += TRANSFER_BASE_TIME;
 	}
-	
+
 	// Waspmote can't manage the incoming packets of 1KB from the 3G module
 	// First downloads the file to the 3G module
-		
+
 	#if _3G_debug_mode>0
-		USB.print("Max download time: ");
+		PRINT_3G("Max download time: ");
 		USB.println(file_time, DEC);
 	#endif
-		
+
 	answer = downloadFile( FTP_file, 0, file_time);
-	
+
 	if (answer == 1)
 	{
 		//if the file have been downloaded correctly, it will be transferred to Waspmote SD
@@ -4377,7 +4387,7 @@ int8_t Wasp3G::downloadData(const char* FTP_file, const char* SD_destination_pat
 			//once the file is transferred, it deletes from the 3G module
 			del(strrchr(FTP_file,'/')+1);
 		}
-		
+
 		if (answer != 1)
 		{
 			return -3;
@@ -4405,20 +4415,20 @@ unsigned long Wasp3G::getFTPsize(const char* FTP_file)
 	int8_t answer;
 	uint16_t i, j;
 	unsigned long previous;
-	
+
 	answer = check3Gconnection(90);
-	
+
 	if (answer != 1)
 	{
 		return -2;
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[26])));	//FTP_LIST
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, FTP_file);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[27])));	//FTP_LIST_RES
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR_CME, FTP_TIMEOUT, SEND_ONCE);
 	previous = millis();
-	
+
 	memset( buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[28])));	//FTP_LIST_END
 	if (answer == 1)
@@ -4435,16 +4445,16 @@ unsigned long Wasp3G::getFTPsize(const char* FTP_file)
 			}
 			buffer_3G[i] = serialRead(_socket);
 			i++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
-			}		
+			}
 		}while ((buffer_3G[i-1] != '\r') && ((millis()-previous) < 3000));
 
 		buffer_3G[i-1] = '\0';
 		j = atoi(buffer_3G);
-		
+
 		//Then reads the bytes
 		serialRead(_socket);
 		i = 0;
@@ -4458,28 +4468,28 @@ unsigned long Wasp3G::getFTPsize(const char* FTP_file)
 			}
 			buffer_3G[i] = serialRead(_socket);
 			i++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
-			}		
+			}
 		}while ((i < j) && ((millis()-previous) < 3000));
-		
+
 		buffer_3G[i] = '\0';
-		
+
 		// Parses the string getting the file size
 		strtok(buffer_3G, " ");
 		strtok(NULL, " ");
 		strtok(NULL, " ");
 		strtok(NULL, " ");
 		strcpy(buffer_3G,strtok(NULL, " "));
-		
+
 		// Waits for the en string
 		waitForData(str_aux1, ERROR_CME, FTP_TIMEOUT, millis(), 0);
 		// Converts from the string to a long value
-		return atol(buffer_3G);	
+		return atol(buffer_3G);
 	}
-	
+
 	return -1;
 }
 
@@ -4494,10 +4504,10 @@ unsigned long Wasp3G::getFTPsize(const char* FTP_file)
  * '-5' if timeout when logs in
 */
 int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_name, const char* password){
-	
+
 	int8_t answer;
 	int8_t count;
-	
+
 	// Sets connection parameters (apn, user_name, password)
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
@@ -4510,8 +4520,8 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 	{
 		return -2;
 	}
-	
-	
+
+
 	// Sets username and password
 	if (strlen(_apn_login) == 0)
 	{
@@ -4521,7 +4531,7 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 	}
 	count = 5;
 	do{
@@ -4536,11 +4546,11 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 	{
 		return 0;
 	}
-		
+
 	// Releases old SSL stack if there is
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[15])));	//RELEASE_SSL_STACK
 	sendCommand2(str_aux1, OK_RESPONSE, ERROR);
-	
+
 	// Acquires SSL stack
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[14])));	//ACQUIRE_SSL_STACK
 	answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR);
@@ -4549,7 +4559,7 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 		return -3;
 	}
 
-	// Logs into the server	
+	// Logs into the server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[16])));	//FTPS_LOGIN
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",%u,\"%s\",\"%s\"", str_aux1, server, port, user_name, password);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
@@ -4561,9 +4571,9 @@ int8_t Wasp3G::loginFPTS(const char* server, uint16_t port, const char* user_nam
 	{
 		return -5;
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* uploadFileSecure(uint8_t, const char*) - Uploads a file from 3G board to FTPS server
@@ -4579,7 +4589,7 @@ int8_t Wasp3G::uploadFileSecure(uint8_t origin, const char* destination_path){
 	uint8_t count;
 	unsigned long previous;
 	long file_size;
-	
+
 	// first get the file size to calculates a aproximated upload time
 	switch (origin)
 	{
@@ -4626,24 +4636,24 @@ int8_t Wasp3G::uploadFileSecure(uint8_t origin, const char* destination_path){
 	{
 		file_size = getFileSize(strchr(destination_path, '/'));
 	}
-	
+
 	if (file_size == -2)
 	{
 		return -3;
 	}
-	
+
 	// Send the file and selects the origin location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[22])));	//FTPS_PUT_FILE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, destination_path, origin);
-		
+
 	count = 3;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[23])));	//FTPS_PUT_FILE_RES
 	do{
 		answer = sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, (file_size / 10) + 1000, SEND_ONCE);
 		count--;
 	}while ((answer != 1) && (count > 0));
-	
-	
+
+
 	if (count == 0)
 	{
 		if (answer == 2)	// If CME error code is available returns -2
@@ -4658,9 +4668,9 @@ int8_t Wasp3G::uploadFileSecure(uint8_t origin, const char* destination_path){
 	else
 	{
 		previous = millis();
-		count = serialRead(_socket);	
-		answer = 0;	
-		
+		count = serialRead(_socket);
+		answer = 0;
+
 		// Gets the answer (a number in ASCII), if the number is 0 the transfer is OK, if is a number, it is an FTP error code
 		do{
 			answer *= 10;
@@ -4668,16 +4678,16 @@ int8_t Wasp3G::uploadFileSecure(uint8_t origin, const char* destination_path){
 			count = serialRead(_socket);
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < (file_size / 10)));
 		}while ((count != '\r') && ((millis() - previous) < (file_size / 10)));
-		
+
 		if (answer != 0)
 		{
 			CME_CMS_code = answer;
 			return -2;
 		}
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* downloadFileSecure(const char*, uint8_t, int) - Downloads a file from FTPS server to 3G board
@@ -4693,18 +4703,18 @@ int8_t Wasp3G::downloadFileSecure(const char* origin_path, uint8_t destination, 
 
 	uint8_t answer;
 	uint8_t count;
-		
+
 	// Request the file and selects the destination location
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[18])));	//FTPS_GET_FILE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, origin_path, destination);
-	
+
 	count=3;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[19])));	//FTPS_GET_FILE_RES
 	do{
 		answer=sendCommand3(buffer_3G, str_aux1, ERROR_CME, ERROR, max_time*100, SEND_ONCE);
 		count--;
 	}while ((answer != 1) && (count > 0));
-	
+
 	if(count == 0)
 	{
 		if (answer == 2)	// If CME error code is available returns -2
@@ -4718,9 +4728,9 @@ int8_t Wasp3G::downloadFileSecure(const char* origin_path, uint8_t destination, 
 	}
 	else
 	{
-		count = serialRead(_socket);	
-		answer = 0;	
-		
+		count = serialRead(_socket);
+		answer = 0;
+
 		// Gets the answer (a number in ASCII), if the number is 0 the transfer is OK, if is a number, it is an FTPS error code
 		do{
 			answer *= 10;
@@ -4728,16 +4738,16 @@ int8_t Wasp3G::downloadFileSecure(const char* origin_path, uint8_t destination, 
 			count = serialRead(_socket);
 			while(serialAvailable(_socket) == 0);
 		}while (count != '\r');
-		
+
 		if(answer != 0)
 		{
 			CME_CMS_code = answer;
 			return -2;
 		}
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* uploadDataSecure(const char*, const char*) - Uploads data from Waspmote to FTPS server
@@ -4754,18 +4764,18 @@ int8_t Wasp3G::uploadDataSecure(const char* SD_file, const char* FTP_destination
 	uint8_t answer;
 	uint16_t count;
 	long file_size;
-	
+
 	//Sends the command to send data
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[24])));	//FTPS_PUT_FILE_SIO
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, FTP_destination_path);
-		
+
 	count=3;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[25])));	//FTPS_PUT_FILE_RES_SIO
 	do{
 		answer=sendCommand2(buffer_3G, str_aux1, ERROR_CME, 30000, SEND_ONCE);
 		count--;
 	}while ((answer != 1) && (count > 0));
-	
+
 	if (count == 0)
 	{
 		if (answer == 2)	//If CME error code is available returns 2
@@ -4777,20 +4787,20 @@ int8_t Wasp3G::uploadDataSecure(const char* SD_file, const char* FTP_destination
 			return 0;		//Error without code
 		}
 	}
-	
+
 	// Sends data trought SOCKET:
 	else
-	{	
+	{
 		SD.ON();
 		file_size = SD.getFileSize(SD_file);
 		if (file_size == -1)
 		{
 			#if _3G_debug_mode>0
-				USB.print(F("Error reading SD file size"));
+				PRINT_3G(F("Error reading SD file size\n"));
 			#endif// Sends <CTRL+Z>:
 			count = 3;
 			#if _3G_debug_mode>0
-			USB.print(F("Sends CTRL+Z"));
+			PRINT_3G(F("Sends CTRL+Z\n"));
 			#endif
 			printByte(0x1A, _socket);
 			do{
@@ -4803,7 +4813,7 @@ int8_t Wasp3G::uploadDataSecure(const char* SD_file, const char* FTP_destination
 		else
 		{
 			#if _3G_debug_mode>0
-				USB.print(F("file size: "));
+				PRINT_3G(F("file size: "));
 				USB.println(file_size,DEC);
 			#endif
 			count = 0;
@@ -4820,26 +4830,26 @@ int8_t Wasp3G::uploadDataSecure(const char* SD_file, const char* FTP_destination
 					count = file_size;
 				}
 				printString(buffer_3G,_socket);
-				
+
 				#if _3G_debug_mode>0
-					USB.print(F("bytes sent : "));
+					PRINT_3G(F("bytes sent : "));
 					USB.println(count,DEC);
 				#endif
 			}while (count < file_size);
-			
+
 			SD.OFF();
-			
+
 			// Sends <CTRL+Z>:
 			count = 3;
 			#if _3G_debug_mode>0
-				USB.print(F("Sends CTRL+Z"));
+				PRINT_3G(F("Sends CTRL+Z\n"));
 			#endif
 			printByte(0x1A, _socket);
 			do{
 				answer = waitForData(OK_RESPONSE, ERROR_CME, 10000, millis(), 0);
 				count--;
 			}while ((answer != 1) && (count > 0));
-			
+
 			if (count == 0)
 			{
 				if (answer == 2)	// If CME error code is available returns 2
@@ -4853,9 +4863,9 @@ int8_t Wasp3G::uploadDataSecure(const char* SD_file, const char* FTP_destination
 			}
 		}
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* downloadDataSecure(const char*, const char*) - Downloads data from FTP server to Waspmote
@@ -4870,19 +4880,19 @@ int8_t Wasp3G::uploadDataSecure(const char* SD_file, const char* FTP_destination
 int8_t Wasp3G::downloadDataSecure(const char* FTP_file, const char* SD_destination_path, uint16_t max_time){
 
 	uint8_t answer;
-	
+
 	// Waspmote can't manage the incoming packets of 1KB from the 3G module
 	// First downloads the file to the 3G module
-	
+
 	answer = downloadFileSecure( FTP_file, 0, max_time);
-	
+
 	if (answer == 1)
 	{
 		//if the file have been downloaded correctly, it will be transferred to Waspmote SD
 		answer = getXModemFile((strrchr(FTP_file,'/')+1), SD_destination_path);
 		//once the file is transferred, it deletes from the 3G module
 		del(strrchr(FTP_file,'/')+1);
-		
+
 		if (answer != 1)
 		{
 			return -3;
@@ -4905,7 +4915,7 @@ int8_t Wasp3G::downloadDataSecure(const char* FTP_file, const char* SD_destinati
  * Returns '1' on success,'-2' if error logging out of the server and '-3' if error releasing the SSL stack
 */
 int8_t Wasp3G::logoutFPTS(){
-	
+
 	int8_t answer;
 
 	// Logs out of the server
@@ -4915,7 +4925,7 @@ int8_t Wasp3G::logoutFPTS(){
 	{
 		return -2;
 	}
-	
+
 	// Releases SSL stack
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_FTP[15])));	//RELEASE_SSL_STACK
 	answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR);
@@ -4923,8 +4933,8 @@ int8_t Wasp3G::logoutFPTS(){
 	{
 		return -3;
 	}
-	
-	return 1;	
+
+	return 1;
 }
 
 
@@ -4946,12 +4956,12 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port, const char* user
 	// Sets the SMTP server address and port
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[0])));	//SMTP_SERVER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, server, port);
-	answer = sendCommand1(buffer_3G, OK_RESPONSE);	
+	answer = sendCommand1(buffer_3G, OK_RESPONSE);
 	if (answer == 0)
 	{
 		return -1;
 	}
-	
+
 	// Sets the SMTP username and password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[1])));	//SMTP_AUTH
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, username, password);
@@ -4966,23 +4976,23 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port, const char* user
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port){
-	
+
 	uint8_t answer;
-	
+
 	// Sets the SMTP server address and port
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[0])));	//SMTP_SERVER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%d", str_aux1, server, port);
-	answer = sendCommand1(buffer_3G, OK_RESPONSE);	
+	answer = sendCommand1(buffer_3G, OK_RESPONSE);
 	if (answer == 0)
 	{
 		return 0;
 	}
-	
+
 	// Sets the SMTP username and password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[1])));	//SMTP_AUTH
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
-	
+
 }
 
 /* setSMTPfrom( const char*, const char*) - Sets sender address and name
@@ -4992,11 +5002,11 @@ int8_t Wasp3G::setSMTPserver(const char* server, uint16_t port){
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::setSMTPfrom( const char* mail_address, const char* name){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[2])));	//SMTP_FROM
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",\"%s\"", str_aux1, mail_address, name);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
-	
+
 }
 
 /* setSMTPrecipient(uint8_t, uint8_t, const char*, const char*) - Sets recipient address and name (TO/CC/BCC)
@@ -5006,11 +5016,11 @@ int8_t Wasp3G::setSMTPfrom( const char* mail_address, const char* name){
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::setSMTPrecipient(uint8_t kind, uint8_t index, const char* mail_address, const char* name){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[3])));	//SMTP_RCPT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,\"%s\",\"%s\"", str_aux1, kind, index, mail_address, name);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
-	
+
 }
 
 /* setSMTPsubject( const char*) - Sets the subject of the email
@@ -5020,7 +5030,7 @@ int8_t Wasp3G::setSMTPrecipient(uint8_t kind, uint8_t index, const char* mail_ad
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::setSMTPsubject( const char* subject){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[4])));	//SMTP_SUBJECT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, subject);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
@@ -5034,7 +5044,7 @@ int8_t Wasp3G::setSMTPsubject( const char* subject){
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::setSMTPbody( const char* body){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[5])));	//SMTP_BODY
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, body);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
@@ -5048,7 +5058,7 @@ int8_t Wasp3G::setSMTPbody( const char* body){
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::setSMTPattach( uint8_t index, const char* file){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[6])));	//SMTP_ATTACH
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,\"%s\"", str_aux1, index, file);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
@@ -5065,9 +5075,9 @@ int8_t Wasp3G::setSMTPattach( uint8_t index, const char* file){
  * '-3' if error setting the apn with cme error code available
 */
 int8_t Wasp3G::setSMTPsend(){
-	
+
 	int8_t answer, count;
-	
+
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
@@ -5079,8 +5089,8 @@ int8_t Wasp3G::setSMTPsend(){
 	if (count == 0)
 	{
 		return 0;
-	}	
-	
+	}
+
 	// Sets username and password
 	if (strlen(_apn_login) == 0)
 	{
@@ -5090,7 +5100,7 @@ int8_t Wasp3G::setSMTPsend(){
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 	}
 	count = 5;
 	do{
@@ -5105,16 +5115,16 @@ int8_t Wasp3G::setSMTPsend(){
 	{
 		return 0;
 	}
-		
+
 	// Sends the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[7])));	//SMTP_SEND
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[8])));	//SMTP_SEND_R
 	answer = sendCommand2(str_aux1, str_aux2, ERROR, SMTP_TIMEOUT, SEND_ONCE);
 	if ((answer == 0) || (answer == 2))
-	{	
+	{
 		return -2;
 	}
-	
+
 	return 1;
 
 }
@@ -5129,9 +5139,9 @@ int8_t Wasp3G::setSMTPsend(){
  * '-3' if error setting the apn with cme error code available
 */
 int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* username, const char* password){
-	
+
 	int8_t answer, count;
-	
+
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
@@ -5143,8 +5153,8 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	if (count == 0)
 	{
 		return 0;
-	}	
-	
+	}
+
 	// Sets username and password
 	if (strlen(_apn_login) == 0)
 	{
@@ -5154,7 +5164,7 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 	}
 	count = 5;
 	do{
@@ -5169,7 +5179,7 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	{
 		return 0;
 	}
-		
+
 	// Sets the POP3 server, port, username and password
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[9])));	//POP3_SERVER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",\"%s\",\"%s\",%d", str_aux1, server, username, password, port);
@@ -5178,9 +5188,9 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
 	{
 		return -2;
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* getPOP3list() - Gets the total number of emails
@@ -5192,24 +5202,24 @@ int8_t Wasp3G::setPOP3server(const char* server, uint16_t port, const char* user
  * '-3' if error getting the e-mail number
 */
 int Wasp3G::getPOP3list(){
-	
+
 	int8_t answer;
 	unsigned long previous;
 	int count;
-	
+
 	// Logs into the server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[10])));	//POP3_IN
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	answer = sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
+	answer = sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
 	if ((answer == 0) || (answer == 2))
 	{
 		return -1;
-	}	
-	
+	}
+
 	// Slow baudrate to manage the data
 	changeBaudrate(4800);
 	getIfReady();
-	
+
 	// Request the list of emails
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[12])));	//POP3_LIST
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[13])));	//POP3_LIST_R
@@ -5218,7 +5228,7 @@ int Wasp3G::getPOP3list(){
 	{
 		previous = millis();
 		count = 0;
-		do{	
+		do{
 			buffer_3G[2] = serialRead(_socket);
 			if (buffer_3G[2] != -1)
 			{
@@ -5229,14 +5239,14 @@ int Wasp3G::getPOP3list(){
 					count++;
 				}
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while (((buffer_3G[2] != 'K') && (buffer_3G[0] != 'O')) && ((millis() - previous) < 30000));
-		
+
 		// Restores the baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s%ld", str_aux1, _baudRate);
@@ -5250,14 +5260,14 @@ int Wasp3G::getPOP3list(){
 			beginSerial(_baudRate, _socket);
 		}
 		getIfReady();
-				
+
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
-		
+		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
+
 		return count;
-	}	
-	
+	}
+
 	// Restores the baudrate
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%ld", str_aux1, _baudRate);
@@ -5271,13 +5281,13 @@ int Wasp3G::getPOP3list(){
 		beginSerial(_baudRate, _socket);
 	}
 	getIfReady();
-		
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
-	
+	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
+
 	return -3;
-	
+
 }
 
 /* getPOP3header(uint8_t) - Gets the header of the e-mail specified in index
@@ -5288,34 +5298,37 @@ int Wasp3G::getPOP3list(){
  * and '-2' if error getting the header of the e-mail
 */
 int8_t Wasp3G::getPOP3header(uint8_t index){
-	
+
 	int8_t answer;
 	unsigned long previous;
 	int x;
-	
-	// Logs into the server	
+
+	// Logs into the server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[10])));	//POP3_IN
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
 	answer = sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
 	if ((answer == 0) || (answer == 2))
 	{
 		return -1;
-	}	
-	
+	}
+
 	// Slow baudrate to manage the data
 	changeBaudrate(4800);
 	getIfReady();
-	
+
 	// Request the header of the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[14])));	//POP3_HEADER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, index);
-	answer=sendCommand1(buffer_3G, "From:");	
+	answer=sendCommand1(buffer_3G, "From:");
 	if (answer == 1)
 	{
 		memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 		x=0;
+    #if _3G_debug_mode>0
+      PRINT_3G(F(""));
+    #endif
 		previous=millis();
-		
+
 		do{
 			buffer_3G[x] = serialRead(_socket);
 			if (buffer_3G[x] != -1)
@@ -5325,18 +5338,18 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 					x++;
 				#endif
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
-		}while (((buffer_3G[x-1] != 'K') && (buffer_3G[x-2] != 'O')) 
+
+		}while (((buffer_3G[x-1] != 'K') && (buffer_3G[x-2] != 'O'))
 					&& ((millis()-previous) < POP3_TIMEOUT)
 					&& (x < _3G_BUFFER_SIZE));
-		
+
 		buffer_3G[x-4]='\0';
-		
+
 		// Restores the baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 		snprintf(str_aux2, sizeof(str_aux2), "%s%ld", str_aux1, _baudRate);
@@ -5350,15 +5363,15 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 			beginSerial(_baudRate, _socket);
 		}
 		getIfReady();
-		
-		
+
+
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
-		
+		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
+
 		return 1;
-	}	
-	
+	}
+
 	// Restores the baudrate
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 	snprintf(str_aux2, sizeof(str_aux2), "%s%ld", str_aux1, _baudRate);
@@ -5372,13 +5385,13 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
 		beginSerial(_baudRate, _socket);
 	}
 	getIfReady();
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
-	
+	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
+
 	return -2;
-	
+
 }
 
 /* getPOP3mail(uint8_t) - Gets the e-mail specified in index
@@ -5388,25 +5401,25 @@ int8_t Wasp3G::getPOP3header(uint8_t index){
  * Returns '1' on success, '-1' if error logging in the POP3 server and '-2' getting the e-mail
 */
 int8_t Wasp3G::getPOP3mail(uint8_t index){
-	
+
 	int8_t answer;
 	unsigned long previous;
 	int x;
-		
+
 	// Logs into the server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[10])));	//POP3_IN
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	answer = sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
+	answer = sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
 	if ((answer == 0) || (answer == 2))
 	{
 		return -1;
-	}	
-		
+	}
+
 	// Request the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[15])));	//POP3_GET
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,1", str_aux1, index);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	answer = sendCommand2(buffer_3G, str_aux1, ERROR, POP3_TIMEOUT, SEND_ONCE);	
+	answer = sendCommand2(buffer_3G, str_aux1, ERROR, POP3_TIMEOUT, SEND_ONCE);
 	if (answer == 1)
 	{
 		x = 0;
@@ -5417,33 +5430,33 @@ int8_t Wasp3G::getPOP3mail(uint8_t index){
 			//while ((serialAvailable(_socket) <= 20) && ((millis()-previous) < 10000));
 			buffer_3G[x] = serialRead(_socket);
 			if (buffer_3G[x] != 0xFF)
-			{				
+			{
 				x++;
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[x-1] != '\r')
 					&& ((millis()-previous) < POP3_TIMEOUT)
 					&& (x < _3G_BUFFER_SIZE));
-		
+
 		buffer_3G[x-1] = '\0';
-		
+
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
-		
+		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
+
 		return 1;
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
-	
-	return -2;	
+	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
+
+	return -2;
 }
 
 /* deletePOP3mail(uint8_t) - Marks an e-mail to delete from POP3 server
@@ -5453,36 +5466,36 @@ int8_t Wasp3G::getPOP3mail(uint8_t index){
  * Returns '1' on success, '-1' if error logging in the POP3 server and '-2' if error deleting the e-mail
 */
 int8_t Wasp3G::deletePOP3mail(uint8_t index){
-	
+
 	int8_t answer;
-	
+
 	// Logs into the server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[10])));	//POP3_IN
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	answer = sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
+	answer = sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
 	if ((answer == 0) || (answer == 2))
 	{
 		return -1;
-	}	
-	
+	}
+
 	// Request the header of the email
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[16])));	//POP3_DEL
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, index);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	answer = sendCommand2(buffer_3G, str_aux1, ERROR);	
+	answer = sendCommand2(buffer_3G, str_aux1, ERROR);
 	if (answer == 1)
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 		strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
+		sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
 		return 1;
-	}	
-	
+	}
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MAIL[11])));	//POP3_OUT
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MAIL[17])));	//POP3_SUCCESS
-	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);	
+	sendCommand2(str_aux1, str_aux2, ERROR, POP3_TIMEOUT, SEND_ONCE);
 	return -2;
-	
+
 }
 
 #endif
@@ -5539,9 +5552,9 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
  * '-20' if error checking the connection
 */
 int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request, bool parse){
-	
+
 	int16_t answer;
-	
+
 	// Checks the connection
 	answer = check3Gconnection(90);
 	if ((answer != 1) && (answer != -1))
@@ -5549,21 +5562,21 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 		return 0;
 	}
 	else if (answer == -1)
-	{		
+	{
 		return -20;
 	}
-	
+
 	// Configures the operator parameters
 	answer = initHTTP();
 	if (answer != 1)
 	{
-		return answer;		
+		return answer;
 	}
-	
+
 	// Reduces the baudrate to allows manage all data from the 3G module
 	changeBaudrate(2400);
 	getIfReady();
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	delay(1000);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[0])));	//HTTP_ACT
@@ -5583,20 +5596,20 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
 	delay(1000);
 	for (uint16_t x=0 ; x < strlen(HTTP_request);x++)
 	{
-		printByte(HTTP_request[x], _socket); 
+		printByte(HTTP_request[x], _socket);
 	}
 	delay(1000);
 	printByte(0x1A, _socket);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[2])));	//HTTP_ACT_DATA
-	answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);	
+	answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);
 	if (answer != 1)
 	{
 		changeBaudrate(_baudRate);
 		return -3;
-	}	
-	
+	}
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	// Reads the response from the server ('0' header and answer, '1' only answer from Meshlium)
 	return readHTTPresponse(parse);
 }
@@ -5618,16 +5631,16 @@ int16_t Wasp3G::readURL(const char* url, uint16_t port, const char* HTTP_request
  * '-15' if error setting APN, username and password with CME_error code available
 */
 int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
-	
+
 	int16_t answer;
 	char aux_str[20];
 	uint8_t year, month, date, day_week, hour, minute, second;
 	int8_t timezone;
 	bool RTC_ant=false;
-	
-	uint16_t count=0;	
+
+	uint16_t count=0;
 	unsigned long previous;
-	
+
 	// Checks the connection
 	answer = check3Gconnection(90);
 	if ((answer != 1) && (answer != -1))
@@ -5635,18 +5648,18 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 		return 0;
 	}
 	else if (answer == -1)
-	{		
+	{
 		return -2;
 	}
-	
+
 	// Configures the operator parameters
 	answer = initHTTP();
 	if (answer != 1)
 	{
 		return answer - 4;
 	}
-	
-			
+
+
 	// ADD the HTP server
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[18])));	//"+CHTPSERV="
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"ADD\",\"%s\",%u,1", str_aux1, htp_server, htp_port);
@@ -5655,7 +5668,7 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 	{
 		return -3;
 	}
-	
+
 	// Updating date and time using HTP protocol
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[19])));	//"+CHTPUPDATE"
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[20])));	//"+CHTPUPDATE: "
@@ -5669,12 +5682,12 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 	if (answer != 0)
 	{
 		#if _3G_debug_mode>0
-			USB.print(F("Error HTP: "));
+			PRINT_3G(F("Error HTP: "));
 			USB.println(answer, DEC);
 		#endif
 		return answer;
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[63])));	//"+CCLK?"
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[64])));	//"+CCLK:"
 	answer=sendCommand2(str_aux1, str_aux2, ERROR);
@@ -5682,13 +5695,13 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 	{
 		return -4;
 	}
-	
-		count = 0;	
+
+		count = 0;
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	previous = millis();
 	do{
 		while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000))
-		{	
+		{
 			if (millis() < previous)
 			{
 				previous = millis();
@@ -5696,14 +5709,14 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 		}
 		buffer_3G[count]=serialRead(_socket);
 		count++;
-		
+
 		if (millis() < previous)
 		{
 			previous = millis();
 		}
-		
+
 	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 5000) && (count < _3G_BUFFER_SIZE));
-	
+
 	year = ((buffer_3G[1] - 0x30) * 10) + (buffer_3G[2] - 0x30);
 	month = ((buffer_3G[4] - 0x30) * 10) + (buffer_3G[5] - 0x30);
 	date = ((buffer_3G[7] - 0x30) * 10) + (buffer_3G[8] - 0x30);
@@ -5717,22 +5730,22 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
  	}
 
 	#if _3G_debug_mode>0
-		USB.print(F("year "));  
+		PRINT_3G(F("year "));
 		USB.print(year, DEC);
-		USB.print(F("; month "));  
+		USB.print(F("; month "));
 		USB.print(month, DEC);
-		USB.print(F("; date "));  
+		USB.print(F("; date "));
 		USB.println(date, DEC);
-		USB.print(F("hour "));  
+		PRINT_3G(F("hour "));
 		USB.print(hour, DEC);
-		USB.print(F("; minute "));  
+		USB.print(F("; minute "));
 		USB.print(minute, DEC);
-		USB.print(F("; second "));  
+		USB.print(F("; second "));
 		USB.print(second, DEC);
-		USB.print(F("; timezone "));  
+		USB.print(F("; timezone "));
 		USB.println((timezone), DEC);
 	#endif
-		
+
 	if (timezone >= 0)
 	{
 		if(hour >= timezone)
@@ -5745,7 +5758,7 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 		}
 	}
 	else
-	{	
+	{
 		if((hour - timezone) > 23)
 		{
 			hour = hour - timezone - 24;
@@ -5754,9 +5767,9 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 		{
 			hour = hour - timezone;
 		}
-		
+
 	}
-		
+
 	if (RTC.isON == 0) // Checks if the RTC is on
 	{
 		RTC_ant = true;
@@ -5768,12 +5781,12 @@ int16_t Wasp3G::setTimebyURL(const char* htp_server, uint16_t htp_port){
 
 	if (RTC_ant == 1) // Powers off the RTC if before it was off
 	{
-		RTC.OFF();	
+		RTC.OFF();
 	}
 
 	return 1;
-	
-	
+
+
 }
 
 /* setTimebyMeshlium - Sets the time of Waspmote's RTC getting the time from Meshlium
@@ -5806,34 +5819,34 @@ int16_t Wasp3G::setTimebyMeshlium(const char* url, uint16_t port){
 	char frame_data[50];
 	char MID[17];
 	uint8_t year, month, date, day_week, hour, minute, second;
-	bool RTC_ant=false;	
+	bool RTC_ant=false;
 	char time_zone[6];
-	
+
 	memset(frame_data, '\0', sizeof(frame_data));
 	memset(MID, '\0', sizeof(MID));
-	
+
 	// read mote ID from EEPROM memory
 	for(int i=0 ; i<16 ; i++ )
 	{
 		MID[i]=Utils.readEEPROM(i+EEPROM_FRAME_MOTEID);
 	}
 	MID[16]='\0';
-	
+
 	// Generates a frame
-	snprintf(frame_data, 
-				sizeof(frame_data), 
+	snprintf(frame_data,
+				sizeof(frame_data),
 				"<=>%c0#%02x%02x%02x%02x#%s#0#",
-				155, 
-				_serial_id[4], 
-				_serial_id[5], 
-				_serial_id[6], 
-				_serial_id[7], 
+				155,
+				_serial_id[4],
+				_serial_id[5],
+				_serial_id[6],
+				_serial_id[7],
 				MID);
-	
+
 	answer = sendHTTPframe( url, port, (uint8_t*) frame_data, strlen(frame_data), GET, 1);
 	// gets URL from the solicited URL
 	if ( answer == 1)
-	{		
+	{
 		year = ((buffer_3G[2] - 0x30) * 10) + (buffer_3G[3] - 0x30);
 		month = ((buffer_3G[4] - 0x30) * 10) + (buffer_3G[5] - 0x30);
 		date = ((buffer_3G[6] - 0x30) * 10) + (buffer_3G[7] - 0x30);
@@ -5842,57 +5855,57 @@ int16_t Wasp3G::setTimebyMeshlium(const char* url, uint16_t port){
 		second = ((buffer_3G[12] - 0x30) * 10) + (buffer_3G[13] - 0x30);
 		memset(time_zone, '\0', sizeof(time_zone));
 		strncpy(time_zone, buffer_3G+14,5);
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("year "));  
+			PRINT_3G(F("year "));
 			USB.print(year, DEC);
-			USB.print(F("; month "));  
+			USB.print(F("; month "));
 			USB.print(month, DEC);
-			USB.print(F("; date "));  
+			USB.print(F("; date "));
 			USB.println(date, DEC);
-			USB.print(F("hour "));  
+			PRINT_3G(F("hour "));
 			USB.print(hour, DEC);
-			USB.print(F("; minute "));  
+			USB.print(F("; minute "));
 			USB.print(minute, DEC);
-			USB.print(F("; second "));  
+			USB.print(F("; second "));
 			USB.print(second, DEC);
-			USB.print(F("; time zone "));  
+			USB.print(F("; time zone "));
 			USB.println(time_zone);
 		#endif
-		
+
 		if (RTC.isON == 0) // Checks if the RTC is on
 		{
 			RTC_ant = true;
 			RTC.ON();
 		}
-			
+
 		// Sets the RTC time
 		RTC.setTime(year, month, date, RTC.dow(year, month, date), hour, minute, second); //Gets time from RTC
-				
+
 		if (RTC_ant == 1) // Powers off the RTC if before it was off
 		{
 			RTC.OFF();
 		}
-		
-		// Sets the RTC of the 3G too 
+
+		// Sets the RTC of the 3G too
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
 		answer = sendCommand2( buffer_3G, OK_RESPONSE, ERROR);
-		
+
 		memset(buffer_3G, '\0', sizeof(buffer_3G));
 		strncpy(buffer_3G, time_zone, 5);
-		
+
 		if (answer == 2)
 		{
 			return -21;
 		}
-		
+
 		return 1;
 	}
-	
+
 	return answer;
-	
-	
+
+
 }
 
 /* sendHTTPframe(const char*, uint16_t, uint16_t , const char*) - Sends a frame to Meshlium
@@ -5923,7 +5936,7 @@ int16_t Wasp3G::setTimebyMeshlium(const char* url, uint16_t port){
 int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method){
 	return sendHTTPframe( url, port, data, length, method, 0);
 }
-	
+
 /* sendHTTPframe(const char*, uint16_t, uint16_t , const char*) - Sends a frame to Meshlium
  *
  * This function sends a frame to Meshlium and get an answer. The answer is stored in 'buffer_3G'
@@ -5950,9 +5963,9 @@ int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int
  * '-20' if error checking the connection
 */
 int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int length, uint8_t method, uint8_t parse){
-	
+
 	int16_t answer;
-	
+
 	// Checks the connection
 	answer = check3Gconnection(90);
 	if ((answer != 1) && (answer != -1))
@@ -5960,33 +5973,33 @@ int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int
 		return 0;
 	}
 	else if (answer == -1)
-	{		
+	{
 		return -20;
 	}
-		
+
 	// Configures the operator parameters
 	answer = initHTTP();
 	if (answer != 1)
 	{
-		return answer;		
+		return answer;
 	}
-	
+
 	// Reduces the baudrate to allows manage all data from the 3G module
 	changeBaudrate(2400);
 	getIfReady();
-	
+
 	delay(1000);
-	
-	// Sends the HTTP request to the server	
-	answer = sendHTTPrequest(url, port, data, length, method);	
+
+	// Sends the HTTP request to the server
+	answer = sendHTTPrequest(url, port, data, length, method);
 	if (answer != 1)
 	{
 		changeBaudrate(_baudRate);
-		return answer;		
+		return answer;
 	}
-	
+
 	// Reads the response from the server ('0' header and answer, '1' only answer from Meshlium)
-	return readHTTPresponse(parse);	
+	return readHTTPresponse(parse);
 }
 
 /* readURLS(const char*, uint16_t, uint16_t , const char*) - Sends a request to a HTTPS url and get an answer
@@ -6005,12 +6018,12 @@ int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int
  * '-10' if error setting APN, username and password
  * '-11' if error acquiring HTTPS protocol stack,
  * '-12' if error opening a HTTPS session,
- * '-13' if error changing baudrate, 
+ * '-13' if error changing baudrate,
  * '-14' if error storing HTTPS request in the output buffer,
  * '-15' if error sending the HTTPS request to the url,
  * '-16' if error with the receive command,
  * '-17' if error closing the session (data received is OK),
- * '-18' if error releasing the SSL stack (data received is OK), 
+ * '-18' if error releasing the SSL stack (data received is OK),
  * '-19' if error changing the baudrate (data received is OK),
  * '-20' if error receiving data or timeout waiting data
  * '-25' if error setting username and password with CME_error code available
@@ -6024,12 +6037,12 @@ int16_t Wasp3G::sendHTTPframe(const char* url, uint16_t port, uint8_t* data, int
  * '-38' HTTPS error code: network error
 */
 int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_request){
-	
+
 	int8_t answer;
 	int HTTPS_data, count;
 	char command[15], aux;
 	unsigned long previous;
-	
+
 	// Sets APN
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
@@ -6041,8 +6054,8 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	if (count == 0)
 	{
 		return -10;
-	}	
-	
+	}
+
 	// Sets username and password
 	if (strlen(_apn_login) == 0)
 	{
@@ -6052,7 +6065,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 	}
 	count = 5;
 	do{
@@ -6067,20 +6080,20 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	{
 		return -25;
 	}
-		
+
 	// Release other SSL stacks and close session
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[6])));	//HTTPS_CLOSE
 	sendCommand2(str_aux1, OK_RESPONSE, ERROR);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[4])));	//HTTPS_STOP
 	sendCommand2(str_aux1, OK_RESPONSE, ERROR);
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[3])));	//HTTPS_START
 	answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR, HTTP_CONF_TIMEOUT, SEND_ONCE);
 	if (answer != 1)
 	{
 		return -11;
 	}
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[5])));	// HTTPS_OPEN
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\",%u", str_aux1, url, port);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR, HTTP_TIMEOUT, SEND_ONCE);
@@ -6090,7 +6103,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		sendCommand2(str_aux1, OK_RESPONSE, ERROR);
 		return -12;
 	}
-		
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[7])));	//HTTPS_SEND
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, strlen(HTTPS_request));
 	answer = sendCommand2(buffer_3G, "\r\n>", ERROR, HTTP_CONF_TIMEOUT,  SEND_ONCE);
@@ -6102,12 +6115,12 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		sendCommand2(str_aux1, OK_RESPONSE, ERROR);
 		return -14;
 	}
-	
+
 	//printString(HTTPS_request,_socket);
 	for (uint16_t x=0 ; x < strlen(HTTPS_request);x++)
 	{
-		//printHex(HTTP_request[x], _socket); 
-		printByte(HTTPS_request[x], _socket); 
+		//printHex(HTTP_request[x], _socket);
+		printByte(HTTPS_request[x], _socket);
 	}
 	answer = waitForData(OK_RESPONSE, ERROR, 200, 0, 0);
 	if (answer != 1)
@@ -6119,7 +6132,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		changeBaudrate(_baudRate);
 		return -14;
 	}
-	
+
 	// Sends the data of the buffer
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[7])));
 	answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR);
@@ -6132,9 +6145,9 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		changeBaudrate(_baudRate);
 		return -15;
 	}
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	// Receives data
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[8])));
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_HTTP[9])));
@@ -6147,66 +6160,66 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		sendCommand2(str_aux1, OK_RESPONSE, ERROR);
 		changeBaudrate(_baudRate);
 		return -16;
-	}	
-	
+	}
+
 	count = 0;
 	aux = serialRead(_socket);
 	while (aux == 'D')
 	{	// Data received
-	
+
 		serialRead(_socket);	// A
 		serialRead(_socket);	// T
 		serialRead(_socket);	// A
 		serialRead(_socket);	// ,
-		
+
 		HTTPS_data = 0;
 		aux=serialRead(_socket);
 		// Gets the length of the first data string
 		do{
-			
+
 			HTTPS_data *= 10;
 			HTTPS_data += aux - 0x30;
 			aux = serialRead(_socket);
 		}while (aux != '\r');
-		
+
 		serialRead(_socket); // Skips '\n'
-		
+
 		// Reads the incoming bytes
 		previous = millis();
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("HTTPS data: "));
+			PRINT_3G(F("HTTPS data: "));
 			USB.println(HTTPS_data, DEC);
 		#endif
-		
+
 		do{
 			aux = serialRead(_socket);
 			if (aux != -1)
-			{	
+			{
 				if (count < _3G_BUFFER_SIZE)
 				{
 					buffer_3G[count] = aux;
 					count++;
 				}
 				HTTPS_data--;
-			}	
+			}
 			else
 			{
 				delay(1);
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((HTTPS_data > 0) && ((millis() - previous) < 20000));
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("Count remainder: "));
+			PRINT_3G(F("Count remainder: "));
 			USB.println(HTTPS_data, DEC);
 		#endif
-		
+
 		// Waits for new data or the end of the request
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[9])));	//HTTPS_DATA
 		answer = waitForData(str_aux1, ERROR, HTTP_TIMEOUT, millis(), 0);
@@ -6219,12 +6232,12 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 			aux = 0;
 		}
 	}
-	
+
 	if (aux == '0')
 	{
 		// No more data
 		buffer_3G[count] = '\0';
-		
+
 		// Closes connection and release the SSL stack
 		delay(1000);
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[6])));	//HTTPS_CLOSE
@@ -6234,7 +6247,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 			changeBaudrate(_baudRate);
 			return -17;
 		}
-		
+
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[4])));
 		answer = sendCommand2(str_aux1, OK_RESPONSE, ERROR);
 		if (answer != 1)
@@ -6242,11 +6255,11 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 			changeBaudrate(_baudRate);
 			return -18;
 		}
-		
+
 		// Changes to default baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 		snprintf(command, sizeof(command), "%s%ld", str_aux1, _baudRate);
-		answer = sendCommand2(command, OK_RESPONSE, ERROR);	
+		answer = sendCommand2(command, OK_RESPONSE, ERROR);
 		if (answer == 2)
 		{
 			changeBaudrate(_baudRate);
@@ -6256,7 +6269,7 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 		{
 			beginSerial(_baudRate, _socket);
 		}
-		
+
 		return 1;
 	}
 	else if (aux == 0)
@@ -6266,26 +6279,26 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 	}
 	else
 	{
-		// Error code received		
-		HTTPS_data = 0;		
+		// Error code received
+		HTTPS_data = 0;
 		do{
 			HTTPS_data *= 10;
 			HTTPS_data += aux - 0x30;
 			aux = serialRead(_socket);
 		}while (aux != '\r');
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("HTTPS error: "));
+			PRINT_3G(F("HTTPS error: "));
 			USB.println(HTTPS_data, DEC);
 		#endif
-		
+
 		// Closes connection, release the SSL stack and changes the baudrate
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[6])));	//HTTPS_CLOSE
 		sendCommand2(str_aux1, OK_RESPONSE, ERROR, HTTP_CONF_TIMEOUT,  SEND_ONCE);
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_HTTP[4])));	//HTTPS_STOP
 		sendCommand2(str_aux1, OK_RESPONSE, ERROR, HTTP_CONF_TIMEOUT,  SEND_ONCE);
 		changeBaudrate(_baudRate);
-		
+
 		return -HTTPS_data - 30;
 	}
 }
@@ -6302,8 +6315,8 @@ int8_t Wasp3G::readURLS(const char* url, uint16_t port, const char* HTTPS_reques
 */
 int8_t Wasp3G::startGPS(){
 	return startGPS( 1, "", "");
-}	
-	
+}
+
 /*startGPS(int8_t, const char*, const char*) - Starts and configures the GPS
  *
  * This function starts and configures (if needs) the GPS.
@@ -6314,14 +6327,14 @@ int8_t Wasp3G::startGPS(){
  * '0' if error,
  * '-2' if error setting the apn,
  * '-3' if error setting GPS server and port,
- * '-4' if error starting the GPS, 
+ * '-4' if error starting the GPS,
  * '-5' if AGPS data are not available
 */
 int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
-	
+
 	int8_t answer;
 	uint8_t count=0;
-	
+
 	if (mode == 1)
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[0])));		//START_GPS
@@ -6340,8 +6353,8 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		if (count == 0)
 		{
 			return -2;
-		}	
-		
+		}
+
 		// Sets username and password
 		if (strlen(_apn_login) == 0)
 		{
@@ -6351,7 +6364,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		else
 		{
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-			snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+			snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 		}
 		count = 5;
 		do{
@@ -6366,7 +6379,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		{
 			return -2;
 		}
-		
+
 		// Sets the GPS server and port:
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[4])));		//GPS_SERVER
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s:%s\"", str_aux1, GPS_url, GPS_port);
@@ -6379,11 +6392,11 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 		{
 			return -3;
 		}
-		
+
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[0])));		//START_GPS
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, mode);
 	}
-	
+
 	// Starts the GPS:
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR, 45000, SEND_ONCE);
 
@@ -6391,7 +6404,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 	{
 			return -4;
 	}
-	
+
 	// If GPS mode is assisted GPS, waits for string of GPS data:
 	if (mode == 3)
 	{
@@ -6410,7 +6423,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
 			return -5;
 		}
 	}
-		
+
 	return 1;
 }
 
@@ -6421,7 +6434,7 @@ int8_t Wasp3G::startGPS(int8_t mode, const char* GPS_url, const char* GPS_port){
  * Returns '1' if success, '0' if error
 */
 int8_t Wasp3G::startGPScold(){
-	
+
 	// Starts the GPS:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[1])));		//START_GPS_COLD
 	return sendCommand1(str_aux1, OK_RESPONSE);
@@ -6434,7 +6447,7 @@ int8_t Wasp3G::startGPScold(){
  * Returns '1' if success, '0' if error
 */
 int8_t Wasp3G::startGPShot(){
-	
+
 	// Starts the GPS:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[2])));		//START_GPS_HOT
 	return sendCommand1(str_aux1, OK_RESPONSE);
@@ -6448,7 +6461,7 @@ int8_t Wasp3G::startGPShot(){
  * Returns '1' if success and '0' if error
 */
 int8_t Wasp3G::stopGPS(){
-	
+
 	int8_t answer;
 
 	// Stops the GPS:
@@ -6459,7 +6472,7 @@ int8_t Wasp3G::stopGPS(){
 	{
 			return answer;
 	}
-		
+
 	return 0;
 }
 
@@ -6470,11 +6483,11 @@ int8_t Wasp3G::stopGPS(){
  * Returns '1' if success, '-2' if info it's not available and '0' if error
 */
 int8_t Wasp3G::getGPSinfo(){
-	
+
 	int8_t answer;
 	uint8_t count=0;
 	unsigned long previous;
-			
+
 	// Starts the GPS:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[6])));
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_GPS[7])));
@@ -6484,14 +6497,14 @@ int8_t Wasp3G::getGPSinfo(){
 	{
 			return -2;
 	}
-	
+
 	// Gets GPS string
-	count = 0;	
+	count = 0;
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	previous = millis();
 	do{
 		while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000))
-		{	
+		{
 			if (millis() < previous)
 			{
 				previous = millis();
@@ -6499,20 +6512,20 @@ int8_t Wasp3G::getGPSinfo(){
 		}
 		buffer_3G[count]=serialRead(_socket);
 		count++;
-		
+
 		if (millis() < previous)
 		{
 			previous = millis();
 		}
-		
+
 	}while ((buffer_3G[count-1] != '\r') && ((millis() - previous) < 5000) && (count < _3G_BUFFER_SIZE));
 	buffer_3G[count] = '\0';
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("GPS raw data: "));
+		PRINT_3G(F("GPS raw data: "));
 		USB.println(buffer_3G);
 	#endif
-	
+
 	if (buffer_3G[0] == ',') // if there aren't data available
 	{
 		return -2;
@@ -6551,7 +6564,7 @@ int8_t Wasp3G::getGPSinfo(){
 		strcpy(speedOG,strtok(NULL, ",")); // Gets speed over ground. Unit is knots.
 		strcpy(course,strtok(NULL, ",")); // Gets course
 	}
-	
+
 	return 1;
 }
 
@@ -6562,7 +6575,7 @@ int8_t Wasp3G::getGPSinfo(){
  * Returns '1' if success, '0' if error
 */
 int8_t Wasp3G::enableAutoGPS(){
-	
+
 	// Enables the auto GPS:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[8])));		//ENABLE_AUTO_GPS
 	return sendCommand1(str_aux1, OK_RESPONSE);
@@ -6575,40 +6588,40 @@ int8_t Wasp3G::enableAutoGPS(){
  * Returns '1' if success, '0' if error
 */
 int8_t Wasp3G::disableAutoGPS(){
-	
+
 	// Disables the auto GPS:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_GPS[9])));		//DISABLE_AUTO_GPS
 	return sendCommand1(str_aux1, OK_RESPONSE);
 }
 
-/* convert2Degrees ( input ) - performs the conversion from input 
- * parameters in  DD°MM.mmm’ notation to DD.dddddd° notation. 
- * 
+/* convert2Degrees ( input ) - performs the conversion from input
+ * parameters in  DD°MM.mmm’ notation to DD.dddddd° notation.
+ *
  * Sign '+' is set for positive latitudes/longitudes (North, East)
  * Sign '-' is set for negative latitudes/longitudes (South, West)
- * 
- * parameter: 'input' is a string indicating the latitude/longitude in 
+ *
+ * parameter: 'input' is a string indicating the latitude/longitude in
  * DDmm.mmmm' notation for latitude and DDDmm.mmmm' notation for longitude
  * parameter: 'indicator' is a char indicating 'N' for North, 'S' for South, 'E'
  * for East and 'W' for West
  * Returns: a float indicating the latitude in DD.dddddd° notation
- *  
+ *
  */
 float Wasp3G::convert2Degrees(char* input){
 	// final latitude expresed in degrees
 	float degrees;
 	float minutes;
-	
+
 	//auxiliar variable
 	char aux[10];
-	
+
 	// check if 'indicator' is a valid input
 	if ( input[5] == '.' && input[6] == '.' )
 	{
 		// invalid indicator
 		return 0;
-	}	
-	
+	}
+
 	// get 'degrees' from input parameter
 	if (input[5] == '.')
 	{
@@ -6625,11 +6638,11 @@ float Wasp3G::convert2Degrees(char* input){
 		aux[2]=input[3];
 		aux[3]='\0';
 	}
-	
+
 	// convert string to integer and add it to final float variable
 	degrees=atoi(aux);
-	
-	// get 'minutes' from input parameter 
+
+	// get 'minutes' from input parameter
 	if (input[5] == '.')
 	{
 		//latitude format: DDmm.mmmm'
@@ -6647,21 +6660,21 @@ float Wasp3G::convert2Degrees(char* input){
 			aux[i]=input[i+4];
 		}
 		aux[7]='\0';
-	}	
-	
+	}
+
 	// convert string to integer and add it to final float variable
 	minutes=atof(aux);
-	
-	// add minutes to degrees 
+
+	// add minutes to degrees
 	degrees=degrees+minutes/60;
-	
+
 	if (input[0] == '-')
 	{
 		degrees*=-1.0;
 	}
-		
+
 	return degrees;
-	
+
 }
 
 /*setTimebyGPS(unsigned long , bool ) - Sets the time of Waspmote's RTC getting the time from GPS
@@ -6674,105 +6687,105 @@ float Wasp3G::convert2Degrees(char* input){
  * '-3' if error setting the RTC time of the 3G module
 */
 int8_t Wasp3G::setTimebyGPS(unsigned long waiting_time, bool state){
-	
+
 	int8_t answer;
 	unsigned long previous;
 	uint8_t year, month, day, day_week, hour, minute, second;
 	bool RTC_ant=false;
-	
+
 	// If state is '1', the GPS is started. '0' if not
 	if (state == 0)
 	{
 		answer = startGPS();
-		
+
 		if (answer != 1)
 		{
 			// error starting the GPS module
 			return -1;
 		}
 	}
-	
+
 	previous = millis();
-	
+
 	do{
 		answer = getGPSinfo();
-		
+
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous)
 		{
 			previous = millis();
 		}
-		
+
 	}while(((millis() - previous) < (waiting_time * 1000)) && (answer != 1));
-	
+
 	//Stops the GPS module
 	if (state == 0)
 	{
 		stopGPS();
 	}
-	
+
 	if ((millis() - previous) > waiting_time * 1000)
 	{
 		//Timeout waiting for GPS data
-		return -2;		
+		return -2;
 	}
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Date: "));
+		PRINT_3G(F("Date: "));
 		USB.println(date);
-		USB.print(F("UTC_time: "));
+		PRINT_3G(F("UTC_time: "));
 		USB.println(UTC_time);
 	#endif
-		
+
 	day = ((date[0] - 0x30) * 10) + (date[1] - 0x30);
 	month = ((date[2] - 0x30) * 10) + (date[3] - 0x30);
 	year = ((date[4] - 0x30) * 10) + (date[5] - 0x30);
 	hour = ((UTC_time[0] - 0x30) * 10) + (UTC_time[1] - 0x30);
 	minute = ((UTC_time[2] - 0x30) * 10) + (UTC_time[3] - 0x30);
 	second = ((UTC_time[4] - 0x30) * 10) + (UTC_time[5] - 0x30);
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("year "));  
+		PRINT_3G(F("year "));
 		USB.print(year, DEC);
-		USB.print(F("; month "));  
+		USB.print(F("; month "));
 		USB.print(month, DEC);
-		USB.print(F("; day "));  
+		USB.print(F("; day "));
 		USB.println(day, DEC);
-		USB.print(F("hour "));  
+		PRINT_3G(F("hour "));
 		USB.print(hour, DEC);
-		USB.print(F("; minute "));  
+		USB.print(F("; minute "));
 		USB.print(minute, DEC);
-		USB.print(F("; second "));  
+		USB.print(F("; second "));
 		USB.println(second, DEC);
 	#endif
-	
+
 	if (RTC.isON == 0) // Checks if the RTC is on
 	{
 		RTC_ant = true;
 		RTC.ON();
 	}
-		
+
 	// Stes the RTC time
 	RTC.setTime(year, month, day, RTC.dow(year, month, day), hour, minute, second); //Gets time from RTC
-			
+
 	if (RTC_ant == 1) // Powers off the RTC if before it was off
 	{
 		RTC.OFF();
 	}
-	
-	// Sets the RTC of the 3G too 
+
+	// Sets the RTC of the 3G too
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[4])));	//SET_TIME
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%02u/%02u/%02u,%02u:%02u:%02u+00\"", str_aux1, RTC.year, RTC.month, RTC.date, RTC.hour, RTC.minute, RTC.second);
 	answer = sendCommand2( buffer_3G, OK_RESPONSE, ERROR);
-	
+
 	if (answer != 1)
 	{
 		//Error setting the RTC time of the 3G module
 		return -3;
 	}
-	
-	return 1;	
-	
+
+	return 1;
+
 }
 #endif
 
@@ -6791,20 +6804,20 @@ int8_t Wasp3G::setTimebyGPS(unsigned long waiting_time, bool state){
  * '-4' if waiting time for connection have expired,
  * '-5' if error setting the APN,
  * '-6' if error setting the user name and the password,
- * '-12' if error setting the user name and the password with CME code available, 
+ * '-12' if error setting the user name and the password with CME code available,
  * and '-7' if error configurating IP parameters
 */
 int8_t Wasp3G::configureTCP_UDP(){
-	
+
 	unsigned long previous = millis();
 	uint8_t answer=0;
 	uint8_t count;
-		
+
 	// First restart TCP/UDP connection:
 	count = 5;
-	
-	if (check3Gattach() == 1) 
-	{	
+
+	if (check3Gattach() == 1)
+	{
 		// Dettachs 3G:
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[9])));	//AT_3G_ATT_OFF
 		do{
@@ -6812,7 +6825,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 			count--;
 		}while ((count != 0) && (answer != 1));
 		if (answer == 0)
-		{	
+		{
 			return -2;
 		}
 		else if (answer == 2)
@@ -6820,7 +6833,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 			return -10;
 		}
 	}
-	
+
 	// Now attaches connection:
 	count = 5;
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[8])));	//AT_3G_ATT_ON
@@ -6829,29 +6842,29 @@ int8_t Wasp3G::configureTCP_UDP(){
 		count--;
 	}while ((count != 0) && (answer != 1));
 	if (answer == 0)
-	{	
+	{
 		return -3;
 	}
 	else if (answer == 2)
 	{
 		return -11;
 	}
-	
+
 	// Waits for connection:
 	previous=millis();
 	while ((check3Gattach() != 1) && ((millis()-previous) < 30000))
-	{	
+	{
 		if (millis() < previous)
 		{
 			previous = millis();
 		}
 	}
-	
+
 	if (millis()-previous > 30000)
 	{
 		return -4;
 	}
-	
+
 	// Sets APN:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[10])));	//_3G_CON
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"IP\",\"%s\"", str_aux1, _apn);
@@ -6863,8 +6876,8 @@ int8_t Wasp3G::configureTCP_UDP(){
 	if (count == 0)
 	{
 		return -5;
-	}	
-	
+	}
+
 	// Sets username and password
 	if (strlen(_apn_login) == 0)
 	{
@@ -6874,7 +6887,7 @@ int8_t Wasp3G::configureTCP_UDP(){
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[11])));	//_3G_AUTH
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);		
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s1,\"%s\",\"%s\"", str_aux1, _apn_password, _apn_login);
 	}
 	count = 5;
 	do{
@@ -6888,59 +6901,59 @@ int8_t Wasp3G::configureTCP_UDP(){
 	else if (answer == 2)
 	{
 		return -0;
-	}	
+	}
 
 	#if _3G_debug_mode>0
-		USB.print(F("IP Flag: "));
+		PRINT_3G(F("IP Flag: "));
 		USB.println(IP_flags,BIN);
 	#endif
-	
+
 	// Configures answers and retries
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[18])));		//CONFIGURE_IP
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,1,0,1", str_aux1, RETRIES, DELAY_SEND);
 	//snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,1,1,1", str_aux1, RETRIES, DELAY_SEND);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
-	
+
 	if ((answer == 0) || (answer == 2))
-	{	
+	{
 		return -7;
-	}	
-	
+	}
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[2])));	//IP_APP_MODE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s0", str_aux1);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
-	
+
 	if ((answer == 0) || (answer == 2))
-	{	
+	{
 		return -8;
 	}
-	
+
 	IP_flags &= 0xFE;
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("IP Flag: "));
+		PRINT_3G(F("IP Flag: "));
 		USB.println(IP_flags,BIN);
 	#endif
-	
+
 	return 1;
-	
+
 }
 
 /* closeSocket() - Closes all sockets opened.
  *
  * This function closes all sockets opened.
  *
- * Returns '1' on success, '0' if error and '-2' if error with IP error code available 
+ * Returns '1' on success, '0' if error and '-2' if error with IP error code available
 */
 int8_t Wasp3G::closeSocket(){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[1])));	//IP_CLOSE
 	answer=sendCommand2(str_aux1, OK_RESPONSE, ERROR_IP);
-	
+
 	if (answer == 2)
-	{	
+	{
 		return -2;
 	}
 	return answer;
@@ -6979,9 +6992,9 @@ int8_t Wasp3G::createSocket(uint8_t mode, uint16_t port){
  * and '-6' if error opening the TCP connection or starting the TCP server with IP error code
 */
 int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
-	
+
 	int answer, count;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[0])));	//IP_OPEN
 	switch (mode)
 	{
@@ -6989,17 +7002,17 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 		case 0:
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"TCP\",0,0", str_aux1);
 			break;
-			
+
 		// UDP client, single connection mode
 		case 1:
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"UDP\",0,0", str_aux1);
 			break;
-			
+
 		// TCP server
 		case 2:
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"TCP\",%u", str_aux1, port);
 			break;
-			
+
 		// Multiple connection mode
 		case 3:
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s,,1", str_aux1);
@@ -7012,22 +7025,22 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 		count--;
 	}while ((count != 0) && (answer != 1));
 
-	
+
 	if (answer == 3)
 	{
 		return -5;
 	}
 	else if (answer == 2)
-	{	
+	{
 		return -4;
 	}
 	else if (answer == 0)
 	{
 		return -2;
 	}
-	
+
 	if (mode == 3)
-	{	
+	{
 		IP_flags &= 0xF9;
 		IP_flags |= 0x06;
 	}
@@ -7036,19 +7049,19 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 		IP_flags &= 0xF9;
 		IP_flags |= 0x04;
 	}
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Flag 2: "));
+		PRINT_3G(F("Flag 2: "));
 		USB.println(IP_flags,BIN);
 	#endif
-	
+
 	switch (mode)
 	{
 		// TCP client, single connection mode
 		case 0:
 			strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[5])));	//TCP_CONNECT
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\",%u", str_aux1, ip, port);
-			
+
 			if ((IP_flags & 0x01) == 0)
 			{
 				count=10;
@@ -7067,7 +7080,7 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 				}while ((count != 0) && (answer != 1));
 			}
 			break;
-			
+
 		// Start up the TCP server
 		case 2:
 			count=10;
@@ -7078,23 +7091,23 @@ int8_t Wasp3G::createSocket(uint8_t mode, const char* ip, uint16_t port){
 			}while ((count != 0) && (answer != 1));
 			break;
 	}
-	
+
 	if (answer == 2)
-	{	
+	{
 		return -6;
 	}
 	else if (answer != 1)
-	{	
+	{
 		return -3;
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* createMultiSocket(uint8_t, uint16_t) - Opens a UDP port to listen in multi client mode
  *
- * This function opens a UDP port to listen 
+ * This function opens a UDP port to listen
  *
  * Returns '1' on success, '0' if error, '-2' if not configured in multi client mode, '-3' if network is closed,
  * '-4' error opening the connection with CME error code available and '-5' error opening the connection with IP error code available
@@ -7111,21 +7124,21 @@ int8_t Wasp3G::createMultiSocket(uint8_t n_link, uint16_t local_port){
  * '-4' error opening the connection with CME error code available and '-5' error opening the connection with IP error code available
 */
 int8_t Wasp3G::createMultiSocket(uint8_t n_link, const char* serverIP, uint16_t server_port){
-	
+
 	int8_t answer, count;
-	
+
 	// Checks the connection mode and the network status flags:
 	if ((IP_flags & 0x02) != 2)
 	{
 		return -2;
 	}
-	
+
 	if ((IP_flags & 0x04) != 4)
 	{
 		return -3;
 	}
-	
-	
+
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[9])));	//MULTI_OPEN
 	if (serverIP[0] == '\0')
 	{
@@ -7137,28 +7150,28 @@ int8_t Wasp3G::createMultiSocket(uint8_t n_link, const char* serverIP, uint16_t 
 		// TCP connections
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,\"TCP\",\"%s\",%u", str_aux1, n_link, serverIP, server_port);
 	}
-	
+
 	count = 3;
 	do{
 		answer = sendCommand3(buffer_3G, OK_RESPONSE, ERROR_CME, ERROR_IP, 10000, SEND_DEFAULT);
 		count--;
 	}while ((count != 0) && (answer != 1));
-	
+
 	if (answer == 2)
-	{	
+	{
 		return -4;
 	}
 	else if (answer == 3)
-	{	
+	{
 		return -5;
 	}
 	else if (answer == 0)
 	{
 		return 0;
 	}
-	
+
 	return 1;
-	
+
 }
 
 /* sendData(const char*) - Sends the data througth a socket (TCP in single connection)
@@ -7241,7 +7254,7 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 
 	int8_t answer;
 	int16_t counter;
-	
+
 	if (IP_flags & 0x02)
 	{
 		// Multiple connection mode
@@ -7252,22 +7265,23 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d", str_aux1, n_link, length);
 			answer = sendCommand3(buffer_3G, "\r\n>", ERROR_CME, ERROR_IP, 20000, SEND_DEFAULT);
 			if (answer == 1)
-			{	
-				#if _3G_debug_mode>1	
-					USB.println(F("Sending data (multiple connection - TCP)..."));
+			{
+				#if _3G_debug_mode>1
+					PRINT_3G(F("Sending data (multiple connection - TCP)...\n"));
+          PRINT_3G(F(""));
 				#endif
 				for (counter = 0; counter < length; counter++)
 				{
 					printByte(data[counter],_socket);
-					#if _3G_debug_mode>1	
+					#if _3G_debug_mode>1
 						USB.print(data[counter], HEX);
 						USB.print(" ");
-					#endif	
+					#endif
 				}
 				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[12])));		//TCP_SEND_OK
 				answer = waitForData(str_aux1, DEFAULT_TIMEOUT, millis(), 0);
-				#if _3G_debug_mode>0	
-					USB.print(F("Answer for send: "));
+				#if _3G_debug_mode>0
+					PRINT_3G(F("Answer for send: "));
 					USB.println(answer, DEC);
 				#endif
 			}
@@ -7279,27 +7293,30 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,%d,\"%s\",%u", str_aux1, n_link, length, ip, port);
 			answer = sendCommand3(buffer_3G, "\r\n>", ERROR_CME, ERROR_IP, 20000, SEND_DEFAULT);
 			if (answer == 1)
-			{	
-				#if _3G_debug_mode>1	
-					USB.println(F("Sending data (multiple connection - UDP)..."));
+			{
+				#if _3G_debug_mode>1
+					PRINT_3G(F("Sending data (multiple connection - UDP)...\n"));
+          PRINT_3G(F(""));
 				#endif
+
 				for (counter = 0; counter < length; counter++)
 				{
 					printByte(data[counter],_socket);
-					#if _3G_debug_mode>1	
+					#if _3G_debug_mode>1
 						USB.print(data[counter], HEX);
 						USB.print(" ");
-					#endif	
+					#endif
 				}
+        USB.println();
 				answer = waitForData(OK_RESPONSE, DEFAULT_TIMEOUT, millis(), 0);
-				#if _3G_debug_mode>0	
-					USB.print(F("Answer for send: "));
+				#if _3G_debug_mode>0
+					PRINT_3G(F("Answer for send: "));
 					USB.println(answer, DEC);
 				#endif
 			}
-			
+
 		}
-		
+
 		if (answer == 3)
 		{
 			return -3;
@@ -7323,22 +7340,25 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, length);
 			answer = sendCommand2(buffer_3G, "\r\n>", ERROR_IP);
 			if (answer == 1)
-			{	
-				#if _3G_debug_mode>1	
-					USB.println(F("Sending data (single connection - TCP)..."));
+			{
+				#if _3G_debug_mode>1
+					PRINT_3G(F("Sending data (single connection - TCP)...\n"));
+          PRINT_3G(F(""));
 				#endif
+
 				for (counter = 0; counter < length; counter++)
 				{
 					printByte(data[counter],_socket);
-					#if _3G_debug_mode>1	
+					#if _3G_debug_mode>1
 						USB.print(data[counter], HEX);
 						USB.print(" ");
-					#endif	
+					#endif
 				}
+        USB.println();
 				strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[12])));		//TCP_SEND_OK
 				answer = waitForData(str_aux1, DEFAULT_TIMEOUT, millis(), 0);
-				#if _3G_debug_mode>0	
-					USB.print(F("Answer for send: "));
+				#if _3G_debug_mode>0
+					PRINT_3G(F("Answer for send: "));
 					USB.println(answer, DEC);
 				#endif
 			}
@@ -7350,26 +7370,29 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s%d,\"%s\",%u", str_aux1, length, ip, port);
 			answer = sendCommand2(buffer_3G, "\r\n>", ERROR_IP);
 			if (answer == 1)
-			{		
-				#if _3G_debug_mode>1	
-					USB.println(F("Sending data (single connection - UDP)..."));
-				#endif	
+			{
+				#if _3G_debug_mode>1
+					PRINT_3G(F("Sending data (single connection - UDP)...\n"));
+          PRINT_3G(F(""));
+				#endif
+
 				for (counter = 0; counter < length; counter++)
 				{
 					printByte(data[counter],_socket);
-					#if _3G_debug_mode>1	
+					#if _3G_debug_mode>1
 						USB.print(data[counter], HEX);
 						USB.print(" ");
-					#endif	
+					#endif
 				}
+        USB.println();
 				answer = waitForData(OK_RESPONSE, DEFAULT_TIMEOUT, millis(), 0);
-				#if _3G_debug_mode>0	
-					USB.print(F("Answer for send: "));
+				#if _3G_debug_mode>0
+					PRINT_3G(F("Answer for send: "));
 					USB.println(answer, DEC);
 				#endif
 			}
 		}
-		
+
 		if (answer == 2)
 		{
 			return -3;
@@ -7378,8 +7401,8 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
 		{
 			return 0;
 		}
-	}	
-	
+	}
+
 	return 1;
 }
 
@@ -7390,13 +7413,13 @@ int8_t Wasp3G::sendData(uint8_t n_link, uint8_t* data, const char* ip, uint16_t 
  * Returns '1' on success, '0' if error, '-2' if error with CME error code available and '-3' if error with IP error code available
 */
 int8_t Wasp3G::closeMultiSocket(uint8_t n_link){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[11])));		//MULTI_CLOSE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, n_link);
 	answer=sendCommand3(buffer_3G, OK_RESPONSE, ERROR_CME, ERROR_IP, 10000, SEND_DEFAULT);
-	
+
 	if (answer == 3)
 	{
 		return -3;
@@ -7405,9 +7428,9 @@ int8_t Wasp3G::closeMultiSocket(uint8_t n_link){
 	{
 		return -2;
 	}
-	
+
 	return answer;
-	
+
 }
 
 /* readIPdata() - Manages the IP data from the 3G module
@@ -7424,14 +7447,14 @@ int16_t Wasp3G::readIPdata(){
 	uint16_t data_length = 0;
 	int8_t answer;
 	unsigned long previous;
-	
-	
+
+
 	#if _3G_debug_mode>0
-		USB.println(F("Inside readIPdata"));
-	#endif	
-		
+		PRINT_3G(F("Inside readIPdata\n"));
+	#endif
+
 	memset(IP_dir, '\0', sizeof(IP_dir));
-	
+
 	//Reads the IP address of the incoming connection
 	answer = 0;
 	previous = millis();
@@ -7440,35 +7463,35 @@ int16_t Wasp3G::readIPdata(){
 		while((serialAvailable(_socket) == 0) && ((millis() - previous) < 1000))
 		{
 			// Condition to avoid an overflow (DO NOT REMOVE)
-			if( millis() < previous) 
+			if( millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 			delay(10);
 		}
-		
+
 		IP_dir[i] = serialRead(_socket);
 		i++;
-		
+
 		// Condition to avoid an overflow (DO NOT REMOVE)
 		if( millis() < previous) previous = millis();
-		
+
 	}while ((IP_dir[i-1] != 0x0D) && ((millis() - previous) < 1000) && (i < sizeof(IP_dir)));
-	
+
 	IP_dir[i-1] = '\0';
-	
+
 	if ((millis() - previous) > 1000)
 	{
 		return 0;
 	}
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Data from: "));
+		PRINT_3G(F("Data from: "));
 		USB.println(IP_dir);
 	#endif
-		
-	
+
+
 	// Checks if there is the data length header:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[25])));		//IP_DATA_SINGLE
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_IP[26])));		//IP_DATA_MULTI
@@ -7480,79 +7503,79 @@ int16_t Wasp3G::readIPdata(){
 			while((serialAvailable(_socket) == 0) && ((millis() - previous) < 1000))
 			{
 				// Condition to avoid an overflow (DO NOT REMOVE)
-				if( millis() < previous) 
+				if( millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 				delay(10);
 			}
-			
+
 			str_aux1[i] = serialRead(_socket);
 			i++;
-			
+
 			// Condition to avoid an overflow (DO NOT REMOVE)
 			if( millis() < previous) previous = millis();
-			
+
 		}while ((str_aux1[i-1] != 0x0D) && ((millis() - previous) < 1000) && (i < sizeof(str_aux1)));
 		str_aux1[i-1] = '\0';
 		data_length = atoi(str_aux1);
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("Data length: "));
+			PRINT_3G(F("Data length: "));
 			USB.println(data_length, DEC);
 		#endif
 	}
 	else if (answer == 2)
 	{
-	
+
 		n_connection = serialRead(_socket);
 		#if _3G_debug_mode>0
-			USB.print(F("No of connection: "));
+			PRINT_3G(F("No of connection: "));
 			USB.println(char(n_connection));
 		#endif
-			
+
 		serialRead(_socket); //Skips ','
-		
+
 		do{
 			while((serialAvailable(_socket) == 0) && ((millis() - previous) < 1000))
 			{
 				// Condition to avoid an overflow (DO NOT REMOVE)
-				if( millis() < previous) 
+				if( millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 				delay(10);
 			}
-			
+
 			str_aux1[i] = serialRead(_socket);
 			i++;
-			
+
 			// Condition to avoid an overflow (DO NOT REMOVE)
 			if( millis() < previous) previous = millis();
-			
+
 		}while ((str_aux1[i-1] != 0x0D) && ((millis() - previous) < 1000) && (i > sizeof(str_aux1)));
 		str_aux1[i-1] = '\0';
 		data_length = atoi(str_aux1);
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("Data length: "));
+			PRINT_3G(F("Data length: "));
 			USB.println(data_length, DEC);
 		#endif
-			
+
 	}
 	else
-	{			
+	{
 		#if _3G_debug_mode>0
-			USB.println(F("No data length header!!"));
+			PRINT_3G(F("No data length header!!\n"));
 		#endif
 		return -2;
 	}
-	
-	// Gets the data and stores in buffer_3G:	
+
+	// Gets the data and stores in buffer_3G:
 	serialRead(_socket); //Skips '\n'
-	
+
 	if (data_length != 0)
 	{
 		memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
@@ -7561,24 +7584,24 @@ int16_t Wasp3G::readIPdata(){
 			while((serialAvailable(_socket) == 0) && ((millis() - previous) < 30000))
 			{
 				// Condition to avoid an overflow (DO NOT REMOVE)
-				if( millis() < previous) 
+				if( millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 				delay(10);
 			}
-			
+
 			buffer_3G[i] = serialRead(_socket);
 			i++;
-			
+
 			// Condition to avoid an overflow (DO NOT REMOVE)
 			if( millis() < previous) previous = millis();
-			
+
 		}
-		
+
 	}
-	
+
 	return data_length;
 
 }
@@ -7596,13 +7619,13 @@ int8_t Wasp3G::listClients(){
 	int counter;
 	int8_t answer;
 	unsigned long previous;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[14])));		//SERVER_LIST
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_IP[15])));		//SERVER_LIST_R
 	answer = sendCommand2(str_aux1, str_aux2, ERROR_IP);
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	if (answer == 2)
 	{
 		return -2;
@@ -7615,7 +7638,7 @@ int8_t Wasp3G::listClients(){
 		do{
 			previous = millis();
 			while ((serialAvailable(_socket) == 0) && ((millis()-previous) < 3000)){
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
@@ -7627,16 +7650,16 @@ int8_t Wasp3G::listClients(){
 			{
 				answer = waitForData(str_aux2, OK_RESPONSE, DEFAULT_TIMEOUT, millis(), 0);
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((answer == 1) && ((millis()-previous) < 3000) && (counter < _3G_BUFFER_SIZE));
 		buffer_3G[counter] = '\0';
 	}
-	
+
 	return answer;
 
 }
@@ -7650,16 +7673,16 @@ int8_t Wasp3G::listClients(){
 int8_t Wasp3G::openClient(uint8_t n_client){
 
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[16])));		//SERVER_OPEN_CLIENT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, n_client);
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR_IP);
-	
+
 	if (answer == 2)
 	{
 		return -2;
 	}
-	
+
 	return answer;
 
 }
@@ -7673,16 +7696,16 @@ int8_t Wasp3G::openClient(uint8_t n_client){
 int8_t Wasp3G::closeClient(uint8_t n_client){
 
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[17])));		//SERVER_CLOSE_CLIENT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%u", str_aux1, n_client);
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR_IP);
-	
+
 	if (answer == 2)
 	{
 		return -2;
 	}
-	
+
 	return answer;
 
 }
@@ -7698,16 +7721,16 @@ int8_t Wasp3G::getIP(){
 	int counter;
 	int8_t answer;
 	unsigned long previous;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[3])));		//GET_IP
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_IP[4])));		//GET_IP_R
 	answer = sendCommand2(str_aux1, str_aux2, ERROR_IP);
-	
+
 	if (answer == 2)
 	{
 		return -2;
 	}
-	
+
 	if (answer == 1)
 	{
 		previous = millis();
@@ -7723,16 +7746,16 @@ int8_t Wasp3G::getIP(){
 			}
 			buffer_3G[counter] = serialRead(_socket);
 			counter++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[counter-1] != '\r') && ((millis()-previous) < 3000) && (counter < _3G_BUFFER_SIZE));
 		buffer_3G[counter] = '\0';
-	}	
-	
+	}
+
 	return answer;
 }
 
@@ -7747,41 +7770,41 @@ int8_t Wasp3G::QueryDomainfromIP(const char* ip){
 	int counter;
 	int8_t answer;
 	unsigned long previous;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[20])));		//DOMFROMIP
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, ip);	
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, ip);
 	answer = sendCommand2(buffer_3G, str_aux1, ERROR);
-	
+
 	if (answer == 1)
-	{	
+	{
 		serialRead(_socket);
 		serialRead(_socket);
-		
+
 		if (serialRead(_socket) == '1')
 		{
 			previous = millis();
 			do{
 				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 1000))
-				{				
+				{
 					if (millis() < previous)
 					{
 						previous = millis();
 					}
 				}
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
 			}while ((serialRead(_socket) != '"') && ((millis() - previous) < 1000));
-			 
+
 			previous = millis();
 			counter = 0;
 			do{
 				previous = millis();
 				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 1000))
-				{				
+				{
 					if (millis() < previous)
 					{
 						previous = millis();
@@ -7789,15 +7812,15 @@ int8_t Wasp3G::QueryDomainfromIP(const char* ip){
 				}
 				buffer_3G[counter] = serialRead(_socket);
 				counter++;
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 			}while ((buffer_3G[counter-1] != '"') && ((millis() - previous) < 1000) && (counter < _3G_BUFFER_SIZE));
 			buffer_3G[counter-1] = '\0';
-			
+
 			return 1;
 		}
 		else
@@ -7819,17 +7842,17 @@ int8_t Wasp3G::QueryIPfromDomain(const char* domain){
 	int counter;
 	int8_t answer;
 	unsigned long previous;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_IP[19])));		//IPFROMDOM
-	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, domain);	
+	snprintf(buffer_3G, sizeof(buffer_3G), "%s=\"%s\"", str_aux1, domain);
 	answer=sendCommand2(buffer_3G, str_aux1, ERROR);
-	
+
 	if (answer == 1)
-	{	
+	{
 		serialRead(_socket);
 		serialRead(_socket);
-		
+
 		if (serialRead(_socket) == '1')
 		{
 			previous = millis();
@@ -7841,14 +7864,14 @@ int8_t Wasp3G::QueryIPfromDomain(const char* domain){
 						previous = millis();
 					}
 				}
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 			}while ((serialRead(_socket) != '"') && ((millis() - previous) < 1000));
-			
+
 			previous = millis();
 			do{
 				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 1000))
@@ -7858,15 +7881,15 @@ int8_t Wasp3G::QueryIPfromDomain(const char* domain){
 						previous = millis();
 					}
 				}
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 			}while ((serialRead(_socket) != '"') && ((millis() - previous) < 1000));
-			
-			
+
+
 			previous = millis();
 			do{
 				while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 1000))
@@ -7876,14 +7899,14 @@ int8_t Wasp3G::QueryIPfromDomain(const char* domain){
 						previous = millis();
 					}
 				}
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 			}while ((serialRead(_socket) != '"') && ((millis() - previous) < 1000));
-			 
+
 			previous = millis();
 			counter = 0;
 			do{
@@ -7897,24 +7920,24 @@ int8_t Wasp3G::QueryIPfromDomain(const char* domain){
 				}
 				buffer_3G[counter] = serialRead(_socket);
 				counter++;
-				
+
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 			}while ((buffer_3G[counter-1] != '"') && ((millis() - previous) < 1000));
 			buffer_3G[counter-1] = '\0';
-			
+
 			return 1;
-			
+
 		}
 		else
 		{
 			return 0;
 		}
 	}
-	
+
 	return 0;
 }
 
@@ -7938,45 +7961,45 @@ int8_t Wasp3G::getXModemFile(const char* origin, const char* destiny){
 	uint8_t checksum, error_counter=0;
 	unsigned long previous;
 	long file_size;
-	
+
 	// Enables microSD card on Waspmote:
 	SD.ON();
-	
+
 	// First goes to the main directory:
 	if (SD.goRoot() != 1)
 	{
 		SD.OFF();
 		return -2;
 	}
-	
+
 	// Then creates the file into the SD of Waspmote:
 	#if _3G_debug_mode>0
-		USB.print(F("Origin: "));
+		PRINT_3G(F("Origin: "));
 		USB.println(origin);
-		USB.print(F("Destiny: "));
+		PRINT_3G(F("Destiny: "));
 		USB.println(destiny);
 	#endif
-	
+
 	aux = SD.create(destiny);
 	if (aux == 2)
 	{
 		SD.OFF();
 		return -3;
 	}
-	
+
 	// Gets the file size
 	file_size = getFileSize(origin);
-	
+
 	// Sends AT command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[50])));	//XMODEM_RECEIVE
 	snprintf(buffer_3G, sizeof(buffer_3G),"%s=\"%s\"",str_aux1, origin);
 	aux=sendCommand2(buffer_3G, OK_RESPONSE, "FILE NOT EXISTING");
-	
+
 	if (aux == 0 || aux == 2)
-	{		
+	{
 		SD.OFF();
 		if (aux == 2)
-		{		
+		{
 			return -4;
 		}
 		return 0;
@@ -7988,7 +8011,7 @@ int8_t Wasp3G::getXModemFile(const char* origin, const char* destiny){
 		{
 			serialRead(_socket);
 		}
-		
+
 		// Starts the transmission and gets the data:
 		serialWrite(0x15, _socket);
 		do{
@@ -7996,23 +8019,23 @@ int8_t Wasp3G::getXModemFile(const char* origin, const char* destiny){
 			previous = millis();
 
 			while ((serialAvailable(_socket) < 134) && ((millis()-previous) <= 3000))
-			{				
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
-				}				
+				}
 			}
-			
+
 			for(int x=0; x < 135; x++){
 				buffer_3G[x]=serialRead(_socket);
 			}
-			
+
 			#if _3G_debug_mode>0
 				if (buffer_3G[1] == 0)
 				{
-					USB.println(F("*******************************"));
+					PRINT_3G(F("*******************************\n"));
 				}
-				USB.print(F("Header value: "));
+				PRINT_3G(F("Header value: "));
 				USB.print(buffer_3G[0],DEC);
 				USB.print(F("\tPacket numbers: "));
 				USB.print(buffer_3G[1],DEC);
@@ -8022,36 +8045,36 @@ int8_t Wasp3G::getXModemFile(const char* origin, const char* destiny){
 				USB.printHex(buffer_3G[131]);
 			#endif
 			checksum=buffer_3G[131];
-			
+
 			// If data isn't an EOT saves data in SD file
 			if (buffer_3G[0] != 0x04)
 			{
-				
+
 				for (int x=0; x < 128; x++)
 				{
 					buffer_3G[x]=buffer_3G[x+3];
 				}
 				buffer_3G[128]='\0';
-				#if _3G_debug_mode>0	
+				#if _3G_debug_mode>0
 					USB.print(F("\tGenerated checksum: "));
 					USB.printHex(getXModemCheckSum((uint8_t*)buffer_3G));
 				#endif
-				
-				
+
+
 				// Cleans the input buffer
 				while (serialAvailable(_socket) != 0)
 				{
 					serialRead(_socket);
 				}
-				
-				
+
+
 				// Checks the checksum byte
 				if(checksum == getXModemCheckSum((uint8_t*)buffer_3G))
-				{	
+				{
 					#if _3G_debug_mode>0
 						USB.print(F("\tChecksum correct"));
 					#endif
-					
+
 					// Stores the data into the SD card
 					if (file_size < 128)
 					{
@@ -8068,7 +8091,7 @@ int8_t Wasp3G::getXModemFile(const char* origin, const char* destiny){
 						SD.writeSD(destiny, (uint8_t*)buffer_3G, SD.getFileSize(destiny), 128);
 						file_size -= 128;
 					}
-					
+
 					error_counter = 0;
 					serialWrite(0x06,_socket);
 				}
@@ -8078,51 +8101,51 @@ int8_t Wasp3G::getXModemFile(const char* origin, const char* destiny){
 					serialWrite(0x15,_socket);
 					#if _3G_debug_mode>0
 						USB.println(F("\tChecksum error"));
-						USB.print(F("Error counter: "));
+						PRINT_3G(F("Error counter: "));
 						USB.println(error_counter, DEC);
 					#endif
 				}
-					
+
 				#if _3G_debug_mode>0
-					USB.print(F("\tSize: "));
+					PRINT_3G(F("\tSize: "));
 					USB.println(SD.getFileSize(destiny), DEC);
 				#endif
-				
-				#if _3G_debug_mode>1	
-					USB.print(F("Data field: "));
+
+				#if _3G_debug_mode>1
+					PRINT_3G(F("Data field: "));
 					for (int x=0; x <128; x++)
 					{
 						USB.printHex(buffer_3G[x]);
 						USB.print(F(" "));
 					}
 					USB.println(F(""));
-				#endif	
-				
+				#endif
+
 				buffer_3G[0] = 0x00;
 			}
 			else
 			{
 				#if _3G_debug_mode>0
-					USB.println(F("EOF"));
+					PRINT_3G(F("EOF\n"));
 				#endif
 				serialWrite(0x06,_socket);
 			}
 		}while ((buffer_3G[0] != 0x04) && (error_counter < 10));
-		
+
 		if (error_counter < 10)
 		{
 				aux = SD.getFileSize(destiny);
-				
+
 		}
 	}
-	
+
 	SD.OFF();
-	
+
 	if (error_counter >= 10)
 	{
 		return -5;
 	}
-		
+
 	return 1;
 }
 
@@ -8144,33 +8167,33 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 	uint8_t error_counter = 10, packet_counter = 1, answer;
 	long file_size, bytes_sent = 0;
 	uint16_t crc;
-	
+
 	SdFile file;
 
 	// Enables microSD card on Waspmote:
 	SD.ON();
-	
+
 	// First goes to the main directory:
 	if (SD.goRoot() != 1)
 	{
 		SD.OFF();
 		return -4;
 	}
-	
+
 	#if _3G_debug_mode>0
-		USB.print(F("Origin: "));
+		PRINT_3G(F("Origin: "));
 		USB.println(origin);
-		USB.print(F("Destiny: "));
+		PRINT_3G(F("Destiny: "));
 		USB.println(destiny);
-	#endif	
-	
+	#endif
+
 	file_size = SD.getFileSize(origin);
 	if (file_size == -1)
 	{
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("Error reading SD file size"));
-		#endif 
+			PRINT_3G(F("Error reading SD file size\n"));
+		#endif
 
 		SD.OFF();
 		return -5;
@@ -8178,37 +8201,37 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 	else
 	{
 		#if _3G_debug_mode>0
-			USB.print(F("file size: "));
+			PRINT_3G(F("file size: "));
 			USB.println(file_size,DEC);
 		#endif
-		
+
 		if(!SD.openFile((char*)origin, &file, O_RDONLY))
 		{
-			// SD error		
+			// SD error
 			#if _3G_debug_mode>0
-				USB.println(F("Error: opening file"));  
+				PRINT_3G(F("Error: opening file\n"));
 			#endif
 			SD.OFF();
 			return -6;
 		}
 
 		// set pointer to the beginning of the file
-		if(!file.seekSet(0))	
+		if(!file.seekSet(0))
 		{
-			// SD error		
+			// SD error
 			#if _3G_debug_mode>0
-				USB.println(F("Error: setting initial offset in file")); 
+				PRINT_3G(F("Error: setting initial offset in file\n"));
 			#endif
 			SD.OFF();
 			return -7;
-		}		
+		}
 	}
-	
+
 	// Sends AT command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[60])));	//XMODEM_SEND
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s\"%s\"", str_aux1, destiny);
 	answer = sendCommand3(buffer_3G, "C", ERROR, "FILE IS EXISTING", 20000, SEND_ONCE);
-	
+
 	if (answer == 1)
 	{
 		do{
@@ -8216,28 +8239,28 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 			buffer_3G[0] = 0x01;
 			buffer_3G[1] = packet_counter;
 			buffer_3G[2] = 0xFF - packet_counter;
-			
+
 			aux = file.read(buffer_3G + 3, 128);
 			if (aux == -1)
 			{
-				// SD error		
+				// SD error
 				#if _3G_debug_mode>0
-					USB.println(F("Error: reading the file"));  
+					PRINT_3G(F("Error: reading the file\n"));
 				#endif
-					
+
 			}
 			else if (aux < 128)
 			{
 				memset((&buffer_3G[3]) + aux, 0x1A, 128 - aux);
 			}
-			
+
 			crc = sendXModemCheckSum(buffer_3G + 3);
 			buffer_3G[131] = char((0xFF00 & crc)>>8);
 			buffer_3G[132] = char(0x00FF & crc);
 			buffer_3G[133] = 0x00;
-			
+
 			#if _3G_debug_mode>0
-				USB.print(F("Header value: "));
+				PRINT_3G(F("Header value: "));
 				USB.print(buffer_3G[0],DEC);
 				USB.print(F("\tPacket numbers: "));
 				USB.print(buffer_3G[1],DEC);
@@ -8250,7 +8273,11 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 				USB.print(bytes_sent + aux,DEC);
 				USB.println(F(""));
 			#endif
-				
+
+      #if _3G_debug_mode>1
+        PRINT_3G(F(""));
+      #endif
+
 			for (uint8_t i = 0; i < 134; i++)
 			{
 				printByte(buffer_3G[i], _socket);
@@ -8259,46 +8286,46 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 				#endif
 			}
 			#if _3G_debug_mode>1
-				USB.println("");
+				USB.println();
 			#endif
-			
+
 			//Waits the answer from the module
 			str_aux1[0] = XMODEM_ACK;
 			str_aux1[1] = '\0';
 			str_aux2[0] = XMODEM_NAK;
 			str_aux2[1] = '\0';
 			answer = waitForData(str_aux1, str_aux2, "C", 10000, millis(), 0);
-			
+
 			switch (answer)
 			{
 				case 1:
 					bytes_sent += aux;
 					packet_counter++;
 					break;
-					
+
 				case 2:
 				case 3:
 					// set pointer to the beginning of the file
-					if(!file.seekSet(bytes_sent - 1))	
+					if(!file.seekSet(bytes_sent - 1))
 					{
-						// SD error		
+						// SD error
 						#if _3G_debug_mode>0
-							USB.println(F("Error: setting offset in file")); 
+							PRINT_3G(F("Error: setting offset in file\n"));
 						#endif
-						
+
 						bytes_sent = file_size;
 					}
 					error_counter--;
 					break;
 				default:
 					// set pointer to the beginning of the file
-					if(!file.seekSet(bytes_sent - 1))	
+					if(!file.seekSet(bytes_sent - 1))
 					{
-						// SD error		
+						// SD error
 						#if _3G_debug_mode>0
-							USB.println(F("Error: setting offset in file")); 
+							PRINT_3G(F("Error: setting offset in file\n"));
 						#endif
-						
+
 						bytes_sent = file_size;
 					}
 					answer = 4;
@@ -8306,19 +8333,19 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
 					break;
 			}
 		}while((bytes_sent < file_size) && (error_counter > 0));
-		
+
 		SD.OFF();
-		
+
 		printByte(XMODEM_EOT, _socket);
-		
+
 		if (answer != 1)
 		{
 			return -answer;
 		}
-		
+
 		return 1;
 	}
-	
+
 	return 0;
 }
 
@@ -8331,24 +8358,24 @@ int8_t Wasp3G::sendXModemFile(const char* origin, const char* destiny){
  * Returns '1' if succes, '-2' if error changing the unit or '0' if error going to the root
 */
 int8_t Wasp3G::goRoot(uint8_t unit){
-	
+
 	int8_t answer;
 	int x;
 	unsigned long previous;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[16])));	//CHANGE_DIR
 	if (unit == 0) // selects internal memory (C: unit)
 	{
 		snprintf(buffer_3G, sizeof(buffer_3G), "%sC:", str_aux1);
-	}	
+	}
 	else if (unit == 1) // selects microSD memory (D: unit)
 	{
 		snprintf(buffer_3G, sizeof(buffer_3G), "%sD:", str_aux1);
 	}
-	
+
 	// first changes to the desired unit
 	answer = sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
-	
+
 	if (answer == 1)
 	{
 		do{
@@ -8373,16 +8400,16 @@ int8_t Wasp3G::goRoot(uint8_t unit){
 					{
 						x++;
 					}
-				
+
 					if (millis() < previous)
 					{
 						previous = millis();
 					}
-				
+
 				}while ((buffer_3G[0] != '\r') && ((millis()-previous) < 3000));
-				
+
 				#if _3G_debug_mode>0
-					USB.print(F("Directory level: "));
+					PRINT_3G(F("Directory level: "));
 					USB.println(x, DEC);
 				#endif
 			}
@@ -8391,15 +8418,15 @@ int8_t Wasp3G::goRoot(uint8_t unit){
 				return 0;
 			}
 		}while (x > 1);
-		
+
 		return 1;
 	}
 	else
 	{
 		return -2;
 	}
-	
-	
+
+
 }
 
 /* cd(const char*) - It changes the directory in the actual unit
@@ -8409,10 +8436,10 @@ int8_t Wasp3G::goRoot(uint8_t unit){
  * Returns '1' if success and '0' if error
 */
 int8_t Wasp3G::cd(const char* path){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[16])));	//CHANGE_DIR
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, path);
-	
+
 	if (sendCommand2(buffer_3G, OK_RESPONSE, ERROR) == 1)
 	{
 		return 1;
@@ -8433,7 +8460,7 @@ long Wasp3G::getFileSize(const char* filename){
 
 	long file_size=0;
 	unsigned long previous;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[19])));	//FILE_ATTRIB
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, filename);
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[20])));	//FILE_ATTRIB_R
@@ -8449,7 +8476,7 @@ long Wasp3G::getFileSize(const char* filename){
 			}
 		}
 		buffer_3G[0] = serialRead(_socket);
-		
+
 		// Gets the file size
 		do{
 			file_size *= 10;
@@ -8461,21 +8488,21 @@ long Wasp3G::getFileSize(const char* filename){
 					previous = millis();
 				}
 			}
-			
+
 			buffer_3G[0] = serialRead(_socket);
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[0] != ',') && ((millis()-previous) < 3000));
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("File size: "));
+			PRINT_3G(F("File size: "));
 			USB.println(file_size, DEC);
 		#endif
-			
+
 		return file_size;
 	}
 	else
@@ -8491,7 +8518,7 @@ long Wasp3G::getFileSize(const char* filename){
  * Returns '1' if success and '0' if error
 */
 int8_t Wasp3G::del(const char* filename){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[21])));	//DEL_FILE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%s", str_aux1, filename);
 	if (sendCommand2(buffer_3G, OK_RESPONSE, ERROR) == 1)
@@ -8517,7 +8544,7 @@ int8_t Wasp3G::isSD(){
 	return sendCommand1(buffer_3G, OK_RESPONSE);
 }
 
-/* ls(int8_t ) - Stores in 'buffer_3G' a list of subdirectories and files in the current directory 
+/* ls(int8_t ) - Stores in 'buffer_3G' a list of subdirectories and files in the current directory
  *
  * This function stores in 'buffer_3G' a list of subdirectories and files in the current directory
  *
@@ -8525,12 +8552,12 @@ int8_t Wasp3G::isSD(){
  * 		'1' list subdirectories only and '2' list files only
  *
  * Returns '1' if success, '2' if no files or subdirectories and '0' if error
-*/ 
+*/
 int8_t Wasp3G::ls(int8_t type){
 
 	unsigned long previous;
 	int counter=0, answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[23])));	//LIST_DIR
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, type);
 	answer = sendCommand3( buffer_3G, str_aux1, OK_RESPONSE, ERROR, 10000, SEND_DEFAULT);
@@ -8538,6 +8565,9 @@ int8_t Wasp3G::ls(int8_t type){
 	{
 		previous=millis();
 		counter = 0;
+    #if _3G_debug_mode>1
+      PRINT_3G(F(""));
+    #endif
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis()-previous) < 3000))
 			{
@@ -8550,17 +8580,17 @@ int8_t Wasp3G::ls(int8_t type){
 			#if _3G_debug_mode>1
 				USB.print(buffer_3G[counter]);
 			#endif
-			counter++;	
-			
+			counter++;
+
 			if (millis() < previous)
 			{
 				previous = millis();
-			}	
-				
+			}
+
 		}while ((counter < _3G_BUFFER_SIZE)
 				&& !((buffer_3G[counter-2] == 'O') && (buffer_3G[counter-1] == 'K'))
 				&& ((millis()-previous) < 3000));
-		
+
 		if ((buffer_3G[counter-2] == 'O') && (buffer_3G[counter-1] == 'K'))
 		{
 			buffer_3G[counter-6] = '\0';
@@ -8569,7 +8599,7 @@ int8_t Wasp3G::ls(int8_t type){
 		{
 			buffer_3G[counter-1] = '\0';
 		}
-		
+
 		return 1;
 	}
 	else if (answer == 2)
@@ -8594,10 +8624,10 @@ int8_t Wasp3G::getRSSI(){
 
 	int8_t answer, count;
 	unsigned long previous;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[24])));	//GET_RSSI
 	answer = sendCommand2(str_aux1, str_aux1, ERROR);
-	
+
 	if (answer == 1)
 	{
 		// if the command answers with +CSQ: reads the value
@@ -8617,19 +8647,19 @@ int8_t Wasp3G::getRSSI(){
 			answer *= 10;
 			answer += count-0x30;
 			count = serialRead(_socket);
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-				
+
  		}while ((count != ',') && ((millis()-previous) < 1000));
-		
+
 		#if _3G_debug_mode>0
-			USB.print(F("Raw RSSI: "));
+			PRINT_3G(F("Raw RSSI: "));
 			USB.println(answer, DEC);
 		#endif
-		
+
 		// converts the answer from the command to dBm
 		switch(answer)
 		{
@@ -8645,7 +8675,7 @@ int8_t Wasp3G::getRSSI(){
 			default:
 				answer = (answer * 2) - 109;
 		}
-		
+
 		return answer;
 	}
 	else
@@ -8656,7 +8686,7 @@ int8_t Wasp3G::getRSSI(){
 
 /* getCellsysInfo() - Gets cell system information. Only in GSM
  *
- * This function gets cell system information. 
+ * This function gets cell system information.
  *
  * Information is stored in 'buffer_3G'
  *
@@ -8671,13 +8701,13 @@ int8_t Wasp3G::getCellsysInfo(){
 	int x;
 	unsigned long previous;
 	char command[15];
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	// reduces the baudrate
 	changeBaudrate(4800);
-	getIfReady();	
-	
+	getIfReady();
+
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[34])));		//CELL_SYS_INFO
 	answer = sendCommand1(str_aux1, str_aux1);
@@ -8692,23 +8722,23 @@ int8_t Wasp3G::getCellsysInfo(){
 				// reads from socket 1
 				buffer_3G[x] = serialRead(_socket);
 				if (buffer_3G[x] != -1)
-				{	
+				{
 					x++;
-				}	
+				}
 				else
 				{
 					delay(1);
-				}				
-				
+				}
+
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
-				
+
 			}while ((buffer_3G[x-1] != '\r')
 				&& ((millis() - previous) < 5000)
 				&& (x < _3G_BUFFER_SIZE));
-			
+
 			if ((millis() - previous) < 5000)
 			{
 				// no timeout, waits for the next line or for the OK
@@ -8719,22 +8749,22 @@ int8_t Wasp3G::getCellsysInfo(){
 				// timeout
 				answer = -1;
 			}
-			
+
 			serialRead(_socket); // skips ':'
 			buffer_3G[x] = '\r'; // next line
 			x++;
 			buffer_3G[x] = '\n';
-			x++;			
-			
+			x++;
+
 		}while (answer == 2);
 		buffer_3G[x-3] = '\0';
-		
+
 	}
-	
+
 	// Changes to default baudrate
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 	snprintf(command, sizeof(command), "%s%ld", str_aux1, _baudRate);
-	x = sendCommand2(command, OK_RESPONSE, ERROR);	
+	x = sendCommand2(command, OK_RESPONSE, ERROR);
 	if (x == 2)
 	{
 		return -4;
@@ -8743,13 +8773,13 @@ int8_t Wasp3G::getCellsysInfo(){
 	{
 		beginSerial(_baudRate, _socket);
 	}
-		
+
 	return answer;
 }
 
 /* getCellchannel() - Gets cell channel information. Only during a GSM call
  *
- * This function gets cell channel information. 
+ * This function gets cell channel information.
  *
  * Information is stored in 'buffer_3G'
  *
@@ -8760,9 +8790,9 @@ int8_t Wasp3G::getCellchannel(){
 	int8_t answer;
 	int x;
 	unsigned long previous;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[35])));	//CELL_CHN_INFO
 	answer = sendCommand1(str_aux1, str_aux1);
@@ -8777,26 +8807,26 @@ int8_t Wasp3G::getCellchannel(){
 			// reads from socket 1
 			buffer_3G[x] = serialRead(_socket);
 			if (buffer_3G[x] != -1)
-			{	
+			{
 				x++;
-			}	
+			}
 			else
 			{
 				delay(1);
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while (!((buffer_3G[x-1] == 'K')
 			&& (buffer_3G[x-2] == 'O'))
 			&& ((millis() - previous) < 5000)
 			&& (x < _3G_BUFFER_SIZE));
 		buffer_3G[x-4] = '\0';
 	}
-	
+
 	return answer;
 }
 
@@ -8813,7 +8843,7 @@ int8_t Wasp3G::getCellradioparam(){
 	int8_t answer;
 	int x;
 	unsigned long previous;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[36])));	//CELL_RADIO_PARAM
@@ -8825,29 +8855,29 @@ int8_t Wasp3G::getCellradioparam(){
 		serialRead(_socket); // skips ' '
 		x = 0;
 		previous = millis();
-		do{			
+		do{
 			// reads from socket 1
 			buffer_3G[x] = serialRead(_socket);
 			if ((buffer_3G[x] != -1) &&  (x < _3G_BUFFER_SIZE))
-			{	
+			{
 				x++;
-			}	
+			}
 			else
 			{
 				delay(1);
 			}
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while (!((buffer_3G[x-1] == 'K')
 			&& (buffer_3G[x-2] == 'O'))
 			&& ((millis() - previous) < 5000));
 		buffer_3G[x-4] = '\0';
 	}
-	
+
 	return answer;
 }
 
@@ -8860,14 +8890,14 @@ int8_t Wasp3G::getCellradioparam(){
  * Returns '1' if success and '0' if error
 */
 int8_t Wasp3G::setPreferedServiceDomain(uint8_t mode){
-		
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[29])));	//PREF_SERV_DOM
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, mode);
 	// Sends the command:
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 }
 
-/* scanNetworkchannels() - Scans the network band channels specified 
+/* scanNetworkchannels() - Scans the network band channels specified
  *
  * This function scans the network band channels specified. Only in GSM
  *
@@ -8879,7 +8909,7 @@ int8_t Wasp3G::scanNetworkchannels(int chn_start, int chn_end, bool mode){
 
 	int8_t answer, x;
 	unsigned long previous;
-	
+
 	if (mode == 0)
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[39])));	//CHN_SCAN_STR
@@ -8888,7 +8918,7 @@ int8_t Wasp3G::scanNetworkchannels(int chn_start, int chn_end, bool mode){
 	else
 	{
 		strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[40])));	//CHN_SCAN_NUM
-		snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d,%d", str_aux1, chn_start, chn_end);	
+		snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d,%d", str_aux1, chn_start, chn_end);
 	}
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[41])));	//NET_START_SCAN
@@ -8908,25 +8938,25 @@ int8_t Wasp3G::scanNetworkchannels(int chn_start, int chn_end, bool mode){
 			}
 			buffer_3G[x] = serialRead(_socket);
 			x++;
-		
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-				
+
 		}while ((buffer_3G[x-1] != 'N')
 			&& ((millis() - previous) < 10000)
 			&& (x < _3G_BUFFER_SIZE));
-		
+
 		buffer_3G[x-3] = '\0';
 	}
-	
+
 	return answer;
 }
 
 /* getUEsysInfo() - Inquire UE system information
  *
- * This function inquires UE system information. 
+ * This function inquires UE system information.
  *
  * Information are stored in 'buffer_3G' it's different from 2G or 3G
  *
@@ -8937,7 +8967,7 @@ int8_t Wasp3G::getUEsysInfo(){
 	int8_t x;
 	uint8_t answer=0;
 	unsigned long previous;
-	
+
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[30])));	//INQ_UE_SYS
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[31])));	//INQ_UE_SYS_R
@@ -8949,7 +8979,7 @@ int8_t Wasp3G::getUEsysInfo(){
 		previous=millis();
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000))
-			{	
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
@@ -8957,19 +8987,19 @@ int8_t Wasp3G::getUEsysInfo(){
 			}
 			buffer_3G[x]=serialRead(_socket);
 			x++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[x-1] != '\r')
 			&& ((millis() - previous) < 5000)
 			&& (x < _3G_BUFFER_SIZE));
-		
+
 		buffer_3G[x-1]='\0';
 	}
-	
+
 	return answer;
 }
 
@@ -8991,7 +9021,7 @@ int8_t Wasp3G::getUEsysInfo(){
 int8_t Wasp3G::showsNetworkMode(){
 
 	int8_t answer;
-	
+
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[32])));	//NETWORK_MODE
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[33])));	//NETWORK_MODE_R
@@ -9005,9 +9035,9 @@ int8_t Wasp3G::showsNetworkMode(){
 	{
 		serialRead(_socket);
 		serialRead(_socket);
-		return (serialRead(_socket)-0x2F);	
+		return (serialRead(_socket)-0x2F);
 	}
-	
+
 	return answer;
 }
 
@@ -9023,7 +9053,7 @@ int8_t Wasp3G::WCDMAsysInfo(){
 
 	int8_t answer, x;
 	unsigned long previous;
-	
+
 	memset(buffer_3G, '\0', _3G_BUFFER_SIZE);
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[37])));	//CELL_SET_SYS_INFO
@@ -9037,7 +9067,7 @@ int8_t Wasp3G::WCDMAsysInfo(){
 		previous=millis();
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000))
-			{	
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
@@ -9045,24 +9075,24 @@ int8_t Wasp3G::WCDMAsysInfo(){
 			}
 			buffer_3G[x]=serialRead(_socket);
 			x++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[x-1] != '\n')
 			&& ((millis() - previous) < 10000)
 			&& (x < _3G_BUFFER_SIZE));
-		
+
 		waitForData(str_aux2, 2000, millis(), 0);
-		
+
 		// Gets info from sync neighbor cell
-		
+
 		previous=millis();
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000))
-			{	
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
@@ -9070,22 +9100,22 @@ int8_t Wasp3G::WCDMAsysInfo(){
 			}
 			buffer_3G[x]=serialRead(_socket);
 			x++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[x-1] != '\n') && ((millis() - previous) < 10000));
-		
+
 		waitForData(str_aux2, 2000, millis(), 0);
-		
+
 		// Gets info from async neighbor cell
-		
+
 		previous=millis();
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 10000))
-			{	
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
@@ -9093,19 +9123,19 @@ int8_t Wasp3G::WCDMAsysInfo(){
 			}
 			buffer_3G[x]=serialRead(_socket);
 			x++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[x-1] != '\n')
 			&& ((millis() - previous) < 10000)
 			&& (x < _3G_BUFFER_SIZE));
-		
+
 		buffer_3G[x-1]='\0';
 	}
-	
+
 	return answer;
 }
 
@@ -9118,7 +9148,7 @@ int8_t Wasp3G::WCDMAsysInfo(){
  * Returns '1' if success and '0' if error
 */
 int8_t Wasp3G::setNetworkMode(uint8_t mode){
-		
+
 	// Selects the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[26])));	//PREF_MODE
 	switch (mode)
@@ -9133,7 +9163,7 @@ int8_t Wasp3G::setNetworkMode(uint8_t mode){
 			snprintf(buffer_3G, sizeof(buffer_3G), "%s=14", str_aux1);
 			break;
 	}
-	
+
 	// Sends the command:
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 }
@@ -9145,23 +9175,23 @@ int8_t Wasp3G::setNetworkMode(uint8_t mode){
  * Returns '1' if success and '0' if error
 */
 int8_t Wasp3G::setNetworkBand(int high_zone, int mid_zone, int low_zone){
-	
+
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[27])));	//PREF_BAND
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=0x%04X0000%04X%04X", str_aux1, high_zone, mid_zone, low_zone);
 	return (sendCommand1(buffer_3G, OK_RESPONSE));
 }
 
-/* modeAcquisitionsOrder(uint8_t) - Sets the preferences for order of acquisitions 
+/* modeAcquisitionsOrder(uint8_t) - Sets the preferences for order of acquisitions
  *
- * This function sets the preferences for order of acquisitions 
+ * This function sets the preferences for order of acquisitions
  *
  * Allows '0' for automatic,'1' GSM,WCDMA and '2' for WCDMA,GSM
  *
  * Returns '1' if success and '0' if error
 */
 int8_t Wasp3G::modeAcquisitionsOrder(uint8_t mode){
-	
+
 	// Selects the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[28])));	//ACQ_ORDER
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s=%d", str_aux1, mode);
@@ -9176,12 +9206,12 @@ int8_t Wasp3G::modeAcquisitionsOrder(uint8_t mode){
  * Returns '1' on success, '0' or '-2' if error
 */
 int8_t Wasp3G::selectStorage(uint8_t destination){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[42])));
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, destination);
-	
+
 	// Sends the command:
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 
@@ -9189,7 +9219,7 @@ int8_t Wasp3G::selectStorage(uint8_t destination){
 	{
 			return -2;
 	}
-	
+
 	return answer;
 }
 
@@ -9200,12 +9230,12 @@ int8_t Wasp3G::selectStorage(uint8_t destination){
  * Returns '1' on success, '0' or '-2' if error
 */
 int8_t Wasp3G::changeBaudrate(long baudrate){
-	
+
 	int8_t answer;
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[43])));	//CHANGE_BAUDRATE
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%ld", str_aux1, baudrate);
-	
+
 	// Sends the command:
 	answer=sendCommand2(buffer_3G, OK_RESPONSE, ERROR);
 
@@ -9217,7 +9247,7 @@ int8_t Wasp3G::changeBaudrate(long baudrate){
 	{
 		beginSerial(baudrate, _socket);
 	}
-	
+
 	return answer;
 }
 
@@ -9230,24 +9260,24 @@ int8_t Wasp3G::changeBaudrate(long baudrate){
  * Returns '1' on success, '0' if error
 */
 uint8_t Wasp3G::sendATCommand(const char* ATcommand){
-	
+
 	unsigned long timeout;
 	uint16_t i;
-	
+
 	// Cleans 'buffer_3G':
 	memset (buffer_3G, '\0', _3G_BUFFER_SIZE);
-	
+
 	i = 0;
-	
+
 	snprintf(buffer_3G, sizeof(buffer_3G), "AT%s%c%c", ATcommand,'\r','\n');
 
 	serialFlush(_socket);
-	
+
 	// Sends the command to the 3G module:
 	printString(buffer_3G,_socket);
-	
+
 	timeout = millis();
-	// Waits and reads the answer from the 3G module:	
+	// Waits and reads the answer from the 3G module:
 	while ( (millis() - timeout) < 10000 )
 	{
 		while ((!serialAvailable(_socket)) && ((millis() - timeout) < 10000))
@@ -9258,6 +9288,9 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
 				timeout = millis();
 			}
 		}
+    #if _3G_debug_mode>0
+      PRINT_3G(F(""));
+    #endif
 		while ( serialAvailable(_socket) && ((millis() - timeout) < 10000))
 		{
 			buffer_3G[i] = serialRead(_socket);
@@ -9265,7 +9298,7 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
 				USB.print(char(buffer_3G[i]));
 			#endif
 			delay(20);
-			
+
 			if (i < _3G_BUFFER_SIZE)
 			{
 				i++;
@@ -9274,22 +9307,22 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
 			{
 				timeout = millis() + 10000;
 			}
-			
+
 			if (millis() < timeout)
 			{
 				timeout = millis();
 			}
 		}
 	}
-	
+
 	buffer_3G[i]='\0';
-	
-	if (i < 2) 
+
+	if (i < 2)
 	{
 		return 0;
 	}
 	return 1;
-	
+
 }
 
 /* selectAudioOutput(uint8_t) - Selects speaker or loudspeaker output for calls
@@ -9299,7 +9332,7 @@ uint8_t Wasp3G::sendATCommand(const char* ATcommand){
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::selectAudioOutput(uint8_t output){
-		
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[44])));	//AUDIO_OUT
 	snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, ((output * 2) + 1));
 	return sendCommand1(buffer_3G, OK_RESPONSE);
@@ -9314,11 +9347,11 @@ int8_t Wasp3G::selectAudioOutput(uint8_t output){
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::micGain(uint8_t gain){
-		
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[45])));	//MUTE_MIC
 	if (gain == 0)	// If gain is '0' enables the mute of the microphone
 	{
-		
+
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s1", str_aux1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 	}
@@ -9332,23 +9365,23 @@ int8_t Wasp3G::micGain(uint8_t gain){
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 
 	}
-	
+
 	return 0;
 }
 
-/* loudspeakerLevel(uint8_t) - Sets loudspeaker volume 
+/* loudspeakerLevel(uint8_t) - Sets loudspeaker volume
  *
  * This function sets loudspeaker volume level between 0-5
  *
- * 'volume' values: '0' for mute and '1' to '5' for volume level 
+ * 'volume' values: '0' for mute and '1' to '5' for volume level
  *
  * Returns '1' on success, '0' if error
 */
 int8_t Wasp3G::loudspeakerLevel(uint8_t volume){
-	
+
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[48])));	//MUTE_SPEAKER
 	if (volume == 0)	// If volume is '0' enables the silent mode
-	{		
+	{
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s1", str_aux1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 	}
@@ -9360,7 +9393,7 @@ int8_t Wasp3G::loudspeakerLevel(uint8_t volume){
 		snprintf(buffer_3G, sizeof(buffer_3G), "%s%d", str_aux1, volume-1);
 		return sendCommand1(buffer_3G, OK_RESPONSE);
 	}
-	
+
 	return 0;
 }
 
@@ -9373,7 +9406,7 @@ int8_t Wasp3G::loudspeakerLevel(uint8_t volume){
 int8_t Wasp3G::whoamI(){
 	int8_t answer, x;
 	unsigned long previous;
-	
+
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[51])));	//AT_WHO_AM_I
 	answer=sendCommand1(str_aux1, "\r\n");
@@ -9384,24 +9417,24 @@ int8_t Wasp3G::whoamI(){
 		previous=millis();
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000))
-			{	
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
-				}	
+				}
 			}
 			buffer_3G[x]=serialRead(_socket);
-			x++;			
-			
+			x++;
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[x-1] != '\r') && ((millis() - previous) < 5000));
 		buffer_3G[x-1]='\0';
 	}
-	
+
 	return answer;
 
 }
@@ -9415,7 +9448,7 @@ int8_t Wasp3G::whoamI(){
 int8_t Wasp3G::firmware_version(){
 	int8_t answer, x;
 	unsigned long previous;
-	
+
 	// Sends the command:
 	strcpy_P(str_aux1, (char*)pgm_read_word(&(table_MISC[52])));	//FIRMWARE_VER
 	strcpy_P(str_aux2, (char*)pgm_read_word(&(table_MISC[53])));	//FIRMWARE_VER_R
@@ -9427,24 +9460,24 @@ int8_t Wasp3G::firmware_version(){
 		previous=millis();
 		do{
 			while ((serialAvailable(_socket) == 0) && ((millis() - previous) < 5000))
-			{	
+			{
 				if (millis() < previous)
 				{
 					previous = millis();
 				}
-			}	
+			}
 			buffer_3G[x]=serialRead(_socket);
 			x++;
-			
+
 			if (millis() < previous)
 			{
 				previous = millis();
 			}
-			
+
 		}while ((buffer_3G[x-1] != '\r') && ((millis() - previous) < 5000));
 		buffer_3G[x-1]='\0';
 	}
-	
+
 	return answer;
 
 }
@@ -9454,7 +9487,7 @@ int8_t Wasp3G::firmware_version(){
  * Returns nothing
 */
 void Wasp3G::set_APN( char* apn){
-	
+
 	set_APN( apn, NULL, NULL);
 }
 
@@ -9465,15 +9498,15 @@ void Wasp3G::set_APN( char* apn){
  * Returns nothing
 */
 void Wasp3G::set_APN( char* apn, char* login, char* password){
-	
+
 	memset(_apn, '\0', sizeof(_apn));
 	memset(_apn_login, '\0', sizeof(_apn_login));
 	memset(_apn_password, '\0', sizeof(_apn_password));
-	
+
 	strncpy(_apn, apn, min(sizeof(_apn), strlen(apn)));
 	strncpy(_apn_login, login, min(sizeof(_apn_login), strlen(login)));
 	strncpy(_apn_password, password, min(sizeof(_apn_password), strlen(password)));
-	
+
 }
 
 /* show_APN() - Shows the apn, login and password constants
@@ -9484,12 +9517,12 @@ void Wasp3G::set_APN( char* apn, char* login, char* password){
 */
 void Wasp3G::show_APN(){
 	// APN parameters depends on SIM
-	USB.print(F("APN: "));
+	PRINT_3G(F("APN: "));
 	USB.println(_apn);
-	USB.print(F("LOGIN: "));
+	PRINT_3G(F("LOGIN: "));
 	USB.println(_apn_login);
-	USB.print(F("PASSWORD: "));
-	USB.println(_apn_password);	
+	PRINT_3G(F("PASSWORD: "));
+	USB.println(_apn_password);
 }
 
 #if TRANSMISSION_FUSE
@@ -9498,15 +9531,15 @@ void Wasp3G::show_APN(){
 /* sendFiletoWiFiFTP(char*, char*, char*, uint16_t, uint8_t, char*, char*, uint8_t, char*, char*) - Uploads a file to a FTP using the WiFi connection
  *
  * This function uploads a file to a FTP using the WiFi connection. It does all steps.
- 
+
  * Return '1' if success, '-2' if error setting the connection options, '-3' if error setting the DHCP options
  * '-4' if error setting FTP parameters, '-5' if error setting authentification key, '-6' if error setting the join mode
  * '-7' if error joining to the Wi-Fi network, '-8' if error opening the FTP session and '-9' if error uploading the file
 */
 int8_t Wasp3G::sendFiletoWiFiFTP(char* origin_path, char* destiny_name, char* FTP_server, uint16_t FTP_port, uint8_t FTP_mode, char* FTP_username, char* FTP_password, uint8_t auth_type, char* auth_key, char* SSID){
-    
+
 	int8_t answer;
-	getXModemFile(origin_path,destiny_name); 
+	getXModemFile(origin_path,destiny_name);
 	// Switch on the WIFI module on the desired socket.
 	WIFI.ON(SOCKET0);
 		// 1. Configure the transport protocol (UDP, TCP, FTP, HTTP...)
@@ -9522,11 +9555,11 @@ int8_t Wasp3G::sendFiletoWiFiFTP(char* origin_path, char* destiny_name, char* FT
 			if (answer == 1)
 			{
 				// 3.1 Sets the server account with the username and password
-				answer = WIFI.openFTP( FTP_username, FTP_password); 
+				answer = WIFI.openFTP( FTP_username, FTP_password);
 				if (answer == 1)
 				{
 					// 4. Configure how to connect the AP
-					answer = WIFI.setAuthKey(auth_type,auth_key); 
+					answer = WIFI.setAuthKey(auth_type,auth_key);
 					if (answer == 1)
 					{
 						answer = WIFI.setJoinMode(MANUAL);
@@ -9579,10 +9612,10 @@ int8_t Wasp3G::sendFiletoWiFiFTP(char* origin_path, char* destiny_name, char* FT
 	{
 		answer = -2;
 	}
-	     
-     // Exit and power off the module. 
+
+     // Exit and power off the module.
      WIFI.OFF();
-	 
+
 	 return answer;
 }
 #endif
@@ -9597,13 +9630,13 @@ int8_t Wasp3G::sendFiletoWiFiFTP(char* origin_path, char* destiny_name, char* FT
  * Return '1' on success,'-2' if error setting the connection parameters (APN), '-3' if error setting the FTP server ('-13' if CME error available),
  * '-4' if error setting the FTP port ('-14' if CME error available), '-5' if error setting the FTP mode ('-15' if CME error available),
  * '-6' if error setting the FTP type ('-16' if CME error available), '-7' if error setting the user name ('-17' if CME error available),
- * '-8' if error setting the FTP password ('-18' if CME error available), '-20' if error uploading the file, '-22' if error with CME code (FTP error) and 
+ * '-8' if error setting the FTP password ('-18' if CME error available), '-20' if error uploading the file, '-22' if error with CME code (FTP error) and
  * '-23' if error getting the file of the size to upload.
  */
 int8_t Wasp3G::sendFileto3GFTP(uint8_t origin, const char* destination_path, const char* FTP_server, const char* FTP_port, uint8_t FTP_mode, const char* FTP_username, const char* FTP_password){
 
 	int8_t answer;
-	
+
 	answer = configureFTP(FTP_server, FTP_port, FTP_username, FTP_password, FTP_mode, "I");
 	if (answer == 1)
 	{
@@ -9629,13 +9662,13 @@ int8_t Wasp3G::sendFileto3GFTP(uint8_t origin, const char* destination_path, con
  * This function sends a file attached into an email. It does all steps to send the email
  *
  * Return '1' if success, '0' if error setting username and password, '-1' if error setting server and port, '-2' if error setting sender address and name,
- * '-3' if error setting recipient address and name, '-4' if error setting subject, '-5' if error setting the body, '-6' if error attaching the file 
+ * '-3' if error setting recipient address and name, '-4' if error setting subject, '-5' if error setting the body, '-6' if error attaching the file
  * and '-7' if error sending the email
 */
 int8_t Wasp3G::sendFileto3Gemail(char* SMTP_server, uint16_t SMTP_port, char* STMP_account, char* STMP_password, char* sender_address, char* sender_name, char* recipient_address, char* recipient_name, char* subject, char* body, char* picture_name){
 
 	int8_t answer;
-	
+
 	answer = setSMTPserver(SMTP_server, SMTP_port, STMP_account, STMP_password);
 	if (answer == 1)
 	{
@@ -9646,11 +9679,11 @@ int8_t Wasp3G::sendFileto3Gemail(char* SMTP_server, uint16_t SMTP_port, char* ST
 				if (_3G.setSMTPsubject( subject))
 				{
 					if (_3G.setSMTPbody( body))
-					{   
+					{
 						if (setSMTPattach( 1, picture_name) == 1)
 						{
 							if ( setSMTPsend() == 1)
-							{                            
+							{
 								return 1;
 							}
 							else
@@ -9666,22 +9699,22 @@ int8_t Wasp3G::sendFileto3Gemail(char* SMTP_server, uint16_t SMTP_port, char* ST
 					else
 					{
 						return -5;
-					} 
+					}
 				}
 				else
 				{
 					return -4;
-				}  
+				}
 			}
 			else
 			{
 				return -3;
-			}  
+			}
 		}
 		else
 		{
 			return -2;
-		}  
+		}
 	}
 	else
 	{
@@ -9715,7 +9748,7 @@ int8_t Wasp3G::sendFileto3Gemail(char* SMTP_server, uint16_t SMTP_port, char* ST
  * '-23' if there isn't FILE tag,
  * '-24' if there isn't PATH tag,
  * '-25' if there isn't VERSION tag,
- * '-26' if OTA is not necessary, 
+ * '-26' if OTA is not necessary,
  * '-27' if OTA files are the same program version,
  * '-28' if error downloading the OTA file,
  * '-31' if error with CME code (FTP error) downloading the OTA file
@@ -9730,90 +9763,90 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 	char aux_name[8];
 	char programID[8];
 	char path[60];
-	
+
 //	memset(path, 0x00, strlen(path));
 	//memset(aux_name, 0x00, strlen(aux_name));
-	
+
 	SD.ON();
 	SD.goRoot();
 	SD.del(OTA_ver_file);
 	SD.OFF();
 	answer = configureFTP( FTP_server, FTP_port, FTP_username, FTP_password, 1, "I");
 	if (answer == 1)
-	{	
-		
+	{
+
 		answer = downloadData(OTA_ver_file, OTA_ver_file);
 		if (answer == 1)
 		{
-			
+
 			SD.ON();
 			SD.goRoot();
-			
+
 			// Reads the file
 			strcpy(buffer_3G, SD.cat(OTA_ver_file, 0, _3G_BUFFER_SIZE));
 
 			// Searchs the file name
 			str_pointer = strstr(buffer_3G, "FILE:");
 			if (str_pointer != NULL)
-			{	
+			{
 				strncpy(aux_name, strchr(buffer_3G, ':') + 1, 7);
 				aux_name[7] = '\0';
-				
+
 				#if _3G_debug_mode>0
-					USB.print(F("OTA file: "));
-					USB.println(aux_name);	
+					PRINT_3G(F("OTA file: "));
+					USB.println(aux_name);
 				#endif
 				// Searchs the file name
 				str_pointer = strstr(buffer_3G, "PATH:");
 				if (str_pointer != NULL)
 				{
 					strncpy(path, strchr(str_pointer, ':') + 1, strchr(str_pointer, '\n') - (strchr(str_pointer, ':')));
-					
+
 					path[strchr(path, '\n') - path] = '\0';
-					
+
 					#if _3G_debug_mode>0
-						USB.print(F("File path: "));
+						PRINT_3G(F("File path: "));
 						USB.println(path);
 					#endif
 					//strcat(path,"/");
 					strcat(path,aux_name);
-					
+
 					str_pointer = strstr(buffer_3G, "VERSION:");
-					
+
 					if (str_pointer != NULL)
 					{
-					
+
 						strncpy(aux_ver, strchr(str_pointer, ':') + 1, strchr(str_pointer, '\n') - (strchr(str_pointer, ':')));
 						aux_ver[strchr(aux_ver, '\n') - aux_ver] = '\0';
-						
+
 						version = atoi(aux_ver);
-						
+
 						#if _3G_debug_mode>0
-							USB.print(F("Version: "));
+							PRINT_3G(F("Version: "));
 							USB.println(version, DEC);
 						#endif
-						
+
 						SD.del(aux_name);
-		
+
 						if (strcmp(aux_name, NO_OTA) != 0)
 						{
 							Utils.getProgramID(programID);
 							// check if the program have a new version or if it is a different code
 							if (((strcmp(aux_name, programID) == 0) && (version > Utils.getProgramVersion())) || (strcmp(aux_name, programID) != 0))
-							{		
+							{
 								delay(10000);
-								USB.println("Downloading OTA file");	
+								PRINT_3G("Downloading OTA file\n");
 								#if _3G_debug_mode>0
-									USB.print(F("File to download: "));
+									PRINT_3G(F("File to download: "));
 									USB.println(path);
-									USB.print(F("File to save: "));
+									PRINT_3G(F("File to save: "));
 									USB.println(aux_name);
 								#endif
 								answer = downloadData(path, aux_name);
 								if (answer == 1)
 								{
 									_3G.OFF();
-									
+
 									Utils.loadOTA(aux_name, version);
 
 									return 1;
@@ -9827,24 +9860,24 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 							else
 							{
 								#if _3G_debug_mode>0
-									USB.println(F("Same program version, no OTA required"));
+									PRINT_3G(F("Same program version, no OTA required\n"));
 								#endif
 								SD.OFF();
 								return -27;
 							}
-								
+
 						}
 						else
 						{
-							
+
 							#if _3G_debug_mode>0
-								USB.println(F("No OTA"));
+								PRINT_3G(F("No OTA\n"));
 							#endif
 							SD.OFF();
 							return -26;
 						}
-						
-						
+
+
 					}
 					else
 					{
@@ -9856,7 +9889,7 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 				{
 					SD.OFF();
 					return -24;
-				}	
+				}
 			}
 			else
 			{
@@ -9870,7 +9903,7 @@ int8_t Wasp3G::requestOTA(const char* FTP_server, const char* FTP_port, const ch
 		}
 	}
 	else
-	{	
+	{
 		return answer;
 	}
 

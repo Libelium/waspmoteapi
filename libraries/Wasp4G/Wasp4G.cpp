@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.5
+ *  Version:		3.6
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -40,6 +40,9 @@ Wasp4G::Wasp4G()
 	strncpy(_apn, LE910_GPRS_APN, min(sizeof(_apn), strlen(LE910_GPRS_APN)));
 	strncpy(_apn_login, LE910_GPRS_LOGIN, min(sizeof(_apn_login), strlen(LE910_GPRS_LOGIN)));
 	strncpy(_apn_password, LE910_GPRS_PASSW, min(sizeof(_apn_password), strlen(LE910_GPRS_PASSW)));	
+	
+	// Set "application/x-www-form-urlencoded" as default Content-Type
+	sprintf_P(_contentType, (char*)pgm_read_word(&(table_HTTP[7])));
 }
 
 
@@ -377,10 +380,11 @@ uint8_t Wasp4G::httpRequest(uint8_t method,
 		// 2a. Send HTTP POST or PUT request
 		// AT#HTTPSND=0,<method>,"<resource>",<data_length>
 		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[2])),
-				method - 3, 
-				resource, 
-				length);
-				
+				method - 3,
+				resource,
+				length,
+				_contentType);
+
 		// send command
 		answer = sendCommand(command_buffer, LE910_DATA_TO_MODULE, LE910_ERROR, 5000);		
 		if (answer != 1)
@@ -410,11 +414,12 @@ uint8_t Wasp4G::httpRequest(uint8_t method,
 		
 		// AT#HTTPSND=0,0,"<php_file>",<data_length>
 		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[2])),
-				0, 
-				php_file, 
-				6 + (length * 2));
-				
-		answer = sendCommand(command_buffer, LE910_DATA_TO_MODULE, LE910_ERROR, 5000);		
+				0,
+				php_file,
+				6 + (length * 2),
+				_contentType);
+
+		answer = sendCommand(command_buffer, LE910_DATA_TO_MODULE, LE910_ERROR, 5000);
 		if (answer != 1)
 		{
 			return 2;
@@ -1909,6 +1914,7 @@ uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 	char command_buffer[100];
 	uint8_t answer;
 	
+	delay(3000);
 		
 	//// 1. Check connection
 	answer = checkConnection(60);
@@ -1921,6 +1927,25 @@ uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 	}	
 	
 	// delay to wait for operational SIM
+	delay(3000);
+	
+	// 2. Set Text Mode Parameters
+	// <fo>: 17 --> SMS-SUBMIT with validity period in relative format
+	// <vp>: 167 --> 24 hours
+	// <pid>: 0
+	// <dcs>: 0
+	memset(command_buffer,0x00,sizeof(command_buffer));
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SMS[7])), 17, 167, 0 ,0);	//AT+CSMP=17,167,0,0
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR,500);
+
+	if (answer != 1)
+	{
+		#if DEBUG_WASP4G > 0
+			USB.println("Error CSMP");
+		#endif
+		return 7;
+	}
+	
 	delay(3000);
 	
 	//// 2. Send SMS
@@ -1939,11 +1964,12 @@ uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 		#endif
 		return 5;
 	}
+	delay(3000);
 	
 	printString(sms_string, 1);
 	command_buffer[0] = 0x1A;
 	command_buffer[1] = '\0';
-	answer = sendCommand(command_buffer, LE910_OK);
+	answer = sendCommand(command_buffer, LE910_OK, 10000);
 	if (answer != 1)
 	{
 		printByte(0x1B, 1); //ESC ASCII
@@ -2236,6 +2262,40 @@ uint8_t Wasp4G::deleteSMS(uint8_t sms_index, uint8_t del_flag)
 }
 
 
+/* Function: 	This function stores the desired Content-Type for HTTP POST requests
+ * Parameters:	uint8_t content: index number corresponding to content type.
+ * 				“0” – “application/x-www-form-urlencoded”
+ * 				“1” – “text/plain” 
+ * 				“2” – “application/octet-stream”
+ * 				“3” – “multipart/form-data” 
+ * Return:	'0' if OK
+ * 			'x' if error
+ */
+uint8_t Wasp4G::httpSetContentType(uint8_t content)
+{
+	memset(_contentType, 0x00, sizeof(_contentType));
+	switch (content)
+	{		
+		case 0:	sprintf_P(_contentType, (char*)pgm_read_word(&(table_HTTP[7])));	break;
+		case 1:	sprintf_P(_contentType, (char*)pgm_read_word(&(table_HTTP[8])));	break;
+		case 2:	sprintf_P(_contentType, (char*)pgm_read_word(&(table_HTTP[9])));	break;
+		case 3:	sprintf_P(_contentType, (char*)pgm_read_word(&(table_HTTP[10])));	break;
+		default: break;
+	}	
+	return 0;
+}
+
+/* Function: 	This function stores the desired Content-Type for HTTP POST requests
+ * Parameters:	char* content: string corresponding to content type. i.e. "text/plain"
+ * Return:	'0' if OK
+ * 			'x' if error
+ */
+uint8_t Wasp4G::httpSetContentType(char* content)
+{
+	memset(_contentType, 0x00, sizeof(_contentType));
+	strlcpy(_contentType, content, sizeof(_contentType));
+	return 0;
+}
 
 
 /* Function: 	This function performs a HTTP request
@@ -4753,7 +4813,25 @@ uint8_t Wasp4G::manageSSL(	uint8_t socketId,
 	}
 		
 	
-	//// 2. Set SSL settings
+	//// 2. Configure security parameters of a SSL socket
+	// "AT#SSLSECCFG=1,0,1\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[34])), socketId+1, 0, 1);
+		
+	// send command
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+		
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 6;
+	}	
+	
+	
+	//// 3. Set SSL settings
 	if ((action == Wasp4G::SSL_ACTION_STORE) && (data != NULL))
 	{
 		// AT#SSLSECDATA=<socketId>,<action>,<dataType>,<data_length>\r

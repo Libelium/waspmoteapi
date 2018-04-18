@@ -1,7 +1,7 @@
 /*! \file	Wasp4G_contants.h
     \brief 	Header file with constant definitions and flash strings
         
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascon
     Implementation:	Alejandro Gállego
 
@@ -197,6 +197,7 @@ const char LE910_SMS_03[]	PROGMEM = "AT+CMGR=%u\r";						//3
 const char LE910_SMS_04[]	PROGMEM = "AT+CMGS=\"%s\"\r";					//4
 const char LE910_SMS_05[]	PROGMEM = "AT+CMGD=%u\r";						//5
 const char LE910_SMS_06[]	PROGMEM = "AT+CMGD=%u,%u\r";					//6
+const char LE910_SMS_07[]	PROGMEM = "AT+CSMP=%u,%u,%u,%u\r";				//7
 
 const char* const table_SMS[] PROGMEM = 
 {
@@ -207,6 +208,7 @@ const char* const table_SMS[] PROGMEM =
 	LE910_SMS_04,
 	LE910_SMS_05,
 	LE910_SMS_06,
+	LE910_SMS_07,
 };
 
 
@@ -216,13 +218,17 @@ const char* const table_SMS[] PROGMEM =
 const unsigned long LE910_HTTP_TIMEOUT = 60000;		// Timeout for HTTP and HTTPS functions in miliseconds
 const unsigned long LE910_HTTP_CONF_TIMEOUT = 15000;	// Timeout for HTTP and HTTPS functions in miliseconds
 
-const char LE910_HTTP_00[]	PROGMEM = "AT#HTTPCFG=0,\"%s\",%u\r";		//0
-const char LE910_HTTP_01[]	PROGMEM = "AT#HTTPQRY=0,%u,\"%s\"\r";		//1
-const char LE910_HTTP_02[]	PROGMEM = "AT#HTTPSND=0,%u,\"%s\",%u\r";	//2
-const char LE910_HTTP_03[]	PROGMEM = "#HTTPRING: 0,";					//3
-const char LE910_HTTP_04[]	PROGMEM = "AT#HTTPRCV=%u,%u\r";				//4
-const char LE910_HTTP_05[]	PROGMEM = "/getpost_frame_parser.php";		//5
-const char LE910_HTTP_06[]	PROGMEM = "frame=";							//6
+const char LE910_HTTP_00[]	PROGMEM = "AT#HTTPCFG=0,\"%s\",%u\r";			//0
+const char LE910_HTTP_01[]	PROGMEM = "AT#HTTPQRY=0,%u,\"%s\"\r";			//1
+const char LE910_HTTP_02[]	PROGMEM = "AT#HTTPSND=0,%u,\"%s\",%u,%s\r";		//2
+const char LE910_HTTP_03[]	PROGMEM = "#HTTPRING: 0,";						//3
+const char LE910_HTTP_04[]	PROGMEM = "AT#HTTPRCV=%u,%u\r";					//4
+const char LE910_HTTP_05[]	PROGMEM = "/getpost_frame_parser.php";			//5
+const char LE910_HTTP_06[]	PROGMEM = "frame=";								//6
+const char LE910_HTTP_07[]	PROGMEM = "application/x-www-form-urlencoded";	//7
+const char LE910_HTTP_08[]	PROGMEM = "text/plain";							//8
+const char LE910_HTTP_09[]	PROGMEM = "application/octet-stream";			//9
+const char LE910_HTTP_10[]	PROGMEM = "multipart/form-data";				//10
 
 const char* const table_HTTP[] PROGMEM = 
 {
@@ -233,6 +239,10 @@ const char* const table_HTTP[] PROGMEM =
 	LE910_HTTP_04,
 	LE910_HTTP_05,
 	LE910_HTTP_06,
+	LE910_HTTP_07,
+	LE910_HTTP_08,
+	LE910_HTTP_09,
+	LE910_HTTP_10,
 };
 
 
@@ -325,6 +335,7 @@ const char LE910_IP_SOCKET_30[]	PROGMEM = "AT#SLUDP=%u,%u,%u\r";			//30
 const char LE910_IP_SOCKET_31[]	PROGMEM = "AT#SS\r";						//31
 const char LE910_IP_SOCKET_32[]	PROGMEM = "#SS: %u,";						//32
 const char LE910_IP_SOCKET_33[]	PROGMEM = "AT#SSLEN=%u,%u\r";				//33
+const char LE910_IP_SOCKET_34[]	PROGMEM = "AT#SSLSECCFG=%u,%u,%u\r";		//34
 
 const char* const table_IP[] PROGMEM = 
 {
@@ -362,6 +373,7 @@ const char* const table_IP[] PROGMEM =
 	LE910_IP_SOCKET_31,
 	LE910_IP_SOCKET_32,
 	LE910_IP_SOCKET_33,
+	LE910_IP_SOCKET_34,
 };
 
 

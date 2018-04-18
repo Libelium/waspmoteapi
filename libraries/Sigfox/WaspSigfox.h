@@ -1,10 +1,10 @@
 /*! 
  * @file 	WaspSigfox.h
  * @author	Libelium Comunicaciones Distribuidas S.L.
- * @version	3.1
+ * @version	3.2
  * @brief 	Library for managing Sigfox modules TD1207 & TD1508
  * 
- * Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ * Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  * http://www.libelium.com
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -185,6 +185,10 @@ class WaspSigfox : public WaspUART
 		uint8_t getMacroChannel();
 		uint8_t setDownFreqOffset(int32_t offset);
 		uint8_t getDownFreqOffset();
+		
+		// Radio configuration region functions
+		uint8_t setRegionRC4();
+		uint8_t setRegionRC2();
 };
 
 //! Define the object

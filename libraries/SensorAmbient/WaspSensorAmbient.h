@@ -1,32 +1,32 @@
 /*! \file WaspSensorAmbient.h
     \brief Library for environmental Sensors
-    
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.1
+
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova, Javier Siscart
-     
+
     Based on K. Townsend Library.
  */
 
  /*! \def WaspSensorAmbient.h
     \brief The library flag
-    
+
   */
 #ifndef WaspSensorAmbient_h
 #define WaspSensorAmbient_h
@@ -34,7 +34,7 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
- 
+
 #include <inttypes.h>
 #include <WaspConstants.h>
 
@@ -47,10 +47,13 @@
  * Definitions & Declarations
  ******************************************************************************/
 
-/*! \def AMBIENT_DEBUG
-    \brief Debug mode definition. Comment this line to disable debug mode. Uncomment to enable. 
- */
-#define SENS_AMBIENT_DEBUG
+ /*! Possible values:
+  * 	0: No debug mode enabled
+  */
+#define SENS_AMBIENT_DEBUG 0
+
+#define PRINT_AMBIENT(str)	USB.print(F("[AMBIENT] ")); USB.print(str);
+
 
 // Pin out definition
 #define SENS_AMBIENT_SENSIRION_PWR		15
@@ -91,7 +94,7 @@
 /******************************************************************************
  * Class
  ******************************************************************************/
- 
+
 //! WaspSensorAmbient Class
 /*!
 	WaspSensorAmbient Class defines all the variables and functions used for managing
@@ -100,22 +103,22 @@
 class WaspSensorAmbient
 {
 	private:
-	
+
 	//! It reads from the sensirion
   	/*!
 	\param uint8_t parameter : TEMPERATURE or HUMIDITY
 	\return the value returned by the sensor
 	 */
 	float readSensirion(uint8_t parameter);
-	
+
 	//! It converts the temperature returned by sensirion
   	/*!
 	\param int readValue : value returned by sensirion
 	\param int precision : precission bits
 	\return the converted value
-	 */	
+	 */
 	float temperatureConversion(int readValue, int precision);
-	
+
 	//! It converts the humidity returned by sensirion
   	/*!
 	\param int readValue : value returned by sensirion
@@ -123,8 +126,8 @@ class WaspSensorAmbient
 	\return the converted value
 	 */
 	float humidityConversion(int readValue, int precision);
-	
-	
+
+
 	//! It reads the Sensirion temperature value
   	/*!
 	\return the value returned by the sensor
@@ -142,12 +145,12 @@ class WaspSensorAmbient
 	\return the value returned by the sensor
 	 */
 	float readLDR(void);
-	
-	
-	
-	
+
+
+
+
 	public:
-	
+
 	//! class constructor
   	/*!
 	It initializes the different digital pins
@@ -155,7 +158,7 @@ class WaspSensorAmbient
 	\return void
 	 */
 	WaspSensorAmbient();
-	
+
 	//! It sets ON/OFF the different sensor switches
   	/*!
 	\param uint8_t mode : SENS_ON or SENS_OFF
@@ -171,7 +174,7 @@ class WaspSensorAmbient
 	\return error
 	 */
 	float readValue(uint8_t sensor);
-	
+
 	//! Read temperature sensor
 	float getTemperature();
 
@@ -182,8 +185,10 @@ class WaspSensorAmbient
 	float getLuminosity();
 
 	//! Read Luxes sensor
-	float getLuxes(uint8_t gain);
-	
+	uint32_t getLuxes();
+	uint32_t getLuxes(bool gain);
+	uint32_t getLuxes(bool gain, uint8_t res);
+
 	//! Read BME Temperature
 	float getTemperatureBME();
 	//! Read BME Humidity
@@ -196,4 +201,3 @@ class WaspSensorAmbient
 extern WaspSensorAmbient SensorAmbient;
 
 #endif
-

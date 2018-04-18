@@ -1,23 +1,23 @@
 /*
  *  Library for managing the TSL2561 sensor (luxes accuray)
- * 
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
  *  (at your option) any later version.
-   
+
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
-  
+
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -31,7 +31,7 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 TSL2561::TSL2561()
-{	
+{
   _initialized = false;
   _integration = TSL2561_INTEGRATIONTIME_402MS;
   _gain = TSL2561_GAIN_0X;
@@ -44,41 +44,41 @@ TSL2561::TSL2561()
 boolean TSL2561::checkID()
 {
 	uint8_t valueID;
-	
-	
+
+
 	#if TSL2561_DEBUG>0
-		USB.print(F("TSL2561.Checking ID..."));
+		PRINT_LUX(F("TSL2561.Checking ID..."));
 	#endif
 	Wire.readByte(I2C_ADDRESS_TSL2561, TSL2561_CHIP_ID_REG, &valueID);
 	if (valueID == TSL2561_CHIP_ID_REG_CHIP_ID)
 	{
 		#if TSL2561_DEBUG>0
-			USB.println(F("OK"));
+			PRINT_LUX(F("OK\n"));
 		#endif
 		return 1;
 	}
-	
+
 	#if TSL2561_DEBUG>0
-		USB.println(F("error"));
+		PRINT_LUX(F("error\n"));
 	#endif
 	return 0;
-	
-	
+
+
 }
 
 
 /*
- Function: 
- Returns: 
- Parameters: 
- Values: 
+ Function:
+ Returns:
+ Parameters:
+ Values:
 */
 void TSL2561::enable(void)
 {
-  	#if TSL2561_DEBUG>0
-		USB.println(F("TSL2561.Enabling lux sensor"));
+  #if TSL2561_DEBUG>0
+		PRINT_LUX(F("TSL2561.Enabling lux sensor\n"));
 	#endif
-	Wire.writeByte(	I2C_ADDRESS_TSL2561, 
+	Wire.writeByte(	I2C_ADDRESS_TSL2561,
 					TSL2561_COMMAND_BIT | TSL2561_CONTROL_REG,
 					TSL2561_CONTROL_POWERON);
 
@@ -86,17 +86,17 @@ void TSL2561::enable(void)
 }
 
 /*
- Function: 
- Returns: 
- Parameters: 
- Values: 
+ Function:
+ Returns:
+ Parameters:
+ Values:
 */
 void TSL2561::disable(void)
 {
   	#if TSL2561_DEBUG>0
-		USB.println(F("TSL2561.Disabling lux sensor"));
+		PRINT_LUX(F("TSL2561.Disabling lux sensor\n"));
 	#endif
-	Wire.writeByte(	I2C_ADDRESS_TSL2561, 
+	Wire.writeByte(	I2C_ADDRESS_TSL2561,
 					TSL2561_COMMAND_BIT | TSL2561_CONTROL_REG,
 					TSL2561_CONTROL_POWEROFF);
 
@@ -104,48 +104,48 @@ void TSL2561::disable(void)
 }
 
 /*
- Function: 
- Returns: 
- Parameters: 
- Values: 
+ Function:
+ Returns:
+ Parameters:
+ Values:
 */
-void TSL2561::setGain(tsl2561Gain_t gain) 
+void TSL2561::setGain(tsl2561Gain_t gain)
 {
 	enable();
-	
+
 	#if TSL2561_DEBUG>0
-		USB.print(F("TSL2561.Setting gain to "));
+		PRINT_LUX(F("TSL2561.Setting gain to "));
 		USB.println(gain, DEC);
 	#endif
 
 	_gain = gain;
-  
-	Wire.writeByte(	I2C_ADDRESS_TSL2561, 
+
+	Wire.writeByte(	I2C_ADDRESS_TSL2561,
 					TSL2561_COMMAND_BIT | TSL2561_TIMING_REG,
 					_integration | _gain);
-	
+
 	disable();
 }
 
 /*
- Function: 
- Returns: 
- Parameters: 
- Values: 
+ Function:
+ Returns:
+ Parameters:
+ Values:
 */
 void TSL2561::setTiming(tsl2561IntegrationTime_t integration)
 {
-		
+
 	enable();
-	
+
 	#if TSL2561_DEBUG>0
-		USB.print(F("TSL2561.Setting integration time to "));
+		PRINT_LUX(F("TSL2561.Setting integration time to "));
 		USB.println(integration, DEC);
 	#endif
 
 	_integration = integration;
 
-	Wire.writeByte(	I2C_ADDRESS_TSL2561, 
+	Wire.writeByte(	I2C_ADDRESS_TSL2561,
 					TSL2561_COMMAND_BIT | TSL2561_TIMING_REG,
 					_integration | _gain);
 
@@ -154,10 +154,10 @@ void TSL2561::setTiming(tsl2561IntegrationTime_t integration)
 
 
 /*
- Function: 
- Returns: 
- Parameters: 
- Values: 
+ Function:
+ Returns:
+ Parameters:
+ Values:
 */
 void TSL2561::calculateLux()
 {
@@ -170,11 +170,11 @@ void TSL2561::calculateLux()
 		case TSL2561_INTEGRATIONTIME_13MS:
 			chScale = TSL2561_LUX_CHSCALE_TINT0;
 			break;
-			
+
 		case TSL2561_INTEGRATIONTIME_101MS:
 			chScale = TSL2561_LUX_CHSCALE_TINT1;
 			break;
-			
+
 		default: // No scaling ... integration time = 402ms
 			chScale = (1 << TSL2561_LUX_CHSCALE);
 			break;
@@ -210,37 +210,37 @@ void TSL2561::calculateLux()
 	else if (ratio <= TSL2561_LUX_K2T)
 	{
 		b = TSL2561_LUX_B2T;
-		m = TSL2561_LUX_M2T;		
+		m = TSL2561_LUX_M2T;
 	}
 	else if (ratio <= TSL2561_LUX_K3T)
 	{
 		b = TSL2561_LUX_B3T;
-		m = TSL2561_LUX_M3T;		
+		m = TSL2561_LUX_M3T;
 	}
 	else if (ratio <= TSL2561_LUX_K4T)
 	{
-		b = TSL2561_LUX_B4T; 
-		m = TSL2561_LUX_M4T;		
+		b = TSL2561_LUX_B4T;
+		m = TSL2561_LUX_M4T;
 	}
 	else if (ratio <= TSL2561_LUX_K5T)
 	{
 		b = TSL2561_LUX_B5T;
-		m = TSL2561_LUX_M5T;		
+		m = TSL2561_LUX_M5T;
 	}
 	else if (ratio <= TSL2561_LUX_K6T)
 	{
 		b = TSL2561_LUX_B6T;
-		m = TSL2561_LUX_M6T;		
+		m = TSL2561_LUX_M6T;
 	}
 	else if (ratio <= TSL2561_LUX_K7T)
 	{
 		b = TSL2561_LUX_B7T;
-		m = TSL2561_LUX_M7T;		
+		m = TSL2561_LUX_M7T;
 	}
 	else if (ratio > TSL2561_LUX_K8T)
 	{
 		b = TSL2561_LUX_B8T;
-		m = TSL2561_LUX_M8T;		
+		m = TSL2561_LUX_M8T;
 	}
 
 	unsigned long temp;
@@ -261,16 +261,16 @@ void TSL2561::calculateLux()
 }
 
 /*
- Function: 
- Returns: 
- Parameters: 
- Values: 
+ Function:
+ Returns:
+ Parameters:
+ Values:
 */
 int8_t TSL2561::getFullLuminosity ()
 {
 	int8_t error;
 	uint8_t aux_buffer[4];
-	
+
 	// Enable the device by setting the control bit to 0x03
 	enable();
 
@@ -280,11 +280,11 @@ int8_t TSL2561::getFullLuminosity ()
 		case TSL2561_INTEGRATIONTIME_13MS:
 			delay(14);
 			break;
-			
+
 		case TSL2561_INTEGRATIONTIME_101MS:
 			delay(105);
 			break;
-			
+
 		default:
 			delay(420);
 			break;
@@ -294,10 +294,16 @@ int8_t TSL2561::getFullLuminosity ()
 					TSL2561_COMMAND_BIT | TSL2561_WORD_BIT | TSL2561_CHAN0_LOW_REG,
 					aux_buffer,
 					4);
-	
+
 	full = ((uint16_t) aux_buffer[1] << 8) | (uint16_t) aux_buffer[0];
 	ir = ((uint16_t) aux_buffer[3] << 8) | (uint16_t) aux_buffer[2];
-	
+
+  #if TSL2561_DEBUG>0
+    uint32_t x = (((uint32_t)ir << 16) | (uint32_t)full );
+    PRINT_LUX("Full luminosity: ");
+    USB.println(x, DEC);
+  #endif
+
 	disable();
 
 	return error;
@@ -307,30 +313,30 @@ int8_t TSL2561::getFullLuminosity ()
 /// POWER AND CONFIGURATION FUNCTIONS
 
 /*
- Function: 
- Returns: 
- Parameters: 
- Values: 
+ Function:
+ Returns:
+ Parameters:
+ Values:
 */
-boolean TSL2561::ON(void) 
-{	
-	if (!Wire.isON) 
+boolean TSL2561::ON(void)
+{
+	if (!Wire.isON)
 	{
 		Wire.begin();
 	}
 	delay(100);
-	
+
 	if (checkID() == 0)
 	{
 		return 1;
 	}
-	
+
 	_initialized = true;
 
 	// Set default integration time and gain
 	setTiming(_integration);
 	setGain(_gain);
-	
+
 	delay(400);
 
 	return 0;
@@ -348,10 +354,9 @@ int8_t TSL2561::getLuminosity(uint8_t res)
 }
 
 int8_t TSL2561::getLuminosity(uint8_t res, bool gain)
-{	
+{
 	int8_t error;
-	
-	
+
 	if (gain == 0)
 	{
 		setGain(TSL2561_GAIN_0X);
@@ -360,22 +365,22 @@ int8_t TSL2561::getLuminosity(uint8_t res, bool gain)
 	{
 		setGain(TSL2561_GAIN_16X);
 	}
-	setTiming((tsl2561IntegrationTime_t)res); 
-	
-	// Reads both channels of the sensor	
-	error = getFullLuminosity();	 
+	setTiming((tsl2561IntegrationTime_t)res);
+
+	// Reads both channels of the sensor
+	error = getFullLuminosity();
 	if ( error != 0)
 	{
 		return error;
 	}
-	
+
 	visible = full - ir;
 
 	// Calculta the luxes value
 	calculateLux();
-	
+
 	return 0;
-	
+
 }
 
 

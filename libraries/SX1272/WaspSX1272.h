@@ -1,7 +1,7 @@
 /*! \file WaspSX1272.h
     \brief Library for managing Semtech modules
 
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
 
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Covadonga Albiñana, Yuri Carmona
 
@@ -46,12 +46,10 @@
 
 #define SX1272_debug_mode 0
 
-#define WASPMOTE_GATEWAY_FOR_MESHLIUM
+#define PRINT_SX1272(str)	USB.print(F("[SX1272] ")); USB.print(str);
+#define PRINTLN_SX1272(str)	USB.print(F("[SX1272] ")); USB.println(str);
 
-//! MACROS //
-#define bitRead(value, bit) (((value) >> (bit)) & 0x01)  // read a bit
-#define bitSet(value, bit) ((value) |= (1UL << (bit)))    // set bit to '1'
-#define bitClear(value, bit) ((value) &= ~(1UL << (bit))) // set bit to '0'
+#define WASPMOTE_GATEWAY_FOR_MESHLIUM
 
 
 //! REGISTERS //
@@ -305,7 +303,7 @@ public:
 	\return void
   	 */
    	WaspSX1272();
-   	
+
 	//! It puts the module ON
   	/*!
 	\param void
@@ -658,7 +656,7 @@ public:
 	 */
 	uint8_t getRegs();
 
-	//! It sets the maximum number of bytes from a frame that fit in a packet 
+	//! It sets the maximum number of bytes from a frame that fit in a packet
 	//! structure.
 	/*!
 	It stores in global '_payloadlength' variable the maximum number of bytes.
@@ -744,11 +742,11 @@ public:
 	 */
 	boolean	availableData();
 
-	//! It checks if there is an available packet and its destination before a 
+	//! It checks if there is an available packet and its destination before a
 	//! timeout.
   	/*!
   	 *
-  	\param uint32_t wait : time to wait while there is no a valid header 
+  	\param uint32_t wait : time to wait while there is no a valid header
   	received.
 	\return 'true' on success, 'false' otherwise
 	 */
@@ -770,7 +768,7 @@ public:
 	*/
 	uint8_t setPacket(uint8_t dest, uint8_t *payload);
 
-	//! It reads a received packet from the FIFO, if it arrives before ending 
+	//! It reads a received packet from the FIFO, if it arrives before ending
 	//! MAX_TIMEOUT time.
 	/*!
 	 *
@@ -778,7 +776,7 @@ public:
 	*/
 	uint8_t getPacketMAXTimeout();
 
-	//! It reads a received packet from the FIFO, if it arrives before ending 
+	//! It reads a received packet from the FIFO, if it arrives before ending
 	//! '_sendTime' time.
 	/*!
 	 *
@@ -786,11 +784,11 @@ public:
 	*/
 	int8_t getPacket();
 
-	//! It receives and gets a packet from FIFO, if it arrives before ending 
+	//! It receives and gets a packet from FIFO, if it arrives before ending
 	//! 'wait' time.
 	/*!
 	 *
-	\param uint32_t wait : time to wait while there is not a complete packet 
+	\param uint32_t wait : time to wait while there is not a complete packet
 	received.
 	\return '0' on success, '1' otherwise
 	*/
@@ -817,17 +815,17 @@ public:
 	*/
 	uint8_t sendWithTimeout(uint32_t wait);
 
-	//! It tries to send the packet which payload is a parameter before ending 
+	//! It tries to send the packet which payload is a parameter before ending
 	//! MAX_TIMEOUT.
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeout(	uint8_t dest, 
+	uint8_t sendPacketMAXTimeout(	uint8_t dest,
 									char *payload);
 
-	//! It tries to send the packet which payload is a parameter before ending 
+	//! It tries to send the packet which payload is a parameter before ending
 	//! MAX_TIMEOUT.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -835,22 +833,22 @@ public:
 	\param uint16_t length : payload buffer length.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeout(	uint8_t dest, 
-									uint8_t *payload, 
+	uint8_t sendPacketMAXTimeout(	uint8_t dest,
+									uint8_t *payload,
 									uint16_t length);
 
 
-	//! It sends the packet which payload is a parameter before ending 
+	//! It sends the packet which payload is a parameter before ending
 	//! MAX_TIMEOUT.
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeout(	uint8_t dest, 
+	uint8_t sendPacketTimeout(	uint8_t dest,
 								char *payload);
 
-	//! It sends the packet which payload is a parameter before ending 
+	//! It sends the packet which payload is a parameter before ending
 	//! MAX_TIMEOUT.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -858,11 +856,11 @@ public:
 	\param uint16_t length : payload buffer length.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeout(	uint8_t dest, 
-								uint8_t *payload, 
+	uint8_t sendPacketTimeout(	uint8_t dest,
+								uint8_t *payload,
 								uint16_t length);
 
-	//! It sends the packet which payload is a parameter before ending 'wait' 
+	//! It sends the packet which payload is a parameter before ending 'wait'
 	//! time.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -870,11 +868,11 @@ public:
 	\param uint32_t wait : time to wait.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeout(	uint8_t dest, 
-								char *payload, 
+	uint8_t sendPacketTimeout(	uint8_t dest,
+								char *payload,
 								uint32_t wait);
 
-	//! It sends the packet which payload is a parameter before ending 'wait' 
+	//! It sends the packet which payload is a parameter before ending 'wait'
 	//! time.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -883,12 +881,12 @@ public:
 	\param uint32_t wait : time to wait.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeout(	uint8_t dest, 
-								uint8_t *payload, 
-								uint16_t length, 
+	uint8_t sendPacketTimeout(	uint8_t dest,
+								uint8_t *payload,
+								uint16_t length,
 								uint32_t wait);
 
-	//! It sends the packet which payload is a parameter before MAX_TIMEOUT, 
+	//! It sends the packet which payload is a parameter before MAX_TIMEOUT,
 	//! and replies with ACK.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -904,10 +902,10 @@ public:
 			'1'  --> not used (reserved)
 			'0'  --> The ACK has been received with no errors
 	*/
-	uint8_t sendPacketMAXTimeoutACK(uint8_t dest, 
+	uint8_t sendPacketMAXTimeoutACK(uint8_t dest,
 									char *payload);
 
-	//! It sends the packet which payload is a parameter before MAX_TIMEOUT, 
+	//! It sends the packet which payload is a parameter before MAX_TIMEOUT,
 	//! and replies with ACK.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -924,11 +922,11 @@ public:
 			'1'  --> not used (reserved)
 			'0'  --> The ACK has been received with no errors
 	*/
-	uint8_t sendPacketMAXTimeoutACK(uint8_t dest, 
-									uint8_t *payload, 
+	uint8_t sendPacketMAXTimeoutACK(uint8_t dest,
+									uint8_t *payload,
 									uint16_t length);
 
-	//! It sends the packet which payload is a parameter before a timeout, 
+	//! It sends the packet which payload is a parameter before a timeout,
 	//! and replies with ACK.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -944,10 +942,10 @@ public:
 			'1'  --> not used (reserved)
 			'0'  --> The ACK has been received with no errors
 	*/
-	uint8_t sendPacketTimeoutACK(	uint8_t dest, 
+	uint8_t sendPacketTimeoutACK(	uint8_t dest,
 									char *payload);
 
-	//! It sends the packet which payload is a parameter before a timeout, 
+	//! It sends the packet which payload is a parameter before a timeout,
 	//! and replies with ACK.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -964,11 +962,11 @@ public:
 			'1'  --> not used (reserved)
 			'0'  --> The ACK has been received with no errors
 	*/
-	uint8_t sendPacketTimeoutACK(	uint8_t dest, 
-									uint8_t *payload, 
+	uint8_t sendPacketTimeoutACK(	uint8_t dest,
+									uint8_t *payload,
 									uint16_t length);
 
-	//! It sends the packet which payload is a parameter before 'wait' time, 
+	//! It sends the packet which payload is a parameter before 'wait' time,
 	//! and replies with ACK.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -985,11 +983,11 @@ public:
 			'1'  --> not used (reserved)
 			'0'  --> The ACK has been received with no errors
 	*/
-	uint8_t sendPacketTimeoutACK(	uint8_t dest, 
+	uint8_t sendPacketTimeoutACK(	uint8_t dest,
 									char *payload,
 									uint32_t wait);
 
-	//! It sends the packet which payload is a parameter before 'wait' time, 
+	//! It sends the packet which payload is a parameter before 'wait' time,
 	//! and replies with ACK.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -1007,9 +1005,9 @@ public:
 			'1'  --> not used (reserved)
 			'0'  --> The ACK has been received with no errors
 	*/
-	uint8_t sendPacketTimeoutACK(uint8_t dest, 
-									uint8_t *payload, 
-									uint16_t length, 
+	uint8_t sendPacketTimeoutACK(uint8_t dest,
+									uint8_t *payload,
+									uint16_t length,
 									uint32_t wait);
 
 	//! It sets the destination of a packet.
@@ -1025,7 +1023,7 @@ public:
 	\return '0' on success, '1' otherwise
 	 */
 	uint8_t setTimeout();
-	
+
 	//! It gets the theoretical value of the time-on-air of the packet
   	/*! \remarks http://www.semtech.com/images/datasheet/sx1272.pdf
    	It stores in global '_sendTime' variable the time for each mode.
@@ -1063,7 +1061,7 @@ public:
 	*/
 	uint8_t getACK();
 
- 	//! It receives and gets an ACK from FIFO, if it arrives before ending 
+ 	//! It receives and gets an ACK from FIFO, if it arrives before ending
  	//! 'wait' time.
 	/*!
 	 *
@@ -1080,17 +1078,17 @@ public:
 	*/
 	uint8_t getACK(uint32_t wait);
 
-	//! It sends a packet, waits to receive an ACK and updates the _retries 
+	//! It sends a packet, waits to receive an ACK and updates the _retries
 	//! value, before ending MAX_TIMEOUT time.
 	/*!
 	\param uint8_t dest : packet destination.
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeoutACKRetries(uint8_t dest, 
+	uint8_t sendPacketMAXTimeoutACKRetries(uint8_t dest,
 											char *payload);
 
-	//! It sends a packet, waits to receive an ACK and updates the _retries 
+	//! It sends a packet, waits to receive an ACK and updates the _retries
 	//! value, before ending MAX_TIMEOUT time.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -1098,8 +1096,8 @@ public:
 	\param uint16_t length : payload buffer length.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeoutACKRetries(	uint8_t dest, 
-											uint8_t *payload, 
+	uint8_t sendPacketMAXTimeoutACKRetries(	uint8_t dest,
+											uint8_t *payload,
 											uint16_t length);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries value
@@ -1108,7 +1106,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, 
+	uint8_t sendPacketTimeoutACKRetries(uint8_t dest,
 										char *payload);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries value
@@ -1118,11 +1116,11 @@ public:
 	\param uint16_t length : payload buffer length.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, 
-										uint8_t *payload, 
+	uint8_t sendPacketTimeoutACKRetries(uint8_t dest,
+										uint8_t *payload,
 										uint16_t length);
 
-	//! It sends a packet, waits to receive an ACK and updates the _retries 
+	//! It sends a packet, waits to receive an ACK and updates the _retries
 	//! value, before ending 'wait' time.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -1130,11 +1128,11 @@ public:
 	\param uint32_t wait : time to wait while trying to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, 
-										char *payload, 
+	uint8_t sendPacketTimeoutACKRetries(uint8_t dest,
+										char *payload,
 										uint32_t wait);
 
-	//! It sends a packet, waits to receive an ACK and updates the _retries 
+	//! It sends a packet, waits to receive an ACK and updates the _retries
 	//! value, before ending 'wait' time.
 	/*!
 	\param uint8_t dest : packet destination.
@@ -1143,9 +1141,9 @@ public:
 	\param uint32_t wait : time to wait while trying to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, 
-										uint8_t *payload, 
-										uint16_t length, 
+	uint8_t sendPacketTimeoutACKRetries(uint8_t dest,
+										uint8_t *payload,
+										uint16_t length,
 										uint32_t wait);
 
 	//! It gets the internal temperature of the module.
@@ -1160,31 +1158,31 @@ public:
 	 * \return void
 	*/
 	void showReceivedPacket();
-	
+
 	//! It shows te received Waspmote Frame via USB port
 	/*!
 	 * \return void
 	*/
 	void showFramefromPacket();
-	
+
 	//! It prints the registers related to RX via USB
 	/*!
 	 * \return void
 	*/
-	void showRxRegisters();	
-	
+	void showRxRegisters();
+
 	//! It sets the RTC settings with Meshlium timestamp configuration
-	/*! This function sends a special Frame to Meshlium (Meshlium's address must 
-	 * be '1'), and then Meshlium returns an answer with the timestamp. This 
-	 * function parses the info and sets the RTC Time and Date. 
+	/*! This function sends a special Frame to Meshlium (Meshlium's address must
+	 * be '1'), and then Meshlium returns an answer with the timestamp. This
+	 * function parses the info and sets the RTC Time and Date.
 	 * \return  '0' on success, '1' otherwise
 	*/
 	uint8_t setRTCfromMeshlium();
-	
+
 	//! It sets the RTC settings with Meshlium timestamp configuration
-	/*! This function sends a special Frame to Meshlium (Meshlium's address must 
-	 * be '1'), and then Meshlium returns an answer with the timestamp. This 
-	 * function parses the info and sets the RTC Time and Date. 
+	/*! This function sends a special Frame to Meshlium (Meshlium's address must
+	 * be '1'), and then Meshlium returns an answer with the timestamp. This
+	 * function parses the info and sets the RTC Time and Date.
 	 * \return  'true' on cad detected, 'false' if not detected
 	*/
 	bool cadDetected();

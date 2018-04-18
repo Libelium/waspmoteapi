@@ -1,7 +1,7 @@
 /*
  *  Library for managing managing the LoRaWAN module
  * 
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.3
+ *  Version:		3.4
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -123,6 +123,7 @@
  const char command_90[]	PROGMEM	= 	"mac get rx2\r\n";
  const char command_91[]	PROGMEM	= 	"mac set sync %u\r\n";
  const char command_92[]	PROGMEM	= 	"mac get sync\r\n";
+ const char command_93[]	PROGMEM	= 	"radio tx ";
 
  
 
@@ -220,7 +221,8 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
 	command_89,
 	command_90,
 	command_91,
-	command_92
+	command_92,
+	command_93
 };
 
 /******************************************************************************
@@ -654,6 +656,35 @@ uint8_t WaspLoRaWAN::check()
 		return LORAWAN_NO_ANSWER;
 	}
 }
+
+
+
+/*!
+ * @brief	Displays the module's firmware version via USB port
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer 
+ * 
+ */ 
+void WaspLoRaWAN::showFirmwareVersion()
+{	
+	uint8_t status;
+	
+	memset(_command,0x00,sizeof(_command));
+	
+	// create "sys get ver" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[68])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,"\r\n",1000);
+	
+	USB.ON();
+	USB.print(F("Firmware version: "));
+	USB.print((char*)_buffer);
+}
+
+
 
 
 
@@ -1871,6 +1902,7 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 	memset(ans3,0x00,sizeof(ans3));
+	memset(ans4,0x00,sizeof(ans4));
 	
 	// check port
 	if (port > 223) return LORAWAN_INPUT_ERROR;
@@ -1894,9 +1926,11 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	// create "not_joined" answer
 	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
+	// invalid_data_len
+	strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,ans3,1000);
+	status = sendCommand(_command,ans1,ans2,ans3,ans4,1000);
 	
 	if (status == 1)
 	{
@@ -1904,7 +1938,6 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 		memset(ans1,0x00,sizeof(ans1));
 		memset(ans2,0x00,sizeof(ans2));
 		memset(ans3,0x00,sizeof(ans3));
-		memset(ans4,0x00,sizeof(ans4));
 		memset(carr,0x00,sizeof(carr));
 		
 		// mac_rx
@@ -1913,13 +1946,11 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 		strcpy_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
 		// mac_err
 		strcpy_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));		
-		// invalid_data_len
-		strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 		// \r\n
 		strcpy_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 		
 		//wait for response
-		status = waitFor(ans1, ans2, ans3, ans4, 20000);
+		status = waitFor(ans1, ans2, ans3, 60000);
 		
 		if (status == 1)
 		{
@@ -1954,11 +1985,6 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 			saveConfig();
 			return LORAWAN_SENDING_ERROR;
 		}
-		else if (status == 4)
-		{
-			saveConfig();
-			return LORAWAN_LENGTH_ERROR;
-		}
 		else
 		{
 			saveConfig();
@@ -1975,6 +2001,11 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
 		saveConfig();
 		return LORAWAN_NOT_JOINED;
 	}
+	else if (status == 4)
+	{
+		saveConfig();
+		return LORAWAN_LENGTH_ERROR;
+	}
 	else
 	{
 		saveConfig();
@@ -1989,6 +2020,7 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, char* payload)
  * 	
  * @param 	char* data:	data to be sent
  * 			uint8_t port: port number to send data
+ * 			uint16_t length: length of data array
  * 
  * @remarks	data is a sequence of digit representing the value of byte stream
  * 			expressed in hexadecimal value (i.e.: payload =12A435 – the payload 
@@ -2023,6 +2055,7 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t leng
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 	memset(ans3,0x00,sizeof(ans3));
+	memset(ans4,0x00,sizeof(ans4));
 	memset(byte2send,0x00,sizeof(byte2send));
 	memset(carr,0x00,sizeof(carr));
 	
@@ -2037,6 +2070,8 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t leng
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	// create "not_joined" answer
 	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
+	// invalid_data_len
+	strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 	// create "\r\n" answer
 	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 
@@ -2049,7 +2084,7 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t leng
 		printByte(byte2send[1],_uart);
 	}
 	printString(carr,_uart);
-	status = waitFor(ans1,ans2,ans3,1000);
+	status = waitFor(ans1,ans2,ans3,ans4,500);
 
 	if (status == 1)
 	{
@@ -2057,7 +2092,6 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t leng
 		memset(ans1,0x00,sizeof(ans1));
 		memset(ans2,0x00,sizeof(ans2));
 		memset(ans3,0x00,sizeof(ans3));
-		memset(ans4,0x00,sizeof(ans4));
 		
 		// mac_rx
 		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[3])));
@@ -2065,11 +2099,9 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t leng
 		strcpy_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
 		// mac_err
 		strcpy_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));		
-		// invalid_data_len
-		strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 		
 		//wait for response
-		status = waitFor(ans1, ans2, ans3, ans4, 20000);
+		status = waitFor(ans1, ans2, ans3, 20000);
 		
 		if (status == 1)
 		{
@@ -2104,11 +2136,6 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t leng
 			saveConfig();
 			return LORAWAN_SENDING_ERROR;
 		}
-		else if (status == 4)
-		{
-			saveConfig();
-			return LORAWAN_LENGTH_ERROR;
-		}
 		else
 		{
 			saveConfig();
@@ -2124,6 +2151,11 @@ uint8_t WaspLoRaWAN::sendConfirmed(uint8_t port, uint8_t* payload, uint16_t leng
 	{
 		saveConfig();
 		return LORAWAN_NOT_JOINED;
+	}
+	else if (status == 4)
+	{
+		saveConfig();
+		return LORAWAN_LENGTH_ERROR;
 	}
 	else
 	{
@@ -2171,6 +2203,7 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 	memset(ans3,0x00,sizeof(ans3));
+	memset(ans4,0x00,sizeof(ans4));
 	
 	// check port
 	if (port > 223) return LORAWAN_INPUT_ERROR;
@@ -2194,9 +2227,11 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	// create "not_joined" answer
 	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
+	// invalid_data_len
+	sprintf_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,ans3,500);
+	status = sendCommand(_command,ans1,ans2,ans3,ans4,500);
 
 	if (status == 1)
 	{
@@ -2213,13 +2248,11 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
 		// mac_err
 		sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));
-		// invalid_data_len
-		sprintf_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 		// \r\n
 		sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 		
 		//wait for response
-		status = waitFor(ans1, ans2, ans3, ans4, 20000);
+		status = waitFor(ans1, ans2, ans3, 20000);
 		
 		if (status == 1)
 		{
@@ -2255,11 +2288,6 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 			saveConfig();
 			return LORAWAN_SENDING_ERROR;
 		}
-		else if (status == 4)
-		{
-			saveConfig();
-			return LORAWAN_LENGTH_ERROR;
-		}
 		else
 		{
 			saveConfig();
@@ -2276,6 +2304,11 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
 		saveConfig();
 		return LORAWAN_NOT_JOINED;
 	}
+	else if (status == 4)
+	{
+		saveConfig();
+		return LORAWAN_LENGTH_ERROR;
+	}
 	else
 	{
 		saveConfig();
@@ -2290,6 +2323,7 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, char* payload)
  * 	
  * @param 	char* data:	data to be sent
  * 			uint8_t port: port number to send data
+ * 			uint16_t length: length of data array
  * 
  * @remarks	data is a sequence of digit representing the value of byte stream
  * 			expressed in hexadecimal value (i.e.: payload =12A435 – the payload 
@@ -2324,6 +2358,7 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t le
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 	memset(ans3,0x00,sizeof(ans3));
+	memset(ans4,0x00,sizeof(ans4));
 	memset(carr,0x00,sizeof(carr));
 	memset(byte2send,0x00,sizeof(byte2send));
 	
@@ -2338,6 +2373,8 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t le
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 	// create "not_joined" answer
 	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[18])));
+	// invalid_data_len
+	strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 	// create "\r\n" answer
 	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 
@@ -2350,7 +2387,7 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t le
 		printByte(byte2send[1],_uart);
 	}
 	printString(carr,_uart);
-	status = waitFor(ans1,ans2,ans3,1000);
+	status = waitFor(ans1,ans2,ans3,ans4,500);
 
 	if (status == 1)
 	{
@@ -2358,7 +2395,6 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t le
 		memset(ans1,0x00,sizeof(ans1));
 		memset(ans2,0x00,sizeof(ans2));
 		memset(ans3,0x00,sizeof(ans3));
-		memset(ans4,0x00,sizeof(ans4));
 		memset(carr,0x00,sizeof(carr));
 			
 		// mac_rx
@@ -2367,13 +2403,11 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t le
 		strcpy_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[8])));
 		// mac_err
 		strcpy_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[15])));
-		// invalid_data_len
-		strcpy_P(ans4,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[16])));
 		// create "\r\n" answer
 		sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	
 		//wait for response
-		status = waitFor(ans1, ans2, ans3, ans4, 20000);
+		status = waitFor(ans1, ans2, ans3, 20000);
 		
 		if (status == 1)
 		{
@@ -2408,11 +2442,6 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t le
 			saveConfig();
 			return LORAWAN_SENDING_ERROR;
 		}
-		else if (status == 4)
-		{
-			saveConfig();
-			return LORAWAN_LENGTH_ERROR;
-		}
 		else
 		{
 			saveConfig();
@@ -2428,6 +2457,11 @@ uint8_t WaspLoRaWAN::sendUnconfirmed(uint8_t port, uint8_t* payload, uint16_t le
 	{
 		saveConfig();
 		return LORAWAN_NOT_JOINED;
+	}
+	else if (status == 4)
+	{
+		saveConfig();
+		return LORAWAN_LENGTH_ERROR;
 	}
 	else
 	{
@@ -3809,6 +3843,90 @@ uint8_t WaspLoRaWAN::sendRadio(char * message)
 }
 
 
+/*!
+ * @brief	Send a packet via radio
+ * 
+ * @param	uint8_t* data: byte array that will be send
+ * 			uint16_t length: length of data array
+ * 
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if there was an error
+ * 	@arg	'2' if no answer
+ *  @arg	'7' if input parameter error
+ */
+uint8_t WaspLoRaWAN::sendRadio(uint8_t * payload, uint16_t length)
+{	
+	char ans1[15];
+	char ans2[15];
+	char carr[5];
+	char byte2send[3];
+	uint8_t status;
+	
+	// clear buffers
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	memset(byte2send,0x00,sizeof(byte2send));
+	memset(carr,0x00,sizeof(carr));
+	
+	// create "radio tx " command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[93])));
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	// create "\r\n" answer
+	sprintf_P(carr,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+	
+	//send command and wait for ans
+	printString(_command,_uart);
+	for (uint16_t i=0; i<length;i++)
+	{
+		Utils.hex2str((uint8_t*)&payload[i], byte2send, 1);
+		printByte(byte2send[0],_uart);
+		printByte(byte2send[1],_uart);
+	}
+	printString(carr,_uart);
+	
+	status = waitFor(ans1,ans2,600);
+
+	if (status == 1)
+	{
+		memset(ans1,0x00,sizeof(ans1));
+		memset(ans2,0x00,sizeof(ans2));
+		
+		// create "radio_tx_ok" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[4])));
+		// create "radio_err" answer
+		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[12])));
+		
+		//wait for response
+		status = waitFor(ans1,ans2,3000);
+		
+		if (status == 1)
+		{
+			return LORAWAN_ANSWER_OK;
+		}
+		else if (status == 2)
+		{
+			return LORAWAN_ANSWER_ERROR;
+		}
+		else
+		{
+			return LORAWAN_NO_ANSWER;
+		}
+	}
+	else if (status == 2)
+	{
+		return LORAWAN_ANSWER_ERROR;
+	}
+	else
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
 
 /*!
  * @brief	Receive a packet via radio
@@ -4357,7 +4475,6 @@ uint8_t WaspLoRaWAN::setRadioFreq(uint32_t freq)
 		case RN2903_MODULE:
 				if ((freq < 902250000)||(freq > 927750000)) return LORAWAN_INPUT_ERROR;
 				break;
-				
 		default:
 				return LORAWAN_VERSION_ERROR;			
 	}
@@ -4780,8 +4897,11 @@ uint8_t WaspLoRaWAN::setRadioCRC(char* state)
 	
 	if (status == 1)
 	{
-		if (state == ans1) _crcStatus = true;
-		else _crcStatus = false;
+		// create "on" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[9])));
+
+		if (!strcmp(state,ans1)) _crcStatus = true;
+        else _crcStatus = false;
 		
 		return LORAWAN_ANSWER_OK;
 	}

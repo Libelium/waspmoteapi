@@ -19,9 +19,9 @@
   
   Written by Doc Walker (Rx)
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>
-  Modified for Waspmote by Libelium, 2017
+  Modified for Waspmote by Libelium, 2018
   
-  Version:	3.2
+  Version:	3.3
   
 */
 
@@ -80,10 +80,7 @@ Macro to generate 32-bit integer from (2) 16-bit words.
 #define LONG(hi, lo) ((uint32_t) ((hi) << 16 | (lo)))
 #define lowByte(w) ((uint8_t) ((w) & 0xff))
 #define highByte(w) ((uint8_t) ((w) >> 8))
-#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
-#define bitSet(value, bit) ((value) |= (1UL << (bit)))
-#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
-#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+
 
 #define		RS485_COM	0x01
 #define		RS232_COM	0x02

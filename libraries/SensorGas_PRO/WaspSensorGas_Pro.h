@@ -1,7 +1,7 @@
 /*! \file WaspSensorGas_Pro.h
 \brief Library for managing the Gas Pro Sensor Board
 
-Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
 http://www.libelium.com
 
 This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Version:		4.0
+Version:		4.1
 Design:			David Gascón
 Implementation:	Alejandro Gállego & Ahmad Saad
 
@@ -42,6 +42,8 @@ Implementation:	Alejandro Gállego & Ahmad Saad
 #include <MCP3421.h>
 #include <LMP91000.h>
 #include <BME280.h>
+#include <UltrasoundSensor.h>
+#include <TSL2561.h>
 
 
 
@@ -49,7 +51,7 @@ Implementation:	Alejandro Gállego & Ahmad Saad
  * Definitions & Declarations
  ******************************************************************************/
 // Probe I2C pins
-#define GP_I2C_MAIN_EN		ANA0 
+#define GP_I2C_MAIN_EN		ANA0
 #define GP_I2C_SOCKET_1_C	DIGITAL4
 #define GP_I2C_SOCKET_2_E	DIGITAL6
 #define GP_I2C_SOCKET_3_F	DIGITAL8
@@ -307,10 +309,10 @@ WaspSensorGas_Pro Class defines all the variables and functions used to manage t
 
 class Gas
 {
-	
+
 private:
 	bool initDone = false;
-	
+
 protected:
 
 	//! This struct includes all the data necessary to manage the AFE modules for each sensor
@@ -651,4 +653,70 @@ public:
 };
 #endif
 
+/******************************************************************************
+ * Class
+ ******************************************************************************/
+#ifndef BME_GASES_SENSOR_H
 
+class bmeGasesSensor
+{
+	private:
+	public:
+
+		// Constructor
+		bmeGasesSensor();
+
+		void ON();
+		void OFF();
+
+		float getTemperature();
+		float getHumidity();
+		float getPressure();
+};
+
+
+#endif
+
+
+
+/******************************************************************************
+ * Class
+ ******************************************************************************/
+#ifndef ULTRASOUND_GASES_SENSOR_H
+
+class ultrasoundGasesSensor
+{
+	private:
+	public:
+
+		// Constructor
+		ultrasoundGasesSensor();
+
+		void ON();
+		void OFF();
+		uint16_t getDistance();
+};
+
+
+#endif
+
+
+
+/******************************************************************************
+ * Class
+ ******************************************************************************/
+
+class luxesGasesSensor
+{
+	private:
+	public:
+
+		// Constructor
+		luxesGasesSensor();
+
+		void ON();
+		void OFF();
+		uint32_t getLuminosity();
+		uint32_t getLuminosity(bool gain);
+		uint32_t getLuminosity(bool gain, uint8_t res);
+};

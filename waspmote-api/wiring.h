@@ -1,6 +1,6 @@
 /*
  *  Modified for Waspmote by D. Cuartielles & A. Bielsa, 2009
- *	Modified for Waspmote, 2016
+ *	Modified for Waspmote, 2018
  * 
  *  Copyright (c) 2005-2006 David A. Mellis
  *
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- * 	Version:	3.0 
+ * 	Version:	3.1 
  */
  
 
@@ -65,6 +65,13 @@ extern "C"{
 
 #define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
 #define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
+
+
+// define MACROS in order to manage bits inside Bytes
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
 
 typedef uint8_t boolean;

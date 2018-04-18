@@ -1,7 +1,7 @@
 /*
  *  Library for managing the Gas Pro Sensor Board
  *
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		4.0
+ *  Version:		4.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego & Ahmad Saad
  */
@@ -104,7 +104,7 @@ Gas::Gas(int socket)
 
 	// Init I2C and power lines
 	if (!initDone)
-	{		
+	{
 		if ((WaspRegisterSensor & REG_CITIES_PRO) != 0)
 		{
 			// gases pro board
@@ -120,9 +120,9 @@ Gas::Gas(int socket)
 			digitalWrite(GP_I2C_SOCKET_3_F, LOW);
 			digitalWrite(GP_I2C_SOCKET_4_A, LOW);
 			digitalWrite(GP_I2C_SOCKET_5_B, LOW);
-			digitalWrite(GP_I2C_SOCKET_6, LOW);			
-			
-			// switch off all socket power lines	
+			digitalWrite(GP_I2C_SOCKET_6, LOW);
+
+			// switch off all socket power lines
 			pinMode(GP_PWR_SOCKET_1_C, OUTPUT);
 			pinMode(GP_PWR_SOCKET_2_E, OUTPUT);
 			pinMode(GP_PWR_SOCKET_3_F, OUTPUT);
@@ -143,7 +143,7 @@ Gas::Gas(int socket)
 		}
 	}
 	initDone = true;
-	
+
 	// i2c isolator disabled
 	// sensor socket power disabled
 	pinMode(sensor_config.power_pin, OUTPUT);
@@ -328,7 +328,7 @@ float Gas::getSensitivityTempComp(float temperature)
 	#if DEBUG_GASES_PRO>2
 		PRINTLN_GASES_PRO(F("***End of sensitivity temperature compensation***\r\n"));
 	#endif
-	
+
 
 	return comp_sens;
 }
@@ -471,8 +471,8 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 
 	// Read the ADC
 	for (int i = 0; i < n_samples; i++)
-	{		
-		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));		
+	{
+		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));
 	}
 	// Get the mean value
 	V_conc /= n_samples;
@@ -561,7 +561,7 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO_DATA("Ie: ", conc," uA");
 	#endif
-	
+
 	// Ie-Ibase  (Subtracts baseline current)
 	conc -= (sensor_config.baseline / 1000);
 
@@ -569,13 +569,13 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 		PRINT_GASES_PRO_DATA("Ie-Ibase: ", conc," uA");
 	#endif
 
-	// Output current temperature compensation	
-	conc *= getSensitivityTempComp(temperature);	
-	
+	// Output current temperature compensation
+	conc *= getSensitivityTempComp(temperature);
+
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO_DATA("Compensated conc: ", conc," uA");
 	#endif
-	
+
 	// fix sensitivity sign
 	if ((sensor_config.sensor_type == CL2_SS) 		||
 		(sensor_config.sensor_type == NO2_SS_CLE) 	||
@@ -583,15 +583,15 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 	{
 		conc *= -1;
 	}
-	
-	// Conversion: I(nA) --> concentración(ppm)	
+
+	// Conversion: I(nA) --> concentración(ppm)
 	conc = (conc * 1000) / sensor_config.m_conc;
-	
+
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO_DATA("concentration: ", conc," ppm");
 	#endif
-	
-	
+
+
 	// Baseline temperature compensation
 	conc -= getBaselineTempComp(temperature);
 	#if DEBUG_GASES_PRO>0
@@ -647,34 +647,34 @@ float Gas::readPellistorSensor(uint8_t resolution, float temperature)
 	#endif
 
 	// Vconc(mV) - Voffset(mV) sensor
-	V_conc -= sensor_config.baseline;		
+	V_conc -= sensor_config.baseline;
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure baseline compensated: "));
 		USB.printFloat(V_conc, 3);
 		USB.println(F(" mV"));
 	#endif
-	
+
 	// Baseline temperature compensation
-	V_conc -= getBaselineTempComp(temperature);	
+	V_conc -= getBaselineTempComp(temperature);
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure temperature compensated: "));
 		USB.printFloat(V_conc, 3);
 		USB.println(F(" mV"));
 	#endif
-	
+
 	// Output current temperature compensation
-	V_conc *= getSensitivityTempComp(temperature);	
+	V_conc *= getSensitivityTempComp(temperature);
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure sensitivity compensated: "));
 		USB.printFloat(V_conc, 3);
 		USB.println(F(" mV"));
 	#endif
-	
+
 	// V_conc(mV) --> concentration(% LEL)
-	concentration = V_conc / (sensor_config.m_conc);	
+	concentration = V_conc / (sensor_config.m_conc);
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure concentration: "));
@@ -731,7 +731,7 @@ float Gas::readNDIR(uint8_t resolution)
 	#endif
 
 	// Vconc(mV) - Voffset(mV) sensor
-	V_conc -= sensor_config.baseline;		
+	V_conc -= sensor_config.baseline;
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure baseline compensated: "));
@@ -740,7 +740,7 @@ float Gas::readNDIR(uint8_t resolution)
 	#endif
 
 	// conc(mV) --> concentración(% LEL)
-	conc = V_conc * sensor_config.m_conc;	
+	conc = V_conc * sensor_config.m_conc;
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Compensated measure: "));
@@ -819,9 +819,9 @@ float Gas::read4ElectrodeSensorv100(uint8_t resolution, float temperature)
 		USB.print(R_gain, DEC);
 		USB.println(F(" Ohms"));
 	#endif
-	
+
 	// V(mV) --> I(uA)
-	conc = (V_conc / (R_gain)) * -1000;			
+	conc = (V_conc / (R_gain)) * -1000;
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Current: "));
@@ -1048,7 +1048,7 @@ float Gas::read4ElectrodeSensorv301(uint8_t resolution, float temperature, float
 			PRINT_GASES_PRO_DATA("O3-NO2: ", concentration, " uA");
 		#endif
 	}
-	
+
 	// I(uA) --> concentracion (ppm)
 	#if DEBUG_GASES_PRO > 0
 		PRINT_GASES_PRO_DATA("Sensitivity: ", sensor_config.m_conc, " nA/ppm");
@@ -1268,48 +1268,48 @@ int8_t Gas::ON(float R_gain)
 
 			PWR.setSensorPower(SENS_3V3, SENS_ON);
 			delay(100);
-			
-			// init BME 
+
+			// init BME
 			BME.ON();
 		}
 	#endif
 
 	// Update register bitmap with related socket
 	pwrGasPRORegister |= (1 << sensor_config.socket);
-	
+
 	// Switch ON the sensor power 3v3 switch if required for Cities Board
 	if (WaspRegisterSensor & REG_CITIES_PRO)
 	{
 		digitalWrite(sensor_config.cities_3v3_pin, HIGH);
 		pwrCitiesPRORegister |= (1 << sensor_config.socket);
 	}
-	
+
 	// Switch ON the sensor socket
 	digitalWrite(sensor_config.power_pin, LOW);
-	
+
 	// Disable All sockets for preventing interferences
 	disableCommSockets();
-	
+
 	// Enable communication with the AFE
  	digitalWrite(sensor_config.i2c_pin, HIGH);
  	delay(100);
- 	
+
  	//////////////////////////////////////////////
  	// Read eeprom
  	//////////////////////////////////////////////
-	uint8_t retries = 3;	
+	uint8_t retries = 3;
 	do
 	{
 		// read eeprom info
 		answer = readSensorInfo();
 		retries--;
-		
+
 		if (answer != 1)
 		{
 			Wire.recover();
 		}
 	} while ((answer != 1) && (retries > 0));
-	
+
 	// check error
 	if (answer == 0)
 	{
@@ -1325,25 +1325,25 @@ int8_t Gas::ON(float R_gain)
 	#endif
 
  	delay(1000);
- 	
- 	
+
+
  	//////////////////////////////////////////////
  	// Configure AFE
  	//////////////////////////////////////////////
- 	
+
  	retries = 3;
  	do
 	{
 		// configure AFE
 		answer = configureAFE(R_gain);
 		retries--;
-		
+
 		if (answer != 1)
 		{
 			Wire.recover();
 		}
 	} while ((answer != 1) && (retries > 0));
- 	
+
 
 	if (answer == 1)
 	{
@@ -1403,14 +1403,14 @@ uint8_t Gas::OFF(uint8_t enable_FET)
 
 	// Power off the AFE module
 	digitalWrite(sensor_config.power_pin, HIGH);
-	
+
 
 	// Switch ON the sensor power 3v3 switch if required for Cities Board
 	if (WaspRegisterSensor & REG_CITIES_PRO)
-	{		
+	{
 		digitalWrite(sensor_config.cities_3v3_pin, LOW);
 		pwrCitiesPRORegister &= ~(1 << sensor_config.socket);
-	}	
+	}
 
 
 	#ifndef CALIBRATION_MODE
@@ -1556,7 +1556,7 @@ int8_t Gas::configureAFE(float R_gain)
 								LMP91000_REFC_REG_REF_POLARITY_POSITIVE);
 			break;
 
-		case H2S_SS_SEC:		
+		case H2S_SS_SEC:
 		case HCL_SS:
 			LMP.setTIAConReg(gain_3E, LMP91000_TIAC_REG_REF_R_LOAD_50R);
 			LMP.setRefConReg(	LMP91000_REFC_REG_REF_SOURCE_EXTERNAL_REF,
@@ -1639,7 +1639,7 @@ int8_t Gas::configureAFE(float R_gain)
 float Gas::getTemp()
 {
 	float temp = -1000;
-	
+
 	temp = getTemp(1);
 
 	if (temp == -1000)
@@ -1722,7 +1722,7 @@ float Gas::getTemp(bool sensor)
  * Returns:		The relative humidity, -1000 if error
 */
 float Gas::getHumidity()
-{	
+{
     return BME.getHumidity(BME280_OVERSAMP_1X);
 }
 
@@ -1897,14 +1897,14 @@ float Gas::getConc(uint8_t resolution, float temperature, float NO2_conc)
 
 
 
-/* 
+/*
  * Function: disable I2C lines in the sensor board to avoid I2C interferences
- * while working with an AFE (eeprom memories have the same i2c address) 
- * 
- * 
+ * while working with an AFE (eeprom memories have the same i2c address)
+ *
+ *
  */
 uint8_t Gas::disableCommSockets()
-{	
+{
 	if (WaspRegisterSensor & REG_CITIES_PRO)
 	{
 		// Cities PRO board I2C pins
@@ -1915,9 +1915,9 @@ uint8_t Gas::disableCommSockets()
 		digitalWrite(GP_I2C_SOCKET_3_F, LOW);
 		digitalWrite(GP_I2C_SOCKET_5_B, LOW);
 		delay(1);
-		
+
 		return 0;
-	}	
+	}
 
 	// Gases PRO board I2C pins
 	pinMode(GP_I2C_SOCKET_1_C, OUTPUT);
@@ -1931,9 +1931,9 @@ uint8_t Gas::disableCommSockets()
 	digitalWrite(GP_I2C_SOCKET_3_F, LOW);
 	digitalWrite(GP_I2C_SOCKET_4_A, LOW);
 	digitalWrite(GP_I2C_SOCKET_5_B, LOW);
-	digitalWrite(GP_I2C_SOCKET_6, LOW);	
+	digitalWrite(GP_I2C_SOCKET_6, LOW);
 	delay(1);
-	
+
 	return 0;
 }
 
@@ -3104,4 +3104,292 @@ float Gas::readAuxiliaryElectrode4E()
 	#endif
 
 	return V_conc_aux / 110;
+}
+
+
+
+//******************************************************************************
+// BME Sensor Class functions
+//******************************************************************************
+
+/*!
+ * @brief	Constructor of the class
+ * @param 	void
+ * @return	void
+ */
+bmeGasesSensor::bmeGasesSensor()
+{
+}
+
+
+
+/*!
+ * @brief	switch on the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void bmeGasesSensor::ON()
+{
+  if (pwrGasPRORegister == 0x00)
+  {
+    #if DEBUG_GASES_PRO>0
+      PRINTLN_GASES_PRO(F("3V3 to ON"));
+    #endif
+    // enable I2C isolator
+    pinMode(GP_I2C_MAIN_EN, OUTPUT);
+    digitalWrite(GP_I2C_MAIN_EN, HIGH);
+    // Power on 3V3
+    PWR.setSensorPower(SENS_3V3, SENS_ON);
+  }
+
+  // init BME
+  BME.ON();
+
+}
+
+
+
+/*!
+ * @brief	switch off the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void bmeGasesSensor::OFF()
+{
+  // If there aren't powered AFE modules, turns off the 3V3 power supply
+  if (pwrGasPRORegister == 0x00)
+  {
+    #if DEBUG_GASES_PRO>0
+      PRINTLN_GASES_PRO(F("3V3 to OFF"));
+    #endif
+    // Power off 3V3
+    PWR.setSensorPower(SENS_3V3, SENS_OFF);
+    // disable I2C isolator
+    pinMode(GP_I2C_MAIN_EN, OUTPUT);
+    digitalWrite(GP_I2C_MAIN_EN, LOW);
+  }
+  delay(100);
+}
+
+
+/*!
+ *  @brief Read BME temperature value
+ *  @return	temperature value
+ *
+ */
+float bmeGasesSensor::getTemperature()
+{
+  return BME.getTemperature(BME280_OVERSAMP_1X, 0);
+}
+
+
+/*!
+ *  @brief Read BME humidity value
+ *  @return	humidity value
+ *
+ */
+float bmeGasesSensor::getHumidity()
+{
+	return BME.getHumidity(BME280_OVERSAMP_1X);
+}
+
+
+/*!
+ *  @brief Read BME pressure value
+ *  @return	pressure value
+ *
+ */
+float bmeGasesSensor::getPressure()
+{
+  return BME.getPressure(BME280_OVERSAMP_1X, 0);
+}
+
+
+
+
+
+
+//******************************************************************************
+// Ultrasound Sensor Class functions
+//******************************************************************************
+
+/*!
+ * @brief	Constructor of the class
+ * @param 	void
+ * @return	void
+ */
+ultrasoundGasesSensor::ultrasoundGasesSensor()
+{
+}
+
+
+
+/*!
+ * @brief	switch on the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void ultrasoundGasesSensor::ON()
+{
+  if ((pwrGasPRORegister == 0x00) ||
+    ((WaspRegister & REG_3V3) == 0))
+  {
+    #if DEBUG_GASES_PRO>0
+      PRINTLN_GASES_PRO(F("3V3 to ON"));
+    #endif
+    // enable I2C isolator
+    pinMode(GP_I2C_MAIN_EN, OUTPUT);
+    digitalWrite(GP_I2C_MAIN_EN, HIGH);
+    // Power on 3V3
+    PWR.setSensorPower(SENS_3V3, SENS_ON);
+  }
+}
+
+
+
+/*!
+ * @brief	switch off the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void ultrasoundGasesSensor::OFF()
+{
+  // If there aren't powered AFE modules, turns off the 3V3 power supply
+  if (pwrGasPRORegister == 0x00)
+  {
+    #if DEBUG_GASES_PRO>0
+      PRINTLN_GASES_PRO(F("3V3 to OFF"));
+    #endif
+    // Power off 3V3
+    PWR.setSensorPower(SENS_3V3, SENS_OFF);
+    // disable I2C isolator
+    pinMode(GP_I2C_MAIN_EN, OUTPUT);
+    digitalWrite(GP_I2C_MAIN_EN, LOW);
+  }
+	delay(100);
+}
+
+
+/*!
+ * @brief 	This function performs a distance measurement
+ * @return 	distance in cm.
+ * 		  	9000 if error reading the distance
+ * 			10000 if error reading the sensor
+ */
+uint16_t ultrasoundGasesSensor::getDistance()
+{
+	return Ultrasound.getDistance();
+}
+
+
+
+
+
+
+//******************************************************************************
+// Luxes Sensor Class functions
+//******************************************************************************
+
+/*!
+ * @brief	Constructor of the class
+ * @param 	void
+ * @return	void
+ */
+luxesGasesSensor::luxesGasesSensor()
+{
+}
+
+
+
+/*!
+ * @brief	switch on the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void luxesGasesSensor::ON()
+{
+  if (pwrGasPRORegister == 0x00)
+  {
+    #if DEBUG_GASES_PRO>0
+      PRINTLN_GASES_PRO(F("3V3 to ON"));
+    #endif
+    // enable I2C isolator
+    pinMode(GP_I2C_MAIN_EN, OUTPUT);
+    digitalWrite(GP_I2C_MAIN_EN, HIGH);
+    // Power on 3V3
+    PWR.setSensorPower(SENS_3V3, SENS_ON);
+  }
+
+  // init luxes sensor
+  TSL.ON();
+}
+
+
+
+/*!
+ * @brief	switch off the corresponding 3v3 switch
+ * @param 	void
+ * @return	void
+ */
+void luxesGasesSensor::OFF()
+{
+  // If there aren't powered AFE modules, turns off the 3V3 power supply
+  if (pwrGasPRORegister == 0x00)
+  {
+    #if DEBUG_GASES_PRO>0
+      PRINTLN_GASES_PRO(F("3V3 to OFF"));
+    #endif
+    // Power off 3V3
+    PWR.setSensorPower(SENS_3V3, SENS_OFF);
+    // disable I2C isolator
+    pinMode(GP_I2C_MAIN_EN, OUTPUT);
+    digitalWrite(GP_I2C_MAIN_EN, LOW);
+  }
+	// switch off delay for better preformance before
+	// entering sleep mode after calling this function
+	delay(100);
+}
+
+/*!
+ * @brief 	This function performs a lux measurement
+ * @return 	luxes if ok
+ * 			-1 if error
+ */
+uint32_t luxesGasesSensor::getLuminosity()
+{
+  return getLuminosity(TSL2561_GAIN_1, TSL2561_HIGH_RES);
+
+}
+
+/*!
+ * @brief 	This function performs a lux measurement
+ * @return 	luxes if ok
+ * 			-1 if error
+ */
+uint32_t luxesGasesSensor::getLuminosity(bool gain)
+{
+  return getLuminosity(gain, TSL2561_HIGH_RES);
+}
+
+
+/*!
+ * @brief 	This function performs a lux measurement
+ * @param   Gain: INDOOR, OUTDOOR
+ *          Resolution: TSL2561_HIGH_RES, TSL2561_MED_RES, TSL2561_LOW_RES
+ * @return 	luxes if ok
+ * 			    -1 if error
+ */
+uint32_t luxesGasesSensor::getLuminosity(bool gain, uint8_t res)
+{
+
+  uint8_t error;
+	error = TSL.getLuminosity(res, gain);
+
+	if (error == 0)
+	{
+		return TSL.lux;
+	}
+  else{
+    return (uint32_t)-1;
+  }
 }

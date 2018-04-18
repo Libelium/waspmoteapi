@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -57,8 +57,8 @@ enum AnswerTypesLoRaWAN
  */
 enum ModuleTypersLoRaWAN
 {
-	RN2483_MODULE = 1,
-	RN2903_MODULE = 2,
+	RN2483_MODULE = 1, //	EU
+	RN2903_MODULE = 2, //	US or AU
 };
 
 /******************************************************************************
@@ -187,7 +187,8 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t setSyncWord(uint8_t sync);
 		uint8_t getSyncWord();
 		// Radio functions
-		uint8_t sendRadio(char * buff);
+		uint8_t sendRadio(char * message);
+		uint8_t sendRadio(uint8_t * payload,uint16_t length);
 		uint8_t receiveRadio(uint32_t timeout);
 		uint8_t test_ON();
 		uint8_t test_OFF();
@@ -230,6 +231,7 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getRX2Delay();
 		uint8_t getRX2Parameters(char* band);
 		uint8_t getMaxPayload();
+		void showFirmwareVersion();
 
 	private:		
 		// Utils

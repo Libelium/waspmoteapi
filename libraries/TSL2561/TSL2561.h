@@ -1,23 +1,23 @@
 /*! \file TSL2561.h
     \brief Library for managing the TSL2561 sensor (luxes accuracy)
-    
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.0
+
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -25,7 +25,7 @@
 
 /*! \def TSL2561_h
     \brief The library flag
-    
+
 */
 #ifndef TSL2561_h
 #define TSL2561_h
@@ -33,7 +33,7 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
- 
+
 #include <inttypes.h>
 
 /*! Possible values:
@@ -45,6 +45,9 @@
 // #define TSL2561_DEBUG 1
 // #define TSL2561_DEBUG 2
 
+#define PRINT_LUX(str)	USB.print(F("[LUX] ")); USB.print(str);
+
+
 
 //! Sensor Specific constants
 // LUX auxiliary definitions
@@ -52,11 +55,11 @@
 #define TSL2561_INFRARED 				1 // channel 1
 #define TSL2561_VISIBLE 				2 // channel 0 - channel 1
 
-#define TSL2561_LOW_RES					0 
+#define TSL2561_LOW_RES					0
 #define TSL2561_MED_RES					1
-#define TSL2561_HIGH_RES				2 
+#define TSL2561_HIGH_RES				2
 
-#define TSL2561_GAIN_1					0 
+#define TSL2561_GAIN_1					0
 #define TSL2561_GAIN_16					1
 
 
@@ -122,8 +125,8 @@
 #define TSL2561_LUX_B8T           		(0x0000)  // 0.000 * 2^LUX_SCALE
 #define TSL2561_LUX_M8T           		(0x0000)  // 0.000 * 2^LUX_SCALE
 
-#define OUTDOOR		0x01
-#define INDOOR		0x02
+#define OUTDOOR		0
+#define INDOOR		1
 
 // Lux auxiliary data
 typedef enum
@@ -145,7 +148,7 @@ tsl2561Gain_t;
 /******************************************************************************
  * Class
  ******************************************************************************/
- 
+
 //! TSL2561 Class
 /*!
 	TSL2561 Class defines all the variables and functions used to manage TSL2561 sensor
@@ -153,38 +156,38 @@ tsl2561Gain_t;
 class TSL2561
 {
 	private:
-	
+
 	//! Variable : aux variable for Lux sensor
     	/*!
 	*/
 	tsl2561IntegrationTime_t _integration;
-	
+
 	//! Variable : Gain for the Lux sensor
     	/*!
 	*/
 	tsl2561Gain_t _gain;
-	
+
 	//! Variable : stores lux sensor state
     	/*!
 	*/
 	boolean _initialized;
-	
+
 	//! Enables lux sensor
   	/*!
 	\param void
-	
+
 	\return void
 	 */
 	void enable(void);
-	
+
 	//! Disables lux sensor
   	/*!
 	\param void
-	
+
 	\return void
 	 */
 	void disable(void);
-	
+
 	//! Calculate luxes measured by lux sensor
   	/*!
 	\param ch0: channel 0
@@ -192,61 +195,61 @@ class TSL2561
 	\return nothing
 	 */
 	void calculateLux();
-	
+
 	//! Configures luxes sensor
   	/*!
 	\param integration:
-	
+
 	\return void
 	 */
 	void setTiming(tsl2561IntegrationTime_t integration);
-	
+
 	//! Sets Lux sensor gain
   	/*!
 	\param gain: gain to be set
-	
-	\return 
+
+	\return
 	 */
 	void setGain(tsl2561Gain_t gain);
-	
+
 	//! Reads lux sensor
   	/*!
-	\param 
-	
+	\param
+
 	\return lux
 	 */
 	int8_t getFullLuminosity ();
-	
-	
-	
+
+
+
 	boolean checkID();
-	
+
 	public:
-		
+
 	// Constructors
 	TSL2561();
-	
-	
+
+
 	//! Variable : value measured in luxes
     	/*!
 	*/
 	uint32_t lux;
-	
-	
+
+
 	uint16_t ir, full, visible;
-	
-	
+
+
 	//! Turn on the sensor and preconfigurates it
   	/*!
-	\param void	
+	\param void
 	\return luxes
 	 */
 	boolean ON(void);
-	
+
 	int8_t getLuminosity();
 	int8_t getLuminosity(uint8_t res);
 	int8_t getLuminosity(uint8_t res, bool gain);
-	
+
 };
 
 

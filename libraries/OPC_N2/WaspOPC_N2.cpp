@@ -1,27 +1,27 @@
 /*
  *  Library for managing the Particle sensor OPC-N2 from Alphasense
- * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
  *  (at your option) any later version.
-   
+
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
-  
+
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.3
+ *  Version:		1.4
  *  Design:			David Gascón
  *  Implementation:	Marcos Yarza, Alejandro Gállego
  */
-  
+
 
 /******************************************************************************
  * Includes
@@ -42,13 +42,13 @@ WaspOPC_N2::WaspOPC_N2()
 {
 	// update Waspmote Control Register
 	WaspRegisterSensor |= REG_DUST_GASES_PRO;
-	
+
 	pinMode(DUST_SENSOR_CS,OUTPUT);
 	digitalWrite(DUST_SENSOR_CS,HIGH);
 	pinMode(DUST_SENSOR_POWER,OUTPUT);
 	digitalWrite(DUST_SENSOR_POWER,LOW);
-	
-	
+
+
 	for (int i = 0; i < 15; i++)
 	{
 		_binParticleVolume[i] = 0.0;
@@ -60,19 +60,19 @@ WaspOPC_N2::WaspOPC_N2()
 	{
 		_binBoundaryValues[i] = 0;
 	}
-	
+
 	_gain = 0;
 	_sample = 0;
 	_laserDAC = 0;
 	_fanDAC = 0;
-	
+
 	_temp = 0.0;
 	_pressure = 0.0;
 	_periodCount = 0;
 	_PM1 = 0.0;
 	_PM2_5 = 0.0;
 	_PM10 = 0.0;
-	
+
 	pwrGasPRORegister = 0;
 }
 
@@ -86,43 +86,43 @@ WaspOPC_N2::WaspOPC_N2()
  * Returns 0 if not ready, 1 if  ready
 */
 uint8_t WaspOPC_N2::checkStatus()
-{	
+{
 	uint8_t error = 0;
 	uint8_t val = 0;
 	uint16_t times = 0;
-	
+
 	#if OPC_N2_DEBUG>0
-		USB.print(F("OPC-N2: Check status..."));
+		PRINT_OPC_N2(F("OPC-N2: Check status..."));
 	#endif
-	
+
 	if(_mode == OPC_N2_SPI_MODE)
 	{
 		SPI.setSPISlave(ALL_DESELECTED);
 		SPI.setSPISlave(DUST_SENSOR_SELECT);
 		delayMicroseconds(2);
 		while((val != CHECK_STATUS_READY)&&(times<100))
-		{ 
+		{
 			val = SPI.transfer(CHECK_STATUS);
 			times++;
 			delay(50);
 		}
 		if (times<99)
 		{
-			
+
 			error = 1;
 			#if OPC_N2_DEBUG>0
-				USB.println(F("ready"));
+				PRINT_OPC_N2(F("ready\n"));
 			#endif
 		}
 		else
-		{	
+		{
 			error = 0;
 			#if OPC_N2_DEBUG>0
-				USB.println(F("not ready"));
+				PRINT_OPC_N2(F("not ready\n"));
 			#endif
-			
+
 		}
-		
+
 		SPI.setSPISlave(ALL_DESELECTED);
 	}
 	else
@@ -130,21 +130,21 @@ uint8_t WaspOPC_N2::checkStatus()
 		times = 5;
 		do{
 			error = sendCommand("AT\r", "OK",3000);
-			times--;		
+			times--;
 		}while((times > 0) && (error != 1));
 
 		if (error == 1)
 		{
 			#if OPC_N2_DEBUG>0
-				USB.println(F("ready"));
+				PRINT_OPC_N2(F("ready\n"));
 			#endif
 		}
 		else
-		{	
+		{
 			#if OPC_N2_DEBUG>0
-				USB.println(F("not ready"));
+				PRINT_OPC_N2(F("not ready\n"));
 			#endif
-			
+
 		}
 	}
 
@@ -157,15 +157,15 @@ uint8_t WaspOPC_N2::checkStatus()
  * Returns nothing
 */
 void WaspOPC_N2::configSPI()
-{	
+{
 	// Starting SPI port
-	SPI.begin();	
+	SPI.begin();
 	SPI.setBitOrder(MSBFIRST);
 	SPI.setClockDivider(SPI_CLOCK_DIV32);
 	SPI.setDataMode(SPI_MODE1);
 	SPI.setSPISlave(ALL_DESELECTED);
-	
-	
+
+
 }
 
 /******************************************************************************
@@ -183,46 +183,46 @@ uint8_t WaspOPC_N2::ON()
 */
 uint8_t WaspOPC_N2::ON(bool com_mode)
 {
-	
+
 	uint8_t error = 0;
-	
+
 	_mode = com_mode;
 	#if OPC_N2_DEBUG>0
 		if(_mode == OPC_N2_SPI_MODE)
 		{
-			USB.println(F("OPC-N2.SPI Mode"));
+			PRINT_OPC_N2(F("OPC-N2.SPI Mode\n"));
 		}
 		else
 		{
-			USB.println(F("OPC-N2.UART Mode"));
+			PRINT_OPC_N2(F("OPC-N2.UART Mode\n"));
 		}
 	#endif
-	
+
 	if (_mode == OPC_N2_SPI_MODE)
 	{
-	
+
 		pinMode(DUST_SENSOR_CS,OUTPUT);
 		digitalWrite(DUST_SENSOR_CS,HIGH);
-		delay(1000);	
+		delay(1000);
 
-		
+
 		pinMode(DUST_SENSOR_POWER,OUTPUT);
 		digitalWrite(DUST_SENSOR_POWER,LOW);
 		delay(1000);
-		
+
 		digitalWrite(DUST_SENSOR_POWER,HIGH);
 		delay(1000);
-		
+
 		// update SPI flag
-		SPI.isDustSensor = true;	
-		
+		SPI.isDustSensor = true;
+
 		configSPI();
-		
+
 		delay(1000);
 		if ((WaspRegister & REG_3V3) == 0)
 		{
 			#if OPC_N2_DEBUG>0
-				USB.println(F("OPC-N2.3V3 to ON"));
+				PRINT_OPC_N2(F("OPC-N2.3V3 to ON\n"));
 			#endif
 			PWR.setSensorPower(SENS_3V3, SENS_ON);
 		}
@@ -231,7 +231,7 @@ uint8_t WaspOPC_N2::ON(bool com_mode)
 	else
 	{
 		pinMode(DUST_SENSOR_POWER,OUTPUT);
-	
+
 		digitalWrite(DUST_SENSOR_POWER,HIGH);
 // 		delay(15000);
 		delay(5000);
@@ -240,9 +240,9 @@ uint8_t WaspOPC_N2::ON(bool com_mode)
 		beginUART();
 		Utils.setMuxAux2();
 	}
-	
+
 	error = checkStatus();
-		
+
 	if (error == 0)
 	{
 		OFF();
@@ -250,13 +250,13 @@ uint8_t WaspOPC_N2::ON(bool com_mode)
 		isON = 0;
 	}
 	else
-	{		
+	{
 		pwrGasPRORegister |= 0x01;
 		isON = 1;
 	}
 	delay(2000);
-	
-	return error;	
+
+	return error;
 
 }
 
@@ -266,41 +266,41 @@ uint8_t WaspOPC_N2::ON(bool com_mode)
  * 				1 if powers off correctly
 */
 uint8_t WaspOPC_N2::OFF()
-{	
-	
+{
+
 	uint8_t error = 0;
-	
+
 	if (_mode == OPC_N2_SPI_MODE)
 	{
 		#if OPC_N2_DEBUG>0
-			USB.print(F("OPC-N2.Turning off sensor,"));
+			PRINT_OPC_N2(F("OPC-N2.Turning off sensor,"));
 		#endif
-		// Stopping SPI port	
+		// Stopping SPI port
 		SPI.isDustSensor = false;
 		SPI.setSPISlave(ALL_DESELECTED);
 		pinMode(DUST_SENSOR_CS,INPUT);
 		SPI.close();
-		
+
 		digitalWrite(DUST_SENSOR_POWER,LOW);
-		
+
 		if (( pwrGasPRORegister == 0x01) || ( pwrGasPRORegister == 0x0))
-		{			
-			#if OPC_N2_DEBUG>0			
-				USB.println(F("3V3 off"));
+		{
+			#if OPC_N2_DEBUG>0
+				PRINT_OPC_N2(F("3V3 off\n"));
 			#endif
-			PWR.setSensorPower(SENS_3V3, SENS_OFF);		
+			PWR.setSensorPower(SENS_3V3, SENS_OFF);
 		}
-		#if OPC_N2_DEBUG>0		
+		#if OPC_N2_DEBUG>0
 		else
 		{
-			USB.println(F("3V3 NOT off"));
+			PRINT_OPC_N2(F("3V3 NOT off\n"));
 		}
 		#endif
-		
-			
+
+
 		if((digitalRead(DUST_SENSOR_CS) == HIGH) && (digitalRead(DUST_SENSOR_POWER) == LOW))
 		{
-			error = 1;		
+			error = 1;
 			pwrGasPRORegister &= 0xFE;
 		}
 		isON = 0;
@@ -308,72 +308,73 @@ uint8_t WaspOPC_N2::OFF()
 	else
 	{
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.Turning off sensor"));
+			PRINT_OPC_N2(F("OPC-N2.Turning off sensor\n"));
 		#endif
 
 		closeSerial(1);
-		
+
 		digitalWrite(DUST_SENSOR_POWER,LOW);
 
 		error = 1;
 		pwrGasPRORegister &= 0xFE;
 		isON = 0;
 	}
-		
-	
+
+
 	return error;
 }
 
-/* Function: 	This function reads the information string from OPC-N2 sensor 
- * 				module. 
+/* Function: 	This function reads the information string from OPC-N2 sensor
+ * 				module.
  * Parameters:	buffer: string pointer to store the information data
  * Returns: 	1 if OK
  *				-1 if error sending the command
 */
 int8_t WaspOPC_N2::getInfoString(char* buffer)
-{ 
-	
+{
+
 	uint8_t error = 0;
 	uint8_t val = 0;
 	uint16_t times = 0;
-	
-	
+
+
 	#if OPC_N2_DEBUG>0
-		USB.println(F("OPC-N2.Reading information string"));
+		PRINT_OPC_N2(F("OPC-N2.Reading information string\n"));
 	#endif
-		
+
 	if (_mode == OPC_N2_SPI_MODE)
-	{		
-	
+	{
+
 		SPI.setSPISlave(DUST_SENSOR_SELECT);
 		delayMicroseconds(100);
 		while((val != CHECK_STATUS_READY) && (times<100))
-		{ 
+		{
 			val = SPI.transfer(READ_INFO_STRING);
 			times++;
 			delay(30);
 		}
-		
+
 		if (times >= 100)
 		{
 			return -1;
-		}	
-		
+		}
+
 		// At least 1.7 ms between command byte and following byte
 		delay(2);
-		
+
 		for(int i = 0; i < 58; i++)
 		{
 			buffer[i] = SPI.transfer(READ_INFO_STRING);
 			delayMicroseconds(8);
-			
+
 		}
-		
+
 		buffer[58] = '\0';
-		
+
 		error = 1;
-		
+
 		#if OPC_N2_DEBUG>0
+      PRINT_OPC_N2(F(""));
 			for(int i = 0; i < 58; i++)
 			{
 				USB.print(buffer[i],HEX);
@@ -381,7 +382,7 @@ int8_t WaspOPC_N2::getInfoString(char* buffer)
 			}
 			USB.println("");
 		#endif
-			
+
 		// Release the bus
 		SPI.setSPISlave(ALL_DESELECTED);
 	}
@@ -389,39 +390,39 @@ int8_t WaspOPC_N2::getInfoString(char* buffer)
 	{
 		char command[10];
 		uint32_t waitTime;
-		
+
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.Getting PM with fan on"));
-		#endif	
-		
+			PRINT_OPC_N2(F("OPC-N2.Getting PM with fan on\n"));
+		#endif
+
 		memset(command, '\0', sizeof(command));
 		snprintf(	command, sizeof(command), "AT$101\r");
-		
+
 		beginSerial(9600, 1);
 		Utils.setMuxAux2();
-		delay(100);	
-		
+		delay(100);
+
 		error = sendCommand(command, "$101", "ERROR", 2000);
 		if( error != 1)
 		{
 			return -11;
 		}
-		
+
 		error = waitFor("OK", 2000);
 		if( error != 1)
 		{
 			return -12;
 		}
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.String received: "));
+			PRINT_OPC_N2(F("OPC-N2.String received: "));
 			USB.println((char*) _buffer);
 		#endif
-		
+
 		memset(buffer, '\0', 60);
 		strncpy(buffer, (char*)_buffer+1, 60);
-		
+
 	}
-	
+
 	return error;
 }
 
@@ -432,67 +433,67 @@ int8_t WaspOPC_N2::getInfoString(char* buffer)
  * 				-2 if error receiving data
 */
 int8_t WaspOPC_N2::setDigitalPot(uint8_t mode)
-{	
+{
 	int8_t error = 0;
 	uint8_t val = 0;
 	uint16_t times = 0;
-	
+
 	#if OPC_N2_DEBUG>0
-		USB.print(F("OPC-N2.Setting digital pot"));
+		PRINT_OPC_N2(F("OPC-N2.Setting digital pot"));
 	#endif
-		
+
 	if(_mode == OPC_N2_UART_MODE)
-	{	
+	{
 		#if OPC_N2_DEBUG>0
-			USB.println(F("... not supported in UART_MODE"));
+			PRINT_OPC_N2(F("... not supported in UART_MODE\n"));
 		#endif
 		return  -3;
 	}
-		
+
 	uint8_t command[2];
 	uint8_t command_answer[2];
-	
+
 	command[0] = SET_DIGITAL_POT;
 	command[1] = mode;
-	
+
 	delay(100);
 	SPI.setSPISlave(DUST_SENSOR_SELECT);
 	delayMicroseconds(2);
-	
+
 	command_answer[0] = 0;
 	command_answer[1] = 0;
-	
-	while(	((command_answer[0] != CHECK_STATUS_READY) || 
+
+	while(	((command_answer[0] != CHECK_STATUS_READY) ||
 			(command_answer[1] != SET_DIGITAL_POT)) &&
 			(times<20))
 	{
-		command_answer[0] = SPI.transfer(command[0]); 
+		command_answer[0] = SPI.transfer(command[0]);
 		delay(2);
-		command_answer[1] = SPI.transfer(command[1]); 
+		command_answer[1] = SPI.transfer(command[1]);
 		delay(10);
 		times++;
 	}
-	
+
 	if (times >= 20 )
 	{
 		#if OPC_N2_DEBUG>0
-			USB.println(F("...failed. Communication error."));
+			PRINT_OPC_N2(F("...failed. Communication error.\n"));
 		#endif
 		error = -1;
 	}
 	else
 	{
 		#if OPC_N2_DEBUG>0
-			USB.println(F("...done."));
+			PRINT_OPC_N2(F("...done.\n"));
 		#endif
 		error = 1;
 	}
 
-	
+
 	return error;
 }
 
-/* Function: 	This function reads the histogram from OPC-N2 sensor module. 
+/* Function: 	This function reads the histogram from OPC-N2 sensor module.
  * 	It will reset the histogram too. Next variables will be updated:
  * 				_bin[16]
  * 				_temp
@@ -517,55 +518,55 @@ int8_t WaspOPC_N2::getHistogramData()
 	uint16_t times = 0;
 	uint16_t crc = 0;
 	uint16_t crc_bin = 0;
-	
+
 	uint32_t aux_val;
-	byte histogramString[62];	
-	
+	byte histogramString[62];
+
 	#if OPC_N2_DEBUG>0
-		USB.print(F("OPC-N2.Getting histogram data"));
+		PRINT_OPC_N2(F("OPC-N2.Getting histogram data"));
 	#endif
-		
+
 	if (_mode == OPC_N2_SPI_MODE)
 	{
-	
+
 		error = 1;
 		delay(100);
 
 		SPI.setSPISlave(DUST_SENSOR_SELECT);
 		// Read histogram data
 		while((val != CHECK_STATUS_READY) && (times < 100))
-		{ 
+		{
 			val = SPI.transfer(READ_HISTOGRAM);
 			delay(10);
 			times++;
-			if (val != CHECK_STATUS_READY)	
+			if (val != CHECK_STATUS_READY)
 			{
 				SPI.setSPISlave(ALL_DESELECTED);
 				delay(100);
 				SPI.setSPISlave(DUST_SENSOR_SELECT);
-				
+
 			}
-			
+
 		}
-		
+
 		if (times >= 100)
 		{
 			#if OPC_N2_DEBUG>0
-				USB.println(F("...failed. Communication error."));
+				PRINT_OPC_N2(F("...failed. Communication error.\n"));
 			#endif
 			error = -1;
 		}
-			
-		
-			
+
+
+
 		for(int i = 0; i < 62; i++)
 		{
-			delayMicroseconds(8);     
+			delayMicroseconds(8);
 			histogramString[i] = SPI.transfer(0x30);
 		}
 
 		SPI.setSPISlave(ALL_DESELECTED);
-				
+
 		crc = (histogramString[49] * 256) + histogramString[48];
 		crc_bin=0;
 		for (int i = 0; i<16; i++)
@@ -575,38 +576,38 @@ int8_t WaspOPC_N2::getHistogramData()
 			_bin[i] = (_bin[i] << 8) | histogramString[2*i];
 			crc_bin += _bin[i];
 		}
-		
-		
+
+
 		if (crc_bin != crc)
-		{		
+		{
 			#if OPC_N2_DEBUG>0
-				USB.println(F("...CRC NOK"));
-				USB.print(F("CRC bin: "));
+				PRINT_OPC_N2(F("...CRC NOK\n"));
+				PRINT_OPC_N2(F("CRC bin: "));
 				USB.print(crc_bin, DEC);
 				USB.print(F(" || CRC : "));
 				USB.println(crc, DEC);
 			#endif
-				
+
 			error = -2;
 		}
-		
+
 		#if OPC_N2_DEBUG>0
-			USB.println(F("...Done"));
+			PRINT_OPC_N2(F("...Done\n"));
 		#endif
-		
-		
+
+
 		_bin1_MToF = histogramString[32];
 		_bin3_MToF = histogramString[33];
 		_bin5_MToF = histogramString[34];
 		_bin7_MToF = histogramString[35];
-		
+
 		aux_val = *(uint32_t *)&histogramString[36];
 		_temp = aux_val / 10.0;
 		aux_val = *(uint32_t *)&histogramString[40];
 		_pressure = aux_val;
 		_periodCount = *(uint32_t *)&histogramString[44];
-		
-		
+
+
 		_PM1 = *(float *)&histogramString[50];
 		_PM2_5 = *(float *)&histogramString[54];
 		_PM10 = *(float *)&histogramString[58];
@@ -615,59 +616,59 @@ int8_t WaspOPC_N2::getHistogramData()
 	{
 		char command[10];
 		uint32_t waitTime;
-		
+
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.Getting PM with fan on"));
+			PRINT_OPC_N2(F("OPC-N2.Getting PM with fan on\n"));
 		#endif
-		
+
 		for (int i = 0; i < 15; i++)
 		{
 			_bin[i] = 0;
 		}
-		
+
 		_temp = 0.0;
 		_pressure = 0.0;
 		_periodCount = 0;
 		_PM1 = 0.0;
 		_PM2_5 = 0.0;
 		_PM10 = 0.0;
-		
+
 		memset(command, '\0', sizeof(command));
 		snprintf(	command, sizeof(command), "AT$201\r");
-		
+
 		beginSerial(9600, 1);
 		Utils.setMuxAux2();
-		delay(100);	
-		
+		delay(100);
+
 		error = sendCommand(command, "$201", "ERROR", 2000);
 		if( error != 1)
 		{
 			return -11;
 		}
-		
+
 		error = waitFor("OK", 2000);
 		if( error != 1)
 		{
 			return -12;
 		}
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.String received: "));
+			PRINT_OPC_N2(F("OPC-N2.String received: "));
 			USB.println((char*) _buffer);
 		#endif
 		_PM1 = strtod(strtok((char*)_buffer+1, ","), NULL);
 		_PM2_5 = strtod(strtok(NULL, ","), NULL);
 		_PM10 = strtod(strtok(NULL, ","), NULL);
-		
+
 		for (uint8_t i = 0; i < 16; i++)
 		{
 			_bin[i] = atoi(strtok(NULL, ","));
 		}
-		
+
 		_bin1_MToF = atoi(strtok(NULL, ","));
 		_bin3_MToF = atoi(strtok(NULL, ","));
 		_bin5_MToF = atoi(strtok(NULL, ","));
 		_bin7_MToF = atoi(strtok(NULL, ","));
-		
+
 		_temp = strtod(strtok(NULL, ","), NULL);
 		_pressure = strtod(strtok(NULL, ","), NULL);
 		_periodCount = atol(strtok(NULL, "\r"));
@@ -696,144 +697,144 @@ int8_t WaspOPC_N2::getConfigVar()
 	uint16_t times = 0;
 	uint16_t crc = 0;
 	uint16_t crc_bin = 0;
-	
+
 	byte aux_buffer[4];
-	
-	
-	
+
+
+
 	#if OPC_N2_DEBUG>0
-		USB.print(F("OPC-N2.Getting config variables"));
+		PRINT_OPC_N2(F("OPC-N2.Getting config variables"));
 	#endif
-	
+
 	if(_mode == OPC_N2_UART_MODE)
-	{	
+	{
 		#if OPC_N2_DEBUG>0
-			USB.println(F("... not supported in UART_MODE"));
+			PRINT_OPC_N2(F("... not supported in UART_MODE\n"));
 		#endif
 		return  -3;
 	}
-		
+
 	delay(100);
 	SPI.setSPISlave(DUST_SENSOR_SELECT);
 
 	// Read histogram data
 	while((val != CHECK_STATUS_READY) && (times < 100))
-	{ 
+	{
 		val = SPI.transfer(READ_CONFIG_VAR);
 		times++;
 		delay(1);
 	}
-	
+
 	if (times >= 100)
 	{
 		#if OPC_N2_DEBUG>0
-			USB.println(F("...failed. Communication error."));
+			PRINT_OPC_N2(F("...failed. Communication error.\n"));
 		#endif
 		return -1;
 	}
-	
+
 	error = 1;
-	
+
 	// Bin Boundaries values (BB0 - BB14). It are unsigned 16bit integer values.
 	for(int i = 0; i < 15; i++)
 	{
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		val = SPI.transfer(0x3C);
 		_binBoundaryValues[i] = 0;
 		_binBoundaryValues[i] = val;
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		val = SPI.transfer(0x3C);
 		_binBoundaryValues[i] = _binBoundaryValues[i] | (val << 8);
-	}	
-	
+	}
+
 	SPI.transfer(0x3C);
 	SPI.transfer(0x3C);
-	
+
 	// Bin Particle Volumes (BPV0 - BPV15) are real number variables
 	for(int i = 0; i < 16; i++)
 	{
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[0] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[1] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[2] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[3] = SPI.transfer(0x3C);
 		_binParticleVolume[i] = *(float *)&aux_buffer[0];
 	}
-	
+
 	// Bin Particle Densities (BPD0 - BPD15) are real number variables
 	for(int i = 0; i < 16; i++)
 	{
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[0] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[1] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[2] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[3] = SPI.transfer(0x3C);
 		_binParticleDensity[i] = *(float *)&aux_buffer[0];
 	}
-	
+
 	// Bin Sample Volume Weightings (BSVW0 - BSVW15) are real number variables
 	for(int i = 0; i < 16; i++)
 	{
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[0] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[1] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[2] = SPI.transfer(0x3C);
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		aux_buffer[3] = SPI.transfer(0x3C);
 		_binSampleVolumeWeight[i] = *(float *)&aux_buffer[0];
 	}
-	
+
 	// Gain Scaling Coefficient (GSC) is real number variable
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[0] = SPI.transfer(0x3C);
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[1] = SPI.transfer(0x3C);
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[2] = SPI.transfer(0x3C);
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[3] = SPI.transfer(0x3C);
 	_gain = *(float *)&aux_buffer[0];
-	
-	
+
+
 	// Sample Flow Rate (SFR) is real number variable
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[0] = SPI.transfer(0x3C);
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[1] = SPI.transfer(0x3C);
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[2] = SPI.transfer(0x3C);
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	aux_buffer[3] = SPI.transfer(0x3C);
 	_sample = *(float *)&aux_buffer[0];
 
-	
-	
-	delayMicroseconds(8);     
+
+
+	delayMicroseconds(8);
 	_laserDAC = SPI.transfer(0x3C);
-	delayMicroseconds(8);     
+	delayMicroseconds(8);
 	_fanDAC = SPI.transfer(0x3C);
-	
+
 	// Read 22 spare bytes
 	for(int i = 0; i < 22; i++)
 	{
-		delayMicroseconds(8);     
+		delayMicroseconds(8);
 		SPI.transfer(0x3C);
 	}
-	
+
 	SPI.setSPISlave(ALL_DESELECTED);
-	
+
 	#if OPC_N2_DEBUG>0
-		USB.println(F("...Done"));
+		PRINT_OPC_N2(F("...Done\n"));
 	#endif
-		
+
 	return error;
 }
 
@@ -863,7 +864,7 @@ int8_t WaspOPC_N2::getConfigVar()
 */
 int8_t WaspOPC_N2::getPM(uint32_t timeSample)
 {
-	return getPM(0, timeSample);	
+	return getPM(0, timeSample);
 }
 
 /* Function: 	This function gets PM values (PM1, PM2_5 and PM10)
@@ -896,28 +897,28 @@ int8_t WaspOPC_N2::getPM(uint32_t waitSample, uint32_t timeSample)
 	uint8_t error = 0;
 	char* pointer1;
 	char* pointer2;
-	
+
 	if (_mode == OPC_N2_SPI_MODE)
 	{
-	
+
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.Getting PM with fan on"));
+			PRINT_OPC_N2(F("OPC-N2.Getting PM with fan on\n"));
 		#endif
-		
+
 		for (int i = 0; i < 15; i++)
 		{
 			_bin[i] = 0;
 		}
-		
+
 		_temp = 0.0;
 		_pressure = 0.0;
 		_periodCount = 0;
 		_PM1 = 0.0;
 		_PM2_5 = 0.0;
-		_PM10 = 0.0;	 
+		_PM10 = 0.0;
 			configSPI();
 		error = checkStatus();
-		
+
 		// Set digital pot ON
 		delay(100);
 		error = setDigitalPot(DIGITAL_POT_ON);
@@ -925,7 +926,7 @@ int8_t WaspOPC_N2::getPM(uint32_t waitSample, uint32_t timeSample)
 		{
 			return error;
 		}
-			
+
 		// Reset the histogram
 		delay(waitSample + 500);
 		error = getHistogramData();
@@ -933,29 +934,29 @@ int8_t WaspOPC_N2::getPM(uint32_t waitSample, uint32_t timeSample)
 		{
 			return error - 2;
 		}
-		
+
 		// Desired delay
 		delay(timeSample);
-		
+
 		// Read the histogram
 		error = getHistogramData();
 		if (error != 1)
-		{	
+		{
 			for (int i = 0; i < 15; i++)
 			{
 				_bin[i] = 0;
 			}
-			
+
 			_temp = 0.0;
 			_pressure = 0.0;
 			_periodCount = 0;
 			_PM1 = 0.0;
 			_PM2_5 = 0.0;
 			_PM10 = 0.0;
-			
+
 			return error - 4;
 		}
-		
+
 		// Set digital pot OFF
 		delay(100);
 		error = setDigitalPot(DIGITAL_POT_OFF);
@@ -963,74 +964,74 @@ int8_t WaspOPC_N2::getPM(uint32_t waitSample, uint32_t timeSample)
 		{
 			return error - 6;
 		}
-		
+
 	}
 	else
 	{
 		char command[23];
 		uint32_t waitTime;
-		
+
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.Getting PM with fan on"));
+			PRINT_OPC_N2(F("OPC-N2.Getting PM with fan on\n"));
 		#endif
-		
+
 		for (int i = 0; i < 15; i++)
 		{
 			_bin[i] = 0;
 		}
-		
+
 		_temp = 0.0;
 		_pressure = 0.0;
 		_periodCount = 0;
 		_PM1 = 0.0;
 		_PM2_5 = 0.0;
 		_PM10 = 0.0;
-		
+
 		memset(command, '\0', sizeof(command));
 		snprintf(	command, sizeof(command), "AT$200=%lu,%lu,2\r",
 					waitSample, timeSample);
 		waitTime = waitSample + timeSample + 5000;
-		
+
 		beginSerial(9600, 1);
 		Utils.setMuxAux2();
-		delay(100);	
-		
+		delay(100);
+
 		error = sendCommand(command, "$200", "ERROR", waitTime);
 		if( error != 1)
 		{
 			return -11;
 		}
-		
+
 		error = waitFor("OK", 2000);
 		if( error != 1)
 		{
 			return -12;
 		}
 		#if OPC_N2_DEBUG>0
-			USB.println(F("OPC-N2.String received: "));
+			PRINT_OPC_N2(F("OPC-N2.String received: "));
 			USB.println((char*) _buffer);
 		#endif
 		_PM1 = strtod(strtok((char*)_buffer+1, ","), NULL);
 		_PM2_5 = strtod(strtok(NULL, ","), NULL);
 		_PM10 = strtod(strtok(NULL, ","), NULL);
-		
+
 		for (uint8_t i = 0; i < 16; i++)
 		{
 			_bin[i] = atoi(strtok(NULL, ","));
 		}
-		
+
 		_bin1_MToF = atoi(strtok(NULL, ","));
 		_bin3_MToF = atoi(strtok(NULL, ","));
 		_bin5_MToF = atoi(strtok(NULL, ","));
 		_bin7_MToF = atoi(strtok(NULL, ","));
-		
+
 		_temp = strtod(strtok(NULL, ","), NULL);
 		_pressure = strtod(strtok(NULL, ","), NULL);
 		_periodCount = atol(strtok(NULL, "\r"));
 	}
-	
-	
-	
+
+
+
 	return error;
 }
 

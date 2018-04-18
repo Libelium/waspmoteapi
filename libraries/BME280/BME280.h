@@ -1,23 +1,23 @@
 /*! \file BME280.h
     \brief Library for managing the BME280 sensor
-    
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.0
+
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -25,7 +25,7 @@
 
 /*! \def BME280_h
     \brief The library flag
-    
+
 */
 #ifndef BME280_h
 #define BME280_h
@@ -33,10 +33,13 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
- 
+
 #include <inttypes.h>
 
 #define BME280_DEBUG 0
+
+// define print message
+#define PRINT_BME(str)	USB.print(F("[BME] ")); USB.print(str);
 
 
 //! Sensor Specific constants
@@ -181,7 +184,7 @@
 /******************************************************************************
  * Class
  ******************************************************************************/
- 
+
 //! BME280 Class
 /*!
 	BME280 Class defines all the variables and functions used to manage BME280 sensor
@@ -189,7 +192,7 @@
 class BME280
 {
 	private:
-		
+
 	/// Calibration variables
 	uint16_t dig_T1;
 	int16_t dig_T2;
@@ -212,7 +215,7 @@ class BME280
 	int8_t  dig_H6;
 
 	int32_t t_fine;
-	
+
 	/// INTERNAL COMPENSATION FUNCTIONS
 	//! This function compensates the temperature with the calibration data
 	/*!
@@ -220,14 +223,14 @@ class BME280
 	\return		compensated temperature in ºC
 	*/
 	float compensateTemp(long uncompensated_temp);
-	
+
 	//! This function compensates the pressure with the calibration data
 	/*!
 	\param	long uncompensated_pres: uncompensated pressure value
 	\return		compensated pressure in Pascals
 	*/
 	float compensatePres(long uncompensated_pres);
-	
+
 	//! This function compensates the humidity with the calibration data
 	/*!
 	\param	long uncompensated_hum: uncompensated humidity value
@@ -235,38 +238,38 @@ class BME280
 	*/
 	float compensateHum(long uncompensated_hum);
 
-	
+
 	public:
-		
+
 	// Constructors
 	BME280();
-	
-	/// POWER AND CONFIGURATION FUNCTIONS	
-	//! This function checks if the module is accesible via I2C and 
+
+	/// POWER AND CONFIGURATION FUNCTIONS
+	//! This function checks if the module is accesible via I2C and
 	//! reads the calibration registers
 	/*!
 	\return		1 if is OK, 0 if not
 	*/
 	int8_t ON();
-	
+
 	//! This function checks if the module is accesible via I2C
 	/*!
 	\return		1 if is accesible, 0 if not
 	*/
 	int8_t checkID();
-	
+
 	//! This function reads the calibration registers
 	/*!
 	\return	 	nothing
 	*/
 	void readCalibration();
-	
+
 	//! This function shows the calibration variables
 	/*!
 	\return		nothing
 	*/
 	void showCalibration();
-	
+
 	/// MEASURE FUNCTIONS
 	//! This function reads temperature and compensate it
 	/*!
@@ -285,10 +288,10 @@ class BME280
 					- BME280_FILTER_COEFF_16
 	\return		The temperature in ºC
 				-1000 if comunication error
-				-1001 if conversion timeout 
+				-1001 if conversion timeout
 	*/
-	float getTemperature(uint8_t over_sample_value, uint8_t filter_value);	
-	
+	float getTemperature(uint8_t over_sample_value, uint8_t filter_value);
+
 	//! This function reads pressure and compensate it
 	/*!
 	\param	uint8_t over_sample_value: oversamples value for the sensor
@@ -306,10 +309,10 @@ class BME280
 					- BME280_FILTER_COEFF_16
 	\return		The pressure in Pascals
 				-1000 if comunication error
-				-1001 if conversion timeout 
+				-1001 if conversion timeout
 	*/
-	float getPressure(uint8_t over_sample_value, uint8_t filter_value);	
-	
+	float getPressure(uint8_t over_sample_value, uint8_t filter_value);
+
 	//! This function reads humidity and compensate it
 	/*!
 	\param	uint8_t over_sample_value: oversamples value for the sensor
@@ -321,12 +324,12 @@ class BME280
 					- BME280_OVERSAMP_16X
 	\return		The humidity in %RH
 				-1000 if comunication error
-				-1001 if conversion timeout 
+				-1001 if conversion timeout
 	*/
-	float getHumidity(uint8_t over_sample_value);	
-	
+	float getHumidity(uint8_t over_sample_value);
 
-	
+
+
 };
 
 

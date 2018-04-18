@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -65,7 +65,7 @@ const char	set_power_mode_ZB[]		PROGMEM	=	"7E00050852504D0000";	// AT+PM
 const char	get_power_mode_ZB[]		PROGMEM	=	"7E00040852504D08";		// AT+PM
 const char	get_supply_Volt_ZB[]	PROGMEM	=	"7E0004085225562A";		// AT+%V
 const char	set_coordinator_ZB[]	PROGMEM	=	"7E0005085243450000";	// AT+CE
-const char	get_coordinator_ZB[]	PROGMEM	=	"7E00040852434500";		// AT+CE
+const char	get_coordinator_ZB[]	PROGMEM	=	"7E0004085243451D";		// AT+CE
 
 
 

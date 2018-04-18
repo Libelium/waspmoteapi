@@ -1,7 +1,7 @@
 /*! \file Wasp4G.h
     \brief Library for managing Telit LE910
         
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	A. Gállego, Y. Carmona
 
@@ -134,17 +134,17 @@ class Wasp4G : public WaspUART
 {
 
 private:
-	/*!	Attribute for  APN 
-	 */
+	//!	Attribute for APN 
 	char _apn[30];
 	
-	/*!	Attribute for  APN login
-	 */
+	//!	Attribute for APN login
 	char _apn_login[30];
 	
-	/*!	Attribute for  APN password
-	 */
-	char _apn_password[30];	
+	//!	Attribute for APN password
+	char _apn_password[30];		
+	
+	//!	Attribute for HTTP POST content type
+	char _contentType[80];
 	
 	/*! This function parses the error copde returned by the module. At the
 	 * point this function is called, the UART is supposed to have received: 
@@ -172,7 +172,7 @@ private:
  					request
 	\param	char* data: data to send in POST/PUT method
 	\param	uint16_t data_length: data length to send in POST/PUT method
-	\return 	0 if OK
+	\param	0 if OK
 				1 if error setting URL and port
 				2 if error sending the request
 				3 if error sending POST / PUT data
@@ -545,6 +545,26 @@ public:
 			1 if error deleting the SMS
 	*/	
 	uint8_t deleteSMS(uint8_t sms_index, uint8_t del_flag);
+	
+	//! Function: 	This function stores the desired Content-Type for HTTP POST requests
+	/*!
+	\param uint8_t content: index number corresponding to content type.
+	 				“0” – “application/x-www-form-urlencoded”
+	 				“1” – “text/plain” 
+	 				“2” – “application/octet-stream”
+	 				“3” – “multipart/form-data” 
+	\return	'0' if OK
+	 		'x' if error
+	 */
+	uint8_t httpSetContentType(uint8_t content);
+	
+	//! Function: This function stores the desired Content-Type for HTTP POST requests
+	/*!
+	\param char* content: string corresponding to content type. i.e. "text/plain"
+	\return '0' if OK
+			'x' if error
+	*/
+	uint8_t httpSetContentType(char* content);
 	
 	/*!
 	\brief	This function performs a HTTP request
