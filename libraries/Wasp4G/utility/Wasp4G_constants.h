@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascon
     Implementation:	Alejandro Gállego
 
@@ -197,7 +197,7 @@ const char LE910_SMS_03[]	PROGMEM = "AT+CMGR=%u\r";						//3
 const char LE910_SMS_04[]	PROGMEM = "AT+CMGS=\"%s\"\r";					//4
 const char LE910_SMS_05[]	PROGMEM = "AT+CMGD=%u\r";						//5
 const char LE910_SMS_06[]	PROGMEM = "AT+CMGD=%u,%u\r";					//6
-const char LE910_SMS_07[]	PROGMEM = "AT+CSMP=%u,%u,%u,%u\r";				//7
+const char LE910_SMS_07[]	PROGMEM = "AT+CSMP=17,167,0,0\r";				//7
 
 const char* const table_SMS[] PROGMEM = 
 {

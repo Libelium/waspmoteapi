@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.4
+ *  Version:		3.5
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -124,6 +124,7 @@
  const char command_91[]	PROGMEM	= 	"mac set sync %u\r\n";
  const char command_92[]	PROGMEM	= 	"mac get sync\r\n";
  const char command_93[]	PROGMEM	= 	"radio tx ";
+ const char command_94[]	PROGMEM	= 	"mac set bat %u\r\n";
 
  
 
@@ -222,7 +223,8 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
 	command_90,
 	command_91,
 	command_92,
-	command_93
+	command_93,
+	command_94
 };
 
 /******************************************************************************
@@ -249,7 +251,9 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
  const char answer_18[]	PROGMEM	=	"not_joined";
  const char answer_19[]	PROGMEM	=	"denied";
  const char answer_20[]	PROGMEM	=	"RN2903";
-
+ const char answer_21[]	PROGMEM	=	"India";
+ const char answer_22[]	PROGMEM	=	"radio_rx "; // for india purpose only
+ 
 
 const char* const table_LoRaWAN_ANSWERS[] PROGMEM= 	  
 {   
@@ -273,7 +277,9 @@ const char* const table_LoRaWAN_ANSWERS[] PROGMEM=
 	answer_17,
 	answer_18,
 	answer_19,
-	answer_20
+	answer_20,
+	answer_21,
+	answer_22,
 };
 
 
@@ -385,6 +391,13 @@ uint8_t WaspLoRaWAN::reset()
 	else if (status == 2)
 	{
 		_version = RN2903_MODULE;
+		
+		// create "India" answer
+		memset(ans1,0x00,sizeof(ans1));
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[21])));
+		
+		if(waitFor(ans1) == 1) _version = RN2903_IN_MODULE;
+		
 		return LORAWAN_ANSWER_OK;
 	}
 	else
@@ -431,14 +444,19 @@ uint8_t WaspLoRaWAN::factoryReset()
 	
 	if (status == 1)
 	{
-		waitFor(carr,1000);
 		_version = RN2483_MODULE;
 		return LORAWAN_ANSWER_OK;
 	}
 	else if (status == 2)
 	{
-		waitFor(carr,1000);
 		_version = RN2903_MODULE;
+		
+		// create "India" answer
+		memset(ans1,0x00,sizeof(ans1));
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[21])));
+		
+		if(waitFor(ans1) == 1) _version = RN2903_IN_MODULE;
+		
 		return LORAWAN_ANSWER_OK;
 	}
 	else
@@ -645,6 +663,13 @@ uint8_t WaspLoRaWAN::check()
 	if (status == 2)
 	{
 		_version = RN2903_MODULE;
+		
+		// create "India" answer
+		memset(ans1,0x00,sizeof(ans1));
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[21])));
+		
+		if(waitFor(ans1) == 1) _version = RN2903_IN_MODULE;
+		
 		return LORAWAN_ANSWER_OK;
 	}
 	else if (status == 3)
@@ -717,6 +742,11 @@ uint8_t WaspLoRaWAN::resetMacConfig(char* band)
 	memset(ans2,0x00,sizeof(ans2));
 	
 	if ((strcmp(band, "433")) && (strcmp(band, "868")) && (strcmp(band, "900")))
+	{
+		return LORAWAN_INPUT_ERROR;
+	}
+	
+	if (!strcmp(band, "433") && (_version == RN2903_IN_MODULE))
 	{
 		return LORAWAN_INPUT_ERROR;
 	}
@@ -1432,6 +1462,10 @@ uint8_t WaspLoRaWAN::setPower(uint8_t index)
 				if ( index > 10 || index < 5 || index == 6) return LORAWAN_INPUT_ERROR;		
 				else break;
 				
+		case RN2903_IN_MODULE:
+				if ( index > 5 || index < 0) return LORAWAN_INPUT_ERROR;		
+				else break;
+						
 		default:
 				return LORAWAN_VERSION_ERROR;			
 	}
@@ -1544,13 +1578,13 @@ uint8_t WaspLoRaWAN::setDataRate(uint8_t datarate)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if (datarate > 7) return LORAWAN_INPUT_ERROR;
 				break;
 				
 		case RN2903_MODULE:
 				if (datarate > 4) return LORAWAN_INPUT_ERROR;
 				break;
-				
 		default:
 				return LORAWAN_VERSION_ERROR;			
 	}
@@ -2741,6 +2775,7 @@ uint8_t WaspLoRaWAN::setChannelFreq(uint8_t channel, uint32_t freq)
 	if (freq < 433250000) return LORAWAN_INPUT_ERROR;
 	if ((freq > 434550000)&&(freq < 863250000)) return LORAWAN_INPUT_ERROR;
 	if (freq > 869750000) return LORAWAN_INPUT_ERROR;	
+	if ((freq < 863250000) && (_version == RN2903_IN_MODULE)) return LORAWAN_INPUT_ERROR;	
 	
 	// clear buffers
 	memset(_command,0x00,sizeof(_command));
@@ -2799,6 +2834,7 @@ uint8_t WaspLoRaWAN::getChannelFreq(uint8_t channel)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if (channel > 15)
 				{
 					return LORAWAN_INPUT_ERROR;
@@ -3003,6 +3039,7 @@ uint8_t WaspLoRaWAN::setChannelDRRange(uint8_t channel, uint8_t minDR, uint8_t m
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if ((channel > 15) || (minDR > 5) || (maxDR > 5))
 				{
 					return LORAWAN_INPUT_ERROR;
@@ -3073,6 +3110,7 @@ uint8_t WaspLoRaWAN::getChannelDRRange(uint8_t channel)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if (channel > 15)
 				{
 					return LORAWAN_INPUT_ERROR;
@@ -3163,6 +3201,7 @@ uint8_t WaspLoRaWAN::setChannelStatus(uint8_t channel, char* state)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if (channel > 15)
 				{
 					return LORAWAN_INPUT_ERROR;
@@ -3237,6 +3276,7 @@ uint8_t WaspLoRaWAN::getChannelStatus(uint8_t channel)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if (channel > 15)
 				{
 					return LORAWAN_INPUT_ERROR;
@@ -3972,7 +4012,15 @@ uint8_t WaspLoRaWAN::receiveRadio(uint32_t timeout)
 			memset(ans2,0x00,sizeof(ans2));
 			
 			// create "radio_rx  " answer
-			sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[7])));
+			if (_version == RN2903_IN_MODULE) 
+			{
+				sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[22])));
+			}
+			else
+			{
+				sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[7])));
+			}
+						
 			// create "\r\n" answer
 			sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 			// create "radio_err" answer
@@ -4087,6 +4135,13 @@ uint8_t WaspLoRaWAN::test_OFF()
 	else if (status == 2)
 	{
 		_version = RN2903_MODULE;
+		
+		// create "India" answer
+		memset(ans1,0x00,sizeof(ans1));
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[21])));
+		
+		if(waitFor(ans1) == 1) _version = RN2903_IN_MODULE;
+		
 		return LORAWAN_ANSWER_OK;
 	}
 	else if (status == 3)
@@ -4272,6 +4327,7 @@ uint8_t WaspLoRaWAN::setRadioPower(int8_t pwr)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if ((pwr < -3) || (pwr > 15)) return LORAWAN_INPUT_ERROR;
 				break;
 				
@@ -4467,9 +4523,11 @@ uint8_t WaspLoRaWAN::setRadioFreq(uint32_t freq)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if (freq < 433250000) return LORAWAN_INPUT_ERROR;
 				if ((freq > 434550000)&&(freq < 863250000)) return LORAWAN_INPUT_ERROR;
 				if (freq > 869750000) return LORAWAN_INPUT_ERROR;	
+				if ((freq < 863250000) && (_version == RN2903_IN_MODULE)) return LORAWAN_INPUT_ERROR;	
 				break;
 				
 		case RN2903_MODULE:
@@ -5385,10 +5443,12 @@ uint8_t WaspLoRaWAN::setRX2Parameters(uint8_t datarate, uint32_t frequency)
 	switch (_version)
 	{
 		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
 				if (datarate > 7) return LORAWAN_INPUT_ERROR;
 				if (frequency < 433250000) return LORAWAN_INPUT_ERROR;
 				if ((frequency > 434550000)&&(frequency < 863250000)) return LORAWAN_INPUT_ERROR;
 				if (frequency > 869750000) return LORAWAN_INPUT_ERROR;	
+				if ((frequency < 863250000) && (_version == RN2903_IN_MODULE)) return LORAWAN_INPUT_ERROR;	
 				break;
 				
 		case RN2903_MODULE:
@@ -5915,8 +5975,9 @@ uint8_t WaspLoRaWAN::getRX2Parameters(char* band)
 	
 	// check state
 	if ((strcmp(band, "868")) && (strcmp(band, "433")) && (strcmp(band, "900"))) return LORAWAN_INPUT_ERROR;
+	if (!(strcmp(band, "433")) && _version == RN2903_IN_MODULE) return LORAWAN_INPUT_ERROR;
 	
-	if (_version == RN2483_MODULE)
+	if (_version == RN2483_MODULE || _version == RN2903_IN_MODULE)
 	{
 		// create "mac get rx2" command
 		sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[89])),band);
@@ -6028,7 +6089,7 @@ uint8_t WaspLoRaWAN::getMaxPayload()
 				case 4:
 				case 5:
 				case 6:
-				case 7: _maxPayload = 242;
+				case 7: _maxPayload = 222;
 						break;
 				default:_maxPayload = 0;
 						return 1;
@@ -6047,6 +6108,24 @@ uint8_t WaspLoRaWAN::getMaxPayload()
 						break;
 				case 3: 
 				case 4: _maxPayload = 242;
+						break;
+				default:_maxPayload = 0;
+						return 1;
+						break;
+			}
+		}
+		else if (_version == RN2903_IN_MODULE)
+		{
+			switch (_dataRate)
+			{
+				case 0:
+				case 1:	
+				case 2:	_maxPayload = 51;
+						break;
+				case 3: _maxPayload = 115;
+						break;
+				case 4:
+				case 5: _maxPayload = 222;
 						break;
 				default:_maxPayload = 0;
 						return 1;
@@ -6145,6 +6224,91 @@ uint8_t WaspLoRaWAN::getSyncWord()
 	}
 }
 
+
+/*!
+ * @brief	This function is used to set the battery level required for 
+ * 			Device Status Answer frame in use with the LoRaWAN Class A protocol. 
+ * 
+ * @param	uint8_t sync: one byte long hexadecimal number that represents
+ * 			the synchronization word
+ */
+uint8_t WaspLoRaWAN::setBatteryLevel()
+{
+	uint8_t status;	
+	char ans1[15];
+	char ans2[15];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	uint16_t battery = PWR.getBatteryLevel();
+	
+	battery = battery * 254/100;
+	if (battery == 0) battery == 1;
+	
+	// create "mac set bat" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[94])), battery);
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,100);
+
+	if (status == 1)
+	{
+		return LORAWAN_ANSWER_OK;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
+
+
+/*!
+ * @brief	This function is used to set the battery level required for 
+ * 			Device Status Answer frame in use with the LoRaWAN Class A protocol. 
+ * 
+ * @param	uint8_t sync: one byte long hexadecimal number that represents
+ * 			the synchronization word
+ */
+uint8_t WaspLoRaWAN::setBatteryLevel(uint8_t bat)
+{
+	uint8_t status;	
+	char ans1[15];
+	char ans2[15];
+	
+	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
+	memset(ans2,0x00,sizeof(ans2));
+	
+	uint16_t battery = bat;
+	
+	battery = battery * 254/100;
+	if (battery == 0) battery == 1;
+	
+	// create "mac set bat" command
+	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[94])), battery);
+	// create "ok" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+	// create "invalid_param" answer
+	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+	
+	//send command and wait for ans
+	status = sendCommand(_command,ans1,ans2,100);
+
+	if (status == 1)
+	{
+		return LORAWAN_ANSWER_OK;
+	}
+	else 
+	{
+		return LORAWAN_NO_ANSWER;
+	}
+}
 ////////////////////////////////////////////////////////////////////////////////
 // Private functions
 ////////////////////////////////////////////////////////////////////////////////

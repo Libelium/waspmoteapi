@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.3
+    Version:		3.4
     Design:			David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -57,8 +57,9 @@ enum AnswerTypesLoRaWAN
  */
 enum ModuleTypersLoRaWAN
 {
-	RN2483_MODULE = 1, //	EU
-	RN2903_MODULE = 2, //	US or AU
+	RN2483_MODULE = 1,		//	EU
+	RN2903_MODULE = 2,		//	US or AU
+	RN2903_IN_MODULE = 3,	//	IN
 };
 
 /******************************************************************************
@@ -232,7 +233,9 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getRX2Parameters(char* band);
 		uint8_t getMaxPayload();
 		void showFirmwareVersion();
-
+		uint8_t setBatteryLevel();
+		uint8_t setBatteryLevel(uint8_t bat);
+		
 	private:		
 		// Utils
 		uint32_t parseValue(uint8_t base);

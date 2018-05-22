@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.5
+ *  Version:		3.6
  *  Design:			David Gascón
  *  Implementation:	Carlos Bello
  */
@@ -493,86 +493,76 @@ watermarkClass::watermarkClass(uint8_t socket)
  * 						  -1 if wrong sensor selected
  *
  */
-float watermarkClass::readWatermark()
-{
-	int value = 0;
-	int previous_value = 0;
-	int counter = 0;
-	float freq = 0;
+ float watermarkClass::readWatermark()
+ {
+ 	int value = 0;
+ 	int previous_value = 0;
+ 	int counter = 0;
+ 	float freq = 0;
 
-	// switch on
-    digitalWrite(WATERMARK_ON,HIGH);
+ 	// switch on
+     digitalWrite(WATERMARK_ON,HIGH);
 
-	switch (_watermarkSocket)
-	{
-		case SOCKET_1:
-		case SOCKET_B:
-		    digitalWrite(WATERMARK_DIR_A,LOW);
-		    digitalWrite(WATERMARK_DIR_B,LOW);
-		break;
-		case SOCKET_2:
-		case SOCKET_E:
-			digitalWrite(WATERMARK_DIR_A,HIGH);
-			digitalWrite(WATERMARK_DIR_B,LOW);
-		break;
-		case SOCKET_3:
-		case SOCKET_C:
-			digitalWrite(WATERMARK_DIR_A,LOW);
-			digitalWrite(WATERMARK_DIR_B,HIGH);
-		break;
-	}
+ 	switch (_watermarkSocket)
+ 	{
+ 		case SOCKET_1:
+ 		case SOCKET_B:
+ 		    digitalWrite(WATERMARK_DIR_A,LOW);
+ 		    digitalWrite(WATERMARK_DIR_B,LOW);
+ 		break;
+ 		case SOCKET_2:
+ 		case SOCKET_E:
+ 			digitalWrite(WATERMARK_DIR_A,HIGH);
+ 			digitalWrite(WATERMARK_DIR_B,LOW);
+ 		break;
+ 		case SOCKET_3:
+ 		case SOCKET_C:
+ 			digitalWrite(WATERMARK_DIR_A,LOW);
+ 			digitalWrite(WATERMARK_DIR_B,HIGH);
+ 		break;
+ 	}
 
-	#if DEBUG_AGR==2
-	PRINT_AGR(F("readWatermark Select:"));
-	USB.println(_watermarkSocket);
-	#endif
+ 	#if DEBUG_AGR==2
+ 	PRINT_AGR(F("readWatermark Select:"));
+ 	USB.println(_watermarkSocket);
+ 	#endif
 
-	const uint32_t total_timeout = 10000;
-	const uint32_t total_counts  = 500;
-	uint32_t current_millis;
-	uint32_t previous = millis();
+ 	const uint32_t total_counts  = 500;
+ 	uint32_t count_down=1000000UL;
+ 	uint32_t previous = millis();
 
-	// init counter
-	counter = 0;
+ 	// init counter
+ 	counter = 0;
 
-	while (counter < total_counts)
-	{
-		previous_value = value;
-		value = digitalRead(ANA5);
-		if ((previous_value == 1) && (value == 0))
-		{
-			counter++;
-		}
+ 	while (counter < total_counts)
+ 	{
+ 		previous_value = value;
+ 		value = digitalRead(ANA5);
+ 		if ((previous_value == 1) && (value == 0))
+ 		{
+ 			counter++;
+ 		}
 
-		// get current 'millis' time
-		current_millis = millis();
+     if(--count_down==0){
+       break;
+     }
+ 	}
 
-		if (current_millis-previous > total_timeout)
-		{
-			break;
-		}
-		else if (current_millis < previous)
-		{
-			previous = millis();
-		}
-	}
+ 	// switch off
+ 	digitalWrite(WATERMARK_ON,LOW);
 
-	// switch off
-	digitalWrite(WATERMARK_ON,LOW);
+ 	if (counter >= total_counts)
+ 	{
+ 		return freq = ((float)total_counts*1000.0) / float((millis() - previous));
+ 	}
 
-	if (counter >= total_counts)
-	{
-		return freq = ((float)total_counts*1000.0) / float((millis() - previous));
-	}
+ 	// check no counts (bad behaviour)
+ 	if (counter == 0)
+ 	{
+ 		return 0;
+ 	}
 
-	// check no counts (bad behaviour)
-	if (counter == 0)
-	{
-		return 0;
-	}
-
-	return freq = (float)counter*1000.0 / float(total_timeout);
-}
+ }
 
 
 /*

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.6
+ *  Version:		3.7
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -1853,9 +1853,14 @@ uint8_t	Wasp4G::manageSockets(uint32_t wait_time)
 
 /* This function sets the parameters to use SMS
  * Return:	0 if OK
- * 			1 if error setting the SMS format
- * 			2 if error selecting the storage
- * 			3 if error setting the incoming SMS indication
+ * 			1 not registered, ME is not currently searching for a new operator to register to
+ * 			2 not registered, but ME is currently searching for a new operator to register to
+ * 			3 registration denied
+ * 			4 unknown connection error
+ * 			5 if error setting the SMS format
+ * 			6 if error selecting the storage
+ * 			7 if error setting the incoming SMS indication
+ * 			8 if error setting additional parameters
 */
 uint8_t Wasp4G::configureSMS()
 {
@@ -1865,13 +1870,26 @@ uint8_t Wasp4G::configureSMS()
 	#if DEBUG_WASP4G > 1
 		PRINT_LE910(F("Setting SMS parameters\n"));
 	#endif		
+	
+	// delay to wait for operational SIM
+	delay(5000);
+	
+/*	//// 1. Check connection
+	answer = checkConnection(60);
+	if (answer != 0)
+	{
+		#if DEBUG_WASP4G > 0
+			PRINT_LE910(F("Error checking connection\n"));
+		#endif
+		return answer;
+	}	*/
 		
-	// 1. Configure format, storage and indication parameters
+	// 2. Configure format, storage and indication parameters
 	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SMS[0])));	//AT+CMGF=1
 	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR,500);
 	if (answer != 1)
 	{
-		return 1;
+		return 5;
 	}
 	
 	/*
@@ -1882,7 +1900,7 @@ uint8_t Wasp4G::configureSMS()
 	if (answer != 1)
 	{
 		USB.println("Error CPMS");
-		return 2;
+		return 6;
 	}
 
 	memset(command_buffer,0x00,sizeof(command_buffer));
@@ -1891,9 +1909,18 @@ uint8_t Wasp4G::configureSMS()
 	if (answer != 1)
 	{
 		USB.println("Error CNMI");
-		return 3;
+		return 7;
 	}
 	*/
+	
+	// 3. Configure format, storage and indication parameters
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SMS[7])));	//AT+CSMP=17,167,0,0
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR,500);
+	if (answer != 1)
+	{
+		return 8;
+	}
+	
 	return 0;
 	
 }
@@ -1914,7 +1941,6 @@ uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 	char command_buffer[100];
 	uint8_t answer;
 	
-	delay(3000);
 		
 	//// 1. Check connection
 	answer = checkConnection(60);
@@ -1927,26 +1953,7 @@ uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 	}	
 	
 	// delay to wait for operational SIM
-	delay(3000);
-	
-	// 2. Set Text Mode Parameters
-	// <fo>: 17 --> SMS-SUBMIT with validity period in relative format
-	// <vp>: 167 --> 24 hours
-	// <pid>: 0
-	// <dcs>: 0
-	memset(command_buffer,0x00,sizeof(command_buffer));
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SMS[7])), 17, 167, 0 ,0);	//AT+CSMP=17,167,0,0
-	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR,500);
-
-	if (answer != 1)
-	{
-		#if DEBUG_WASP4G > 0
-			USB.println("Error CSMP");
-		#endif
-		return 7;
-	}
-	
-	delay(3000);
+	delay(5000);
 	
 	//// 2. Send SMS
 	// AT+CMGS="<phone_number>"	
@@ -1964,12 +1971,11 @@ uint8_t Wasp4G::sendSMS(char* phone_number, char* sms_string)
 		#endif
 		return 5;
 	}
-	delay(3000);
 	
 	printString(sms_string, 1);
 	command_buffer[0] = 0x1A;
 	command_buffer[1] = '\0';
-	answer = sendCommand(command_buffer, LE910_OK, 10000);
+	answer = sendCommand(command_buffer, LE910_OK);
 	if (answer != 1)
 	{
 		printByte(0x1B, 1); //ESC ASCII
