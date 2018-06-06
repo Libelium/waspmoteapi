@@ -1,7 +1,7 @@
 /*
  *  Library for managing the MB7040 and MB1202 sensors
  * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -38,48 +38,30 @@
 uint16_t UltrasoundSensor::getDistance()
 {
 	
-	uint8_t HByte, LByte;
-	uint16_t range;
+	union l {
+		uint16_t distance;
+		uint8_t data[2];
+	}measure;
+	
 	uint32_t tempo;
+
+	// init I2C bus
+	I2C.begin();
 	
-	delay(200);
-	
-	if( !Wire.isON ) Wire.begin();
-	
-	Wire.beginTransmission(I2C_ADDRESS_MB7040_MB1202);
-    Wire.send(MB7040_MB1202_RANGE_READING);        
-	Wire.endTransmission();
+	// send command
+	I2C.write(I2C_ADDRESS_MB7040_MB1202, MB7040_MB1202_RANGE_READING, 1);
 	
 	delay(100); //It is best to allow 100ms between readings to allow for proper acoustic dissipation. 
 	
 	// Reads the measured distance	
-	Wire.requestFrom(I2C_ADDRESS_MB7040_MB1202,0x02);
-	tempo = millis();
-	while((Wire.available() < 2) && ((millis() - tempo) < MB7040_MB1202_I2C_READ_TIMEOUT))
-	{
-		if (millis() < tempo) tempo = millis();	//to avoid millis overflow
-	}
+	I2C.read(I2C_ADDRESS_MB7040_MB1202,measure.data,2);
 	
-	if (Wire.available() == 2)
-	{
-		HByte = Wire.receive();
-		LByte = Wire.receive();
-		Wire.endTransmission();
+	uint8_t aux;
+	aux = measure.data[0];
+	measure.data[0] = measure.data[1];
+	measure.data[1] = aux;
 	
-		range = ((uint16_t)HByte * 256) + LByte;
-		if (range >= 800)
-		{
-			range = 9000;			
-		}
-		
-	}
-	else
-	{
-		range = 10000;
-	}	
-	
-	
-	return range;	
+	return measure.distance;	
 }
 
 

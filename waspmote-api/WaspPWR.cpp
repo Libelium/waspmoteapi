@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.3
+ *  Version:		3.4
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -227,7 +227,6 @@ void WaspPWR::switchesOFF(uint8_t option)
 	//~ digitalWrite(I2C_SDA,LOW);
 	//~ pinMode(I2C_SCL,OUTPUT);
 	//~ digitalWrite(I2C_SCL,LOW);
-	Wire.isON = false;
 	
 	// switch Analog to Digital Converter OFF
 	cbi(ADCSRA,ADEN);
@@ -249,8 +248,7 @@ void WaspPWR::switchesOFF(uint8_t option)
 	{	
 		// switch OFF sensor boards
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
-		PWR.setSensorPower(SENS_5V, SENS_OFF);
-		Wire.isBoard = false;
+		PWR.setSensorPower(SENS_5V, SENS_OFF);		
 	}
 	
 	// close UART0
@@ -530,7 +528,7 @@ void WaspPWR::deepSleep(const char* time2wake,
 	{
 		RTC.disableAlarm1();
 		RTC.OFF();
-		Wire.recover();
+		I2C.recover();
 		USB.println(F("[PWR] deepSleep RTC error"));
 		return (void)0;
 	}
@@ -868,7 +866,7 @@ void	WaspPWR::closeI2C()
 	pinMode(I2C_SCL,OUTPUT);
 	//digitalWrite(I2C_SDA,LOW);
 	//digitalWrite(I2C_SCL,LOW);
-	Wire.close();
+	I2C.close();
 }
 
 

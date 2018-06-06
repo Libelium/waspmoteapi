@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego
  */
@@ -49,7 +49,7 @@ boolean TSL2561::checkID()
 	#if TSL2561_DEBUG>0
 		PRINT_LUX(F("TSL2561.Checking ID..."));
 	#endif
-	Wire.readByte(I2C_ADDRESS_TSL2561, TSL2561_CHIP_ID_REG, &valueID);
+	I2C.read(I2C_ADDRESS_TSL2561, TSL2561_CHIP_ID_REG, &valueID,1);
 	if (valueID == TSL2561_CHIP_ID_REG_CHIP_ID)
 	{
 		#if TSL2561_DEBUG>0
@@ -78,7 +78,7 @@ void TSL2561::enable(void)
   #if TSL2561_DEBUG>0
 		PRINT_LUX(F("TSL2561.Enabling lux sensor\n"));
 	#endif
-	Wire.writeByte(	I2C_ADDRESS_TSL2561,
+	I2C.write	(	I2C_ADDRESS_TSL2561, 
 					TSL2561_COMMAND_BIT | TSL2561_CONTROL_REG,
 					TSL2561_CONTROL_POWERON);
 
@@ -96,7 +96,7 @@ void TSL2561::disable(void)
   	#if TSL2561_DEBUG>0
 		PRINT_LUX(F("TSL2561.Disabling lux sensor\n"));
 	#endif
-	Wire.writeByte(	I2C_ADDRESS_TSL2561,
+	I2C.write	(	I2C_ADDRESS_TSL2561, 
 					TSL2561_COMMAND_BIT | TSL2561_CONTROL_REG,
 					TSL2561_CONTROL_POWEROFF);
 
@@ -119,8 +119,8 @@ void TSL2561::setGain(tsl2561Gain_t gain)
 	#endif
 
 	_gain = gain;
-
-	Wire.writeByte(	I2C_ADDRESS_TSL2561,
+  
+	I2C.write	(	I2C_ADDRESS_TSL2561, 
 					TSL2561_COMMAND_BIT | TSL2561_TIMING_REG,
 					_integration | _gain);
 
@@ -145,7 +145,7 @@ void TSL2561::setTiming(tsl2561IntegrationTime_t integration)
 
 	_integration = integration;
 
-	Wire.writeByte(	I2C_ADDRESS_TSL2561,
+	I2C.write	(	I2C_ADDRESS_TSL2561, 
 					TSL2561_COMMAND_BIT | TSL2561_TIMING_REG,
 					_integration | _gain);
 
@@ -290,8 +290,8 @@ int8_t TSL2561::getFullLuminosity ()
 			break;
 	}
 
-	error = Wire.readBytes(	I2C_ADDRESS_TSL2561,
-					TSL2561_COMMAND_BIT | TSL2561_WORD_BIT | TSL2561_CHAN0_LOW_REG,
+	error = I2C.read(	I2C_ADDRESS_TSL2561,
+					(uint8_t)(TSL2561_COMMAND_BIT | TSL2561_WORD_BIT | TSL2561_CHAN0_LOW_REG),
 					aux_buffer,
 					4);
 
@@ -318,12 +318,10 @@ int8_t TSL2561::getFullLuminosity ()
  Parameters:
  Values:
 */
-boolean TSL2561::ON(void)
-{
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+boolean TSL2561::ON(void) 
+{	
+	I2C.begin();
+	
 	delay(100);
 
 	if (checkID() == 0)

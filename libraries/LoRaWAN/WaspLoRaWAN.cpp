@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.5
+ *  Version:		3.6
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -695,16 +695,19 @@ uint8_t WaspLoRaWAN::check()
 void WaspLoRaWAN::showFirmwareVersion()
 {	
 	uint8_t status;
+	char ans1[5];
 	
 	memset(_command,0x00,sizeof(_command));
+	memset(ans1,0x00,sizeof(ans1));
 	
 	// create "sys get ver" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[68])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	
 	//send command and wait for ans
-	status = sendCommand(_command,"\r\n",1000);
+	status = sendCommand(_command,ans1,1000);
 	
-	USB.ON();
 	USB.print(F("Firmware version: "));
 	USB.print((char*)_buffer);
 }

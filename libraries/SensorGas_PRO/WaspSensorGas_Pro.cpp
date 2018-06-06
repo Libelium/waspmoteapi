@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		4.1
+ *  Version:		4.2
  *  Design:			David Gascón
  *  Implementation:	Alejandro Gállego & Ahmad Saad
  */
@@ -104,7 +104,7 @@ Gas::Gas(int socket)
 
 	// Init I2C and power lines
 	if (!initDone)
-	{
+	{		
 		if ((WaspRegisterSensor & REG_CITIES_PRO) != 0)
 		{
 			// gases pro board
@@ -120,9 +120,9 @@ Gas::Gas(int socket)
 			digitalWrite(GP_I2C_SOCKET_3_F, LOW);
 			digitalWrite(GP_I2C_SOCKET_4_A, LOW);
 			digitalWrite(GP_I2C_SOCKET_5_B, LOW);
-			digitalWrite(GP_I2C_SOCKET_6, LOW);
-
-			// switch off all socket power lines
+			digitalWrite(GP_I2C_SOCKET_6, LOW);			
+			
+			// switch off all socket power lines	
 			pinMode(GP_PWR_SOCKET_1_C, OUTPUT);
 			pinMode(GP_PWR_SOCKET_2_E, OUTPUT);
 			pinMode(GP_PWR_SOCKET_3_F, OUTPUT);
@@ -143,7 +143,7 @@ Gas::Gas(int socket)
 		}
 	}
 	initDone = true;
-
+	
 	// i2c isolator disabled
 	// sensor socket power disabled
 	pinMode(sensor_config.power_pin, OUTPUT);
@@ -328,128 +328,11 @@ float Gas::getSensitivityTempComp(float temperature)
 	#if DEBUG_GASES_PRO>2
 		PRINTLN_GASES_PRO(F("***End of sensitivity temperature compensation***\r\n"));
 	#endif
-
+	
 
 	return comp_sens;
 }
 
-
-//! ONLY FOR 4-ELECTRODE AMPERIOMETRIC BOARD (V12)
-/* Function:	This function sets the resistance to an specific digipot
- * Parameters: electrode: electrode asociated to each digipot
- *  			     resistor: resistor value to set in Ohms
- * Return: 		void
- */
-void Gas::setAmplifier(bool electrode, float resistor)
-{
-	uint8_t value = 0;
-	uint8_t aux[2];
-
-	Wire.readBytes(I2C_ADDRESS_GASPRO_MCP4146, VOL_TCON_REG | READ_COMMAND, aux, 2);
-
-	if(resistor <= 100000)
-	{
-		// Connect the resistor
-		value = 128.0 * (resistor / 100000.0);
-
-		if (electrode == AUXILIARY_ELECTRODE)
-		{
-			aux[0] =  aux[1] | 0x04;
-			Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_TCON_REG | WRITE_COMMAND | 0x01, aux, 1);
-			//delay(100);
-			value = 128 - value;
-			Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_0_REG | WRITE_COMMAND, &value, 1);
-		}
-		else
-		{
-			aux[0] =  aux[1] | 0x10;
-			Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_TCON_REG | WRITE_COMMAND | 0x01, aux, 1);
-		//	delay(100);
-			Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_1_REG | WRITE_COMMAND, &value, 1);
-		}
-	}
-	else
-	{
-
-		// Disconnect the resistor
-		if (electrode == AUXILIARY_ELECTRODE)
-		{
-			value = aux[1] & 0xFB;
-			Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_TCON_REG | WRITE_COMMAND | 0x01, &value, 1);
-		}
-		else
-		{
-			value = aux[1] & 0xEF;
-			Wire.writeBytes( I2C_ADDRESS_GASPRO_MCP4146, VOL_TCON_REG | WRITE_COMMAND | 0x01, &value, 1);
-
-		}
-
-	}
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Setting R "));
-		USB.print(electrode);
-		USB.print(F(" to "));
-		USB.print(resistor);
-		USB.print(F(" Ohms || wiper: "));
-		USB.println(value, HEX);
- 	#endif
-}
-
-/* Function: 	This function gets the resistance from an specific digipot
- * Parameters:	electrode: electrode asociated to each digipot
- * Return: 		resistor value in Ohms
- */
-float Gas::getAmplifier(bool electrode)
-{
-	uint8_t aux[2];
-	uint16_t wiper;
-	float resistor;
-
-	Wire.readBytes(I2C_ADDRESS_GASPRO_MCP4146, VOL_TCON_REG | READ_COMMAND, aux, 2);
-	if ((aux[1] == 0xEF) || (aux[1] == 0xFB) || (aux[1] == 0xEB))
-	{
-		#if DEBUG_GASES_PRO>0
-			PRINT_GASES_PRO(F("Reading wiper "));
-			USB.print(electrode, DEC);
-			USB.print(F(": "));
-			USB.println(F(" external resistors"));
-		#endif
-		resistor = 1000000;
-		return resistor;
-	}
-
-	//delay(10);
-	if (electrode == AUXILIARY_ELECTRODE)
-	{
-		Wire.readBytes(I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_0_REG | READ_COMMAND, aux, 2);
-	}
-	else
-	{
-		Wire.readBytes(I2C_ADDRESS_GASPRO_MCP4146, VOL_WIPER_1_REG | READ_COMMAND, aux, 2);
-	}
-
-	wiper = (aux[0] * 256) + aux[1];
-
-	if (electrode == AUXILIARY_ELECTRODE)
-	{
-		wiper = 128 - wiper;
-	}
-
-	resistor = (float(wiper) / 128.0) * 100000.0;
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Reading wiper "));
-		USB.print(electrode);
-		USB.print(F(": "));
-		USB.print(wiper, DEC);
-		USB.print(F("/128 || Resistor value: "));
-		USB.print(resistor);
-		USB.println(F(" Ohms"));
-	#endif
-
-	return resistor;
-}
 
 /* Function: 	Specific function to read 3 electrode sensors
  * Parameters:	resolution: resolution value for ADC (RES_12_BIT, RES_14_BIT, RES_16_BIT or RES_18_BIT)
@@ -471,71 +354,15 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 
 	// Read the ADC
 	for (int i = 0; i < n_samples; i++)
-	{
-		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));
+	{		
+		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1));
 	}
 	// Get the mean value
 	V_conc /= n_samples;
 
 
-	// Gets the Vref
-	switch (LMP.getRefSource())
-	{
-		case 0:
-			V_ref = 3300;
-			break;
-		case 1:
-			V_ref = 2048;
-			break;
-	}
-
-	switch (LMP.getInternalZero())
-	{
-		case 0:
-			V_ref *= 0.2;
-			break;
-		case 1:
-			V_ref *= 0.5;
-			break;
-		case 2:
-			V_ref *= 0.67;
-			break;
-		case 3:
-			V_ref *= 1;
-			break;
-	}
-
-	// Gets the Rgain used
-	switch (LMP.getRgain())
-	{
-		case 0:
-			R_gain = 1000;
-			break;
-		case 1:
-			R_gain = 2.750;
-			break;
-		case 2:
-			R_gain = 3.500;
-			break;
-		case 3:
-			R_gain = 7;
-			break;
-		case 4:
-			R_gain = 14;
-			break;
-		case 5:
-			R_gain = 35;
-			break;
-		case 6:
-			R_gain = 120;
-			break;
-		case 7:
-			R_gain = 350;
-			break;
-		default:
-			R_gain = 0;
-	}
-
+	V_ref = LMP.getInternalZero();
+	R_gain = LMP.getRgain();
 
 	// Disable communication with AFE
 	digitalWrite(sensor_config.i2c_pin, LOW);
@@ -561,7 +388,7 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO_DATA("Ie: ", conc," uA");
 	#endif
-
+	
 	// Ie-Ibase  (Subtracts baseline current)
 	conc -= (sensor_config.baseline / 1000);
 
@@ -569,13 +396,13 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 		PRINT_GASES_PRO_DATA("Ie-Ibase: ", conc," uA");
 	#endif
 
-	// Output current temperature compensation
-	conc *= getSensitivityTempComp(temperature);
-
+	// Output current temperature compensation	
+	conc *= getSensitivityTempComp(temperature);	
+	
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO_DATA("Compensated conc: ", conc," uA");
 	#endif
-
+	
 	// fix sensitivity sign
 	if ((sensor_config.sensor_type == CL2_SS) 		||
 		(sensor_config.sensor_type == NO2_SS_CLE) 	||
@@ -583,15 +410,15 @@ float Gas::read3ElectrodeSensor(uint8_t resolution, float temperature)
 	{
 		conc *= -1;
 	}
-
-	// Conversion: I(nA) --> concentración(ppm)
+	
+	// Conversion: I(nA) --> concentración(ppm)	
 	conc = (conc * 1000) / sensor_config.m_conc;
-
+	
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO_DATA("concentration: ", conc," ppm");
 	#endif
-
-
+	
+	
 	// Baseline temperature compensation
 	conc -= getBaselineTempComp(temperature);
 	#if DEBUG_GASES_PRO>0
@@ -623,7 +450,7 @@ float Gas::readPellistorSensor(uint8_t resolution, float temperature)
 	for ( int i = 0; i < 4; i++)
 	{
 		// Reads the ADC
-		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));
+		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1));
 	}
 
 	// Disable communication
@@ -647,34 +474,34 @@ float Gas::readPellistorSensor(uint8_t resolution, float temperature)
 	#endif
 
 	// Vconc(mV) - Voffset(mV) sensor
-	V_conc -= sensor_config.baseline;
+	V_conc -= sensor_config.baseline;		
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure baseline compensated: "));
 		USB.printFloat(V_conc, 3);
 		USB.println(F(" mV"));
 	#endif
-
+	
 	// Baseline temperature compensation
-	V_conc -= getBaselineTempComp(temperature);
+	V_conc -= getBaselineTempComp(temperature);	
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure temperature compensated: "));
 		USB.printFloat(V_conc, 3);
 		USB.println(F(" mV"));
 	#endif
-
+	
 	// Output current temperature compensation
-	V_conc *= getSensitivityTempComp(temperature);
+	V_conc *= getSensitivityTempComp(temperature);	
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure sensitivity compensated: "));
 		USB.printFloat(V_conc, 3);
 		USB.println(F(" mV"));
 	#endif
-
+	
 	// V_conc(mV) --> concentration(% LEL)
-	concentration = V_conc / (sensor_config.m_conc);
+	concentration = V_conc / (sensor_config.m_conc);	
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure concentration: "));
@@ -707,7 +534,7 @@ float Gas::readNDIR(uint8_t resolution)
 	for ( int i = 0; i < 4; i++)
 	{
 		// Reads the ADC
-		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));
+		V_conc += (MCP.readADC(resolution, MCP3421_GAIN_1));
 	}
 
 	// Disable communication
@@ -731,7 +558,7 @@ float Gas::readNDIR(uint8_t resolution)
 	#endif
 
 	// Vconc(mV) - Voffset(mV) sensor
-	V_conc -= sensor_config.baseline;
+	V_conc -= sensor_config.baseline;		
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Measure baseline compensated: "));
@@ -740,7 +567,7 @@ float Gas::readNDIR(uint8_t resolution)
 	#endif
 
 	// conc(mV) --> concentración(% LEL)
-	conc = V_conc * sensor_config.m_conc;
+	conc = V_conc * sensor_config.m_conc;	
 
 	#if DEBUG_GASES_PRO>0
 		PRINT_GASES_PRO(F("Compensated measure: "));
@@ -756,193 +583,6 @@ float Gas::readNDIR(uint8_t resolution)
 	return conc;
 }
 
-// For old O3 sensors
-/* Function: 	Specific function to read O3 sensors (v12 sensors)
- * Parameters:	resolution: resolution value for ADC (RES_12_BIT, RES_14_BIT, RES_16_BIT or RES_18_BIT)
- * 				temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
- * Returns: 	The concetration value in ppm
-*/
-float Gas::read4ElectrodeSensorv100(uint8_t resolution, float temperature)
-{
-
-	float V_conc = 0;
-	float conc=0, conc_aux=0;
-	float aux_val;
-	float aux_resistor;
-
-	float R_gain;
-
-	#if DEBUG_GASES_PRO>0
-		PRINTLN_GASES_PRO(F("****************************"));
-		PRINTLN_GASES_PRO(F("Read 4 electrode sensor v100"));
-		PRINTLN_GASES_PRO(F("****************************\r\n"));
-	#endif
-
-	// Selects amperiometric mode
-	LMP.setModeReg(LMP91000_MODEC_REG_FET_NOT_SHORTED,
-					LMP91000_MODEC_REG_PWR_MODE_3_LEAD_AMPEROMETRIC);
-
-	// Measuring
-	conc = 0;
-	conc_aux = 0;
-
-	/// Read WE
-	#if DEBUG_GASES_PRO>0
-		PRINTLN_GASES_PRO(F("Reading working electrode"));
-	#endif
-
-	aux_resistor = getAmplifier(AUXILIARY_ELECTRODE);
-	setAmplifier(AUXILIARY_ELECTRODE, 0);
-
-	delay(1000);
-
-	V_conc = 0;
-	#if DEBUG_GASES_PRO>0
-		PRINTLN_GASES_PRO(F("ADC reading"));
-	#endif
-	for ( int i = 0; i < 8; i++)
-	{
-		// Reads the ADC
-		delay(100);
-		aux_val = (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));
-		V_conc += aux_val;
-	}
-	V_conc /=8;
-
-	setAmplifier(AUXILIARY_ELECTRODE, aux_resistor);
-	R_gain = getAmplifier(WORKING_ELECTRODE);
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("ADC measure: "));
-		USB.print(V_conc);
-		USB.print(F(" mV || R_gain: "));
-		USB.print(R_gain, DEC);
-		USB.println(F(" Ohms"));
-	#endif
-
-	// V(mV) --> I(uA)
-	conc = (V_conc / (R_gain)) * -1000;
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Current: "));
-		USB.printFloat(conc, 3);
-		USB.println(F(" uA"));
-	#endif
-
-	// Adjust resistor
-	conc =  ((conc + sensor_config.calibration[0][0]) / (sensor_config.calibration[0][1]));
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("AFE compensation: "));
-		USB.printFloat(conc, 3);
-		USB.println(F(" mV"));
-	#endif
-
-	/// Read auxiliary electrode
-	#if DEBUG_GASES_PRO>0
-		PRINTLN_GASES_PRO(F("Reading auxiliary electrode"));
-	#endif
-	aux_resistor = getAmplifier(WORKING_ELECTRODE);
-	setAmplifier(WORKING_ELECTRODE, 0);
-
-	delay(2000);
-
-	V_conc = 0;
-	#if DEBUG_GASES_PRO>0
-		PRINTLN_GASES_PRO(F("ADC"));
-	#endif
-	for ( int i = 0; i < 8; i++)
-	{
-		// Reads the ADC
-		delay(100);
-
-		aux_val = (MCP.readADC(resolution, MCP3421_GAIN_1, MCP3421_VOLTS));
-		V_conc += aux_val;
-	}
-
-	V_conc /=8;
-
-	setAmplifier(WORKING_ELECTRODE, aux_resistor);
-	R_gain = getAmplifier(AUXILIARY_ELECTRODE);
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Average measure: "));
-		USB.print(V_conc);
-		USB.print(F(" mV || R_gain: "));
-		USB.print(R_gain, DEC);
-		USB.println(F(" Ohms"));
-	#endif
-
-	conc_aux = (V_conc / (R_gain)) * 1000;// V(mV) --> I(uA)
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Current Aux: "));
-		USB.print(conc);
-		USB.println(F(" uA"));
-	#endif
-
-	conc_aux =  ((conc_aux + sensor_config.calibration[1][0]) / (sensor_config.calibration[1][1]));// Adjust resistor
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("AFE compensation aux: "));
-		USB.print(conc_aux);
-		USB.println(F(" uA"));
-	#endif
-
-	/// Substracts offset currents
-	conc -= (sensor_config.baseline / 1000);	// Subtracts baseline current
-	conc_aux -= (sensor_config.aux_baseline / 1000);	// Subtracts auxiliary baseline current
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Iwe without offset: "));
-		USB.print(conc);
-		USB.println(F(" uA"));
-		PRINT_GASES_PRO(F("Iae without offset: "));
-		USB.print(conc_aux);
-		USB.println(F(" uA"));
-	#endif
-
-	/// Compensates WE with AE
-	conc -= conc_aux;
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Iwe-Iae: "));
-		USB.print(conc);
-		USB.println(F(" uA"));
-	#endif
-
-	conc *= getSensitivityTempComp(temperature);	// Output current temperature compensation
-
-	#if DEBUG_GASES_PRO>0
-		PRINT_GASES_PRO(F("Temperature compensation: "));
-		USB.print(conc);
-		USB.println(F(" uA"));
-	#endif
-
-	conc = (conc * 1000) / sensor_config.m_conc;	// I(uA) --> concentración(ppm)
-
-	#if DEBUG_GASES_PRO>0
-		PRINTLN_GASES_PRO(F("---------------------------------"));
-		PRINT_GASES_PRO(F("|Concentration: "));
-		USB.print(conc);
-		USB.println(F(" ppm|"));
-		PRINTLN_GASES_PRO(F("---------------------------------"));
-	#endif
-
-	if (conc < 0)
-	{
-		conc = 0;
-	}
-
-	// Disable communication with AFE
-	digitalWrite(sensor_config.i2c_pin, LOW);
-
-	#if DEBUG_GASES_PRO>0
-		PRINTLN_GASES_PRO(F("***End of read 4 electrode sensor v100***\r\n"));
-	#endif
-
-	return conc;
-
-}
 
 // For new 4 electrode AFE boards
 /* Function: 	Specific function to read 4 electrode sensors
@@ -1048,7 +688,7 @@ float Gas::read4ElectrodeSensorv301(uint8_t resolution, float temperature, float
 			PRINT_GASES_PRO_DATA("O3-NO2: ", concentration, " uA");
 		#endif
 	}
-
+	
 	// I(uA) --> concentracion (ppm)
 	#if DEBUG_GASES_PRO > 0
 		PRINT_GASES_PRO_DATA("Sensitivity: ", sensor_config.m_conc, " nA/ppm");
@@ -1081,10 +721,12 @@ uint8_t Gas::readSensorInfo()
 	uint8_t buffer[4];
 	uint8_t EEPROM_checksum, generated_checksum;
 
+	I2C.begin();
+
 	// First read the board version and sensor type
 	// This parameters are common for all sensors
-	Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, VER_BOARD_REG, &sensor_config.AFE_ver, 1);
-	Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSOR_TYPE_REG, &sensor_config.sensor_type, 1);
+	I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)VER_BOARD_REG, &sensor_config.AFE_ver, 1);
+	I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)SENSOR_TYPE_REG, &sensor_config.sensor_type, 1);
 
 	// Then read the calibration values according the sensor type
 	// Each kind of sensor has different calibration patterns
@@ -1096,15 +738,15 @@ uint8_t Gas::readSensorInfo()
 		case NDIR_CO2_SS:
 		case CALIBRATION_NDIR:
 
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSITIVITY_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)SENSITIVITY_REG, buffer, 4);
 			memcpy(&sensor_config.m_conc, buffer, 4);
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)OFFSET_REG, buffer, 4);
 			memcpy(&sensor_config.baseline, buffer, 4);
 			// Stores calibration value 1
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_1_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)CAL_1_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[0][0], buffer, 4);
 			// Stores calibration value 2
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_2_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)CAL_2_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[0][1], buffer, 4);
 
 			break;
@@ -1125,25 +767,25 @@ uint8_t Gas::readSensorInfo()
 		case SO2_SS:
 		case CALIBRATION_3E:
 
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSITIVITY_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)SENSITIVITY_REG, buffer, 4);
 			memcpy(&sensor_config.m_conc, buffer, 4);
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)OFFSET_REG, buffer, 4);
 			memcpy(&sensor_config.baseline, buffer, 4);
 
 			// Reads calibration values
 			for (int x = 0; x < 7; x++)
 			{
-				Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_REG + (x * 8), buffer, 4);
+				I2C.read(I2C_ADDRESS_GASPRO_E2PROM, uint8_t(CAL_REG + (x * 8)), buffer, 4);
 				memcpy(&sensor_config.calibration[x][0], buffer, 4);
-				Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_REG + (x * 8) + 4, buffer, 4);
+				I2C.read(I2C_ADDRESS_GASPRO_E2PROM, uint8_t(CAL_REG + (x * 8) + 4), buffer, 4);
 				memcpy(&sensor_config.calibration[x][1], buffer, 4);
 			}
 
 			if (sensor_config.AFE_ver >= 3)
 			{
-				Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_REG + 56, buffer, 4);
+				I2C.read(I2C_ADDRESS_GASPRO_E2PROM, uint8_t(CAL_REG + 56), buffer, 4);
 				memcpy(&sensor_config.calibration[7][0], buffer, 4);
-				Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_REG + 60, buffer, 4);
+				I2C.read(I2C_ADDRESS_GASPRO_E2PROM, uint8_t(CAL_REG + 60), buffer, 4);
 				memcpy(&sensor_config.calibration[7][1], buffer, 4);
 			}
 
@@ -1157,32 +799,32 @@ uint8_t Gas::readSensorInfo()
 		case CO_AS:
 		case CALIBRATION_4E:
 
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSITIVITY_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t) SENSITIVITY_REG, buffer, 4);
 			memcpy(&sensor_config.m_conc, buffer, 4);
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t) OFFSET_REG, buffer, 4);
 			memcpy(&sensor_config.baseline, buffer, 4);
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENS_AE_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t) SENS_AE_REG, buffer, 4);
 			memcpy(&sensor_config.OX_NO2_sens, buffer, 4);
 
 			// Reads calibration values for working electrode
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_WE_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t) CAL_WE_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[0][0], buffer, 4);
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_WE_REG + 4, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, uint8_t(CAL_WE_REG + 4), buffer, 4);
 			memcpy(&sensor_config.calibration[0][1], buffer, 4);
 
 			// Reads calibration values for working electrode
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_AE_REG, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)CAL_AE_REG, buffer, 4);
 			memcpy(&sensor_config.calibration[1][0], buffer, 4);
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, CAL_AE_REG + 4, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, uint8_t(CAL_AE_REG + 4), buffer, 4);
 			memcpy(&sensor_config.calibration[1][1], buffer, 4);
 
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_WRK_ELEC, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)OFFSET_WRK_ELEC, buffer, 4);
 			memcpy(&sensor_config.working_offset, buffer, 4);
 
-			Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_AUX_ELEC, buffer, 4);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)OFFSET_AUX_ELEC, buffer, 4);
 			memcpy(&sensor_config.auxiliar_offset, buffer, 4);
 
-			Wire.readByte(I2C_ADDRESS_GASPRO_E2PROM, ZERO_POINT_OK, buffer);
+			I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)ZERO_POINT_OK, buffer, 1);
 			memcpy(&sensor_config.zeroPointOK, buffer, 1);
 
 
@@ -1190,7 +832,7 @@ uint8_t Gas::readSensorInfo()
 			switch (sensor_config.AFE_ver)
 			{
 				case 3:
-					Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, AE_OFFSET_REG, buffer, 4);
+					I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)AE_OFFSET_REG, buffer, 4);
 					memcpy(&sensor_config.aux_baseline, buffer, 4);
 					break;
 			}
@@ -1200,7 +842,7 @@ uint8_t Gas::readSensorInfo()
 
 	if (sensor_config.AFE_ver >= 3)
 	{
-		Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSOR_CHECKSUM, &EEPROM_checksum, 1);
+		I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)SENSOR_CHECKSUM, &EEPROM_checksum, 1);
 		memcpy(buffer, &sensor_config.m_conc, 4);
 
 		generated_checksum = 	sensor_config.AFE_ver ^
@@ -1268,48 +910,48 @@ int8_t Gas::ON(float R_gain)
 
 			PWR.setSensorPower(SENS_3V3, SENS_ON);
 			delay(100);
-
-			// init BME
+			
+			// init BME 
 			BME.ON();
 		}
 	#endif
 
 	// Update register bitmap with related socket
 	pwrGasPRORegister |= (1 << sensor_config.socket);
-
+	
 	// Switch ON the sensor power 3v3 switch if required for Cities Board
 	if (WaspRegisterSensor & REG_CITIES_PRO)
 	{
 		digitalWrite(sensor_config.cities_3v3_pin, HIGH);
 		pwrCitiesPRORegister |= (1 << sensor_config.socket);
 	}
-
+	
 	// Switch ON the sensor socket
 	digitalWrite(sensor_config.power_pin, LOW);
-
+	
 	// Disable All sockets for preventing interferences
 	disableCommSockets();
-
+	
 	// Enable communication with the AFE
  	digitalWrite(sensor_config.i2c_pin, HIGH);
  	delay(100);
-
+ 	
  	//////////////////////////////////////////////
  	// Read eeprom
  	//////////////////////////////////////////////
-	uint8_t retries = 3;
+	uint8_t retries = 3;	
 	do
 	{
 		// read eeprom info
 		answer = readSensorInfo();
 		retries--;
-
+		
 		if (answer != 1)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((answer != 1) && (retries > 0));
-
+	
 	// check error
 	if (answer == 0)
 	{
@@ -1325,25 +967,25 @@ int8_t Gas::ON(float R_gain)
 	#endif
 
  	delay(1000);
-
-
+ 	
+ 	
  	//////////////////////////////////////////////
  	// Configure AFE
  	//////////////////////////////////////////////
-
+ 	
  	retries = 3;
  	do
 	{
 		// configure AFE
 		answer = configureAFE(R_gain);
 		retries--;
-
+		
 		if (answer != 1)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((answer != 1) && (retries > 0));
-
+ 	
 
 	if (answer == 1)
 	{
@@ -1403,14 +1045,14 @@ uint8_t Gas::OFF(uint8_t enable_FET)
 
 	// Power off the AFE module
 	digitalWrite(sensor_config.power_pin, HIGH);
-
+	
 
 	// Switch ON the sensor power 3v3 switch if required for Cities Board
 	if (WaspRegisterSensor & REG_CITIES_PRO)
-	{
+	{		
 		digitalWrite(sensor_config.cities_3v3_pin, LOW);
 		pwrCitiesPRORegister &= ~(1 << sensor_config.socket);
-	}
+	}	
 
 
 	#ifndef CALIBRATION_MODE
@@ -1556,7 +1198,7 @@ int8_t Gas::configureAFE(float R_gain)
 								LMP91000_REFC_REG_REF_POLARITY_POSITIVE);
 			break;
 
-		case H2S_SS_SEC:
+		case H2S_SS_SEC:		
 		case HCL_SS:
 			LMP.setTIAConReg(gain_3E, LMP91000_TIAC_REG_REF_R_LOAD_50R);
 			LMP.setRefConReg(	LMP91000_REFC_REG_REF_SOURCE_EXTERNAL_REF,
@@ -1585,12 +1227,6 @@ int8_t Gas::configureAFE(float R_gain)
 								LMP91000_REFC_REG_REF_BIAS_PERC_0,
 								LMP91000_REFC_REG_REF_POLARITY_POSITIVE);
 
-			if (sensor_config. AFE_ver != 3)
-			{
-				setAmplifier(WORKING_ELECTRODE, gain_4E);
-				setAmplifier(AUXILIARY_ELECTRODE, gain_4E);
-			}
-
 			break;
 
 		case NO_AS:
@@ -1599,11 +1235,6 @@ int8_t Gas::configureAFE(float R_gain)
 								LMP91000_REFC_REG_REF_INT_Z_50,
 								LMP91000_REFC_REG_REF_BIAS_PERC_10,
 								LMP91000_REFC_REG_REF_POLARITY_POSITIVE);
-			if (sensor_config. AFE_ver != 3)
-			{
-				setAmplifier(WORKING_ELECTRODE, gain_4E);
-				setAmplifier(AUXILIARY_ELECTRODE, gain_4E);
-			}
 			break;
 
 		case CALIBRATION_4E:
@@ -1639,7 +1270,7 @@ int8_t Gas::configureAFE(float R_gain)
 float Gas::getTemp()
 {
 	float temp = -1000;
-
+	
 	temp = getTemp(1);
 
 	if (temp == -1000)
@@ -1678,7 +1309,7 @@ float Gas::getTemp(bool sensor)
 		temp = 0;
 		for ( int i =0; i < 4; i++)
 		{
-			temp += (MCP.readADC(MCP3421_RES_12_BIT, MCP3421_GAIN_1, MCP3421_VOLTS));
+			temp += (MCP.readADC(MCP3421_RES_12_BIT, MCP3421_GAIN_1));
 		}
 
 		temp/=4;
@@ -1722,7 +1353,7 @@ float Gas::getTemp(bool sensor)
  * Returns:		The relative humidity, -1000 if error
 */
 float Gas::getHumidity()
-{
+{	
     return BME.getHumidity(BME280_OVERSAMP_1X);
 }
 
@@ -1741,6 +1372,7 @@ float Gas::getConc()
 {
 	float BME280_temp;
 
+	BME.ON();
 	BME280_temp = BME.getTemperature(BME280_OVERSAMP_1X, 0);
 	return getConc(MCP3421_HIGH_RES, BME280_temp, COMPENSATED);
 }
@@ -1753,6 +1385,7 @@ float Gas::getConc(uint8_t resolution)
 {
 	float BME280_temp;
 
+	BME.ON();
 	BME280_temp = BME.getTemperature(BME280_OVERSAMP_1X, 0);
 	return getConc(resolution, BME280_temp, 0);
 }
@@ -1776,6 +1409,7 @@ float Gas::getConc(uint8_t resolution, float NO2_conc)
 {
 	float BME280_temp;
 
+	BME.ON();
 	BME280_temp = BME.getTemperature(BME280_OVERSAMP_1X, 0);
 	return getConc(resolution, BME280_temp, NO2_conc);
 }
@@ -1867,10 +1501,6 @@ float Gas::getConc(uint8_t resolution, float temperature, float NO2_conc)
 			{
 				conc = read4ElectrodeSensorv301(resolution, temperature, NO2_conc);
 			}
-			else
-			{
-				conc = read4ElectrodeSensorv100(resolution, temperature);
-			}
 
 			break;
 
@@ -1886,25 +1516,23 @@ float Gas::getConc(uint8_t resolution, float temperature, float NO2_conc)
 			{
 				conc = read4ElectrodeSensorv301(resolution, temperature, 0);
 			}
-			else
-			{
-				conc = read4ElectrodeSensorv100(resolution, temperature);
-			}
+			
 			break;
 	}
+	disableCommSockets();
     return conc;
 }
 
 
 
-/*
+/* 
  * Function: disable I2C lines in the sensor board to avoid I2C interferences
- * while working with an AFE (eeprom memories have the same i2c address)
- *
- *
+ * while working with an AFE (eeprom memories have the same i2c address) 
+ * 
+ * 
  */
 uint8_t Gas::disableCommSockets()
-{
+{	
 	if (WaspRegisterSensor & REG_CITIES_PRO)
 	{
 		// Cities PRO board I2C pins
@@ -1915,9 +1543,9 @@ uint8_t Gas::disableCommSockets()
 		digitalWrite(GP_I2C_SOCKET_3_F, LOW);
 		digitalWrite(GP_I2C_SOCKET_5_B, LOW);
 		delay(1);
-
+		
 		return 0;
-	}
+	}	
 
 	// Gases PRO board I2C pins
 	pinMode(GP_I2C_SOCKET_1_C, OUTPUT);
@@ -1931,676 +1559,64 @@ uint8_t Gas::disableCommSockets()
 	digitalWrite(GP_I2C_SOCKET_3_F, LOW);
 	digitalWrite(GP_I2C_SOCKET_4_A, LOW);
 	digitalWrite(GP_I2C_SOCKET_5_B, LOW);
-	digitalWrite(GP_I2C_SOCKET_6, LOW);
+	digitalWrite(GP_I2C_SOCKET_6, LOW);	
 	delay(1);
-
+	
 	return 0;
 }
 
 
 void Gas::zeroPointSet()
 {
-
-  float auxiliar_offset = 0.0;
-  float working_offset = 0.0;
-  uint8_t aux_vector[4];
-
-  const uint8_t MEASURES = 8;
-
-  PWR.deepSleep("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_ON);
-
-  //Enable communication with the AFE
-  digitalWrite(sensor_config.i2c_pin, HIGH);
-  delay(100);
-
-  for (uint8_t i = 0; i < MEASURES; i++)
-  {
-    working_offset += readWorkingElectrode4E();
-    auxiliar_offset += readAuxiliaryElectrode4E();
-  }
-
-  auxiliar_offset = auxiliar_offset/ MEASURES;
-  working_offset = working_offset / MEASURES;
-
-  #if DEBUG_GASES_PRO > 0
-    PRINT_GASES_PRO_DATA("AUXOFFSET get: ",auxiliar_offset, " uA\n");
-    PRINT_GASES_PRO_DATA("WORKING get: ", working_offset, " uA\n");
-  #endif
-
-  sensor_config.auxiliar_offset = auxiliar_offset;
-  sensor_config.working_offset = working_offset;
-
-  memcpy(aux_vector, &working_offset, sizeof(working_offset));
-  Wire.writeBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_WRK_ELEC, aux_vector, 4);
-  delay(10);
-
-  memcpy(aux_vector, &auxiliar_offset, sizeof(auxiliar_offset));
-  Wire.writeBytes(I2C_ADDRESS_GASPRO_E2PROM, OFFSET_AUX_ELEC, aux_vector, 4);
-  delay(10);
-
-  aux_vector[0] = 0xAA;
-  Wire.writeBytes(I2C_ADDRESS_GASPRO_E2PROM, ZERO_POINT_OK, aux_vector, 1);
-
-  //Disable communication with the AFE
-  digitalWrite(sensor_config.i2c_pin, LOW);
-  delay(100);
-
-
-
-}
-
-
-/* Function: 	This function changes the gain and the Vref of the AFE module
- * 				when the signal is into the limits of the ADC
- * Returns: 	high nibble: steps changed in Vref
- * 				low nibble: steps changed in Rgain
-*/
-int8_t Gas::autoGain()
-{
-	float v_ADC = 0;
-	float v_ref = 0;
-	float upper_range = 0;
-	float lower_range = 0;
-	int r_gain;
-	int vref_reg;
-	int8_t r_steps = 0;
-	int8_t v_steps = 0;
-	bool end;
-	uint8_t process_reg = 0;
-	uint8_t mask;
-	float aux_resistor;
-
-	#if DEBUG_GASES_PRO>0
-		USB.println(F("********"));
-		USB.println(F("Autogain"));
-		USB.println(F("********\r\n"));
-	#endif
-
+	
+	float auxiliar_offset = 0.0;
+	float working_offset = 0.0;
+	uint8_t aux_vector[4];
+	
+	const uint8_t MEASURES = 8;
+	
+	PWR.deepSleep("00:00:01:00", RTC_OFFSET, RTC_ALM1_MODE1, ALL_ON);
+	
 	//Enable communication with the AFE
 	digitalWrite(sensor_config.i2c_pin, HIGH);
 	delay(100);
-
-	switch (sensor_config.sensor_type)
+	
+	for (uint8_t i = 0; i < MEASURES; i++)
 	{
-		/***************************************
-		* 	3-ELECTRODE AMPERIOMETRIC BOARD		*
-		***************************************/
-		case CL2_SS:
-		case CO_SS_SEC:
-		case ETO_SS:
-		case H2_SS_SEC:
-		case H2S_SS_SEC:
-		case HCL_SS:
-		case HCN_SS:
-		case NH3_SS:
-		case NO_SS:
-		case NO2_SS_CLE:
-		case O2_SS:
-		case PH3_SS:
-		case SO2_SS:
-		case CALIBRATION_3E:
-			/*
-			*	2048mV	|----------------------------------------
-			*			|					UHV
-			*			|----------------------------------------	(2048 - Vref) * MAX_RANGE_FACTOR
-			*			|					UMV
-			*			|----------------------------------------	(2048 - Vref) * MIN_RANGE_FACTOR
-			*			|					ULV
-			*	Vref	|----------------------------------------
-			*			|					LLV
-			*			|----------------------------------------	(0 - Vref) * MIN_RANGE_FACTOR
-			*			|					LMV
-			*			|----------------------------------------	(0 - Vref) * MAX_RANGE_FACTOR
-			*			|					LHV
-			*		0mV	|----------------------------------------
-			*/
-
-			r_steps = 0;
-			v_steps = 0;
-			#ifdef GAS_PRO_AUTOGAIN_DEBUG
-				USB.println(F("Starting autogain proccess for 3E"));
-			#endif
-
-			// Gets the Vref
-			switch (LMP.getRefSource())
-			{
-				case 0:
-					v_ref = 3300;
-					break;
-				case 1:
-					v_ref = 2048;
-					break;
-			}
-
-			switch (LMP.getInternalZero())
-			{
-				case 0:
-					v_ref *= 0.2;
-					break;
-				case 1:
-					v_ref *= 0.5;
-					break;
-				case 2:
-					v_ref *= 0.67;
-					break;
-				case 3:
-					v_ref *= 1;
-					break;
-			}
-
-			upper_range = 2048 - v_ref;
-			lower_range = 0 - v_ref;
-
-			#ifdef GAS_PRO_AUTOGAIN_DEBUG
-				USB.print(F("Upper limits: "));
-				USB.print(MAX_RANGE_FACTOR * upper_range, DEC);
-				USB.print(F("; "));
-				USB.println(MIN_RANGE_FACTOR * upper_range, DEC);
-				USB.print(F("Lower limits: "));
-				USB.print(MAX_RANGE_FACTOR * lower_range, DEC);
-				USB.print(F("; "));
-				USB.println(MIN_RANGE_FACTOR * lower_range, DEC);
-			#endif
-
-			do
-			{
-				// Reads the ADC
-				v_ADC = (MCP.readADC(	MCP3421_MEDIUM_RES,
-										MCP3421_GAIN_1,
-										MCP3421_VOLTS));
-				v_ADC += (MCP.readADC(	MCP3421_MEDIUM_RES,
-										MCP3421_GAIN_1,
-										MCP3421_VOLTS));
-				v_ADC /=2;
-
-				#ifdef GAS_PRO_AUTOGAIN_DEBUG
-					USB.print(F("Vref:"));
-					USB.print(v_ref, DEC);
-					USB.print(F(" | ADC value:"));
-					USB.print(v_ADC, DEC);
-					USB.print(F(" | ADC-vref value:"));
-					USB.println(v_ADC - v_ref, DEC);
-				#endif
-
-				v_ADC = (v_ADC - v_ref); 	// VADC(mV) - Vzero(mV)
-
-
-				if (v_ADC >= MAX_RANGE_FACTOR * upper_range)		// UHV
-				{
-					process_reg &= 0x03;
-					mask = 1 << UHV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < (MAX_RANGE_FACTOR * upper_range)) && (v_ADC >= (MIN_RANGE_FACTOR * upper_range)))	//UMV
-				{
-					process_reg &= 0x03;
-					mask = 1 << UMV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < (MIN_RANGE_FACTOR * upper_range)) && (v_ADC >= 0))	//ULV
-				{
-					process_reg &= 0x03;
-					mask = 1 << ULV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < 0) && (v_ADC >= (MIN_RANGE_FACTOR * lower_range)))	//LLV
-				{
-					process_reg &= 0x03;
-					mask = 1 << LLV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < (MIN_RANGE_FACTOR * lower_range)) && (v_ADC >= (MAX_RANGE_FACTOR * lower_range)))	//LMV
-				{
-					process_reg &= 0x03;
-					mask = 1 << LMV;
-					process_reg |= mask;
-				}
-				else	// LHV
-				{
-					process_reg &= 0x03;
-					mask = 1 << LHV;
-					process_reg |= mask;
-				}
-
-				r_gain = LMP.getRgain();
-				if (r_gain == 7)
-				{
-					process_reg &= 0xFC;
-					process_reg |= 0x02;
-				}
-				else if (r_gain == 1)
-				{
-					process_reg &= 0xFC;
-					process_reg |= 0x01;
-				}
-				else
-				{
-					process_reg &= 0xFC;
-				}
-
-				#ifdef GAS_PRO_AUTOGAIN_DEBUG
-					USB.print(F("Process_reg: "));
-					USB.println(process_reg, BIN);
-				#endif
-
-				switch (process_reg)
-				{
-					case 0x80:	//Decreases gain
-					case 0x82:
-					case 0x04:
-					case 0x06:
-						#ifdef GAS_PRO_AUTOGAIN_DEBUG
-							USB.println(F("Decresaing Rgain"));
-						#endif
-						r_gain--;
-						LMP.setRgain(r_gain);
-						r_steps--;
-						end = 0;
-						break;
-
-					case 0x20:	//Increases gain
-					case 0x21:
-					case 0x10:
-					case 0x11:
-						#ifdef GAS_PRO_AUTOGAIN_DEBUG
-							USB.println(F("Incresaing Rgain"));
-						#endif
-						r_gain++;
-						LMP.setRgain(r_gain);
-						r_steps++;
-						end = 0;
-						break;
-
-					case 0x81:	//Decreases Vref
-						vref_reg = LMP.getInternalZero();
-						if (vref_reg == 0)
-						{
-							end = 1;
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Vref low limit reached"));
-							#endif
-						}
-						else
-						{
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Decresaing Vref"));
-							#endif
-							LMP.setInternalZero(vref_reg - 1);
-							v_steps--;
-						}
-									// Gets the Vref
-						switch (LMP.getRefSource())
-						{
-							case 0:
-								v_ref = 3300;
-								break;
-							case 1:
-								v_ref = 2048;
-								break;
-						}
-
-						switch (LMP.getInternalZero())
-						{
-							case 0:
-								v_ref *= 0.2;
-								break;
-							case 1:
-								v_ref *= 0.5;
-								break;
-							case 2:
-								v_ref *= 0.67;
-								break;
-							case 3:
-								v_ref *= 1;
-								break;
-						}
-
-						upper_range = 2048 - v_ref;
-						lower_range = 0 - v_ref;
-
-						#ifdef GAS_PRO_AUTOGAIN_DEBUG
-							USB.print(F("Upper limits: "));
-							USB.print(MAX_RANGE_FACTOR * upper_range, DEC);
-							USB.print(F("; "));
-							USB.println(MIN_RANGE_FACTOR * upper_range, DEC);
-							USB.print(F("Lower limits: "));
-							USB.print(MAX_RANGE_FACTOR * lower_range, DEC);
-							USB.print(F("; "));
-							USB.println(MIN_RANGE_FACTOR * lower_range, DEC);
-						#endif
-
-						break;
-
-					case 0x05:	//Increases Vref
-						vref_reg = LMP.getInternalZero();
-						if (vref_reg == 2)
-						{
-							end = 1;
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Vref high limit reached"));
-							#endif
-						}
-						else
-						{
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Incresaing Vref"));
-							#endif
-							LMP.setInternalZero(vref_reg + 1);
-							v_steps++;
-						}
-
-						switch (LMP.getRefSource())
-						{
-							case 0:
-								v_ref = 3300;
-								break;
-							case 1:
-								v_ref = 2048;
-								break;
-						}
-
-						switch (LMP.getInternalZero())
-						{
-							case 0:
-								v_ref *= 0.2;
-								break;
-							case 1:
-								v_ref *= 0.5;
-								break;
-							case 2:
-								v_ref *= 0.67;
-								break;
-							case 3:
-								v_ref *= 1;
-								break;
-						}
-
-						upper_range = 2048 - v_ref;
-						lower_range = 0 - v_ref;
-
-						#ifdef GAS_PRO_AUTOGAIN_DEBUG
-							USB.print(F("Upper limits: "));
-							USB.print(MAX_RANGE_FACTOR * upper_range, DEC);
-							USB.print(F("; "));
-							USB.println(MIN_RANGE_FACTOR * upper_range, DEC);
-							USB.print(F("Lower limits: "));
-							USB.print(MAX_RANGE_FACTOR * lower_range, DEC);
-							USB.print(F("; "));
-							USB.println(MIN_RANGE_FACTOR * lower_range, DEC);
-						#endif
-
-						break;
-
-					case 0x40:	//End
-					case 0x41:
-					case 0x42:
-					case 0x22:
-					case 0x12:
-					case 0x08:
-					case 0x09:
-					case 0x0A:
-					default:
-						end = 1;
-						break;
-
-				}
-
-			}while(end == 0);
-
-			break;
-
-
-		/***************************************
-		* 			PELLISTOR BOARD				*
-		***************************************/
-		case LEL_AS:
-		case CALIBRATION_PEL:
-
-
-			break;
-
-		case NDIR_CO2_SS:
-		case CALIBRATION_NDIR:
-
-			break;
-
-
-		/***************************************
-		* 	4-ELECTRODE AMPERIOMETRIC BOARD		*
-		***************************************/
-		case O3_AS:
-		case CALIBRATION_4E:
-			/*
-			*	2048mV	|----------------------------------------
-			*			|					UHV
-			*			|----------------------------------------	2048 * MAX_RANGE_FACTOR
-			*			|					UMV
-			*			|----------------------------------------	2048 * MIN_RANGE_FACTOR
-			*			|					ULV
-			*	0		|----------------------------------------
-			*			|					LLV
-			*			|----------------------------------------	-2048 * MIN_RANGE_FACTOR
-			*			|					LMV
-			*			|----------------------------------------	-2048 * MAX_RANGE_FACTOR
-			*			|					LHV
-			*	-2048mV	|----------------------------------------
-			*/
-			r_steps = 0;
-			v_steps = 0;
-			#ifdef GAS_PRO_AUTOGAIN_DEBUG
-				USB.println(F("Starting autogain proccess for 4E"));
-			#endif
-
-			upper_range = 2048;
-			lower_range = -2048;
-
-			#ifdef GAS_PRO_AUTOGAIN_DEBUG
-				USB.print(F("Upper limits: "));
-				USB.print(MAX_RANGE_FACTOR * upper_range, DEC);
-				USB.print(F("; "));
-				USB.println(MIN_RANGE_FACTOR * upper_range, DEC);
-				USB.print(F("Lower limits: "));
-				USB.print(MAX_RANGE_FACTOR * lower_range, DEC);
-				USB.print(F("; "));
-				USB.println(MIN_RANGE_FACTOR * lower_range, DEC);
-			#endif
-
-			do{
-
-				aux_resistor = getAmplifier(AUXILIARY_ELECTRODE);
-				setAmplifier(AUXILIARY_ELECTRODE, 0);
-				delay(10);
-				// Reads the ADC
-				v_ADC = (MCP.readADC(	MCP3421_MEDIUM_RES,
-										MCP3421_GAIN_1,
-										MCP3421_VOLTS));
-				v_ADC += (MCP.readADC(	MCP3421_MEDIUM_RES,
-										MCP3421_GAIN_1,
-										MCP3421_VOLTS));
-				v_ADC /=2;
-
-				setAmplifier(AUXILIARY_ELECTRODE, aux_resistor);
-
-				#ifdef GAS_PRO_AUTOGAIN_DEBUG
-					USB.print(F("ADC value:"));
-					USB.println(v_ADC , DEC);
-				#endif
-
-				if (v_ADC >= MAX_RANGE_FACTOR * upper_range)		// UHV
-				{
-					process_reg &= 0x03;
-					mask = 1 << UHV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < (MAX_RANGE_FACTOR * upper_range)) && (v_ADC >= (MIN_RANGE_FACTOR * upper_range)))	//UMV
-				{
-					process_reg &= 0x03;
-					mask = 1 << UMV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < (MIN_RANGE_FACTOR * upper_range)) && (v_ADC >= 0))	//ULV
-				{
-					process_reg &= 0x03;
-					mask = 1 << ULV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < 0) && (v_ADC >= (MIN_RANGE_FACTOR * lower_range)))	//LLV
-				{
-					process_reg &= 0x03;
-					mask = 1 << LLV;
-					process_reg |= mask;
-				}
-				else if ((v_ADC < (MIN_RANGE_FACTOR * lower_range)) && (v_ADC >= (MAX_RANGE_FACTOR * lower_range)))	//LMV
-				{
-					process_reg &= 0x03;
-					mask = 1 << LMV;
-					process_reg |= mask;
-				}
-				else	// LHV
-				{
-					process_reg &= 0x03;
-					mask = 1 << LHV;
-					process_reg |= mask;
-				}
-
-				aux_resistor = getAmplifier(WORKING_ELECTRODE);
-				aux_resistor = round( aux_resistor / 10000) * 10000;
-				if (aux_resistor == 100000.0)
-				{
-					process_reg &= 0xFC;
-					process_reg |= 0x02;
-					aux_resistor = 100000;
-				}
-				else if (aux_resistor == 80000.0)
-				{
-					aux_resistor = 80000;
-				}
-				else if (aux_resistor == 60000.0)
-				{
-					aux_resistor = 60000;
-				}
-				else if (aux_resistor == 40000.0)
-				{
-					aux_resistor = 40000;
-				}
-				else if (aux_resistor == 20000.0)
-				{
-					process_reg &= 0xFC;
-					process_reg |= 0x01;
-					aux_resistor = 20000;
-				}
-				else
-				{
-					process_reg &= 0xFC;
-				}
-
-				#ifdef GAS_PRO_AUTOGAIN_DEBUG
-					USB.print(F("Process_reg: "));
-					USB.println(process_reg, BIN);
-				#endif
-
-				switch (process_reg)
-				{
-					case 0x80:	//Decreases gain
-					case 0x82:
-					case 0x04:
-					case 0x06:
-						#ifdef GAS_PRO_AUTOGAIN_DEBUG
-							USB.println(F("Decresaing Rgain"));
-						#endif
-						aux_resistor -= 20000;
-						setAmplifier(WORKING_ELECTRODE, aux_resistor);
-						setAmplifier(AUXILIARY_ELECTRODE, aux_resistor);
-						r_steps--;
-						end = 0;
-						break;
-
-					case 0x20:	//Increases gain
-					case 0x21:
-					case 0x10:
-					case 0x11:
-						#ifdef GAS_PRO_AUTOGAIN_DEBUG
-							USB.println(F("Incresaing Rgain"));
-						#endif
-						aux_resistor += 20000;
-						setAmplifier(WORKING_ELECTRODE, aux_resistor);
-						setAmplifier(AUXILIARY_ELECTRODE, aux_resistor);
-						r_steps++;
-						end = 0;
-						break;
-
-					case 0x81:	//Decreases Vref
-						vref_reg = LMP.getInternalZero();
-						if (vref_reg == 0)
-						{
-							end = 1;
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Vref low limit reached"));
-							#endif
-						}
-						else
-						{
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Decresaing Vref"));
-							#endif
-							LMP.setInternalZero(vref_reg - 1);
-							v_steps--;
-						}
-
-						break;
-
-					case 0x05:	//Increases Vref
-						vref_reg = LMP.getInternalZero();
-						if (vref_reg == 2)
-						{
-							end = 1;
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Vref high limit reached"));
-							#endif
-						}
-						else
-						{
-							#ifdef GAS_PRO_AUTOGAIN_DEBUG
-								USB.println(F("Incresaing Vref"));
-							#endif
-							LMP.setInternalZero(vref_reg + 1);
-							v_steps++;
-						}
-
-						break;
-
-					case 0x40:	//End
-					case 0x41:
-					case 0x42:
-					case 0x22:
-					case 0x12:
-					case 0x08:
-					case 0x09:
-					case 0x0A:
-					default:
-						end = 1;
-						break;
-
-				}
-
-			}while(end == 0);
-
-			break;
-
+		working_offset += readWorkingElectrode4E();
+		auxiliar_offset += readAuxiliaryElectrode4E();
 	}
-
-	// Disable communication
+	
+	auxiliar_offset = auxiliar_offset/ MEASURES;
+	working_offset = working_offset / MEASURES;
+	
+	#if DEBUG_GASES_PRO > 0
+		PRINT_GASES_PRO_DATA("AUXOFFSET get: ",auxiliar_offset, " uA\n");
+		PRINT_GASES_PRO_DATA("WORKING get: ", working_offset, " uA\n");
+	#endif
+	
+	sensor_config.auxiliar_offset = auxiliar_offset;
+	sensor_config.working_offset = working_offset;
+	
+	I2C.begin();
+	
+	memcpy(aux_vector, &working_offset, sizeof(working_offset));
+	I2C.write(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)OFFSET_WRK_ELEC, aux_vector, 4);
+	delay(10);
+	
+	memcpy(aux_vector, &auxiliar_offset, sizeof(auxiliar_offset));
+	I2C.write(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)OFFSET_AUX_ELEC, aux_vector, 4);
+	delay(10);
+	
+	aux_vector[0] = 0xAA;
+	I2C.write(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)ZERO_POINT_OK, aux_vector, 1);
+	
+	//Disable communication with the AFE
 	digitalWrite(sensor_config.i2c_pin, LOW);
-
-	#ifdef GAS_PRO_AUTOGAIN_DEBUG
-		USB.println(F("End of autogain proccess"));
-	#endif
-
-	#if DEBUG_GASES_PRO>0
-		USB.println(F("\r\n***End of autogain***\r\n"));
-	#endif
-
-	return ((v_steps << 4) & 0xF0) + (r_steps & 0x0F);
+	delay(100);
+	
+	
+	
 }
 
 /* Function: 	This function converts concentration in ppm to %
@@ -2664,8 +1680,10 @@ void Gas::showSensorInfo()
 	//Enable communication with the AFE
 	digitalWrite(sensor_config.i2c_pin, HIGH);
 
+	I2C.begin();
+
 	memset(sensor_no, '\0', sizeof(sensor_no));
-	Wire.readBytes(I2C_ADDRESS_GASPRO_E2PROM, SENSOR_NO_REG, (uint8_t*)sensor_no, 16);
+	I2C.read(I2C_ADDRESS_GASPRO_E2PROM, (uint8_t)SENSOR_NO_REG, (uint8_t*)sensor_no, 16);
 
 	//Disable communication with the AFE
 	digitalWrite(sensor_config.i2c_pin, LOW);
@@ -2914,69 +1932,16 @@ float Gas::readWorkingElectrode3E()
 	for ( int i = 0; i < 4; i++)
 	{
 		// Reads the ADC
-		V_conc += (MCP.readADC(MCP3421_ULTRA_HIGH_RES, MCP3421_GAIN_1, MCP3421_VOLTS));
+		V_conc += (MCP.readADC(MCP3421_ULTRA_HIGH_RES, MCP3421_GAIN_1));
 	}
 
 	V_conc /= 4;
 
 	// Gets the Vref
-	switch (LMP.getRefSource())
-	{
-		case 0:
-			V_ref = 3300;
-			break;
-		case 1:
-			V_ref = 2048;
-			break;
-	}
-
-	switch (LMP.getInternalZero())
-	{
-		case 0:
-			V_ref *= 0.2;
-			break;
-		case 1:
-			V_ref *= 0.5;
-			break;
-		case 2:
-			V_ref *= 0.67;
-			break;
-		case 3:
-			V_ref *= 1;
-			break;
-	}
-
+	V_ref = LMP.getInternalZero();
 	// Gets the Rgain used
 	r_gain_LMP = LMP.getRgain();
-	switch (r_gain_LMP)
-	{
-		case 0:
-			R_gain = 1000000;
-			break;
-		case 1:
-			R_gain = 2750;
-			break;
-		case 2:
-			R_gain = 3500;
-			break;
-		case 3:
-			R_gain = 7000;
-			break;
-		case 4:
-			R_gain = 14000;
-			break;
-		case 5:
-			R_gain = 35000;
-			break;
-		case 6:
-			R_gain = 120000;
-			break;
-		case 7:
-			R_gain = 350000;
-			break;
-		default:
-			R_gain = 0;
-	}
+	
 
 	// Disable communication with AFE
 	digitalWrite(sensor_config.i2c_pin, LOW);
@@ -3063,7 +2028,7 @@ float Gas::readWorkingElectrode4E()
 	for ( int i = 0; i < 8; i++)
 	{
 		// Reads the ADC
-		aux_val = MCP.readADC(I2C_ADDRESS_GASPRO_MCP3421_A1, MCP3421_ULTRA_HIGH_RES, MCP3421_GAIN_1, MCP3421_VOLTS);
+		aux_val = MCP.readADC(I2C_ADDRESS_GASPRO_MCP3421_A1, MCP3421_ULTRA_HIGH_RES, MCP3421_GAIN_1);
 		V_conc += aux_val;
 	}
 
@@ -3093,7 +2058,7 @@ float Gas::readAuxiliaryElectrode4E()
 	for ( int i = 0; i < 8; i++)
 	{
 		//Reads the ADC
-		aux_val = MCP.readADC(	I2C_ADDRESS_GASPRO_MCP3421_A2, MCP3421_ULTRA_HIGH_RES, MCP3421_GAIN_1, MCP3421_VOLTS);
+		aux_val = MCP.readADC(	I2C_ADDRESS_GASPRO_MCP3421_A2, MCP3421_ULTRA_HIGH_RES, MCP3421_GAIN_1);
 		V_conc_aux += aux_val;
 	}
 

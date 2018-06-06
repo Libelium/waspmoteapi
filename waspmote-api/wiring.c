@@ -1,7 +1,7 @@
 /*
  *  Copyright (c) 2008 D. Cuartielles
  *  Copyright (c) 2005-2006 David A. Mellis
- *  Modified for Waspmote by Libelium, 2016
+ *  Modified for Waspmote by Libelium, 2018
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- *  Version:		3.0
+ *  Version:		3.1
  *  Implementation:	D. Mellis, D. Cuartielles, A. Bielsa, Y. Carmona
  */
  
@@ -393,10 +393,6 @@ void setIPF_(uint8_t peripheral)
         // turn on the power on the TWI
         // by writing a zero to the register
         cbi(PRR0, PRTWI);
-
-		// initialize the TWI
-        //FIXME: without this reinitialization the peripheral may not work!!
-		//Wire.begin();
     }
     // SPI, flag IPSPI (aka SD card)
     if( peripheral & (IPSPI > 0) )
@@ -404,10 +400,6 @@ void setIPF_(uint8_t peripheral)
         // turn on the power on the SPI
         // by writing a zero to the register
         cbi(PRR0, PRSPI);
-
-		// initialize the SD
-        // FIXME: this command is not ready yet, since the library is not finished
-		//SD.begin();
     }
     // USART0, flag IPUSART0
     if( peripheral & (IPUSART0 > 0) )

@@ -1,7 +1,7 @@
 /*! \file WaspRTC.h
     \brief Library for managing the RTC
     
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
     
  	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
@@ -21,7 +21,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	A. Bielsa, D. Cuartielles, M. Yarza, Y. Carmona
 
@@ -115,26 +115,26 @@
 /*! \def RTC_LSB_TEMP_ADDRESS
     \brief RTC Addresses constants. LSB Temperature register in this case
  */
-#define	RTC_SECONDS_ADDRESS			0x00	
-#define	RTC_MINUTES_ADDRESS			0x01
-#define	RTC_HOURS_ADDRESS			0x02
-#define	RTC_DAYS_ADDRESS			0x03
-#define	RTC_DATE_ADDRESS			0x04
-#define	RTC_MONTH_ADDRESS			0x05
-#define	RTC_YEAR_ADDRESS			0x06
-#define	RTC_ALM1_START_ADDRESS		0x07
-#define	RTC_ALM1_SECONDS_ADDRESS	0x07
-#define	RTC_ALM1_MINUTES_ADDRESS	0x08
-#define	RTC_ALM1_HOURS_ADDRESS		0x09
-#define	RTC_ALM1_DAYS_ADDRESS		0x0A
-#define	RTC_ALM2_START_ADDRESS		0x0B
-#define	RTC_ALM2_MINUTES_ADDRESS	0x0B
-#define	RTC_ALM2_HOURS_ADDRESS		0x0C
-#define	RTC_ALM2_DAYS_ADDRESS		0x0D
-#define	RTC_CONTROL_ADDRESS			0x0E
-#define	RTC_STATUS_ADDRESS			0x0F
-#define	RTC_MSB_TEMP_ADDRESS		0x11
-#define	RTC_LSB_TEMP_ADDRESS		0x12
+#define	RTC_SECONDS_ADDRESS			(uint8_t)0x00	
+#define	RTC_MINUTES_ADDRESS			(uint8_t)0x01
+#define	RTC_HOURS_ADDRESS			(uint8_t)0x02
+#define	RTC_DAYS_ADDRESS			(uint8_t)0x03
+#define	RTC_DATE_ADDRESS			(uint8_t)0x04
+#define	RTC_MONTH_ADDRESS			(uint8_t)0x05
+#define	RTC_YEAR_ADDRESS			(uint8_t)0x06
+#define	RTC_ALM1_START_ADDRESS		(uint8_t)0x07
+#define	RTC_ALM1_SECONDS_ADDRESS	(uint8_t)0x07
+#define	RTC_ALM1_MINUTES_ADDRESS	(uint8_t)0x08
+#define	RTC_ALM1_HOURS_ADDRESS		(uint8_t)0x09
+#define	RTC_ALM1_DAYS_ADDRESS		(uint8_t)0x0A
+#define	RTC_ALM2_START_ADDRESS		(uint8_t)0x0B
+#define	RTC_ALM2_MINUTES_ADDRESS	(uint8_t)0x0B
+#define	RTC_ALM2_HOURS_ADDRESS		(uint8_t)0x0C
+#define	RTC_ALM2_DAYS_ADDRESS		(uint8_t)0x0D
+#define	RTC_CONTROL_ADDRESS			(uint8_t)0x0E
+#define	RTC_STATUS_ADDRESS			(uint8_t)0x0F
+#define	RTC_MSB_TEMP_ADDRESS		(uint8_t)0x11
+#define	RTC_LSB_TEMP_ADDRESS		(uint8_t)0x12
 
 
 /*! \def RTC_START_ADDRESS
@@ -143,7 +143,7 @@
 /*! \def RTC_DATA_SIZE
     \brief RTC Addresses constants. Number of Timekeeping Registers within RTC
  */
-#define	RTC_START_ADDRESS		0x00
+#define	RTC_START_ADDRESS		(uint8_t)0x00
 #define RTC_DATA_SIZE 			0x13
 
 
@@ -499,7 +499,7 @@ class WaspRTC
 	\return void
 	\sa readRTC(uint8_t endAddress)
 	 */
-   	void writeRTC();
+   	int writeRTC();
 	
 	//! It reads from the RTC the date,time and optionally alarm1 and alarm2, 
 	//! setting the corresponding variables
@@ -508,7 +508,7 @@ class WaspRTC
 	\return void
 	\sa writeRTC()
 	 */
-	void readRTC(uint8_t endAddress);
+	int readRTC(uint8_t endAddress);
 	
 	//! It writes to the RTC the selected registers stored in 'registersRTC'
     /*!
@@ -517,7 +517,7 @@ class WaspRTC
 	\return void
 	\sa readRTCregister(uint8_t theAddress)
 	 */
-    void writeRTCregister(uint8_t theAddress);
+    int writeRTCregister(uint8_t theAddress);
 	
 	//! It reads from the RTC the selected register, and stores it in 'registersRTC' variable
     /*!
@@ -525,7 +525,7 @@ class WaspRTC
 	\return void
 	\sa writeRTCregister(uint8_t theAddress)
 	 */
-    void readRTCregister(uint8_t theAddress);
+    int readRTCregister(uint8_t theAddress);
 	
 	//! It configures the alarm mode and attaches the interruption
     /*!
@@ -541,7 +541,7 @@ class WaspRTC
 	\return void
 	\sa writeRTCalarm2()
 	 */
-	void writeRTCalarm1();
+	int writeRTCalarm1();
 	
 	//! It writes Alarm2 to the RTC 
     /*!
@@ -549,7 +549,7 @@ class WaspRTC
 	\return void
 	\sa writeRTCalarm1()
 	 */
-	void writeRTCalarm2();
+	int writeRTCalarm2();
 	
 	//! It attaches the interruption to the defined pin
     /*!

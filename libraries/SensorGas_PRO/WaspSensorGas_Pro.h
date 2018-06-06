@@ -17,7 +17,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Version:		4.1
+Version:		4.2
 Design:			David Gascón
 Implementation:	Alejandro Gállego & Ahmad Saad
 
@@ -350,26 +350,6 @@ protected:
 	*/
 	float getSensitivityTempComp(float temperature);
 
-	//! ONLY FOR 4-ELECTRODE AMPERIOMETRIC BOARD
-	//! This function sets the resistance to an specific digipot
-	/*!
-	\param bool electrode: electrode asociated to each digipot
-	WORKING_ELECTRODE
-	AUXILIARY_ELECTRODE
-	\param float resistor: resistor value to set in Ohms
-	\return		nothing
-	*/
-	void setAmplifier(bool electrode, float resistor);
-
-	//! This function gets the resistance from an specific digipot
-	/*!
-	\param bool electrode: electrode asociated to each digipot
-	WORKING_ELECTRODE
-	AUXILIARY_ELECTRODE
-	\return		resistor value in Ohms
-	*/
-	float getAmplifier(bool electrode);
-
 	//! Specific function to read 3 electrode sensors
 	/*!
 	\param uint8_t resolution: resolution value for ADC
@@ -405,18 +385,6 @@ protected:
 	\return		The concetration value in ppm
 	*/
 	float readNDIR(uint8_t resolution);
-
-	//! Specific function to read O3 sensors (v12 sensors)
-	/*!
-	\param uint8_t resolution: resolution value for ADC
-	MCP3421_RES_12_BIT or MCP3421_LOW_RES
-	MCP3421_RES_14_BIT or MCP3421_MEDIUM_RES
-	MCP3421_RES_16_BIT or MCP3421_HIGH_RES
-	MCP3421_RES_18_BIT or MCP3421_ULTRA_HIGH_RES
-	\param float temperature: ambient temperature for sensor compensation (-1000 if doesn't needed)
-	\return		The concetration value in ppm
-	*/
-	float read4ElectrodeSensorv100(uint8_t resolution, float temperature);
 
 	//! Specific function to read 4 electrode sensors
 	/*!

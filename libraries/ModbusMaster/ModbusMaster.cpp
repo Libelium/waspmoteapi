@@ -20,7 +20,7 @@
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>  
   Modified for Waspmote by Libelium, 2018
   
-  Version:	3.5
+  Version:	3.6
 */
 
 #include "ModbusMaster.h"
@@ -473,7 +473,7 @@ uint8_t ModbusMaster::writeMultipleRegisters(uint16_t u16WriteAddress, uint16_t 
 	return ModbusMasterTransaction(ku8MBWriteMultipleRegisters);
 }
 
-// new version based on Wire.h
+
 uint8_t ModbusMaster::writeMultipleRegisters()
 {
 	_u16WriteQty = _u8TransmitBufferIndex;

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.3
+    Version:		3.4
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -43,6 +43,7 @@
 #include "../WaspAES/WaspAES.h"
 #include "WaspFrameConstantsv12.h"
 #include "WaspFrameConstantsv15.h"
+#include "AgrXtrFrameConstants.h"
 
 
 /******************************************************************************
@@ -83,31 +84,15 @@
 
 
 
-/*! \def EXAMPLE_FRAME
-    \brief 
- */
-/*! \def TIMEOUT_FRAME
-    \brief 
- */
-/*! \def EVENT_FRAME
-    \brief 
- */
-/*! \def ALARM_FRAME
-    \brief 
- */
-/*! \def SERVICE1_FRAME
-    \brief 
- */
-/*! \def SERVICE2_FRAME
-    \brief 
- */
-#define INFORMATION_FRAME_V12 	0
-#define TIMEOUT_FRAME 			1
-#define EVENT_FRAME 			2
-#define ALARM_FRAME 			3
-#define SERVICE1_FRAME 			4
-#define SERVICE2_FRAME 			5
-#define INFORMATION_FRAME_V15	6
+//Define Frame Types
+#define INFORMATION_FRAME_V12 	     0
+#define TIMEOUT_FRAME 			     1
+#define EVENT_FRAME 			     2
+#define ALARM_FRAME 			     3
+#define SERVICE1_FRAME 			     4
+#define SERVICE2_FRAME 			     5
+#define INFORMATION_FRAME_V15	     6
+#define INFORMATION_FRAME_AGR_XTR    7
 
 // Define frame types for encrypted frames in different formats
 #define AES_ECB_FRAME_V15		96
@@ -206,7 +191,10 @@ private:
     
     //! Variable: encryption flag for End-to-End encryption from device to Cloud
     uint8_t _encryptionToCloud;
-    
+
+    //! Variable: Stores frame type
+    uint8_t _frameType;
+
 public:
 
     //! class constructor

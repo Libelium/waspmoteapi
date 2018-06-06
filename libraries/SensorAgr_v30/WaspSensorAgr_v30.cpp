@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.6
+ *  Version:		3.7
  *  Design:			David Gascón
  *  Implementation:	Carlos Bello
  */
@@ -25,7 +25,6 @@
 
 // BME280 library for reading temperature, humidity and pressure values
 #include "BME280.h"
-#include "Wire.h"
 #include "WaspConstants.h"
 #include "WaspSensorAgr_v30.h"
 #include "UltrasoundSensor.h"
@@ -76,6 +75,7 @@ void WaspSensorAgr_v30::ON() {
 	digitalWrite(I2C_PIN_OE, LOW);
 	// Switch ON 3V3 for supplying the board
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
+	delay(300);
 
     if (_boot_version < 'H')
     {
@@ -170,6 +170,7 @@ float WaspSensorAgr_v30::conversion(byte data_input[3], uint8_t type)
 	else if (type == SENS_SA_DD) return ( (val_def * 3666.66666)/1000.0 );
 	else if( type == SENS_SA_DF) return ( (val_def * 5000)/1000.0 );
 	else if( type == SENS_SA_DC3) return ( (val_def * 8333.33333)/1000.0 );
+  else if( type == SENS_SA_DC2) return ( (val_def * 5000)/1000.0 );
 
 	return 0;
 }
@@ -669,37 +670,42 @@ float pt1000Class::readPT1000(void)
 	const byte pt1000_channel = B10100000;
 	byte data_pt1000[3] = {0,0,0};
 	float value_pt1000 = 0;
+	
+	//Turn on sensor supply
 	digitalWrite(DEN_PT1000_ON,HIGH);
-	delay(100);
+	
 	//Switch ON I2C
 	digitalWrite(I2C_PIN_OE, HIGH);
-	delay(100);
-
-	Wire.beginTransmission(I2C_ADDRESS_AGR_PT1000);
-	Wire.send(pt1000_channel);
-	Wire.send(B01010101);
-	Wire.endTransmission();
-
+	
+	delay(50);
+	
+	// init I2C bus
+	I2C.begin();
+	
+	// send command
+	I2C.write(I2C_ADDRESS_AGR_PT1000, pt1000_channel, B01010101);  
+	
+	// mandatory delay to wait for answer
 	delay(300);
+	
+	// read answer from slave
+	I2C.read(I2C_ADDRESS_AGR_PT1000, data_pt1000, 3);
 
-	Wire.requestFrom(I2C_ADDRESS_AGR_PT1000, 3);
+	value_pt1000 = conversion(data_pt1000,1);	
 
-	int k=0;
-	while (Wire.available())
-	{
-		data_pt1000[k]=Wire.receive();
-		k++;
-	}
-	value_pt1000 = conversion(data_pt1000,1);
-	delay(1000);
 	#if DEBUG_AGR > 0
 	PRINT_AGR(F("readPT1000 value conversion:"));
-	USB.println(value_pt1000);
-	#endif
+	USB.println(value_pt1000);		
+	#endif	
+	
+	//Turn off sensor supply
+	digitalWrite(DEN_PT1000_ON,LOW);	
+	
 	// Switch OFF I2C
 	digitalWrite(I2C_PIN_OE, LOW);
-	digitalWrite(DEN_PT1000_ON,LOW);
-	return value_pt1000;
+		
+	return value_pt1000;  
+
 }
 
 /*
@@ -732,37 +738,30 @@ float dendrometerClass::readDendrometer(void)
 	const byte dendro_channel = B10100001;
 	byte data_dendro[3] = {0,0,0};
 	float value_dendro = 0;
-	digitalWrite(DEN_PT1000_ON,HIGH);
+	
+	//Turn on sensor supply
+	digitalWrite(DEN_PT1000_ON,HIGH);	
+
 	//Switch ON I2C
 	digitalWrite(I2C_PIN_OE, HIGH);
 
 	delay(300);
-
-	Wire.beginTransmission(I2C_ADDRESS_AGR_DENDROMETER);
-	Wire.send(dendro_channel);
-	Wire.send(B01010101);
-	Wire.endTransmission();
-
+	
+    // send command
+	I2C.write(I2C_ADDRESS_AGR_DENDROMETER, dendro_channel, B01010101);
+	
+	// wait for response
 	delay(300);
 
-	Wire.requestFrom(I2C_ADDRESS_AGR_DENDROMETER, 3);
-
-	int i=0;
-	while (Wire.available())
-	{
-		data_dendro[i]=Wire.receive();
-		i++;
-	}
-	/*
-	if (Wire.isON && !ACC.isON && RTC.isON!=1)
-	{
-		PWR.closeI2C();
-		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
-	}
-	*/
+	// read response
+	I2C.read(I2C_ADDRESS_AGR_DENDROMETER, data_dendro, 3);
+	
+	//Turn off sensor supply
 	digitalWrite(DEN_PT1000_ON,LOW);
+	
   	// Switch OFF I2C
 	digitalWrite(I2C_PIN_OE, LOW);
+	
 	#if DEBUG_AGR==1
 	PRINT_AGR(F("readDendrometer value without conversion:"));
 	USB.println(value_dendro);
@@ -790,37 +789,40 @@ void dendrometerClass::setReference(void)
 	byte data_dendro[3] = {0,0,0};
 	uint8_t signo;
 	uint8_t overflow;
-	digitalWrite(DEN_PT1000_ON,HIGH);
+	
+	//Turn on sensor supply
+	digitalWrite(DEN_PT1000_ON,HIGH);	
+
 	//Switch ON I2C
 	digitalWrite(I2C_PIN_OE, HIGH);
 
 	delay(300);
-
-	Wire.beginTransmission(I2C_ADDRESS_AGR_DENDROMETER);
-	Wire.send(dendro_channel);
-	Wire.send(B01010101);
-	Wire.endTransmission();
-
+	
+	// send command
+	I2C.write(I2C_ADDRESS_AGR_DENDROMETER, dendro_channel, B01010101);
+  
+	// wait for response
 	delay(300);
-
-	Wire.requestFrom(I2C_ADDRESS_AGR_DENDROMETER, 3);
-
-	int i=0;
-	while (Wire.available())
-	{
-		data_dendro[i]=Wire.receive();
-		i++;
-	}
-	/*
-	if (Wire.isON && !ACC.isON && RTC.isON!=1)
-	{
-		PWR.closeI2C();
-		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
-	}
-	*/
-	digitalWrite(DEN_PT1000_ON,LOW);
+	
+	// read response
+	I2C.read(I2C_ADDRESS_AGR_DENDROMETER, data_dendro, 3);
+	
+	//Turn off sensor supply
+	digitalWrite(DEN_PT1000_ON,LOW);	
+	
   	// Switch OFF I2C
-	digitalWrite(I2C_PIN_OE, LOW);
+  	digitalWrite(I2C_PIN_OE, LOW);
+  	
+	#if DEBUG_AGR==1
+	PRINT_AGR(F("readDendrometer value without conversion:"));
+	USB.println(value_dendro);		
+	#endif
+	#if DEBUG_AGR==2
+	PRINT_AGR(F("readDendrometer value without conversion:"));
+	USB.println(value_dendro);
+	PRINT_AGR(F("readDendrometer value conversion:"));
+	USB.println(value_dendro = conversion(data_dendro,0));	
+	#endif	
 
 	_reference = conversion(data_dendro,_dendro);
 
@@ -839,37 +841,29 @@ float dendrometerClass::readGrowth(void)
 	const byte dendro_channel = B10100001;
 	byte data_dendro[3] = {0,0,0};
 	float value_dendro = 0;
-	digitalWrite(DEN_PT1000_ON,HIGH);
+	
+	//Turn on sensor supply
+	digitalWrite(DEN_PT1000_ON,HIGH);	
+
 	//Switch ON I2C
 	digitalWrite(I2C_PIN_OE, HIGH);
 
 	delay(300);
-
-	Wire.beginTransmission(I2C_ADDRESS_AGR_DENDROMETER);
-	Wire.send(dendro_channel);
-	Wire.send(B01010101);
-	Wire.endTransmission();
-
+	// send command
+	I2C.write(I2C_ADDRESS_AGR_DENDROMETER, dendro_channel, B01010101);
+  
+	// wait for response
 	delay(300);
-
-	Wire.requestFrom(I2C_ADDRESS_AGR_DENDROMETER, 3);
-
-	int i=0;
-	while (Wire.available())
-	{
-		data_dendro[i]=Wire.receive();
-		i++;
-	}
-	/*
-	if (Wire.isON && !ACC.isON && RTC.isON!=1)
-	{
-		PWR.closeI2C();
-		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
-	}
-	*/
+	
+	// read response
+	I2C.read(I2C_ADDRESS_AGR_DENDROMETER, data_dendro, 3);
+	
+	//Turn off sensor supply
 	digitalWrite(DEN_PT1000_ON,LOW);
+		
   	// Switch OFF I2C
 	digitalWrite(I2C_PIN_OE, LOW);
+	
 	#if DEBUG_AGR==1
 	PRINT_AGR(F("readDendrometer value without conversion:"));
 	USB.println(value_dendro);
@@ -906,37 +900,36 @@ float radiationClass::readRadiation(void)
 	byte data_apogee[2] = {0,0};
 	long val = 0;
 	float val_def = 0;
+	
+	// Turn on sensor supply
 	digitalWrite(RADIATION_ON,HIGH);
 	delay(100);
+
 	//Switch ON I2C
 	pinMode(I2C_PIN_OE, OUTPUT);
-	digitalWrite(I2C_PIN_OE, HIGH);
+	digitalWrite(I2C_PIN_OE, HIGH);	
 	delay(100);
 
 	// Init I2C bus
-	if( !Wire.isON ) Wire.begin();
-	Wire.requestFrom(I2C_ADDRESS_AGR_RADIATION, 2);
-	while (Wire.available())
-	{
-		Wire.receive();
-	}
+	I2C.begin();
+	
+	// Dummy reading
+	I2C.read(I2C_ADDRESS_AGR_RADIATION, data_apogee, 2);
 	delay(50);
-	Wire.requestFrom(I2C_ADDRESS_AGR_RADIATION, 2);
-	int i = 0;
-	while (Wire.available())
-	{
-		data_apogee[i] = Wire.receive();
-		i++;
-	}
+	
+	// Read sensor
+	I2C.read(I2C_ADDRESS_AGR_RADIATION, data_apogee, 2);
+	
 
 	val = long(data_apogee[1]) + long(data_apogee[0])*256;
 	val_def = (val - 32768)*1.8/32768;
 	if( val_def < 0.0 ){
 		val_def = 0.0;
 	}
-
-	digitalWrite(RADIATION_ON,LOW);
-
+    
+	// Turn off sensor supply
+	digitalWrite(RADIATION_ON,LOW);	
+	
 	// Switch OFF I2C
 	digitalWrite(I2C_PIN_OE, LOW);
 

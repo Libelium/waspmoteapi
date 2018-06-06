@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.4
+ *  Version:		3.5
  *  Design:			David Gascón
  *  Implementation: Alejandro Gállego, Ahmad Saad
  */
@@ -425,7 +425,7 @@ float bmeCitiesSensor::getTemperature()
 
 		if (error != 1)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((error != 1) && (retries > 0));
 
@@ -442,7 +442,7 @@ float bmeCitiesSensor::getTemperature()
 
 		if (value == -1000.0)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((value != -1000.0) && (retries > 0));
 
@@ -484,7 +484,7 @@ float bmeCitiesSensor::getHumidity()
 
 		if (error != 1)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((error != 1) && (retries > 0));
 
@@ -501,7 +501,7 @@ float bmeCitiesSensor::getHumidity()
 
 		if (value == -1000.0)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((value != -1000.0) && (retries > 0));
 
@@ -542,7 +542,7 @@ float bmeCitiesSensor::getPressure()
 
 		if (error != 1)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((error != 1) && (retries > 0));
 
@@ -559,7 +559,7 @@ float bmeCitiesSensor::getPressure()
 
 		if (value == -1000.0)
 		{
-			Wire.recover();
+			I2C.recover();
 		}
 	} while ((value != -1000.0) && (retries > 0));
 
@@ -726,7 +726,7 @@ uint32_t luxesCitiesSensor::getLuminosity(bool gain, uint8_t res)
 			return TSL.lux;
 		}
 		retries--;
-		Wire.recover();
+		I2C.recover();
 	}
 	while(retries > 0);
 

@@ -3,7 +3,7 @@
  *  URL: http://arduino.cc/playground/Main/LibraryForI2CEEPROM
  *  VERSION: 1.0.05
  * 
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascon
  *  Implementation:	Yuri Carmona
  */
@@ -44,10 +44,7 @@ uint8_t WaspEEPROM::ON()
 	uint8_t error;
 	
 	// init I2C bus
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+	I2C.begin();
 	
 	error = waitReady();
 	
@@ -202,12 +199,8 @@ int WaspEEPROM::_WriteBlock(uint16_t address, uint8_t* buffer, uint8_t length)
 {
     waitReady();
 
-    Wire.beginTransmission(_deviceAddress);
-    Wire.send((int)(address >> 8));
-    Wire.send((int)(address & 0xFF));
-    for (uint8_t cnt = 0; cnt < length; cnt++)
-    Wire.send(buffer[cnt]);
-    int rv = Wire.endTransmission();
+    int rv = I2C.write(_deviceAddress,address,buffer,length);
+    
     _lastWrite = millis();
     return rv;
 }
@@ -217,22 +210,10 @@ int WaspEEPROM::_WriteBlock(uint16_t address, uint8_t* buffer, uint8_t length)
 uint8_t WaspEEPROM::_ReadBlock(uint16_t address, uint8_t* buffer, uint8_t length)
 {
     waitReady();
-
-    Wire.beginTransmission(_deviceAddress);
-    Wire.send((int)(address >> 8));
-    Wire.send((int)(address & 0xFF));
-
-    int rv = Wire.endTransmission();
-    if (rv != 0) return 0;  // error
-
-    Wire.requestFrom(_deviceAddress, length);
-    uint8_t cnt = 0;
-    uint32_t before = millis();
-    while ((cnt < length) && ((millis() - before) < I2C_EEPROM_TIMEOUT))
-    {
-        if (Wire.available()) buffer[cnt++] = Wire.receive();
-    }
-    return cnt;
+    
+    int rv = I2C.read(_deviceAddress,address,buffer,length);
+    
+    return rv;
 }
 
 
@@ -243,21 +224,8 @@ uint8_t WaspEEPROM::readRegister(uint16_t address, uint8_t* buffer, uint8_t leng
 {	
 	// wait until chip is ready
     waitReady();    
-
-    Wire.beginTransmission(_deviceAddress);
-    Wire.send((int)(address >> 8));
-    Wire.send((int)(address & 0xFF));
-
-    Wire.requestFrom(_deviceAddress, length);
-    uint8_t cnt = 0;
-    uint32_t before = millis();
-    while ((cnt < length) && ((millis() - before) < I2C_EEPROM_TIMEOUT))
-    {
-        if (Wire.available()) buffer[cnt++] = Wire.receive();
-    }
-
-    uint8_t rv = Wire.endTransmission();
-    delay(10);
+    
+    int rv = I2C.read(_deviceAddress,address,buffer,length);
     
     if (rv != 0) return 1;  // error
 
@@ -285,7 +253,8 @@ uint8_t WaspEEPROM::sendCommand(uint8_t* command)
 	uint8_t crc_aux[2];
 	uint8_t length = command[0]-2;
 	uint8_t rx_length = 16;
-
+	uint16_t address = 0xFE00; // CMD REGISTER ADDRESS
+	
 	do
 	{
 		// calculate CRC
@@ -293,18 +262,16 @@ uint8_t WaspEEPROM::sendCommand(uint8_t* command)
 
 		// wait until chip is ready
 		waitReady();
-
-		Wire.beginTransmission(_deviceAddress);
-		Wire.send(0xFE); // CMD REGISTER ADDRESS
-		Wire.send(0x00);
-
-		for (uint8_t i = 0; i<length; i++)
-		{
-			Wire.send(command[i]);  //COUNT  
-		}
-		Wire.send(crc_tx[0]);  //CRC 1
-		Wire.send(crc_tx[1]);  //CRC 2
-		x = Wire.endTransmission();
+		
+		memset(_buffer,0x00,sizeof(_buffer));
+		memcpy(_buffer,command,sizeof(_buffer));
+		
+		_buffer[length] = crc_tx[0];
+		_buffer[length+1] = crc_tx[1];
+		
+		x = I2C.write(_deviceAddress,address,_buffer,length+2);
+		
+		
 		if (x != 0)
 		{
 			//USB.println(F("Error endTransmission"));	
@@ -315,23 +282,9 @@ uint8_t WaspEEPROM::sendCommand(uint8_t* command)
 	}
 	while(x != 0);
 
-	// read response
-	x = Wire.requestFrom(_deviceAddress, rx_length);
-	if (x != 0)
-	{		
-		return 1;
-	}
+	// read response	
+	x = I2C.read(_deviceAddress,_buffer,rx_length);
 	
-	// Store response
-	uint16_t index = 0;
-	while (Wire.available() && (index < sizeof(_buffer)))
-	{
-		_buffer[index] = Wire.receive();	
-		index++; 
-	}  
-
-	// Stop transmission
-	x = Wire.endTransmission();
 	if (x != 0)
 	{		
 		return 1;
@@ -383,25 +336,22 @@ uint8_t WaspEEPROM::sleepCommand()
 	int x;
 	uint8_t command[] = { 0x09, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint8_t length = command[0]-2;
-
+	uint16_t address = 0xFE00; // CMD REGISTER ADDRESS
+	
 	// calculate CRC
 	aes132c_calculate_crc(length, command, crc);
 	/*USB.printHex(crc[0]);
 	USB.printHex(crc[1]);
 	USB.println();*/
-	Wire.beginTransmission(_deviceAddress);
+	
+	memset(_buffer,0x00,sizeof(_buffer));
+	memcpy(_buffer,command,sizeof(_buffer));
+	
+	_buffer[length] = crc[0];
+	_buffer[length+1] = crc[1];
+	
+	x = I2C.write(_deviceAddress,address,_buffer,length+2);
 
-	Wire.send(0xFE); // CMD REGISTER ADDRESS
-	Wire.send(0x00);
-
-	for (int x = 0; x<length; x++)
-	{
-		Wire.send(command[x]);
-	}
-	Wire.send(crc[0]);  //CRC 1
-	Wire.send(crc[1]);  //CRC 2
-
-	x = Wire.endTransmission();
 	if (x != 0)
 	{
 		//USB.println("Error endTransmission_sleep");
@@ -429,8 +379,7 @@ uint8_t WaspEEPROM::waitReady()
     // this is a bit faster than the hardcoded 5 milli
     while ((millis() - _lastWrite) <= I2C_WRITEDELAY)
     {
-        Wire.beginTransmission(_deviceAddress);
-        int x = Wire.endTransmission();
+        int x = I2C.scan(_deviceAddress);
         if (x == 0) 
         {
 			return 0;

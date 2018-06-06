@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.3
+    Version:		3.4
     Design:			David Gascón
     Implementation:	Carlos Bello
 
@@ -171,6 +171,7 @@
 #define	SENS_SA_DD				28
 #define	SENS_SA_DF				29
 #define	SENS_SA_DC3				30
+#define	SENS_SA_DC2				31
 //**********************************************************************
 //DECLARE VARS
 //**********************************************************************

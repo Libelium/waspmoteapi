@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -33,10 +33,6 @@
 #include <avr/pgmspace.h>
 #include <alloca.h>
 
-// I2C libraries
-#include "Wire.h"
-#include "twi.h"
-
 #include "pins_waspmote.h"
 #include "WaspConstants.h"
 #include "wiring.h"
@@ -46,7 +42,6 @@
 
 #include "WaspUtils.h"
 #include "WaspUSB.h"
-#include "Wire.h"
 #include "WaspRTC.h"
 #include "WaspACC.h"
 #include "WaspSD.h"
@@ -54,6 +49,10 @@
 #include "WaspXBeeCore.h"
 #include "MemoryFree.h"
 #include "WaspEEPROM.h"
+
+
+// I2C library
+#include "WaspI2C.h"
 
 
 // SPI library

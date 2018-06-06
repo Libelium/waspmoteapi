@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Marcos Yarza
  */
@@ -66,12 +66,8 @@ void WaspACC::ON(void)
  * It opens I2C bus and powers the accelerometer
  */
 void WaspACC::ON(uint8_t FS_OPTION)
-{	
-	// join i2c bus (address optional for master)
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+{
+	I2C.begin();
     
     accMode = ACC_ON;
 	setMode(ACC_ON);
@@ -135,7 +131,7 @@ void WaspACC::OFF(void)
 	setMode(ACC_POWER_DOWN);
 	
 	// close I2C
-	if (Wire.isON && RTC.isON!=1)
+	if (RTC.isON!=1)
 	{
 		PWR.closeI2C();
 		RTC.setMode(RTC_OFF, RTC_I2C_MODE);
@@ -869,22 +865,20 @@ int16_t WaspACC::readRegister(uint8_t regNum)
 	// reset the flag
 	flag &= ~(ACC_ERROR_READING);
 
+	uint8_t error = 0;
 	uint8_t aux = 0;
-	Wire.beginTransmission(I2C_ADDRESS_WASP_ACC);
-	Wire.send(regNum);
-	Wire.endTransmission();
-
-	Wire.requestFrom(I2C_ADDRESS_WASP_ACC, 1);
-	if(Wire.available())
+	
+	error = I2C.read(I2C_ADDRESS_WASP_ACC, regNum, &aux, 1);
+	
+	if (error == TWI_SUCCESS)
 	{
-		aux = Wire.receive();
 		return aux;
 	}
 
 	// error, activate the reading flag
 	flag |= ACC_ERROR_READING;
 
-	return -1;
+	return error;
 }
 
 // writes a byte to a register in the accelerometer
@@ -894,10 +888,7 @@ uint8_t WaspACC::writeRegister(uint8_t address, uint8_t val)
 	// reset the flag
 	flag &= ~(ACC_ERROR_WRITING);
 
-	Wire.beginTransmission(I2C_ADDRESS_WASP_ACC);
-	Wire.send(address); 
-	Wire.send(val);
-	Wire.endTransmission();
+	I2C.write(I2C_ADDRESS_WASP_ACC, address, val);
 
 	if (readRegister(address) != val)
 	{

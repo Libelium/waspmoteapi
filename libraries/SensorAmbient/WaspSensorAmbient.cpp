@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.3
+ *  Version:		3.4
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Manuel Calahorra, Yuri Carmona, Jorge Casanova, Javier Siscart
  *
@@ -345,11 +345,8 @@ int8_t	WaspSensorAmbient::setSensorMode(uint8_t mode, uint16_t sensor)
 			case	SENS_AMBIENT_TEMPERATURE:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,HIGH);
 												break;
 			case	SENS_AMBIENT_HUMIDITY	:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,HIGH);
-												break;
-
-			case	SENS_AMBIENT_LUX		:	// update I2C flag
-												Wire.isBoard = true;
-												// switch on the power supplies
+												break;								
+			case	SENS_AMBIENT_LUX		:	// switch on the power supplies
 												PWR.setSensorPower(SENS_3V3, SENS_ON);
 												break;
 			default						:	return -1;
@@ -364,9 +361,7 @@ int8_t	WaspSensorAmbient::setSensorMode(uint8_t mode, uint16_t sensor)
 												break;
 			case	SENS_AMBIENT_HUMIDITY	:	digitalWrite(SENS_AMBIENT_SENSIRION_PWR,LOW);
 												break;
-			case	SENS_AMBIENT_LUX	:		// update I2C flag
-												Wire.isBoard = false;
-												// switch off the power supplies
+			case	SENS_AMBIENT_LUX	:		// switch off the power supplies
 												PWR.setSensorPower(SENS_3V3, SENS_OFF);
 												break;
 			default							:	return -1;
@@ -494,17 +489,13 @@ uint32_t WaspSensorAmbient::getLuxes(bool gain)
 uint32_t WaspSensorAmbient::getLuxes(bool gain, uint8_t res)
 {
 	uint8_t error;
-
-	// update I2C flag
-	Wire.isBoard = true;
+	
 	// switch on the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
 	TSL.ON();
 
 	error = TSL.getLuminosity(res, gain);
 
-	// update I2C flag
-	Wire.isBoard = false;
 	// switch off the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);
 
@@ -526,8 +517,6 @@ float WaspSensorAmbient::getTemperatureBME()
 {
 	float value = 0;
 
-	// update I2C flag
-	Wire.isBoard = true;
 	// switch on the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
 
@@ -538,8 +527,6 @@ float WaspSensorAmbient::getTemperatureBME()
 	value = BME.getTemperature(BME280_OVERSAMP_1X, 0);
 	delay(100);
 
-	// update I2C flag
-	Wire.isBoard = false;
 	// switch off the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);
 
@@ -556,8 +543,6 @@ float WaspSensorAmbient::getPressureBME()
 {
 	float value = 0;
 
-	// update I2C flag
-	Wire.isBoard = true;
 	// switch on the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
 
@@ -569,8 +554,6 @@ float WaspSensorAmbient::getPressureBME()
 	value = BME.getPressure(BME280_OVERSAMP_1X, 0);
 	delay(100);
 
-	// update I2C flag
-	Wire.isBoard = false;
 	// switch off the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);
 
@@ -587,8 +570,6 @@ float WaspSensorAmbient::getHumidityBME()
 {
 	float value = 0;
 
-	// update I2C flag
-	Wire.isBoard = true;
 	// switch on the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_ON);
 
@@ -598,11 +579,9 @@ float WaspSensorAmbient::getHumidityBME()
 
 	// Read the humidity from the BME280 Sensor
 	value = BME.getHumidity(BME280_OVERSAMP_1X);
-	delay(100);
+	
+	delay(100);		
 
-
-	// update I2C flag
-	Wire.isBoard = false;
 	// switch off the power supplies
 	PWR.setSensorPower(SENS_3V3, SENS_OFF);
 

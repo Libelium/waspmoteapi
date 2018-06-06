@@ -1,26 +1,26 @@
 /*
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Lesser General Public License as published by
  *  the Free Software Foundation, either version 2.1 of the License, or
  *  (at your option) any later version.
-   
+
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Lesser General Public License for more details.
-  
+
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
- *	Version:		3.2
+ *
+ *	Version:		3.3
  *	Design:			David Gascón
  * 	Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
 */
- 
-  
+
+
 
 
 #ifndef __WASPCONSTANTS_H__
@@ -29,7 +29,7 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
- 
+
 #include	"pins_waspmote.h"
 
 /******************************************************************************
@@ -40,14 +40,14 @@
     \brief Waspmote API version number
  */
 #define WASPMOTE_API_VERSION 28
- 
- 
- 
+
+
+
 
 // internal peripherals flag (IPF) register
 // it just re-arranges the PRR0 and PRR1 registers from the MCU:
 // MSB	-	7	6	5	4	3	2	1	  0
-// ----------------------------------------------------------------------------- 
+// -----------------------------------------------------------------------------
 // PRR0	-	PRTWI	PRTIM2 	PRTIM0	– 	PRTIM1	PRSPI	PRUSART0  PRADC
 // PRR1	-	– 	– 	– 	– 	PRTIM3 	– 	–  	  PRUSART1
 
@@ -103,19 +103,19 @@
 
 /***************************************************
  * INTERRUPTION BITMAP: 'intFlag' and 'intConf'
- * 
- * Waspmote interrupt vector definitions for 'intFlag' and 
- * 'intConf' bit-map vectors. These are 16-bit interrupt 
+ *
+ * Waspmote interrupt vector definitions for 'intFlag' and
+ * 'intConf' bit-map vectors. These are 16-bit interrupt
  * vectors to contain the flags for the different HW/SW
- * interrupts '0' will denote not-active, '1' will denote 
+ * interrupts '0' will denote not-active, '1' will denote
  * active the HW interrupts and default callback functions
  * are stored inside WInterrupts.c
  *  __________________________________________________________
- * |        |      |     |     |     |      |     |     |     |    
+ * |        |      |     |     |     |      |     |     |     |
  * | PIR_3G | XBEE | RAD | HIB | PLV | SENS | WTD | RTC | ACC |
  * |________|______|_____|_____|_____|______|_____|_____|_____|
  *      8      7      6     5     4      3     2     1     0
- *  
+ *
  ***************************************************/
 /*! \def ACC_INT
     \brief Accelerometer interruption bit within intFlag and intConf
@@ -156,18 +156,18 @@
 
 
 /*******************************************************************************
- * INTERRUPTION POSTITION BITMAP 
- * 
- * Waspmote definitions for 'intArray' bit-map interruption 
- * counter vector. This is a 16-Byte interrupt array to 
- * contain the number of interruption generated per each 
+ * INTERRUPTION POSTITION BITMAP
+ *
+ * Waspmote definitions for 'intArray' bit-map interruption
+ * counter vector. This is a 16-Byte interrupt array to
+ * contain the number of interruption generated per each
  * interruption source
  *  ____________________________________________________
- * |        |      |     |     |      |     |     |     |    
+ * |        |      |     |     |      |     |     |     |
  * | PIR_3G | XBEE | RAD | PLV | SENS | WTD | RTC | ACC |
  * |________|______|_____|_____|______|_____|_____|_____|
  *      7       6     5     4      3     2     1     0
- *  
+ *
  ******************************************************************************/
  /*! \def ACC_POS
     \brief Accelerometer interruption counter index within 'intArray'
@@ -220,7 +220,7 @@
 #define RXD1_PIN	2	// INT2 pin
 #define TXD1_PIN	3	// INT3 pin
 #define INT4_PIN	4	// INT4 pin
- 
+
 
 /*******************************************************************************
  * Interruption monitorization pins
@@ -230,23 +230,23 @@
  */
  /*! \def RTC_INT_PIN_MON
     \brief Monitorization pin used for RTC interruptions
- */ 
+ */
  /*! \def WTD_INT_PIN_MON
     \brief Monitorization pin used for Watchdog interruptions
- */ 
+ */
  /*! \def XBEE_INT_PIN_MON
     \brief Monitorization pin used for XBee interruptions
- */ 
+ */
  /*! \def RAD_INT_PIN_MON
     \brief Monitorization pin used for Radiation sensor board interruptions
- */ 
+ */
  /*! \def PIR_3G_PIN_MON
     \brief Monitorization pin used for PIR sensor interruptions (in videocamera
-    sensor board) 
- */ 
+    sensor board)
+ */
  /*! \def PLV_INT_PIN_MON
     \brief Monitorization pin used for Pluviometer sensor interruptions
- */ 
+ */
 #define	ACC_INT_PIN_MON		RDY_ACC 	// PE6
 #define	RTC_INT_PIN_MON		RST_RTC		// PE7
 #define	WTD_INT_PIN_MON		DIGITAL0	// PE4
@@ -276,10 +276,10 @@
 
 
 /*******************************************************************************
- * WASPMOTE CONTROL REGISTER FOR POWER SUPPLIES AND MODULES 
+ * WASPMOTE CONTROL REGISTER FOR POWER SUPPLIES AND MODULES
    _________________________________________________
-  |     |     |     |     |     |     |     |       |   
-  |     |     |     |     |     |     |     |  SD   | 
+  |     |     |     |     |     |     |     |       |
+  |     |     |     |     |     |     |     |  SD   |
   |_____|_____|_____|_____|_____|_____|_____|_______|
     23     22   21    20    19    18    17     16
    _______________________________________________________________________
@@ -291,7 +291,7 @@
   |        |       |             |          |         |         |     |    |
   | Events | Gases | Agriculture | Metering | Socket1 | Socket0 | 3V3 | 5V |
   |________|_______|_____________|__________|_________|_________|_____|____|
-      7        6          5            4         3         2       1     0  
+      7        6          5            4         3         2       1     0
 
  ******************************************************************************/
 
@@ -341,10 +341,10 @@
     \brief Bit dedicated to the marking of the OTA process
  */
 /*! \def REG_SD
-    \brief Bit dedicated to the marking of the SD module 
+    \brief Bit dedicated to the marking of the SD module
  */
 /*! \def REG_SX
-    \brief Bit dedicated to the marking of the Semtech module 
+    \brief Bit dedicated to the marking of the Semtech module
  */
 /*! \def REG_DUST_GASES_PRO
     \brief Bit dedicated to the marking of the Dust sensor in Gases PRO Board
@@ -378,6 +378,7 @@ static const uint16_t	REG_PARKING			=	2048;		// bit 11
 static const uint16_t	REG_VIDEO_CAMERA	=	4096;		// bit 12
 static const uint16_t	REG_WATER			=	8192;		// bit 13
 static const uint16_t	REG_AMBIENT			=	16384;		// bit 14
+static const uint16_t	REG_AGR_XTR			=	32768;		// bit 15
 
 
 /*******************************************************************************
@@ -388,50 +389,50 @@ static const uint16_t	REG_AMBIENT			=	16384;		// bit 14
     \brief socket where UART0 is used
 */
 /*! \def SOCKET1
-    \brief socket where UART1 is used   
+    \brief socket where UART1 is used
  */
-#define SOCKET0	0  
+#define SOCKET0	0
 #define SOCKET1	1
 
 
 /*! \def XBEE_ON
-    \brief XBee Power Mode. OFF in this case    
+    \brief XBee Power Mode. OFF in this case
  */
 /*! \def XBEE_OFF
-    \brief XBee Power Mode. OFF in this case    
+    \brief XBee Power Mode. OFF in this case
  */
 #define	XBEE_ON			1
 #define	XBEE_OFF		3
 
 
 /*! \def XBEE_RATE
-    \brief XBee Baud Rate    
+    \brief XBee Baud Rate
  */
 #define XBEE_RATE	115200
 
 
 /*! \def SENS_ON
-    \brief Sensor Board Power Modes. ON in this case    
+    \brief Sensor Board Power Modes. ON in this case
  */
 /*! \def SENS_OFF
-    \brief Sensor Board Power Modes. OFF in this case    
+    \brief Sensor Board Power Modes. OFF in this case
  */
 #define	SENS_ON		0
 #define	SENS_OFF	1
 
 
 /*! \def SENS_3V3
-    \brief Sensor Board Types. 3V3 switch in this case    
+    \brief Sensor Board Types. 3V3 switch in this case
  */
 /*! \def SENS_5V
-    \brief Sensor Board Types. 5V switch in this case    
+    \brief Sensor Board Types. 5V switch in this case
  */
 #define	SENS_3V3	0
 #define	SENS_5V		1
 
 
 /*! \def boolean
-    \brief boolean is defined as a uint8_t  
+    \brief boolean is defined as a uint8_t
  */
 /*! \def byte
     \brief byte is defined as a uint8_t
@@ -441,10 +442,10 @@ static const uint16_t	REG_AMBIENT			=	16384;		// bit 14
 
 
 /*! \def ENABLED
-    \brief Constant to define a enabled state  
+    \brief Constant to define a enabled state
  */
 /*! \def DISABLED
-    \brief Constant to define a disabled state    
+    \brief Constant to define a disabled state
  */
 #define	DISABLED	0
 #define	ENABLED		1
@@ -469,7 +470,7 @@ static const uint16_t	REG_AMBIENT			=	16384;		// bit 14
 #define SOCKET_9		9
 #define SOCKET_10		10
 
-// Define the Plug&Sense! 
+// Define the Plug&Sense!
 #define SOCKET_A		101
 #define SOCKET_B		102
 #define SOCKET_C		103

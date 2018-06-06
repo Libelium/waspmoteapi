@@ -1,31 +1,31 @@
 /*! \file WaspSPI.h
     \brief Library for managing the SPI bus
-    
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.0
+
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Alberto Bielsa, David Cuartielles
 
 */
-  
-  
+
+
 /*! \def WaspSPI_h
-    \brief The library flag    
+    \brief The library flag
  */
 #ifndef WaspSPI_h
 #define WaspSPI_h
@@ -33,8 +33,8 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
- 
- 
+
+
 
 /******************************************************************************
  * Definitions & Declarations
@@ -70,8 +70,8 @@
 #define SPI_CLOCK_DIV32 	0x06
 
 
-/*! SPI DATA MODES: There are four combinations of SCK phase and polarity with 
-respect to serial data, which are determined by control bits CPHA and CPOL. Data 
+/*! SPI DATA MODES: There are four combinations of SCK phase and polarity with
+respect to serial data, which are determined by control bits CPHA and CPOL. Data
 bits are shifted out and latched in on opposite edges of the SCK signal,
 ensuring sufficient time for data signals to stabilize.
 */
@@ -119,6 +119,9 @@ ensuring sufficient time for data signals to stabilize.
 /*! \def SMART_WATER_IONS
     \brief select Smart Water Ions Sensor Board on SPI bus
  */
+ /*! \def SMART_AGR_XTR
+     \brief select Smart AGR XTR Sensor Board on SPI bus
+  */
 /*! \def ALL_DESELECTED
     \brief deselect all devides on SPI bus
  */
@@ -129,13 +132,14 @@ enum spi_selection {
 	DUST_SENSOR_SELECT,
 	SMART_WATER_SELECT,
 	SMART_IONS_SELECT,
+  SMART_AGR_XTR_SELECT,
 	ALL_DESELECTED,
 };
 
 /******************************************************************************
  * Class
  ******************************************************************************/
- 
+
 
 class WaspSPI
 {
@@ -149,10 +153,11 @@ public:
 		isDustSensor = false;
 		isSmartWater = false;
 		isSmartWaterIons = false;
+    isSmartAgrXtr = false;
 	};
- 
+
 	static byte transfer(uint8_t _data);
-	void transfer(const uint8_t* buf , size_t n); 
+	void transfer(const uint8_t* buf , size_t n);
 	// SPI Configuration methods
 
 	inline static void attachInterrupt();
@@ -167,7 +172,7 @@ public:
 	static void setClockDivider(uint8_t);
 	uint8_t receive();
 	uint8_t receive(uint8_t* buf, size_t n);
-	
+
 	//! It selects the slave on SPI bus to use
 	/*! Possibilities:
 		SD_SELECT
@@ -179,55 +184,61 @@ public:
 	\return void
 	*/
 	void setSPISlave(uint8_t SELECTION);
-	
+
 	void secureBegin();
 	void secureEnd();
-	
+
 	//! Variable : indicates when SOCKET0 module is being powered on
   	/*! true: ON; false: OFF
    	*/
-	boolean 	isSocket0;	
-	
+	boolean 	isSocket0;
+
 	//! Variable : indicates when SD module is being powered on
   	/*! true: ON; false: OFF
    	*/
 	boolean 	isSD;
-	
+
 	//! Variable : indicates when Dust Sensor is being powered on
   	/*! true: ON; false: OFF
    	*/
 	boolean		isDustSensor;
-	
+
 	//! Variable : indicates when Smart Water is being powered on
   	/*! true: ON; false: OFF
    	*/
 	boolean		isSmartWater;
-	
+
 	//! Variable : indicates when Smart Water Ions is being powered on
   	/*! true: ON; false: OFF
    	*/
 	boolean		isSmartWaterIons;
 
-	
+  //! Variable : indicates when Smart Agriculture Xtreme is being powered on
+  	/*! true: ON; false: OFF
+   	*/
+	boolean		isSmartAgrXtr;
+
+
+
 };
 
 extern WaspSPI SPI;
 
-/* 
+/*
  * attachInterrupt
  * When the SPE bit is written to one, the SPI is enabled.
  */
-void WaspSPI::attachInterrupt() 
+void WaspSPI::attachInterrupt()
 {
   SPCR |= _BV(SPIE);
 }
 
 
-/* 
- * detachInterrupt 
+/*
+ * detachInterrupt
  * Disable the SPI operations
  */
-void WaspSPI::detachInterrupt() 
+void WaspSPI::detachInterrupt()
 {
   SPCR &= ~_BV(SPIE);
 }

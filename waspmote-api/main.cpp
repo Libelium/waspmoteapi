@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascon
  *  Implementation:	Yuri Carmona
  */
@@ -47,11 +47,26 @@ int main(void)
 		digitalWrite(RTC_SLEEP, HIGH);
 	}
 	
+	// power on the 3V3 to search BME devices directly connected to SDA and SCL
+	PWR.setSensorPower(SENS_3V3, SENS_ON);
+	delay(100);
+	
+	// scan for i2c sensors
+	if (I2C.scanSlaves())
+	{
+		PWR.setSensorPower(SENS_3V3, SENS_ON);
+	}
+	else
+	{
+		PWR.setSensorPower(SENS_3V3, SENS_OFF);		
+	}
+	
 	uint8_t rtc_hibernate_triggered = digitalRead(RTC_INT_PIN_MON);
 	
 	// proceed depending on the bootloader version
 	if (_boot_version >= 'G')
 	{
+		RTC.ON();
 		RTC.ON();
 		RTC.disableSQW();
 		RTC.OFF();

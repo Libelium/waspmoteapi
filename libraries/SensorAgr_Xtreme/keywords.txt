@@ -1,0 +1,43 @@
+#AgrXtr_Keywords#
+
+ON	KEYWORD2
+OFF	KEYWORD2
+
+WaspSensorAgrXtr	KEYWORD2
+AgricultureXtr		KEYWORD1
+Decagon_5TE         KEYWORD1    
+Decagon_5TM         KEYWORD1
+Decagon_GS3         KEYWORD1
+Decagon_VP4         KEYWORD1
+Decagon_MPS6        KEYWORD1
+Apogee_SO411        KEYWORD1
+Apogee_SI411        KEYWORD1
+Apogee_SF421        KEYWORD1
+leafWetness         KEYWORD1
+dendrometer         KEYWORD2
+weatherStation      KEYWORD1
+bme                 KEYWORD1
+ultrasound          KEYWORD1
+luxes               KEYWORD1
+
+set3v3  KEYWORD2
+set12v  KEYWORD2
+isSensor KEYWORD2
+startSensor KEYWORD2
+setMux KEYWORD2
+
+AGR_XTR_SOCKET_A	LITERAL1
+AGR_XTR_SOCKET_B	LITERAL1
+AGR_XTR_SOCKET_C	LITERAL1
+AGR_XTR_SOCKET_D	LITERAL1
+AGR_XTR_SOCKET_E	LITERAL1
+AGR_XTR_SOCKET_F	LITERAL1
+
+_5TE                LITERAL1
+GS3                 LITERAL1
+VP4                 LITERAL1
+MPS6                LITERAL1
+SO411               LITERAL1
+SI411               LITERAL1
+
+

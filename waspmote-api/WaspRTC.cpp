@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  * 
  * 	Functions getEpochTime(), breakTimeAbsolute(), breakTimeOffset() and 
@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -146,10 +146,7 @@ void WaspRTC::OFF(void)
  */
 void WaspRTC::close()
 {
-	if (Wire.isON && !ACC.isON) 
-	{
-		PWR.closeI2C();
-	}
+	I2C.close();
 }
 
 
@@ -275,77 +272,62 @@ char* WaspRTC::getTimestamp()
  * It stores in corresponding variables the read values up to alarm2 values
  * and stores then in 'registersRTC' array too.
  */
-void WaspRTC::readRTC(uint8_t endAddress) 
+int WaspRTC::readRTC(uint8_t endAddress) 
 {
 	uint16_t timecount = 0;
 	uint16_t timeout = 0;	
+	uint8_t data[endAddress];
+	int error;
 	
 	// init I2C bus
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+	I2C.begin();
 	
 	// ADDRESSING FROM MEMORY POSITION ZERO
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
 	// transmit to device #104 (0x68)
-	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC);
-  
-	Wire.send(RTC_START_ADDRESS);  // start from address zero
-	Wire.endTransmission();
-  
-	// START READING
-	Wire.requestFrom(I2C_ADDRESS_WASP_RTC, RTC_DATA_SIZE);  
-
-	// slave may send less than requested
-	while((timecount <= endAddress) && (timeout < 10))   
-	{ 
-		if (Wire.available())
+	error = I2C.read(I2C_ADDRESS_WASP_RTC, RTC_START_ADDRESS, data, endAddress);
+	
+	if (error == TWI_SUCCESS)
+	{
+		for (int i = 0; i < endAddress; i++)
 		{
-			uint8_t c = Wire.receive(); // receive a byte as character
-			registersRTC[timecount] = c;
-			switch (timecount)
+			registersRTC[i] = data[i];
+			switch (i)
 			{
-				case 0:	second = BCD2byte(c>>4, c&B00001111);
+				case 0:	second = BCD2byte(data[i]>>4, data[i]&B00001111);
 						break;
-				case 1:	minute = BCD2byte(c>>4, c&B00001111);
+				case 1:	minute = BCD2byte(data[i]>>4, data[i]&B00001111);
 						break;
-				case 2:	hour = BCD2byte(c>>4, c&B00001111);
+				case 2:	hour = BCD2byte(data[i]>>4, data[i]&B00001111);
 						break;
-				case 3:	day = c;
+				case 3:	day = data[i];
 						break;
-				case 4:	date = BCD2byte(c>>4, c&B00001111);
+				case 4:	date = BCD2byte(data[i]>>4, data[i]&B00001111);
 						break;
-				case 5:	month = BCD2byte(c>>4, c&B00001111);
+				case 5:	month = BCD2byte(data[i]>>4, data[i]&B00001111);
 						break;
-				case 6:	year = BCD2byte(c>>4, c&B00001111);
+				case 6:	year = BCD2byte(data[i]>>4, data[i]&B00001111);
 						break;
-				case 7:	second_alarm1 = BCD2byte((c>>4)&B00000111, c&B00001111);
+				case 7:	second_alarm1 = BCD2byte((data[i]>>4)&B00000111, data[i]&B00001111);
 						break;
-				case 8:	minute_alarm1 = BCD2byte((c>>4)&B00000111, c&B00001111);
+				case 8:	minute_alarm1 = BCD2byte((data[i]>>4)&B00000111, data[i]&B00001111);
 						break;
-				case 9:	hour_alarm1 = BCD2byte((c>>4)&B00000011, c&B00001111);
+				case 9:	hour_alarm1 = BCD2byte((data[i]>>4)&B00000011, data[i]&B00001111);
 						break;
-				case 10:day_alarm1 = BCD2byte((c>>4)&B00000011, c&B00001111);
+				case 10:day_alarm1 = BCD2byte((data[i]>>4)&B00000011, data[i]&B00001111);
 						break;
-				case 11:minute_alarm2 = BCD2byte((c>>4)&B00000111, c&B00001111);
+				case 11:minute_alarm2 = BCD2byte((data[i]>>4)&B00000111, data[i]&B00001111);
 						break;
-				case 12:hour_alarm2 = BCD2byte((c>>4)&B00000011, c&B00001111);
+				case 12:hour_alarm2 = BCD2byte((data[i]>>4)&B00000011, data[i]&B00001111);
 						break;
-				case 13:day_alarm2 = BCD2byte((c>>4)&B00000011, c&B00001111);
+				case 13:day_alarm2 = BCD2byte((data[i]>>4)&B00000011, data[i]&B00001111);
 						break;
 			}
-			timecount++;
-		}
-		// No data on I2C bus
-		else
-		{
-			timeout++;
-		}
+		}	
 	}
 	
-	timecount = 0;
+	return error;
 }
 
 
@@ -355,35 +337,24 @@ void WaspRTC::readRTC(uint8_t endAddress)
  * It loads the variables into 'registersRTC'
  * array and then, this array is sent to the RTC
  */
-void WaspRTC::writeRTC() 
+int WaspRTC::writeRTC() 
 {
-	int timecount = 0;		
+	int error = 0;		
 	
 	// init I2C bus
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+	I2C.begin();	
 	
-	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
-	// the address specified in the datasheet is 208 (0xD0)
-	// but i2c adressing uses the high 7 bits so it's 104
-	Wire.send(RTC_START_ADDRESS);  // start from address zero
-
 	registersRTC[RTC_SECONDS_ADDRESS] = byte2BCD(second);
 	registersRTC[RTC_MINUTES_ADDRESS] = byte2BCD(minute);
 	registersRTC[RTC_HOURS_ADDRESS] = byte2BCD(hour);
 	registersRTC[RTC_DAYS_ADDRESS] = day;
 	registersRTC[RTC_DATE_ADDRESS] = byte2BCD(date);
 	registersRTC[RTC_MONTH_ADDRESS] = byte2BCD(month);
-	registersRTC[RTC_YEAR_ADDRESS] = byte2BCD(year);
-
-	for(timecount = 0; timecount <= 0x06; timecount++)
-	{
-		Wire.send(registersRTC[timecount]);
-	}
-
-	Wire.endTransmission();
+	registersRTC[RTC_YEAR_ADDRESS] = byte2BCD(year);	
+	
+	error = I2C.write(I2C_ADDRESS_WASP_RTC, RTC_START_ADDRESS, registersRTC, 7);
+	
+	return error;
 }
 
 
@@ -393,32 +364,21 @@ void WaspRTC::writeRTC()
  * It loads these values to 'registersRTC' array
  * and then is sent to the RTC
  */
-void WaspRTC::writeRTCalarm1() 
+int WaspRTC::writeRTCalarm1() 
 {
-	byte timecount = 0;	
+	int error = 0;	
 	
 	// init I2C bus
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+	I2C.begin();		
 	
-	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
-	// the address specified in the datasheet is 208 (0xD0)
-	// but i2c adressing uses the high 7 bits so it's 104
-	Wire.send(RTC_ALM1_START_ADDRESS);
-
 	registersRTC[RTC_ALM1_SECONDS_ADDRESS] 	= 0x7F & byte2BCD(second_alarm1);
 	registersRTC[RTC_ALM1_MINUTES_ADDRESS] 	= 0x7F & byte2BCD(minute_alarm1);
 	registersRTC[RTC_ALM1_HOURS_ADDRESS] 	= 0x7F & byte2BCD(hour_alarm1);
 	registersRTC[RTC_ALM1_DAYS_ADDRESS] 	= 0x3F & byte2BCD(day_alarm1);
+	
+	error = I2C.write(I2C_ADDRESS_WASP_RTC, RTC_ALM1_START_ADDRESS, &registersRTC[RTC_ALM1_SECONDS_ADDRESS], 4);
 
-	for(timecount = 7; timecount <= 0x0A; timecount++)
-	{
-		Wire.send(registersRTC[timecount]);
-	}
-
-	Wire.endTransmission();
+	return error;
 }
 
 
@@ -428,32 +388,20 @@ void WaspRTC::writeRTCalarm1()
  * It loads these values to 'registersRTC' array
  * and then is sent to the RTC
  */
-void WaspRTC::writeRTCalarm2() 
+int WaspRTC::writeRTCalarm2() 
 {
-	byte timecount = 0;	
+	int error = 0;	
 	
 	// init I2C bus
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+	I2C.begin();
 	
-	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x4A)
-	// the address specified in the datasheet is 208 (0xD0)
-	// but i2c adressing uses the high 7 bits so it's 104
-	Wire.send(RTC_ALM2_START_ADDRESS);
-
 	registersRTC[RTC_ALM2_MINUTES_ADDRESS] 	= 0x7F & byte2BCD(minute_alarm2);
 	registersRTC[RTC_ALM2_HOURS_ADDRESS] 	= 0x7F & byte2BCD(hour_alarm2);
 	registersRTC[RTC_ALM2_DAYS_ADDRESS] 	= 0x3F & byte2BCD(day_alarm2);
+	
+	error = I2C.write(I2C_ADDRESS_WASP_RTC, RTC_ALM2_START_ADDRESS, &registersRTC[RTC_ALM2_MINUTES_ADDRESS], 4);
 
-
-	for(timecount = 0X0B; timecount <= 0x0D; timecount++)
-	{
-		Wire.send(registersRTC[timecount]);
-	}
-
-	Wire.endTransmission();
+	return error;
 }
 
 
@@ -722,23 +670,16 @@ void WaspRTC::configureAlarmMode (uint8_t alarmNum, uint8_t alarmMode)
  *
  * - FIXME: modify it to write to EEPROM
  */
-void WaspRTC::writeRTCregister(uint8_t theAddress) 
+int WaspRTC::writeRTCregister(uint8_t theAddress) 
 {	
-	// init I2C bus
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+	int error = 0; 
 	
-	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
-	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x68)
-	// the address specified in the datasheet is 208 (0xD0)
-	// but i2c adressing uses the high 7 bits so it's 104    
-	Wire.send(theAddress);  // start from address theAddress
-
-	// START SENDING
-	Wire.send(registersRTC[theAddress]);
-	Wire.endTransmission();
+	// init I2C bus
+	I2C.begin();
+	
+	error = I2C.write(I2C_ADDRESS_WASP_RTC, theAddress, registersRTC[theAddress]);
+	
+	return error;
 }
 
 
@@ -749,33 +690,16 @@ void WaspRTC::writeRTCregister(uint8_t theAddress)
  *
  * - FIXME: modify it to read from EEPROM
  */
-void WaspRTC::readRTCregister(uint8_t theAddress) 
+int WaspRTC::readRTCregister(uint8_t theAddress) 
 {
-	uint16_t timeout = 0;
+	int error = 0;
 		
 	// init I2C bus
-	if (!Wire.isON)
-	{
-		Wire.begin();
-	}
+	I2C.begin();
 	
-	// ADDRESSING FROM MEMORY POSITION RECEIVED AS PARAMETER
-	Wire.beginTransmission(I2C_ADDRESS_WASP_RTC); // transmit to device #104 (0x68)
-	// the address specified in the datasheet is 208 (0xD0)
-	// but i2c adressing uses the high 7 bits so it's 104    
-	Wire.send(theAddress);  // start from address theAddress
-	Wire.endTransmission();
-  
-	// START READING
-	Wire.requestFrom(I2C_ADDRESS_WASP_RTC, 0x01); // transmit to device #104 (0x68)
-	// the address specified in the datasheet is 208 (0xD0)
-	// but i2c adressing uses the high 7 bits so it's 104    
-	while(!Wire.available() && (timeout < 10))
-	{
-		timeout++;
-	}
-	registersRTC[theAddress] = Wire.receive();
-	Wire.endTransmission();
+	error = I2C.read(I2C_ADDRESS_WASP_RTC, theAddress, &registersRTC[theAddress], 1);
+	
+	return error;
 }
 
 

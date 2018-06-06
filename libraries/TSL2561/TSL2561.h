@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Alejandro Gállego
 
@@ -64,19 +64,19 @@
 
 
 /// Register address
-#define TSL2561_CONTROL_REG				0x00
-#define TSL2561_TIMING_REG				0x01
-#define TSL2561_THRESHHOLDL_LOW_REG		0x02
-#define TSL2561_THRESHHOLDL_HIGH_REG	0x03
-#define TSL2561_THRESHHOLDH_LOW_REG		0x04
-#define TSL2561_THRESHHOLDH_HIGH_REG	0x05
-#define TSL2561_INTERRUPT_REG			0x06
-#define TSL2561_CRC_REG					0x08
-#define TSL2561_CHIP_ID_REG				0x0A
-#define TSL2561_CHAN0_LOW_REG			0x0C
-#define TSL2561_CHAN0_HIGH_REG			0x0D
-#define TSL2561_CHAN1_LOW_REG			0x0E
-#define TSL2561_CHAN1_HIGH_REG			0x0F
+#define TSL2561_CONTROL_REG				(uint8_t)0x00
+#define TSL2561_TIMING_REG				(uint8_t)0x01
+#define TSL2561_THRESHHOLDL_LOW_REG		(uint8_t)0x02
+#define TSL2561_THRESHHOLDL_HIGH_REG	(uint8_t)0x03
+#define TSL2561_THRESHHOLDH_LOW_REG		(uint8_t)0x04
+#define TSL2561_THRESHHOLDH_HIGH_REG	(uint8_t)0x05
+#define TSL2561_INTERRUPT_REG			(uint8_t)0x06
+#define TSL2561_CRC_REG					(uint8_t)0x08
+#define TSL2561_CHIP_ID_REG				(uint8_t)0x0A
+#define TSL2561_CHAN0_LOW_REG			(uint8_t)0x0C
+#define TSL2561_CHAN0_HIGH_REG			(uint8_t)0x0D
+#define TSL2561_CHAN1_LOW_REG			(uint8_t)0x0E
+#define TSL2561_CHAN1_HIGH_REG			(uint8_t)0x0F
 
 /// ID Register
 #define TSL2561_CHIP_ID_REG_CHIP_ID		0x0A

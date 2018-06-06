@@ -21,7 +21,7 @@
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>
   Modified for Waspmote by Libelium, 2018
   
-  Version:	3.3
+  Version:	3.4
   
 */
 
@@ -276,10 +276,10 @@ class ModbusMaster
 		uint16_t _u16WriteAddress;                                   ///< slave register to which to write
 		uint16_t _u16WriteQty;                                       ///< quantity of words to write
 		uint16_t _u16TransmitBuffer[ku8MaxBufferSize];               ///< buffer containing data to transmit to Modbus slave; set via SetTransmitBuffer()
-		uint16_t* txBuffer; // from Wire.h -- need to clean this up Rx
+		uint16_t* txBuffer; 
 		uint8_t _u8TransmitBufferIndex;
 		uint16_t u16TransmitBufferLength;
-		uint16_t* rxBuffer; // from Wire.h -- need to clean this up Rx
+		uint16_t* rxBuffer; 
 		uint8_t _u8ResponseBufferIndex;
 		uint8_t _u8ResponseBufferLength;
 		
