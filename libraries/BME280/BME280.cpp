@@ -270,8 +270,7 @@ void BME280::readCalibration()
 	I2C.read( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_H4_MSB_REG, buffer, 3);
 	dig_H4 = (int16_t(buffer[0]) << 4) + (buffer[1] & 0x0F);
 
-	dig_H5 = (int16_t(buffer[1] & 0xF0) << 4) + buffer[2];
-	dig_H5 &= 0x0FFF;
+	dig_H5 = (int16_t(buffer[2]) << 4) + (buffer[1] >> 4);
 
 	// dig_H6
 	I2C.read( I2C_ADDRESS_GASPRO_BME280, BME280_DIG_H6_REG,  buffer, 1);
