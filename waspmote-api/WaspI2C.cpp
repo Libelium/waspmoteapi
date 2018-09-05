@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascon
     Implementation:	Yuri Carmona, Javier Siscart, Ahmad Saad, Victor Boria
 */
@@ -63,36 +63,36 @@ void WaspI2C::begin()
  */
 void WaspI2C::close()
 {	
-	cli();
+	//~ cli();
 	
-	// de-activate internal pull-up resistors: SDA and SCL pins set to '0'
-	cbi(PORTD, 0); 
-	cbi(PORTD, 1);	
+	//~ // de-activate internal pull-up resistors: SDA and SCL pins set to '0'
+	//~ cbi(PORTD, 0); 
+	//~ cbi(PORTD, 1);	
 	
-	// set pre-scaler bits to 64 prescaler value
-	sbi(TWSR, TWPS0);
-	sbi(TWSR, TWPS1);
+	//~ // set pre-scaler bits to 64 prescaler value
+	//~ sbi(TWSR, TWPS0);
+	//~ sbi(TWSR, TWPS1);
 	
-	// disable twi module, acks, and twi interrupt
-	sbi(TWCR,TWINT);
-	sbi(TWCR,TWSTO);
-	cbi(TWCR,TWEA);
-	cbi(TWCR,TWSTA);
-	cbi(TWCR,TWWC);
-	// switch off TWI depending on wether a sensor board is plugged or not
-	if (WaspRegisterSensor & REG_PROTOTYPING)
-	{
-		cbi(TWCR,TWEN);
-	}
-	else
-	{
-		sbi(TWCR,TWEN);
-	}
-	cbi(TWCR,TWIE);
-	sbi(PRR0,PRTWI);
+	//~ // disable twi module, acks, and twi interrupt
+	//~ sbi(TWCR,TWINT);
+	//~ sbi(TWCR,TWSTO);
+	//~ cbi(TWCR,TWEA);
+	//~ cbi(TWCR,TWSTA);
+	//~ cbi(TWCR,TWWC);
+	//~ // switch off TWI depending on wether a sensor board is plugged or not
+	//~ if (WaspRegisterSensor & REG_PROTOTYPING)
+	//~ {
+		//~ cbi(TWCR,TWEN);
+	//~ }
+	//~ else
+	//~ {
+		//~ sbi(TWCR,TWEN);
+	//~ }
+	//~ cbi(TWCR,TWIE);
+	//~ sbi(PRR0,PRTWI);
 	
 	
-	sei();	
+	//~ sei();	
 }
 
 

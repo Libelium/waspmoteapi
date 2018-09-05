@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.6
+ *  Version:		3.7
  *  Design:			David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -6248,7 +6248,7 @@ uint8_t WaspLoRaWAN::setBatteryLevel()
 	uint16_t battery = PWR.getBatteryLevel();
 	
 	battery = battery * 254/100;
-	if (battery == 0) battery == 1;
+	if (battery == 0) battery = 1;
 	
 	// create "mac set bat" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[94])), battery);
@@ -6290,8 +6290,10 @@ uint8_t WaspLoRaWAN::setBatteryLevel(uint8_t bat)
 	
 	uint16_t battery = bat;
 	
+	if (battery > 100) battery = 100;
+	
 	battery = battery * 254/100;
-	if (battery == 0) battery == 1;
+	if (battery == 0) battery = 1;
 	
 	// create "mac set bat" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[94])), battery);

@@ -1,7 +1,7 @@
 /*! \file TurbiditySensor.cpp
 	\brief Library for managing the Smart Water Turbidity Sensor
 
-	Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:			4.0
+	Version:			4.1
 	Design:				David Gascón
 	Implementation:		Ahmad Saad & Luis Miguel Marti
 */
@@ -91,8 +91,6 @@ uint8_t turbidityClass::ON()
 		// The sensor uses 9600 bps speed communication
 		sensor.begin(9600, 1);
 
-		// Two stop bits configuration
-		sbi(UCSR1C, USBS1);
 		// set Auxiliar1 socket
 		Utils.setMuxAux1();
 

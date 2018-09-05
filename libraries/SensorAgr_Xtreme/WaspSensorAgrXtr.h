@@ -1,25 +1,25 @@
 /*! \file WaspSensorAgrXtr.h
-    \brief Library for managing the Smart Agriculture Extreme sensor board
+	\brief Library for managing the Smart Agriculture Extreme sensor board
 
-    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
-    http://www.libelium.com
+	Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+	http://www.libelium.com
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 2.1 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU Lesser General Public License as published by
+	the Free Software Foundation, either version 2.1 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
+	GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU Lesser General Public License
+	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.0
-    Design:			David Gascón
-    Implementation: Javier Siscart, Víctor Boria
+	Version:		3.1
+	Design:			David Gascón
+	Implementation: Javier Siscart, Víctor Boria
 
  */
 
@@ -67,13 +67,13 @@
 #define MCP_GP1				0			// Unconneted MCP GPIO
 
 
-// PIN  Expander definitions
+// PIN Expander definitions
 #define EXPAN_ISO_EN 		17 			// ANALOG4 pin used as Digital
 #define I2C_SOCKETA_EN		2			// DIGITAL1
 #define I2C_SOCKETD_EN		14			// ANALOG1
 #define SPI_ISO_EN			3			// DIGITAL0
 
-#define SW_12V				8  			// DIGITAL2
+#define SW_12V				8			// DIGITAL2
 #define _12V_ON 			1
 #define _12V_OFF 			0
 
@@ -104,12 +104,12 @@
 
 
 // ADC channel definition. 
-#define ADC_CH0				0		// 4-20 mA (B)
-#define ADC_CH1				1		// 4-20 mA (F)
-#define ADC_CH2				2		// RAD     (F)
-#define ADC_CH3				3		// LEAF    (B)
-#define ADC_CH4				4		// RAD     (E)
-#define ADC_CH5				5		// DENDRO  (C)
+#define ADC_CH0				0		// 4-20 mA	(B)
+#define ADC_CH1				1		// 4-20 mA	(F)
+#define ADC_CH2				2		// RAD		(F)
+#define ADC_CH3				3		// LEAF		(B)
+#define ADC_CH4				4		// RAD		(E)
+#define ADC_CH5				5		// DENDRO	(C)
 
 // Dendrometer types supported (value = range in mm)
 #define DENDRO_DD			11
@@ -117,7 +117,31 @@
 #define DENDRO_DC3			25
 
 
+// Weather station models
+#define WS_GMX100			1
+#define WS_GMX101			2
+#define WS_GMX200			3
+#define WS_GMX240			4
+#define WS_GMX300			5
+#define WS_GMX301			6
+#define WS_GMX400			7
+#define WS_GMX500			8
+#define WS_GMX501			9
+#define WS_GMX531			10
+#define WS_GMX541			11
+#define WS_GMX550			12
+#define WS_GMX551			13
+#define WS_GMX600			14
 
+#define ENABLED		1
+#define DISABLED 	0
+
+
+// EEPROM constants
+const uint8_t manufacturer_code_address = 0xFA;
+const uint8_t device_code_address = 0xFB;
+const uint8_t serial_number_address = 0xFC;
+const uint8_t agr_xtr_eeprom_address = 0x51;
 /*******************************************************************************
  * Structs
  ******************************************************************************/
@@ -183,10 +207,42 @@ struct weatherStationVector
 	char timestamp[22];
 	
 	//! Variable: stores measured supply voltage in a string type
-	char supply_voltage[5];
+	char supply_voltage[6];
 	
 	//! Variable: stores measured status in a string type
 	char status[5];
+	
+	
+	char solar_radiation[5];
+	char sunshine_hours[6];
+	char sunrise_time[6];
+	char solar_noon_time[6];
+	char sunset_time[6];
+	char position_of_sun[8];
+	char twilight_civil[6];
+	char twilight_nautical[6];
+	char twilight_astronomical[6];
+	char pressure[7];
+	char pressure_sea_level[7];
+	char pressure_station[7];
+	uint16_t relative_humidity;
+	char temperature[7];
+	char dewpoint[7];
+	char absolute_humidity[6];
+	char air_density[4];
+	char wet_build_temperature[7];
+	char wind_chill[5];
+	char heat_index[5];
+	
+	char gps_corrected_speed[7];
+	char gps_average_corrected_speed[7];
+	char gps_corrected_gust_speed[7];
+	uint16_t gps_corrected_gust_direction;
+	char gps_location[32];
+	uint16_t gps_heading;
+	char gps_speed[7];
+	char gps_status[5];
+
 };
 
 /*!
@@ -355,6 +411,10 @@ class WaspSensorAgrXtr
 	 	//! Constructor
 	 	WaspSensorAgrXtr();
 	 	
+	 	/* 
+		* Bit:		| 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+		* Socket: 	| A | B | C | D | E | F | - | - |
+		*/
 	 	uint8_t socketRegister;					//variable to store information about sockets used by sensors
 	 	uint8_t _12vStateRegister;				//variable to store information about sockets with 12v enabled
 	 	bool redefinedSocket;					//flag to detect redefinitions of socket by more than one sensor
@@ -364,7 +424,13 @@ class WaspSensorAgrXtr
 		bool luxesIsolatorEnabledSocketD;		//flag to detect two bme sensores connected at the same time to i2c
 		bool ultrasoundIsolatorEnabledSocketA;	//flag to detect two bme sensores connected at the same time to i2c
 		bool ultrasoundIsolatorEnabledSocketD;	//flag to detect two bme sensores connected at the same time to i2c
+		char sensorSerialNumber[14];			//SDI-12 sensor serial number variable
+		char sensorVersion[4];					//SDI-12 sensor version variable
+		uint8_t boardSerialNumber[4];			//Serial number in Smart Agriculture Xtreme board variable
 		
+		uint8_t readSerialNumber();
+		uint8_t writeEEPROM(uint8_t address, uint8_t value);
+		int8_t readEEPROM(uint8_t address);
  	private:
 	 
 	 	MCP23008 mcp;		// object to manage internal circuitry
@@ -374,15 +440,12 @@ class WaspSensorAgrXtr
 	 	WaspSDI12 sdi12;	// object to manage SDI12 communications
 	 	LTC ltc;			// object to manage ADC
 	 	
-		/* 
-		 * Bit:    | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-		 * Socket: | A | B | C | D | E | F | - | - |
-		 */
+
 
 	 	// variables to store information as bus address, model, etc.
 	 	char address;
 	 	char command[6];
-	 	char model[18];
+	 	char sensorModel[7];
 	 	char numberOfMeasures;
 	 	char timeToNextMeasure[4];
 		char measures[30];
@@ -394,6 +457,7 @@ class WaspSensorAgrXtr
 	 	void set3v3(uint8_t socket, uint8_t state);
 	 	void set12v(uint8_t state);
 	 	void setMux();
+	 	
 	 	
 	 	// SDI-12 functions
 	 	uint8_t isSensor(uint8_t sensorName);
@@ -646,8 +710,17 @@ class weatherStation: public WaspSensorAgrXtr
 
 		void ON();
 		void OFF();
-		uint8_t read();	
-
+		void GPS(uint8_t option);
+		uint8_t read();	 
+		uint8_t sendCommand(char* str);
+		
+		//Variable to store the station model
+		//0 -> Station not recognized
+		//1 -> GMX100
+		//2 -> GMX240
+		uint8_t stationModel = 0;
+		uint8_t gps = 0;
+		
 	private:
 
 		typedef WaspSensorAgrXtr super;
@@ -655,7 +728,7 @@ class weatherStation: public WaspSensorAgrXtr
 
 /*!
  * \class bme
- * \brief class inherited from WaspSensorAgrXtr to manage  BME280 sensor
+ * \brief class inherited from WaspSensorAgrXtr to manage BME280 sensor
  */
 class bme: public WaspSensorAgrXtr
 {
@@ -722,7 +795,7 @@ class _4_20mA: public WaspSensorAgrXtr
 
 		_4_20mA(uint8_t socket);	// Constructor
 		
-		//! Variable: stores measured  current in float type
+		//! Variable: stores measured current in float type
 		float current;
 
 		uint8_t ON();

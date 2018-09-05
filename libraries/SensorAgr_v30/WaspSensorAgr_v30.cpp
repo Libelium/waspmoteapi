@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.7
+ *  Version:		3.8
  *  Design:			David Gascón
  *  Implementation:	Carlos Bello
  */
@@ -291,7 +291,6 @@ void	WaspSensorAgr_v30::sleepAgr(const char* time2wake,
 		RTC.ON();
 		RTC.disableAlarm1();
 		RTC.clearAlarmFlag();
-		RTC.OFF();
 	}
 
 	// Keep sensor supply powered down if selected

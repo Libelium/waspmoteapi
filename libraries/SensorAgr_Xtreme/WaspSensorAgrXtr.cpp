@@ -1,25 +1,25 @@
-/*! \file WaspSensorAgrXtr.cpp
-    \brief Library for managing the Smart Agriculture Extreme sensor board
+/*!	\file WaspSensorAgrXtr.cpp
+	\brief Library for managing the Smart Agriculture Extreme sensor board
 
-    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
-    http://www.libelium.com
+	Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+	http://www.libelium.com
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 2.1 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU Lesser General Public License as published by
+	the Free Software Foundation, either version 2.1 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
+	GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU Lesser General Public License
+	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.0
-    Design:			David Gascón
-    Implementation: Javier Siscart, Víctor Boria
+	Version:		3.1
+	Design:			David Gascón
+	Implementation: Javier Siscart, Víctor Boria
 
  */
 
@@ -46,6 +46,27 @@ const char string_08[] PROGMEM = "sensor not detected";
 const char string_09[] PROGMEM = "invalid data";
 const char string_10[] PROGMEM = "socket (!): ";
 const char string_11[] PROGMEM = "WARNING - Not possible to turn ON two sensors at the same time:";
+const char string_12[] PROGMEM = "%c %s %s %c %s %s %s %s %s %s"; 								//GMX100 frame format
+const char string_13[] PROGMEM = "%c %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX101 frame format
+const char string_14[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX200 frame format
+const char string_15[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s"; //GMX240 frame format
+const char string_16[] PROGMEM = "%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX300 frame format
+const char string_17[] PROGMEM = "%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX301 frame format
+const char string_18[] PROGMEM = "%c %s %s %s %d %s %s %s %s %s %c %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX400 frame format
+const char string_19[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX500 frame format
+const char string_20[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX501 frame format
+const char string_21[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX531 GMX541 GMX551 frame format
+const char string_22[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX550 frame format
+const char string_23[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX600 frame format
+
+const char string_24[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX200 + GPS frame format
+const char string_25[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX240 + GPS frame format
+const char string_26[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX500 + GPS frame format
+const char string_27[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX501 + GPS frame format
+const char string_28[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX531 GMX541 GMX551 + GPS frame format
+const char string_29[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX550 + GPS frame format
+const char string_30[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX600 + GPS frame format
+
 
 const char* const table_agrxtr[] PROGMEM =
 {
@@ -60,7 +81,26 @@ const char* const table_agrxtr[] PROGMEM =
 	string_08,
 	string_09,
 	string_10,
-	string_11
+	string_11,
+	string_12,
+	string_13,
+	string_14,
+	string_15,
+	string_16,
+	string_17,
+	string_18,
+	string_19,
+	string_20,
+	string_21,
+	string_22,
+	string_23,
+	string_24,
+	string_25,
+	string_26,
+	string_27,
+	string_28,
+	string_29,
+	string_30
 
 };
 
@@ -71,7 +111,7 @@ WaspSensorAgrXtr::WaspSensorAgrXtr()
 	// init variables
 
 	// AGR_XTR MUX
-  	pinMode(MUX_EN, OUTPUT);	
+	pinMode(MUX_EN, OUTPUT);
 	digitalWrite(MUX_EN, LOW); 
 
 	// pin configuration
@@ -91,8 +131,8 @@ WaspSensorAgrXtr::WaspSensorAgrXtr()
 	digitalWrite(_3V3_SOCKETE, LOW);
 
 	// DC DC
-  	pinMode(SW_12V, OUTPUT);
-  	digitalWrite(SW_12V, LOW);
+	pinMode(SW_12V, OUTPUT);
+	digitalWrite(SW_12V, LOW);
 
 	// I2C isolators
 	pinMode(EXPAN_ISO_EN, OUTPUT);
@@ -108,9 +148,9 @@ WaspSensorAgrXtr::WaspSensorAgrXtr()
 	WaspRegisterSensor |= REG_AGR_XTR;
 	
 	// State registers
-	AgricultureXtr.socketRegister = 0;
-	AgricultureXtr._12vStateRegister = 0;
-	AgricultureXtr.redefinedSocket = 0;
+	//AgricultureXtr.socketRegister = 0;
+	//AgricultureXtr._12vStateRegister = 0;
+	//AgricultureXtr.redefinedSocket = 0;
 	
 	bmeIsolatorEnabledSocketA = 0;
 	bmeIsolatorEnabledSocketD = 0;
@@ -257,10 +297,10 @@ void WaspSensorAgrXtr::OFF()
  }
 
  /*!
-  * \brief Manages the 12v power supplies of Agriculture Xtreme board
-  * \param state desired state 
-  * \return void
-  */
+ * \brief Manages the 12v power supplies of Agriculture Xtreme board
+ * \param state desired state 
+ * \return void
+ */
 void WaspSensorAgrXtr::set12v(uint8_t state)
 {
 	// enable I2C in pin expansor enabling isolator
@@ -270,7 +310,7 @@ void WaspSensorAgrXtr::set12v(uint8_t state)
 	// enable DC-DC
 	digitalWrite(SW_12V, HIGH);
 
-	//  Pin expander modes
+	// Pin expander modes
 	mcp.pinMode(AGR_XTR_SOCKET_A, OUTPUT);
 	mcp.pinMode(AGR_XTR_SOCKET_B, OUTPUT);
 	mcp.pinMode(AGR_XTR_SOCKET_C, OUTPUT);
@@ -367,6 +407,148 @@ void WaspSensorAgrXtr::setMux()
 
 }
 
+/*!
+ * \brief Read the EEPROM memory serial number
+ * \param void
+ * \return 1 if OK, 0 otherwise.
+ */
+uint8_t WaspSensorAgrXtr::readSerialNumber()
+{
+	uint8_t manufacturer_code = 0;
+	uint8_t device_code = 0;
+	memset(boardSerialNumber, 0x00, sizeof(boardSerialNumber));
+	uint8_t flag3v3 = 0;
+
+	if ((WaspRegister & REG_3V3) == 0)
+	{
+		flag3v3 = 1;
+		PWR.setSensorPower(SENS_3V3, SENS_ON);
+	}
+	
+	// Enable EEPROM memory
+	pinMode(EXPAN_ISO_EN, OUTPUT);
+	digitalWrite(EXPAN_ISO_EN, HIGH);
+	delay(100);
+
+	I2C.begin();
+	if (I2C.scan(agr_xtr_eeprom_address) == 0)
+	{
+		// Reading manufacturer code (should be 0x29)
+		I2C.read(agr_xtr_eeprom_address, manufacturer_code_address, &manufacturer_code, 1);
+		
+		// Reading device code (should be 0x41)
+		I2C.read(agr_xtr_eeprom_address, device_code_address, &device_code, 1);
+		
+		if ((manufacturer_code == 0x29) && (device_code == 0x41))
+		{
+			I2C.read(agr_xtr_eeprom_address, serial_number_address, boardSerialNumber, 4);
+			
+			// Disable EEPROM memory
+			digitalWrite(EXPAN_ISO_EN, LOW);
+			if (flag3v3)
+			{
+				PWR.setSensorPower(SENS_3V3, SENS_OFF);
+			}
+			
+			return 1;
+			}
+	}
+	
+	// If here, there was an error while reading
+	// Disable EEPROM memory
+	digitalWrite(EXPAN_ISO_EN, LOW);
+	if (flag3v3)
+	{
+		PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	}
+	
+	return 0;
+}
+
+
+/*!
+ * \brief Write the I2C EEPROM
+ * \param void
+ * \return 0 if OK, otherwise error.
+ */
+uint8_t WaspSensorAgrXtr::writeEEPROM(uint8_t address, uint8_t value)
+{	
+	uint8_t flag3v3 = 0;
+	
+	// reserved addresses below 0x50
+	if( address >= 0x50 ) 
+	{		
+		if ((WaspRegister & REG_3V3) == 0)
+		{
+			flag3v3 = 1;
+			PWR.setSensorPower(SENS_3V3, SENS_ON);
+		}
+		
+		// Enable EEPROM memory
+		pinMode(EXPAN_ISO_EN, OUTPUT);
+		digitalWrite(EXPAN_ISO_EN, HIGH);
+		delay(100);
+		
+		I2C.begin();
+		if (I2C.scan(agr_xtr_eeprom_address) == 0)
+		{
+			int rv = I2C.write(agr_xtr_eeprom_address, address, value);
+			
+			digitalWrite(EXPAN_ISO_EN, LOW);
+			if (flag3v3){
+				PWR.setSensorPower(SENS_3V3, SENS_OFF);
+			}
+			return rv;
+		}
+	}
+	
+	digitalWrite(EXPAN_ISO_EN, LOW);
+	if (flag3v3){
+		PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	}
+	return 1;
+}
+
+/*!
+ * \brief Read the I2C EEPROM
+ * \param void
+ * \return data if OK, otherwise -1.
+ */
+int8_t WaspSensorAgrXtr::readEEPROM(uint8_t address)
+{	
+	uint8_t flag3v3 = 0;
+	
+	if ((WaspRegister & REG_3V3) == 0)
+	{
+		flag3v3 = 1;
+		PWR.setSensorPower(SENS_3V3, SENS_ON);
+	}
+	
+	// Enable EEPROM memory
+	pinMode(EXPAN_ISO_EN, OUTPUT);
+	digitalWrite(EXPAN_ISO_EN, HIGH);
+	delay(100);
+	
+	I2C.begin();
+	if (I2C.scan(agr_xtr_eeprom_address) == 0)
+	{
+		uint8_t rdata = 0;
+		I2C.read(agr_xtr_eeprom_address, address, &rdata, 1);
+		
+		digitalWrite(EXPAN_ISO_EN, LOW);
+		if (flag3v3){
+			PWR.setSensorPower(SENS_3V3, SENS_OFF);
+		}
+		return rdata;
+	}
+	
+	digitalWrite(EXPAN_ISO_EN, LOW);
+	if (flag3v3){
+		PWR.setSensorPower(SENS_3V3, SENS_OFF);
+	}
+	return -1;
+}
+
 //******************************************************************************
 // SDI-12 functions
 //******************************************************************************
@@ -380,9 +562,11 @@ void WaspSensorAgrXtr::setMux()
 uint8_t WaspSensorAgrXtr::isSensor(uint8_t sensorName)
 {
 	// clear variables
-	memset(model, 0x00, sizeof(model));
+	memset(sensorModel, 0x00, sizeof(sensorModel));
+	memset(sensorVersion, 0x00, sizeof(sensorVersion));
+	memset(AgricultureXtr.sensorSerialNumber, 0x00, sizeof(AgricultureXtr.sensorSerialNumber));
 	
-	// check if decagon present. Copy command from flash memory and send it.
+	// check if sensor is present. Copy command from flash memory and send it.
 	strcpy_P(command, (char*)pgm_read_word(&(table_agrxtr[5])));
 	sdi12.sendCommand(command, strlen(command));
 	
@@ -393,7 +577,6 @@ uint8_t WaspSensorAgrXtr::isSensor(uint8_t sensorName)
 	
 	/* parse answer
 	* SENSOR ADDRESS | SDI12 SUPPORT | VENDOR | MODEL | VERSION | SERIAL |
-	*      0                13         DECAGON   5TE      393
 	*/
 	if (sdi12.available() >= 20)
 	{
@@ -411,13 +594,34 @@ uint8_t WaspSensorAgrXtr::isSensor(uint8_t sensorName)
 		}
 
 		// sensor model
+		for(uint8_t i = 0;i < 6; i++)
+		{
+			sensorModel[i] = sdi12.read();
+		}
+		
+		// sensor version
 		for(uint8_t i = 0;i < 3; i++)
 		{
-			model[i] = sdi12.read();
+			AgricultureXtr.sensorVersion[i] = sdi12.read();
+		}
+
+		// sensor serial number
+		for(uint8_t i = 0;i < 13; i++)
+		{
+			char byte_buffer = sdi12.read();
+			//13 is carriage return, end of serial number
+			if (byte_buffer == 13) 
+			{	
+				break;
+			}
+			else
+			{
+				AgricultureXtr.sensorSerialNumber[i] = byte_buffer;
+			}
 		}
 	}
 	
-	char sensorNameStr[10]; 
+	char sensorNameStr[7]; 
 	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
 	
 	switch (sensorName)
@@ -435,23 +639,23 @@ uint8_t WaspSensorAgrXtr::isSensor(uint8_t sensorName)
 			break;
 			
 		case VP4:
-			strncpy(sensorNameStr, "VP-", 3);
+			strncpy(sensorNameStr, "VP-4", 3);
 			break;
 			
 		case MPS6:
-			strncpy(sensorNameStr, "MPS", 3);
+			strncpy(sensorNameStr, "MPS-6", 3);
 			break;
 			
 		case SO411:
-			strncpy(sensorNameStr, "SO-", 3);
+			strncpy(sensorNameStr, "SO-411", 3);
 			break;
 			
 		case SI411:
-			strncpy(sensorNameStr, "SI-", 3);
+			strncpy(sensorNameStr, "SI-411", 3);
 			break;
 			
 		case SF421:
-			strncpy(sensorNameStr, "SF-", 3);
+			strncpy(sensorNameStr, "SF-421", 3);
 			break;
 			
 		default:
@@ -459,13 +663,13 @@ uint8_t WaspSensorAgrXtr::isSensor(uint8_t sensorName)
 	}
 
 	//Compare if the Model field returned by the sensor is equal to sensorName
-	if(strncmp(model, sensorNameStr,strlen(sensorNameStr)) == 0)
+	if(strncmp(sensorModel, sensorNameStr,strlen(sensorNameStr)) == 0)
 	{
 		return 1;
 	}
 	else
 	{
-		if (model[0] == 0x00)
+		if (sensorModel[0] == 0x00)
 		{
 			#if DEBUG_AGR_XTR == 1
 				char message[20];
@@ -478,7 +682,7 @@ uint8_t WaspSensorAgrXtr::isSensor(uint8_t sensorName)
 		{
 			#if DEBUG_AGR_XTR == 1
 				PRINT_AGR_XTR(F("other sensor: "));
-				USB.println(model);
+				USB.println(sensorModel);
 			#endif
 		}
 
@@ -757,7 +961,7 @@ uint8_t Decagon_5TE::parse5TE()
 				break;
 
 			case 2:
-				electricalConductivity[b] =  measures[i];
+				electricalConductivity[b] = measures[i];
 				b++;
 				break;
 
@@ -1153,7 +1357,7 @@ uint8_t Decagon_GS3::parseGS3()
 				break;
 
 			case 3:
-				electricalConductivity[c] =  measures[i];
+				electricalConductivity[c] = measures[i];
 				c++;
 				break;
 
@@ -1364,12 +1568,12 @@ uint8_t Decagon_VP4::parseVP4()
 				break;
 
 			case 3: 
-				relativeHumidity[c] =  measures[i];
+				relativeHumidity[c] = measures[i];
 				c++;
 				break;
 
 			case 4:
-				atmosphericPressure[d] =  measures[i];
+				atmosphericPressure[d] = measures[i];
 				d++;
 				break;
 
@@ -2496,18 +2700,169 @@ void weatherStation::ON()
 		PRINTLN_AGR_XTR(message);
 	}
 
-	super::ON(REG_3V3);
-	set12v(_12V_ON);
-
-	//Enable RS-485 chip on (shared with 3v3 pin)
-	set3v3(_socket, _3V3_ON);
-
 	Utils.setMuxAux2();
 	beginSerial(19200, 1);
 	serialFlush(1);
 	
-	//neccessary delay after powering the sensor
-	delay(10);
+	super::ON(REG_3V3);
+	//Enable RS-485 chip on (shared with 3v3 pin)
+	set3v3(_socket, _3V3_ON);
+	set12v(_12V_ON);
+
+	const uint16_t BUFFER_SIZE = 300;
+	char buffer[BUFFER_SIZE];
+	memset(buffer, 0x00, sizeof(buffer));
+	bool exitWhile = 0;
+	uint16_t i = 0;
+	unsigned long previous = millis();
+	
+	//Capture buffer
+	while (((millis() - previous) < 10000) && exitWhile == 0)
+	{
+		if (serialAvailable(1) > 0)
+		{
+			//Avoid storing 0x00 in our buffer string
+			char buffer_temp = serialRead(1);
+			if (buffer_temp != 0x00)
+			{
+				buffer[i] = buffer_temp;
+				i++;
+			}
+			if(strstr(buffer, "<END OF STARTUP MESSAGE>") != NULL)
+			{
+				exitWhile = 1;
+			}
+			if (i == BUFFER_SIZE)
+			{
+				exitWhile = 1;
+			}
+		}
+
+		//avoid millis overflow problem after approximately 50 days
+		if ( millis() < previous ) previous = millis();
+	}
+	
+	#if DEBUG_AGR_XTR == 2
+	USB.print(F("WS RX:"));
+	USB.println(buffer);
+	#endif
+	
+	if(strstr(buffer, "GMX100") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX100 found"));
+		#endif
+		
+		stationModel = WS_GMX100;
+	}
+	else if(strstr(buffer, "GMX101") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX101 found"));
+		#endif
+		
+		stationModel = WS_GMX101;
+	}
+	else if(strstr(buffer, "GMX200") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX200 found"));
+		#endif
+		
+		stationModel = WS_GMX200;
+	}
+	else if(strstr(buffer, "GMX240") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX240 found"));
+		#endif
+		
+		stationModel = WS_GMX240;
+	}
+	else if(strstr(buffer, "GMX300") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX300 found"));
+		#endif
+		
+		stationModel = WS_GMX300;
+	}
+	else if(strstr(buffer, "GMX301") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX301 found"));
+		#endif
+		
+		stationModel = WS_GMX301;
+	}
+	else if(strstr(buffer, "GMX400") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX400 found"));
+		#endif
+		
+		stationModel = WS_GMX400;
+	}
+	else if(strstr(buffer, "GMX500") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX500 found"));
+		#endif
+		
+		stationModel = WS_GMX500;
+	}
+	else if(strstr(buffer, "GMX501") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX501 found"));
+		#endif
+		
+		stationModel = WS_GMX501;
+	}
+	else if(strstr(buffer, "GMX531") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX531 found"));
+		#endif
+		
+		stationModel = WS_GMX531;
+	}
+	else if(strstr(buffer, "GMX541") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX541 found"));
+		#endif
+		
+		stationModel = WS_GMX541;
+	}
+	else if(strstr(buffer, "GMX550") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX550 found"));
+		#endif
+		
+		stationModel = WS_GMX550;
+	}
+	else if(strstr(buffer, "GMX551") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX551 found"));
+		#endif
+		
+		stationModel = WS_GMX551;
+	}
+	else if(strstr(buffer, "GMX600") != NULL)
+	{
+		#if DEBUG_AGR_XTR == 2
+		PRINTLN_AGR_XTR(F("GMX600 found"));
+		#endif
+		
+		stationModel = WS_GMX600;
+	}
+	
+	
+	//neccessary delay for a first good read
+	delay(100);
 }
 
 /*!
@@ -2521,6 +2876,106 @@ void weatherStation::OFF()
 	super::OFF();
 }
 
+/*!
+ * \brief enable/disable gps
+ * \param gps option
+ * \return void
+ */
+void weatherStation::GPS(uint8_t option)
+{
+	gps = option;
+}
+
+/*!
+ * \brief Reads the weather Station sensor
+ * \param void
+ * \return 1 if ok, 0 if something fails
+ */
+uint8_t weatherStation::sendCommand(char* str)
+{
+	const uint16_t BUFFER_SIZE = 130;
+	char buffer_ws_raw[BUFFER_SIZE];
+	memset(buffer_ws_raw, 0x00, sizeof(buffer_ws_raw));
+	bool exitWhile = 0;
+	bool dataFrameFound = 0;
+	uint16_t i = 0;
+	unsigned long previous = millis();
+
+	
+	//Configure UART
+	Utils.setMuxAux2();
+	beginSerial(19200, 1);
+	serialFlush(1);
+	delay(5);
+	
+	
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+	
+	
+	printString(str, 1);
+	#if DEBUG_AGR_XTR == 2
+	USB.print(F("WS TX:"));
+	USB.println(str);
+	
+	USB.print(F("WS RX:"));
+	#endif
+	
+		//Capture buffer
+	while (((millis() - previous) < 8000) && (exitWhile == 0) && (dataFrameFound == 0))
+	{
+		if (serialAvailable(1) > 0)
+		{
+			//Avoid storing 0x00 in our buffer string or 0x02 STX (Start of Text)
+			char buffer_temp = serialRead(1);
+			#if DEBUG_AGR_XTR == 2
+			USB.print(buffer_temp);
+			//USB.print(".");
+			#endif
+			if ((buffer_temp != 0x00) && (buffer_temp != 0x02))
+			{
+				//Change ',' for ' ' (whitespace character) for better parsing
+				if(buffer_temp != ',')
+				{
+					buffer_ws_raw[i] = buffer_temp;
+				}
+				else
+				{
+					buffer_ws_raw[i] = ' ';
+				}
+				i++;
+			}
+			//ETX (End of Text) found
+			if (buffer_ws_raw[i-1] == 0x03)
+			{
+				buffer_ws_raw[i-1] = 0x00;
+				dataFrameFound = 1;
+			}
+			
+			if (i-1 == BUFFER_SIZE)
+			{
+				exitWhile = 1;
+			}
+		}
+
+		//avoid millis overflow problem after approximately 50 days
+		if ( millis() < previous ) previous = millis();
+	}
+	
+	#if DEBUG_AGR_XTR == 2
+	USB.println();
+	#endif
+	
+	/*
+	#if DEBUG_AGR_XTR == 2
+	USB.print(F("WS RX:"));
+	USB.println(buffer_ws_raw);
+	#endif
+	*/
+}
 
 /*!
  * \brief Reads the weather Station sensor
@@ -2529,10 +2984,11 @@ void weatherStation::OFF()
  */
 uint8_t weatherStation::read()
 {
-	const uint8_t BUFFER_SIZE = 130;
-	char buffer[BUFFER_SIZE];
-	memset(buffer, 0x00, sizeof(buffer));
-	bool exit_while = 0;
+	const uint16_t BUFFER_SIZE = 200;
+	char buffer_ws_raw[BUFFER_SIZE];
+	memset(buffer_ws_raw, 0x00, sizeof(buffer_ws_raw));
+	bool exitWhile = 0;
+	bool dataFrameFound = 0;
 	uint16_t i = 0;
 	unsigned long previous = millis();
 
@@ -2542,252 +2998,929 @@ uint8_t weatherStation::read()
 	serialFlush(1);
 	delay(5);
 	
-	//Send command asking for data
-	printString("?Q", 1);
-
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+	
+	//Send command asking for data (previously "?Q" required)
+	printString("Q", 1);
+	#if DEBUG_AGR_XTR == 2
+	USB.print(F("WS TX:"));
+	USB.println(F("Q"));
+	#endif
+	
 	//Capture buffer
-	while (((millis() - previous) < 5000) && exit_while == 0)
+	while (((millis() - previous) < 8000) && (exitWhile == 0) && (dataFrameFound == 0))
 	{
 		if (serialAvailable(1) > 0)
 		{
-			buffer[i] = serialRead(1);
-
-			if (buffer[i] == 0x03)
+			//Avoid storing 0x00 in our buffer string or 0x02 STX (Start of Text)
+			char buffer_temp = serialRead(1);
+			if ((buffer_temp != 0x00) && (buffer_temp != 0x02))
 			{
-				exit_while = 1;
+				//Change ',' for ' ' (whitespace character) for better parsing
+				if(buffer_temp != ',')
+				{
+					buffer_ws_raw[i] = buffer_temp;
+				}
+				else
+				{
+					buffer_ws_raw[i] = ' ';
+				}
+				i++;
 			}
-			i++;
-			if (i == BUFFER_SIZE)
+			//ETX (End of Text) found
+			if (buffer_ws_raw[i-1] == 0x03)
 			{
-				exit_while = 1;
+				buffer_ws_raw[i-1] = 0x00;
+				dataFrameFound = 1;
+			}
+			
+			if (i-1 == BUFFER_SIZE)
+			{
+				exitWhile = 1;
 			}
 		}
 
 		//avoid millis overflow problem after approximately 50 days
 		if ( millis() < previous ) previous = millis();
 	}
+	
+	#if DEBUG_AGR_XTR == 2
+	USB.print(F("WS RX:"));
+	USB.println(buffer_ws_raw);
+	#endif
+	
+	//Snippet for simulating a weather station connected
+	//dataFrameFound = 1;
+	
+	//GMX240 example frame
+	//stationModel = WS_GMX240;
+	//strcpy(buffer_ws_raw, "Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000");
+	
+	//GMX100 example frame
+	//stationModel = WS_GMX100;
+	//strcpy(buffer_ws_raw, "Q 00000.080 000.080 Y +26 -56 +1 2018-06-12T16:31:11.1 +12.0 00000");
 
-
-	//Analyze buffer
-	for (uint16_t j = 0; j < BUFFER_SIZE; j++)
+	//GMX101 example frame
+	//stationModel = WS_GMX101;	
+	//Q 0001 01.20 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +32 -17 +1 2017-01-20T11:46:01.3 +05.0 0000
+	
+	
+	char buffer_table[150];
+	memset(buffer_table, 0x00, sizeof(buffer_table));
+	
+	if(dataFrameFound && stationModel == WS_GMX100)
 	{
-		if ((buffer[j] == 0x02) &&		//STX (Start of Text)
-			(buffer[j + 2] == ',') &&
-			(buffer[j + 6] == ',') &&
-			(buffer[j + 13] == ',') &&
-			(buffer[j + 17] == ',') &&
-			(buffer[j + 21] == ',') &&
-			(buffer[j + 28] == ',') &&
-			(buffer[j + 32] == ',') &&
-			(buffer[j + 39] == ',') &&
-			(buffer[j + 43] == ',') &&
-			(buffer[j + 48] == ',') &&
-			(buffer[j + 58] == ',') &&
-			(buffer[j + 66] == ',') &&
-			(buffer[j + 68] == ',') &&
-			(buffer[j + 72] == ',') &&
-			(buffer[j + 76] == ',') &&
-			(buffer[j + 80] == ',') &&
-			(buffer[j + 83] == ',') &&
-			(buffer[j + 105] == ',') &&
-			(buffer[j + 111] == ',') &&
-			(buffer[j + 116] == ',') &&
-			(buffer[j + 117] == 0x03))	//ETX (End of Text)
-		{
-
-			//Node letter parsing
-			gmx240.node_letter = buffer[j + 1];
-
-			//Wind direction parsing
-			char wind_direction_ascii[4];
-			memset(wind_direction_ascii, 0x00, sizeof(wind_direction_ascii));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				wind_direction_ascii[k] = buffer[j + 3 + k];
-			}
-			gmx240.wind_direction = atoi (wind_direction_ascii);
-
-			//Wind speed parsing
-			memset(gmx240.wind_speed, 0x00, sizeof(gmx240.wind_speed));
-			for (uint8_t k = 0; k < 6; k++)
-			{
-				gmx240.wind_speed[k] = buffer[j + 7 + k];
-			}
-			//float wind_speed = 0;
-			//wind_speed = atof (wind_speed_ascii);
-
-
-			//Corrected wind direction parsing
-			char corrected_wind_direction_ascii[4];
-			memset(corrected_wind_direction_ascii, 0x00, sizeof(corrected_wind_direction_ascii));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				corrected_wind_direction_ascii[k] = buffer[j + 14 + k];
-			}
-			gmx240.corrected_wind_direction = atoi (corrected_wind_direction_ascii);
-
-
-			//Average wind direction parsing
-			char average_wind_direction_ascii[4];
-			memset(average_wind_direction_ascii, 0x00, sizeof(average_wind_direction_ascii));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				average_wind_direction_ascii[k] = buffer[j + 18 + k];
-			}
-			gmx240.average_wind_direction = atoi (average_wind_direction_ascii);
-
-			//Average wind speed parsing
-			memset(gmx240.average_wind_speed, 0x00, sizeof(gmx240.average_wind_speed));
-			for (uint8_t k = 0; k < 6; k++)
-			{
-				gmx240.average_wind_speed[k] = buffer[j + 22 + k];
-			}
-			//float average_wind_speed = 0;
-			//average_wind_speed = atof (average_wind_speed_ascii);
-
-
-			//Average Wind Gust Direction parsing
-			char average_wind_gust_direction_ascii[4];
-			memset(average_wind_gust_direction_ascii, 0x00, sizeof(average_wind_gust_direction_ascii));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				average_wind_gust_direction_ascii[k] = buffer[j + 29 + k];
-			}
-			gmx240.average_wind_gust_direction = atoi (average_wind_gust_direction_ascii);
-
-
-			//Average Wind Gust Speed parsing
-			memset(gmx240.average_wind_gust_speed, 0x00, sizeof(gmx240.average_wind_gust_speed));
-			for (uint8_t k = 0; k < 6; k++)
-			{
-				gmx240.average_wind_gust_speed[k] = buffer[j + 33 + k];
-			}
-			//float average_wind_gust_speed = 0;
-			//average_wind_gust_speed = atof (average_wind_gust_speed_ascii);
-
-
-			//Corrected wind direction parsing
-			char average_corrected_wind_direction_ascii[4];
-			memset(average_corrected_wind_direction_ascii, 0x00, sizeof(average_corrected_wind_direction_ascii));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				average_corrected_wind_direction_ascii[k] = buffer[j + 40 + k];
-			}
-			gmx240.average_corrected_wind_direction = atoi (average_corrected_wind_direction_ascii);
-
-
-			//Wind Sensor Status parsing
-			memset(gmx240.wind_sensor_status, 0x00, sizeof(gmx240.wind_sensor_status));
-			for (uint8_t k = 0; k < 4; k++)
-			{
-				gmx240.wind_sensor_status[k] = buffer[j + 44 + k];
-			}
-
-
-			//Precipitation total parsing
-			//char precipitation_total_ascii[10];
-			memset(gmx240.precipitation_total, 0x00, sizeof(gmx240.precipitation_total));
-			for (uint8_t k = 0; k < 9; k++)
-			{
-				gmx240.precipitation_total[k] = buffer[j + 49 + k];
-			}
-			//float precipitation_total = 0;
-			//precipitation_total = atof (precipitation_total_ascii);
-
-
-			//Precipitation intensity parsing
-			//char precipitation_intensity_ascii[8];
-			memset(gmx240.precipitation_intensity, 0x00, sizeof(gmx240.precipitation_intensity));
-			for (uint8_t k = 0; k < 7; k++)
-			{
-				gmx240.precipitation_intensity[k] = buffer[j + 59 + k];
-			}
-			//float precipitation_intensity = 0;
-			//precipitation_intensity = atof (precipitation_intensity_ascii);
-
-
-			//Precipitation Status parsing
-			gmx240.precipitation_status = buffer[j + 67];
-
-
-			//Compass parsing
-			char compass_ascii[4];
-			memset(compass_ascii, 0x00, sizeof(compass_ascii));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				compass_ascii[k] = buffer[j + 69 + k];
-			}
-			gmx240.compass = atoi (compass_ascii);
-
-
-			//X Tilt parsing
-			memset(gmx240.x_tilt, 0x00, sizeof(gmx240.x_tilt));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				gmx240.x_tilt[k] = buffer[j + 73 + k];
-			}
-
-
-			//Y Tilt parsing
-			memset(gmx240.y_tilt, 0x00, sizeof(gmx240.y_tilt));
-			for (uint8_t k = 0; k < 3; k++)
-			{
-				gmx240.y_tilt[k] = buffer[j + 77 + k];
-			}
-
-
-			//Z Orient parsing
-			memset(gmx240.z_orient, 0x00, sizeof(gmx240.z_orient));
-			for (uint8_t k = 0; k < 2; k++)
-			{
-				gmx240.z_orient[k] = buffer[j + 81 + k];
-			}
-
-
-
-			//Date & Time
-			//char date_time_ascii[22];
-			memset(gmx240.timestamp, 0x00, sizeof(gmx240.timestamp));
-			for (uint8_t k = 0; k < 21; k++)
-			{
-				gmx240.timestamp[k] = buffer[j + 84 + k];
-			}
-
-			//Supply voltage
-			//char supply_voltage_ascii[6];
-			memset(gmx240.supply_voltage, 0x00, sizeof(gmx240.supply_voltage));
-			for (uint8_t k = 0; k < 4; k++)
-			{
-				gmx240.supply_voltage[k] = buffer[j + 107 + k];
-			}
-
-			//Status
-			//char status_ascii[5];
-			memset(gmx240.status, 0x00, sizeof(gmx240.status));
-			for (uint8_t k = 0; k < 4; k++)
-			{
-				gmx240.status[k] = buffer[j + 112 + k];
-			}
-
-
-			//Print input frame
-			#if DEBUG_AGR_XTR == 1
-			/*
-			for (uint8_t k = 1; k < 116; k++)
-			{
-				PRINT_AGR_XTR(buffer[j + k]);
-			}
-			PRINTLN_AGR_XTR();
-			*/
-			#endif
-
+		//Frame is like: 
+		//"Q 00000.080 000.080 Y +26 -56 +1 2018-06-12T16:31:11.1 +12.0 0000"
+		
+		//"%c %s %s %c %s %s %s %s %s %s"
+		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[12])));
+		sscanf (buffer_ws_raw, buffer_table,
+		&gmx240.node_letter,
+		gmx240.precipitation_total,
+		gmx240.precipitation_intensity,
+		&gmx240.precipitation_status,
+		gmx240.x_tilt,
+		gmx240.y_tilt,
+		gmx240.z_orient,
+		gmx240.timestamp,
+		gmx240.supply_voltage,
+		gmx240.status);
+		
+		return 1;
+	}
+	else if(dataFrameFound && stationModel == WS_GMX101)
+	{
+		//Frame is like: 
+		//"Q 0001 01.20 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +32 -17 +1 2017-01-20T11:46:01.3 +05.0 0000"
+		
+		//"%c %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[13])));
+		sscanf (buffer_ws_raw, buffer_table,
+		&gmx240.node_letter,
+		gmx240.solar_radiation,
+		gmx240.sunshine_hours,
+		gmx240.sunrise_time,
+		gmx240.solar_noon_time,
+		gmx240.sunset_time,
+		gmx240.position_of_sun,
+		gmx240.twilight_civil,
+		gmx240.twilight_nautical,
+		gmx240.twilight_astronomical,
+		gmx240.x_tilt,
+		gmx240.y_tilt,
+		gmx240.z_orient,
+		gmx240.timestamp,
+		gmx240.supply_voltage,
+		gmx240.status);
+		
+		return 1;
+	}
+	else if(dataFrameFound && stationModel == WS_GMX200)
+	{
+		if (!gps){
+			//Frame is like: 
+			//"Q 048 000.02 106 000 000.00 000 000.00 000 0100 058 07:58 12:08 16:19 143:+09 16:57 17:39 18:19 00 +00 +1 2018-01-16T09:29:31.1 +05.0 0000"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[14])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			&gmx240.compass,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status);
+			
 			return 1;
-
+		}
+		else{
+			//Frame is like: 
+			//"Q 048 000.02 106 000 000.00 000 000.00 000 0100 058 07:58 12:08 16:19 143:+09 16:57 17:39 18:19 00 +00 +1 2018-01-16T09:29:31.1 +05.0 0000
+			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[24])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			&gmx240.compass,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status,
+			gmx240.gps_corrected_speed,
+			gmx240.gps_average_corrected_speed,
+			gmx240.gps_corrected_gust_speed,
+			&gmx240.gps_corrected_gust_direction,
+			gmx240.gps_location,
+			&gmx240.gps_heading,
+			gmx240.gps_speed,
+			gmx240.gps_status);
+			
+			return 1;
+			
 		}
 	}
-
-	//frame not found
-	return 0;
+	else if(dataFrameFound && stationModel == WS_GMX240)
+	{
+		if (!gps){
+			//Frame is like: 
+			//"Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[15])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.precipitation_total,
+			gmx240.precipitation_intensity,
+			&gmx240.precipitation_status,
+			&gmx240.compass,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status);
+			
+			return 1;
+		}
+		else{
+			//Frame is like: 
+			//"Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000"
+			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[25])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.precipitation_total,
+			gmx240.precipitation_intensity,
+			&gmx240.precipitation_status,
+			&gmx240.compass,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status,
+			gmx240.gps_corrected_speed,
+			gmx240.gps_average_corrected_speed,
+			gmx240.gps_corrected_gust_speed,
+			&gmx240.gps_corrected_gust_direction,
+			gmx240.gps_location,
+			&gmx240.gps_heading,
+			gmx240.gps_speed,
+			gmx240.gps_status);
+			
+			return 1;
+		}
+		
+	}
+	else if(dataFrameFound && stationModel == WS_GMX300)
+	{
+		//Frame is like: 
+		//"Q 0999.5 0999.5 0999.5 040 +023.3 +009.1 08.45 1.2 +015.1 07:58 12:08 16:19 162:+15 16:57 17:39 18:19 +00 +01 +1 
+		// 2018-01-16T10:55:38.5 +05.1 0000"
+		
+		//"%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[16])));
+		sscanf (buffer_ws_raw, buffer_table,
+		&gmx240.node_letter,
+		gmx240.pressure,
+		gmx240.pressure_sea_level,
+		gmx240.pressure_station,
+		&gmx240.relative_humidity,
+		gmx240.temperature,
+		gmx240.dewpoint,
+		gmx240.absolute_humidity,
+		gmx240.air_density,
+		gmx240.wet_build_temperature,
+		gmx240.sunrise_time,
+		gmx240.solar_noon_time,
+		gmx240.sunset_time,
+		gmx240.position_of_sun,
+		gmx240.twilight_civil,
+		gmx240.twilight_nautical,
+		gmx240.twilight_astronomical,
+		gmx240.x_tilt,
+		gmx240.y_tilt,
+		gmx240.z_orient,
+		gmx240.timestamp,
+		gmx240.supply_voltage,
+		gmx240.status);
+		
+		return 1;
+	}
+	else if(dataFrameFound && stationModel == WS_GMX301)
+	{
+		//Frame is like: 
+		//"Q 0999.4 0999.4 0999.4 040 +023.3 +009.0 08.41 2155 00.00 1.2 +015.0 07:58 12:08 16:19 163:+15 16:57 17:39 18:19 +00 +00 +1 
+		// 2018-01-16T10:58:40.7 +05.1 0000"
+		
+		//"%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[17])));
+		sscanf (buffer_ws_raw, buffer_table,
+		&gmx240.node_letter,
+		gmx240.pressure,
+		gmx240.pressure_sea_level,
+		gmx240.pressure_station,
+		&gmx240.relative_humidity,
+		gmx240.temperature,
+		gmx240.dewpoint,
+		gmx240.absolute_humidity,
+		gmx240.solar_radiation,
+		gmx240.sunshine_hours,
+		gmx240.air_density,
+		gmx240.wet_build_temperature,
+		gmx240.sunrise_time,
+		gmx240.solar_noon_time,
+		gmx240.sunset_time,
+		gmx240.position_of_sun,
+		gmx240.twilight_civil,
+		gmx240.twilight_nautical,
+		gmx240.twilight_astronomical,
+		gmx240.x_tilt,
+		gmx240.y_tilt,
+		gmx240.z_orient,
+		gmx240.timestamp,
+		gmx240.supply_voltage,
+		gmx240.status);
+		
+		return 1;
+	}
+	else if(dataFrameFound && stationModel == WS_GMX400)
+	{
+		//Frame is like: 
+		//"Q 0999.3 0999.3 0999.3 041 +023.2 +009.3 08.61 00000.000 000.000 N 1.2 +015.1 07:58 12:08 16:19 165:+16 16:57 17:39 18:19 +00 +00 +1 
+		// 2018-01-16T11:09:24.0 +05.1 0000"
+		
+		//"%c %s %s %s %d %s %s %s %s %s %c %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[18])));
+		sscanf (buffer_ws_raw, buffer_table,
+		&gmx240.node_letter,
+		gmx240.pressure,
+		gmx240.pressure_sea_level,
+		gmx240.pressure_station,
+		&gmx240.relative_humidity,
+		gmx240.temperature,
+		gmx240.dewpoint,
+		gmx240.absolute_humidity,
+		gmx240.precipitation_total,
+		gmx240.precipitation_intensity,
+		&gmx240.precipitation_status,
+		gmx240.air_density,
+		gmx240.wet_build_temperature,
+		gmx240.sunrise_time,
+		gmx240.solar_noon_time,
+		gmx240.sunset_time,
+		gmx240.position_of_sun,
+		gmx240.twilight_civil,
+		gmx240.twilight_nautical,
+		gmx240.twilight_astronomical,
+		gmx240.x_tilt,
+		gmx240.y_tilt,
+		gmx240.z_orient,
+		gmx240.timestamp,
+		gmx240.supply_voltage,
+		gmx240.status);
+		
+		return 1;
+	}
+	else if(dataFrameFound && stationModel == WS_GMX500)
+	{
+		if(!gps){
+			//Frame is like: 
+			//"Q 056 000.04 115 000 000.00 000 000.00 000 0100 0999.2 0999.2 0999.2 041 +023.2 +009.2 08.56 059 1.2 +015.1 07:58 12:08 16:19 166:+16 
+			// 16:57 17:39 18:19 +00 +01 +1 2018-01-16T11:13:19.5 +05.0 0000"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[19])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			&gmx240.compass,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status);
+			
+			return 1;
+		}
+		else{
+			//Frame is like: 
+			//"Q 056 000.04 115 000 000.00 000 000.00 000 0100 0999.2 0999.2 0999.2 041 +023.2 +009.2 08.56 059 1.2 +015.1 07:58 12:08 16:19 166:+16 
+			// 16:57 17:39 18:19 +00 +01 +1 2018-01-16T11:13:19.5 +05.0 0000"
+			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[26])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			&gmx240.compass,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status,
+			gmx240.gps_corrected_speed,
+			gmx240.gps_average_corrected_speed,
+			gmx240.gps_corrected_gust_speed,
+			&gmx240.gps_corrected_gust_direction,
+			gmx240.gps_location,
+			&gmx240.gps_heading,
+			gmx240.gps_speed,
+			gmx240.gps_status);
+			
+			return 1;
+			
+		}
+	}
+	else if(dataFrameFound && stationModel == WS_GMX501)
+	{
+		if (!gps){
+			//Frame is like: 
+			//"Q,003,000.02,062,000,000.00,000,000.00,000,0100,0999.3,0999.3,0999.3,041,+023.3,+009.3,08.61,059,0001,00.00,,,1.2,+015.2,07:58,12:08,16:19,161:+15,16:57,17:39,18:19,+00,+00,+1,,2018-01-16T10:50:19.2,+05.0,0000"
+			// faltan los datos de radiacion en el frame de ejemplo
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[20])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			&gmx240.compass,
+			gmx240.solar_radiation,
+			gmx240.sunshine_hours,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status);
+			
+			return 1;
+		}
+		else{
+			//Frame is like: 
+			//"Q,003,000.02,062,000,000.00,000,000.00,000,0100,0999.3,0999.3,0999.3,041,+023.3,+009.3,08.61,059,0001,00.00,,,1.2,+015.2,07:58,12:08,16:19,161:+15,16:57,17:39,18:19,+00,+00,+1,,2018-01-16T10:50:19.2,+05.0,0000"
+			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
+			// faltan los datos de radiacion en el frame de ejemplo
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[27])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			&gmx240.compass,
+			gmx240.solar_radiation,
+			gmx240.sunshine_hours,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status,
+			gmx240.gps_corrected_speed,
+			gmx240.gps_average_corrected_speed,
+			gmx240.gps_corrected_gust_speed,
+			&gmx240.gps_corrected_gust_direction,
+			gmx240.gps_location,
+			&gmx240.gps_heading,
+			gmx240.gps_speed,
+			gmx240.gps_status);
+			
+			return 1;
+		}
+	}
+	else if(dataFrameFound && (stationModel == WS_GMX531 || stationModel == WS_GMX541 || stationModel == WS_GMX551))
+	{
+		if(!gps){
+			//Frame is like: 
+			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042 0001 01.20 
+			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[21])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			gmx240.precipitation_total,
+			gmx240.precipitation_intensity,
+			&gmx240.precipitation_status,
+			&gmx240.compass,
+			gmx240.solar_radiation,
+			gmx240.sunshine_hours,
+			gmx240.wind_chill,
+			gmx240.heat_index,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status);
+			
+			return 1;
+		}
+		else{
+			//Frame is like: 
+			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042 0001 01.20 
+			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
+			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[28])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			gmx240.precipitation_total,
+			gmx240.precipitation_intensity,
+			&gmx240.precipitation_status,
+			&gmx240.compass,
+			gmx240.solar_radiation,
+			gmx240.sunshine_hours,
+			gmx240.wind_chill,
+			gmx240.heat_index,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status,
+			gmx240.gps_corrected_speed,
+			gmx240.gps_average_corrected_speed,
+			gmx240.gps_corrected_gust_speed,
+			&gmx240.gps_corrected_gust_direction,
+			gmx240.gps_location,
+			&gmx240.gps_heading,
+			gmx240.gps_speed,
+			gmx240.gps_status);
+			
+			return 1;
+		}
+	}
+	else if(dataFrameFound && stationModel == WS_GMX550)
+	{
+		if(!gps){
+			//Frame is like: 
+			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042
+			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[22])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			gmx240.precipitation_total,
+			gmx240.precipitation_intensity,
+			&gmx240.precipitation_status,
+			&gmx240.compass,
+			gmx240.wind_chill,
+			gmx240.heat_index,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status);
+			
+			return 1;
+		}
+		else{
+			//Frame is like: 
+			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042
+			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
+			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[29])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			gmx240.precipitation_total,
+			gmx240.precipitation_intensity,
+			&gmx240.precipitation_status,
+			&gmx240.compass,
+			gmx240.wind_chill,
+			gmx240.heat_index,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status,
+			gmx240.gps_corrected_speed,
+			gmx240.gps_average_corrected_speed,
+			gmx240.gps_corrected_gust_speed,
+			&gmx240.gps_corrected_gust_direction,
+			gmx240.gps_location,
+			&gmx240.gps_heading,
+			gmx240.gps_speed,
+			gmx240.gps_status);
+			
+			return 1;
+		}
+	}
+	else if(dataFrameFound && stationModel == WS_GMX600)
+	{
+		if(!gps){
+			//Frame is like: 
+			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 042
+			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[23])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			&gmx240.compass,
+			gmx240.wind_chill,
+			gmx240.heat_index,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status);
+			
+			return 1;
+		}
+		else{
+			//Frame is like: 
+			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 042
+			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
+			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
+			
+			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
+			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[30])));
+			sscanf (buffer_ws_raw, buffer_table,
+			&gmx240.node_letter,
+			&gmx240.wind_direction,
+			gmx240.wind_speed,
+			&gmx240.corrected_wind_direction,
+			&gmx240.average_wind_direction,
+			gmx240.average_wind_speed,
+			&gmx240.average_wind_gust_direction,
+			gmx240.average_wind_gust_speed,
+			&gmx240.average_corrected_wind_direction,
+			gmx240.wind_sensor_status,
+			gmx240.pressure,
+			gmx240.pressure_sea_level,
+			gmx240.pressure_station,
+			&gmx240.relative_humidity,
+			gmx240.temperature,
+			gmx240.dewpoint,
+			gmx240.absolute_humidity,
+			&gmx240.compass,
+			gmx240.wind_chill,
+			gmx240.heat_index,
+			gmx240.air_density,
+			gmx240.wet_build_temperature,
+			gmx240.sunrise_time,
+			gmx240.solar_noon_time,
+			gmx240.sunset_time,
+			gmx240.position_of_sun,
+			gmx240.twilight_civil,
+			gmx240.twilight_nautical,
+			gmx240.twilight_astronomical,
+			gmx240.x_tilt,
+			gmx240.y_tilt,
+			gmx240.z_orient,
+			gmx240.timestamp,
+			gmx240.supply_voltage,
+			gmx240.status,
+			gmx240.gps_corrected_speed,
+			gmx240.gps_average_corrected_speed,
+			gmx240.gps_corrected_gust_speed,
+			&gmx240.gps_corrected_gust_direction,
+			gmx240.gps_location,
+			&gmx240.gps_heading,
+			gmx240.gps_speed,
+			gmx240.gps_status);
+			
+			return 1;			
+		}
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 
@@ -3113,8 +4246,8 @@ void ultrasound::OFF()
  * \brief Performs a distance measurement
  * \param void
  * \return distance in cm.
- *         9000 if error reading the distance
- *         10000 if error reading the sensor
+ *		9000 if error reading the distance
+ *		10000 if error reading the sensor
  */
 uint16_t ultrasound::getDistance()
 {

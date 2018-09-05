@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.3
+    Version:		3.4
     Design:			David Gascón
     Implementation:	Carlos Bello
 
@@ -197,7 +197,7 @@ class liquidPresenceClass : public WaspSensorEvent_v30
 // Relay class
 //**************************************************************************************************
 #ifndef relayClass_h
-#define relayClasss_h
+#define relayClass_h
 
 class relayClass : public WaspSensorEvent_v30
 {

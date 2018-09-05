@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.4
+ *  Version:		3.5
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -441,7 +441,6 @@ void WaspPWR::sleep(uint8_t	timer, uint8_t option)
 	{
 		RTC.ON();
 		RTC.clearAlarmFlag();
-		RTC.OFF();
 	}
 	
 	// re-activate what is needed
@@ -567,7 +566,6 @@ void WaspPWR::deepSleep(const char* time2wake,
 	RTC.ON();
 	RTC.disableAlarm1();
 	RTC.clearAlarmFlag();
-	RTC.OFF();
 	
 	// re-activate what is needed
 	switchesON(option);

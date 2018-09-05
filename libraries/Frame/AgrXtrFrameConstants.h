@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		1.0
+    Version:		1.1
     Design:			David Gascón
     Implementation:	Javier Siscart, Víctor Boria
 
@@ -170,6 +170,35 @@
 #define AGRX_GMX_ZO						225
 #define AGRX_GMX_SVO					226
 #define AGRX_GMX_ST						227				
+
+#define AGRX_GMX_SR						228
+#define AGRX_GMX_SUNSHINE				229
+#define AGRX_GMX_SUNRISE				230
+#define AGRX_GMX_SOLAR_NOON				231
+#define AGRX_GMX_SUNSET					232
+#define AGRX_GMX_POS_SUN				233
+#define AGRX_GMX_TW_CIV					234
+#define AGRX_GMX_TW_NAU					235
+#define AGRX_GMX_TW_AST					236
+#define AGRX_GMX_PRES					237
+#define AGRX_GMX_PRES_SEA				238
+#define AGRX_GMX_PRES_STA				239
+#define AGRX_GMX_RH						240
+#define AGRX_GMX_TEMP					241
+#define AGRX_GMX_DEWP					242
+#define AGRX_GMX_AH						243
+#define AGRX_GMX_AD						244
+#define AGRX_GMX_WBT					245
+#define AGRX_GMX_WC						246
+#define AGRX_GMX_HI						247
+#define AGRX_GMX_GPS_CSP				248
+#define AGRX_GMX_GPS_ACS				249
+#define AGRX_GMX_GPS_CGS				250
+#define AGRX_GMX_GPS_CGD				251
+#define AGRX_GMX_GPS_LOC				252
+#define AGRX_GMX_GPS_HEA				253
+#define AGRX_GMX_GPS_SPEED				254
+#define AGRX_GMX_GPS_STATUS				255
 
 
 /// Flash defines //////////////////////////////////////////////////////////////
@@ -413,7 +442,34 @@ const char	agr_xtr_225[]  	PROGMEM = "ZO";
 const char	agr_xtr_226[]  	PROGMEM = "SVO";
 const char	agr_xtr_227[]  	PROGMEM = "ST";
 
-
+const char	agr_xtr_228[]  	PROGMEM = "SR_WS";
+const char	agr_xtr_229[]  	PROGMEM = "SSH_WS";
+const char	agr_xtr_230[]  	PROGMEM = "SRT_WS";
+const char	agr_xtr_231[]  	PROGMEM = "SNT_WS";
+const char	agr_xtr_232[]  	PROGMEM = "ST_WS";
+const char	agr_xtr_233[]  	PROGMEM = "PS_WS";
+const char	agr_xtr_234[]  	PROGMEM = "TC_WS";
+const char	agr_xtr_235[]  	PROGMEM = "TN_WS";
+const char	agr_xtr_236[]  	PROGMEM = "TA_WS";
+const char	agr_xtr_237[]  	PROGMEM = "PRES_WS";
+const char	agr_xtr_238[]  	PROGMEM = "PRESSL_WS";
+const char	agr_xtr_239[]  	PROGMEM = "PRESS_WS";
+const char	agr_xtr_240[]  	PROGMEM = "RH_WS";
+const char	agr_xtr_241[]  	PROGMEM = "TEM_WS";
+const char	agr_xtr_242[]  	PROGMEM = "DP_WS";
+const char	agr_xtr_243[]  	PROGMEM = "AH_WS";
+const char	agr_xtr_244[]  	PROGMEM = "AD_WS";
+const char	agr_xtr_245[]  	PROGMEM = "WBT_WS";
+const char	agr_xtr_246[]  	PROGMEM = "WC_WS";
+const char	agr_xtr_247[]  	PROGMEM = "HI_WS";
+const char	agr_xtr_248[]  	PROGMEM = "GPS_CSP";
+const char	agr_xtr_249[]  	PROGMEM = "GPS_ACSP";
+const char	agr_xtr_250[]  	PROGMEM = "GPS_GSP";
+const char	agr_xtr_251[]  	PROGMEM = "GPS_GDIR";
+const char	agr_xtr_252[]  	PROGMEM = "GPS_LOC";
+const char	agr_xtr_253[]  	PROGMEM = "GPS_H";
+const char	agr_xtr_254[]  	PROGMEM = "GPS_SP";
+const char	agr_xtr_255[]  	PROGMEM = "GPS_ST";
 
 
 /*******************************************************************************
@@ -652,6 +708,35 @@ const char* const AGR_XTR_TABLE[] PROGMEM=
 	agr_xtr_225,
 	agr_xtr_226,
 	agr_xtr_227,
+	
+	agr_xtr_228,
+	agr_xtr_229,
+	agr_xtr_230,
+	agr_xtr_231,
+	agr_xtr_232,
+	agr_xtr_233,
+	agr_xtr_234,
+	agr_xtr_235,
+	agr_xtr_236,
+	agr_xtr_237,
+	agr_xtr_238,
+	agr_xtr_239,
+	agr_xtr_240,
+	agr_xtr_241,
+	agr_xtr_242,
+	agr_xtr_243,
+	agr_xtr_244,
+	agr_xtr_245,
+	agr_xtr_246,
+	agr_xtr_247,
+	agr_xtr_248,
+	agr_xtr_249,
+	agr_xtr_250,
+	agr_xtr_251,
+	agr_xtr_252,
+	agr_xtr_253,
+	agr_xtr_254,
+	agr_xtr_255,
 
 };
 
@@ -906,6 +991,36 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 225
 	2,		// 226
 	3,		// 227
+	
+	3,		// 228
+	3,		// 229
+	3,		// 230
+	3,		// 231
+	3,		// 232
+	3,		// 233
+	3,		// 234
+	3,		// 235
+	3,		// 236
+	3,		// 237
+	3,		// 238
+	3,		// 239
+	1,		// 240
+	3,		// 241
+	3,		// 242
+	3,		// 243
+	3,		// 244
+	3,		// 245
+	3,		// 246
+	3,		// 247
+	3,		// 248
+	3,		// 249
+	3,		// 250
+	1,		// 251
+	3,		// 252
+	1,		// 253
+	3,		// 254
+	3,		// 255
+	
 };
 
 
@@ -1156,6 +1271,35 @@ const uint8_t AGR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 225
 	1,		// 226
 	1,		// 227
+	
+	1,		// 228
+	1,		// 229
+	1,		// 230
+	1,		// 231
+	1,		// 232
+	1,		// 233
+	1,		// 234
+	1,		// 235
+	1,		// 236
+	1,		// 237
+	1,		// 238
+	1,		// 239
+	1,		// 240
+	1,		// 241
+	1,		// 242
+	1,		// 243
+	1,		// 244
+	1,		// 245
+	1,		// 246
+	1,		// 247
+	1,		// 248
+	1,		// 249
+	1,		// 250
+	1,		// 251
+	1,		// 252
+	1,		// 253
+	1,		// 254
+	1,		// 255
 
 };
 
@@ -1403,6 +1547,35 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 225
 	1,		// 226
 	0,		// 227
+	
+	0,		// 228
+	0,		// 229
+	0,		// 230
+	0,		// 231
+	0,		// 232
+	0,		// 233
+	0,		// 234
+	0,		// 235
+	0,		// 236
+	0,		// 237
+	0,		// 238
+	0,		// 239
+	0,		// 240
+	0,		// 241
+	0,		// 242
+	0,		// 243
+	0,		// 244
+	0,		// 245
+	0,		// 246
+	0,		// 247
+	0,		// 248
+	0,		// 249
+	0,		// 250
+	0,		// 251
+	0,		// 252
+	0,		// 253
+	0,		// 254
+	0,		// 255
 
 };
 
