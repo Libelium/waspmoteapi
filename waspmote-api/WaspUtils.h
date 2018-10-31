@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascon
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -296,6 +296,38 @@ class WaspUtils
    */
   uint8_t readEEPROM(int address);
   
+  //! It reads a value from the specified EEPROM address
+  /*!
+  \param int address : EEPROM address to read from
+  \return the value read from EEPROM address
+  \sa writeEEPROM(int address, uint8_t value)
+   */
+  uint16_t readWordEEPROM(int address);
+  
+  //! It reads a value from the specified EEPROM address
+  /*!
+  \param int address : EEPROM address to read from
+  \return the value read from EEPROM address
+  \sa writeEEPROM(int address, uint8_t value)
+   */
+  uint32_t readDWordEEPROM(int address);
+  
+  //! It reads a value from the specified EEPROM address
+  /*!
+  \param int address : EEPROM address to read from
+  \return the value read from EEPROM address
+  \sa writeEEPROM(int address, uint8_t value)
+   */
+  float readFloatEEPROM(int address);
+  
+  //! It reads a value from the specified EEPROM address
+  /*!
+  \param int address : EEPROM address to read from
+  \return the value read from EEPROM address
+  \sa writeEEPROM(int address, uint8_t value)
+   */
+  void readBlockEEPROM(int address, void *pointer, uint16_t length);
+  
   //! It writes the specified value to the specified EEPROM address
   /*!
   \param int address : EEPROM address to write to
@@ -304,6 +336,43 @@ class WaspUtils
   \sa readEEPROM(int address)
    */
   void writeEEPROM(int address, uint8_t value);
+  
+   //! It writes the specified value to the specified EEPROM address
+  /*!
+  \param int address : EEPROM address to write to
+  \param uint16_t value: value to write to the EEPROM
+  \return void
+  \sa readEEPROM(int address)
+   */ 
+  void writeWordEEPROM(int address, uint16_t value);
+  
+    //! It writes the specified value to the specified EEPROM address
+  /*!
+  \param int address : EEPROM address to write to
+  \param uint32_t value: value to write to the EEPROM
+  \return void
+  \sa readEEPROM(int address)
+   */
+  void writeDWordEEPROM(int address, uint32_t value);
+  
+    //! It writes the specified value to the specified EEPROM address
+  /*!
+  \param int address : EEPROM address to write to
+  \param float value: value to write to the EEPROM
+  \return void
+  \sa readEEPROM(int address)
+   */
+  void writeFloatEEPROM(int address, float value);
+  
+    //! It writes the specified value to the specified EEPROM address
+  /*!
+  \param void *address : EEPROM address to write to
+  \param const void *value: value to write to the EEPROM
+  \param size_t size: size of the value
+  \return void
+  \sa readEEPROM(int address)
+   */
+  void writeBlockEEPROM(int address, const void *value, size_t size);
    
   //! It writes the mote identifier to the EEPROM[147-162]
   /*!

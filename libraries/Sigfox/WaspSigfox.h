@@ -1,7 +1,7 @@
 /*! 
  * @file 	WaspSigfox.h
  * @author	Libelium Comunicaciones Distribuidas S.L.
- * @version	3.2
+ * @version	3.3
  * @brief 	Library for managing Sigfox modules TD1207 & TD1508
  * 
  * Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
@@ -54,11 +54,11 @@
 #define SIGFOX_RATE 9600
 
 //! ATcommands responses
-static char AT_OK[] 	= "OK";
-static char AT_ERROR[] 	= "ERROR";
-static char AT_EOL[] 	= "\r\n";
-static char AT_HEADER[] = "AT$";
-static char AT_HEADER_SLASH[] = "AT/";
+static char SIGFOX_AT_OK[] 	= "OK";
+static char SIGFOX_AT_ERROR[] 	= "ERROR";
+static char SIGFOX_AT_EOL[] 	= "\r\n";
+static char SIGFOX_AT_HEADER[] = "AT$";
+static char SIGFOX_AT_HEADER_SLASH[] = "AT/";
 
 //! Maximum LAN packet size
 static int SIGFOX_LAN_MAX_PAYLOAD = 17;

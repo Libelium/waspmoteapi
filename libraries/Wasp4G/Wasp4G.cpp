@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.7
+ *  Version:		3.8
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -1212,9 +1212,23 @@ uint8_t Wasp4G::ON()
  */
 void Wasp4G::OFF()
 {
+	uint8_t status = 0;
+	uint8_t counter = 3;
+	char command_buffer[20];
+	
+	//"AT#SHDN\r"
+	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[44])));	
+	
+	// Software Shut Down	
+	while ((counter > 0) && (status == 0))
+	{
+		status = sendCommand(command_buffer, LE910_OK, 2000);
+		counter--;		
+	}
+	
 	// close UART0
 	closeUART();
-			
+
 	// power down
 	pinMode(GPRS_PW,OUTPUT);	
 	digitalWrite(GPRS_PW, LOW);

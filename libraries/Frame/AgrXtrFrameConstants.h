@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		1.1
+    Version:		1.2
     Design:			David Gascón
     Implementation:	Javier Siscart, Víctor Boria
 
@@ -74,6 +74,18 @@
 #define AGRX_SI411_BT1_B				39
 #define AGRX_SI411_BT1_C				40
 #define AGRX_SI411_BT1_D				41
+
+// Industrial protocols (ModBus & CAN bus)
+#define AGRX_MODBUS_COILS				42
+#define AGRX_MODBUS_DISCRETE_INPUT		43
+#define AGRX_MODBUS_HOLDING_REGS		44
+#define AGRX_MODBUS_INPUT_REGS			45
+#define AGRX_CANBUS_RPM					46
+#define AGRX_CANBUS_VS					47
+#define AGRX_CANBUS_FR					48
+#define AGRX_CANBUS_FL					49
+#define AGRX_CANBUS_TP					50
+#define AGRX_CANBUS_FP					51
 
 // Now some index are reserver for additional fiends, already defined
 #define AGRX_SO411_CO_A					134
@@ -169,7 +181,7 @@
 #define AGRX_GMX_YT						224
 #define AGRX_GMX_ZO						225
 #define AGRX_GMX_SVO					226
-#define AGRX_GMX_ST						227				
+#define AGRX_GMX_ST						227
 
 #define AGRX_GMX_SR						228
 #define AGRX_GMX_SUNSHINE				229
@@ -252,16 +264,19 @@ const char 	agr_xtr_38[] 	PROGMEM	= "BT1_A";
 const char 	agr_xtr_39[] 	PROGMEM	= "BT1_B";
 const char 	agr_xtr_40[] 	PROGMEM	= "BT1_C";
 const char 	agr_xtr_41[] 	PROGMEM	= "BT1_D";
-const char 	agr_xtr_42[] 	PROGMEM	= "";
-const char 	agr_xtr_43[] 	PROGMEM	= "";
-const char 	agr_xtr_44[] 	PROGMEM	= "";
-const char 	agr_xtr_45[] 	PROGMEM	= "";
-const char 	agr_xtr_46[] 	PROGMEM	= "";
-const char 	agr_xtr_47[] 	PROGMEM	= "";
-const char 	agr_xtr_48[] 	PROGMEM	= "";
-const char 	agr_xtr_49[] 	PROGMEM	= "";
-const char 	agr_xtr_50[] 	PROGMEM	= "";
-const char 	agr_xtr_51[] 	PROGMEM	= "";		// reserved
+
+// Industrial protocols: Modbus & CAN bus
+const char	agr_xtr_42[]  PROGMEM = "MB_COILS"; 
+const char	agr_xtr_43[]  PROGMEM = "MB_DI"; 
+const char	agr_xtr_44[]  PROGMEM = "MB_HR"; 
+const char	agr_xtr_45[]  PROGMEM = "MB_IR"; 
+const char	agr_xtr_46[]  PROGMEM = "CB_RPM"; 
+const char	agr_xtr_47[]  PROGMEM = "CB_VS"; 
+const char	agr_xtr_48[]  PROGMEM = "CB_FR"; 
+const char	agr_xtr_49[]  PROGMEM = "CB_FL"; 
+const char	agr_xtr_50[]  PROGMEM = "CB_TP"; 
+const char	agr_xtr_51[]  PROGMEM = "CB_FP"; 
+
 
 // Additional
 const char	agr_xtr_52[] 	PROGMEM	= "BAT";
@@ -799,16 +814,17 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 40
 	2,		// 41
 
-	0,		// 42
-	0,		// 43
-	0,		// 44
-	0,		// 45
-	0,		// 46
-	0,		// 47
-	0,		// 48
+	//// Industrial protocols (ModBus & CAN bus)
+	1,		// 42
+	1,		// 43
+	1,		// 44
+	1,		// 45
+	1,		// 46
+	1,		// 47
+	1,		// 48
 	0,		// 49
 	0,		// 50
-	0,		// 51
+	1,		// 51
 
 	0, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -982,7 +998,7 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	3,		// 216
 	2,		// 217
 	2,		// 218
-	3,		// 219
+	0,		// 219
 	1,		// 220
 	1,		// 221
 	1,		// 222
@@ -1079,16 +1095,17 @@ const uint8_t AGR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 40
 	1,		// 41
 
-	1,		// 42
-	1,		// 43
-	1,		// 44
-	1,		// 45
+	//// Industrial protocols (ModBus & CAN bus)
+	2,		// 42
+	2,		// 43
+	3,		// 44
+	3,		// 45
 	1,		// 46
 	1,		// 47
 	1,		// 48
 	1,		// 49
 	1,		// 50
-	1,		// 51
+	1,		// 51	
 
 	1, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -1355,6 +1372,7 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	3,		// 40
 	3,		// 41
 
+	//// Industrial protocols (ModBus & CAN bus)
 	0,		// 42
 	0,		// 43
 	0,		// 44

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.3
+    Version:		3.4
     Design:			David Gascon
     Implementation:	Alejandro Gállego
 
@@ -86,6 +86,7 @@ const char LE910_string_40[]	PROGMEM = "+CMGR: ";						//40
 const char LE910_string_41[]	PROGMEM = "AT+CEREG?\r";					//41
 const char LE910_string_42[]	PROGMEM = "+CEREG: 0,";						//42
 const char LE910_string_43[]	PROGMEM = "AT+WS46?\r";						//43
+const char LE910_string_44[]	PROGMEM = "AT#SHDN\r";						//44
 
 const char* const table_4G[] PROGMEM = 
 {
@@ -133,6 +134,7 @@ const char* const table_4G[] PROGMEM =
 	LE910_string_41,
 	LE910_string_42,
 	LE910_string_43,
+	LE910_string_44,
 };
 
 

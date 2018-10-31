@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.1
+	Version:		3.2
 	Design:			David Gascón
 	Implementation: Javier Siscart, Víctor Boria
 
@@ -219,14 +219,14 @@ void WaspSensorAgrXtr::OFF()
 	//3V3 is neccessary for 3v3 socket selecter pin expasor
 	if (((WaspRegister & REG_3V3) != 0) && AgricultureXtr._12vStateRegister == 0)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 			PRINTLN_AGR_XTR(F("3V3 OFF"));
 		#endif
 		PWR.setSensorPower(SENS_3V3, SENS_OFF);
 	}
 	if ((WaspRegister & REG_5V) != 0)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 			PRINTLN_AGR_XTR(F("5V OFF"));
 		#endif
 		PWR.setSensorPower(SENS_5V, SENS_OFF);
@@ -348,7 +348,7 @@ void WaspSensorAgrXtr::set12v(uint8_t state)
 	//If every 12V register if OFF, then turn OFF DC-DC
 	if(AgricultureXtr._12vStateRegister == 0)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 			PRINTLN_AGR_XTR(F("12V OFF"));
 		#endif
 		// disable DC-DC
@@ -736,7 +736,7 @@ uint8_t WaspSensorAgrXtr::startSensor()
 		return 0;
 	}
 
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		PRINT_AGR_XTR(F("time:"));
 		USB.println(timeToNextMeasure);
 		PRINT_AGR_XTR(F("N measures:"));
@@ -872,7 +872,7 @@ uint8_t Decagon_5TE::ON()
 	//neccessary delay after powering the sensor
 	delay(300);
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
 		USB.println(_socket, DEC);
@@ -1067,7 +1067,7 @@ uint8_t Decagon_5TM::ON()
 	//neccessary delay after powering the sensor
 	delay(300);
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		//"socket (!): "
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
@@ -1254,7 +1254,7 @@ uint8_t Decagon_GS3::ON()
 	//neccessary delay after powering the sensor
 	delay(300);
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		//"socket (!): "
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
@@ -1459,7 +1459,7 @@ uint8_t Decagon_VP4::ON()
 	//neccessary delay after powering the sensor
 	delay(800);
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		//"socket (!): "
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
@@ -1676,7 +1676,7 @@ uint8_t Decagon_MPS6::ON()
 	//neccessary delay after powering the sensor
 	delay(300);
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		//"socket (!): "
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
@@ -1870,7 +1870,7 @@ uint8_t Apogee_SO411::ON()
 	//neccessary delay after powering the sensor
 	delay(300);
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		//"socket (!): "
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
@@ -2078,7 +2078,7 @@ uint8_t Apogee_SI411::ON()
 	//neccessary delay after powering the sensor
 	delay(300);
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		//"socket (!): "
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
@@ -2259,7 +2259,7 @@ uint8_t Apogee_SF421::ON()
 	//neccessary delay after powering the sensor
 	delay(300);
 
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 		//"socket (!): "
 		strcpy_P(message, (char*)pgm_read_word(&(table_agrxtr[10]))); 
 		PRINT_AGR_XTR(message);
@@ -2593,7 +2593,7 @@ float dendrometer::read(void)
 	digitalWrite(SPI_ISO_EN, LOW);
 
 	// check value of the sensor in volts
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 	PRINT_AGR_XTR(F("dendro (V): "));
 	USB.printFloat(diameter, 5);
 	USB.println();
@@ -2742,14 +2742,14 @@ void weatherStation::ON()
 		if ( millis() < previous ) previous = millis();
 	}
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 	USB.print(F("WS RX:"));
 	USB.println(buffer);
 	#endif
 	
 	if(strstr(buffer, "GMX100") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX100 found"));
 		#endif
 		
@@ -2757,7 +2757,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX101") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX101 found"));
 		#endif
 		
@@ -2765,7 +2765,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX200") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX200 found"));
 		#endif
 		
@@ -2773,7 +2773,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX240") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX240 found"));
 		#endif
 		
@@ -2781,7 +2781,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX300") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX300 found"));
 		#endif
 		
@@ -2789,7 +2789,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX301") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX301 found"));
 		#endif
 		
@@ -2797,7 +2797,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX400") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX400 found"));
 		#endif
 		
@@ -2805,7 +2805,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX500") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX500 found"));
 		#endif
 		
@@ -2813,7 +2813,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX501") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX501 found"));
 		#endif
 		
@@ -2821,7 +2821,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX531") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX531 found"));
 		#endif
 		
@@ -2829,7 +2829,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX541") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX541 found"));
 		#endif
 		
@@ -2837,7 +2837,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX550") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX550 found"));
 		#endif
 		
@@ -2845,7 +2845,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX551") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX551 found"));
 		#endif
 		
@@ -2853,7 +2853,7 @@ void weatherStation::ON()
 	}
 	else if(strstr(buffer, "GMX600") != NULL)
 	{
-		#if DEBUG_AGR_XTR == 2
+		#if DEBUG_AGR_XTR > 1
 		PRINTLN_AGR_XTR(F("GMX600 found"));
 		#endif
 		
@@ -2887,13 +2887,13 @@ void weatherStation::GPS(uint8_t option)
 }
 
 /*!
- * \brief Reads the weather Station sensor
- * \param void
+ * \brief Enters commands to weather station
+ * \param str
  * \return 1 if ok, 0 if something fails
  */
 uint8_t weatherStation::sendCommand(char* str)
 {
-	const uint16_t BUFFER_SIZE = 130;
+	const uint16_t BUFFER_SIZE = 200;
 	char buffer_ws_raw[BUFFER_SIZE];
 	memset(buffer_ws_raw, 0x00, sizeof(buffer_ws_raw));
 	bool exitWhile = 0;
@@ -2915,43 +2915,35 @@ uint8_t weatherStation::sendCommand(char* str)
 		serialRead(1);
 	}
 	
+	// Enter to SETUP MODE
+	printString("\r", 1);
+	delay(20);
 	
-	printString(str, 1);
-	#if DEBUG_AGR_XTR == 2
+	printString("*", 1);
+	printString("\r", 1);
+	#if DEBUG_AGR_XTR > 1
 	USB.print(F("WS TX:"));
-	USB.println(str);
+	USB.println(F("*"));
 	
 	USB.print(F("WS RX:"));
 	#endif
 	
-		//Capture buffer
+	//Capture buffer
 	while (((millis() - previous) < 8000) && (exitWhile == 0) && (dataFrameFound == 0))
 	{
 		if (serialAvailable(1) > 0)
 		{
-			//Avoid storing 0x00 in our buffer string or 0x02 STX (Start of Text)
 			char buffer_temp = serialRead(1);
-			#if DEBUG_AGR_XTR == 2
+			#if DEBUG_AGR_XTR > 1
 			USB.print(buffer_temp);
-			//USB.print(".");
 			#endif
-			if ((buffer_temp != 0x00) && (buffer_temp != 0x02))
+			
+			buffer_ws_raw[i] = buffer_temp;
+			i++;
+			
+			//> found
+			if (buffer_ws_raw[i-1] == '>')
 			{
-				//Change ',' for ' ' (whitespace character) for better parsing
-				if(buffer_temp != ',')
-				{
-					buffer_ws_raw[i] = buffer_temp;
-				}
-				else
-				{
-					buffer_ws_raw[i] = ' ';
-				}
-				i++;
-			}
-			//ETX (End of Text) found
-			if (buffer_ws_raw[i-1] == 0x03)
-			{
-				buffer_ws_raw[i-1] = 0x00;
 				dataFrameFound = 1;
 			}
 			
@@ -2965,17 +2957,110 @@ uint8_t weatherStation::sendCommand(char* str)
 		if ( millis() < previous ) previous = millis();
 	}
 	
-	#if DEBUG_AGR_XTR == 2
+	if(dataFrameFound == 0)
+	{
+		return 0;
+	}
+	
+	memset(buffer_ws_raw, 0x00, sizeof(buffer_ws_raw));
+	strcpy(buffer_ws_raw, str);
+	
+	#if DEBUG_AGR_XTR > 1
+	USB.print(F("WS TX:"));
+	#endif
+	
+	
+	printString("\r", 1);
+	delay(20);
+	for (int j = 0; j < strlen(buffer_ws_raw); j++)
+	{
+		printByte(buffer_ws_raw[j], 1);
+		#if DEBUG_AGR_XTR > 1
+		USB.print(buffer_ws_raw[j]);
+		#endif
+		delay(20);
+	}
+	
+	
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+	printString("\r", 1);
+	#if DEBUG_AGR_XTR > 1
 	USB.println();
 	#endif
 	
-	/*
-	#if DEBUG_AGR_XTR == 2
-	USB.print(F("WS RX:"));
+	memset(buffer_ws_raw, 0x00, sizeof(buffer_ws_raw));
+	exitWhile = 0;
+	dataFrameFound = 0;
+	i = 0;
+	previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 1000) && (exitWhile == 0) && (dataFrameFound == 0))
+	{
+		if (serialAvailable(1) > 0)
+		{
+			//Avoid storing 0x00 in our buffer string or 0x02 STX (Start of Text)
+			char buffer_temp = serialRead(1);
+
+			if ((buffer_temp != 0x00) && (buffer_temp != 0x02))
+			{
+				
+				buffer_ws_raw[i] = buffer_temp;
+				i++;
+			}
+			//ETX (End of Text) found
+			if (buffer_ws_raw[i - 1] == 0x03)
+			{
+				buffer_ws_raw[i - 1] = 0x00;
+				dataFrameFound = 1;
+			}
+
+			if (i - 1 == BUFFER_SIZE)
+			{
+				exitWhile = 1;
+			}
+		}
+		//avoid millis overflow problem after approximately 50 days
+		if ( millis() < previous ) previous = millis();
+
+	}
+
+	#if DEBUG_AGR_XTR > 1
+	USB.print("WS RX:");
 	USB.println(buffer_ws_raw);
 	#endif
-	*/
+	
+	
+	// Exit from SETUP MODE
+	#if DEBUG_AGR_XTR > 1
+	USB.println("WS TX:EXIT");
+	#endif
+	
+
+	printString("\r", 1);
+	delay(20);
+
+	printString("E", 1); delay(20);
+	printString("X", 1); delay(20);
+	printString("I", 1); delay(20);
+	printString("T", 1); delay(20);
+	printString("\r", 1);
+	delay(20);
+	
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+	
+	return 1;
 }
+
+
 
 /*!
  * \brief Reads the weather Station sensor
@@ -2989,9 +3074,62 @@ uint8_t weatherStation::read()
 	memset(buffer_ws_raw, 0x00, sizeof(buffer_ws_raw));
 	bool exitWhile = 0;
 	bool dataFrameFound = 0;
+	bool dataFrameParsed = 0;
 	uint16_t i = 0;
 	unsigned long previous = millis();
 
+	// Initialize variables
+	gmx.node_letter = 0x00;
+	gmx.wind_direction = 0;
+	gmx.corrected_wind_direction = 0;
+	gmx.average_wind_direction = 0;
+	strcpy(gmx.wind_speed, "0");
+	strcpy(gmx.average_wind_speed, "0");
+	gmx.average_wind_gust_direction = 0;
+	strcpy(gmx.average_wind_gust_speed, "0");
+	gmx.average_corrected_wind_direction = 0;
+	strcpy(gmx.wind_sensor_status, "0");
+	strcpy(gmx.precipitation_total, "0");
+	strcpy(gmx.precipitation_intensity, "0");
+	gmx.precipitation_status = 0x00;
+	gmx.compass = 0;
+	strcpy(gmx.x_tilt, "0");
+	strcpy(gmx.y_tilt, "0");
+	strcpy(gmx.z_orient, "0");
+	strcpy(gmx.timestamp, "0");
+	strcpy(gmx.supply_voltage, "0");
+	strcpy(gmx.status, "0");
+	
+	strcpy(gmx.solar_radiation, "0");
+	strcpy(gmx.sunshine_hours, "0");
+	strcpy(gmx.sunrise_time, "0");
+	strcpy(gmx.solar_noon_time, "0");
+	strcpy(gmx.sunset_time, "0");
+	strcpy(gmx.position_of_sun, "0");
+	strcpy(gmx.twilight_civil, "0");
+	strcpy(gmx.twilight_nautical, "0");
+	strcpy(gmx.twilight_astronomical, "0");
+	strcpy(gmx.pressure, "0");
+	strcpy(gmx.pressure_sea_level, "0");
+	strcpy(gmx.pressure_station, "0");
+	gmx.relative_humidity = 0; 
+	strcpy(gmx.temperature, "0");
+	strcpy(gmx.dewpoint, "0");
+	strcpy(gmx.absolute_humidity, "0");
+	strcpy(gmx.air_density, "0");
+	strcpy(gmx.wet_build_temperature, "0");
+	strcpy(gmx.wind_chill, "0");
+	strcpy(gmx.heat_index, "0");
+	
+	strcpy(gmx.gps_corrected_speed, "0");
+	strcpy(gmx.gps_average_corrected_speed, "0");
+	strcpy(gmx.gps_corrected_gust_speed, "0");
+	gmx.gps_corrected_gust_direction = 0;
+	strcpy(gmx.gps_location, "0");
+	gmx.gps_heading = 0;
+	strcpy(gmx.gps_speed, "0");
+	strcpy(gmx.gps_status, "0");
+	
 	//Configure UART
 	Utils.setMuxAux2();
 	beginSerial(19200, 1);
@@ -3006,7 +3144,7 @@ uint8_t weatherStation::read()
 	
 	//Send command asking for data (previously "?Q" required)
 	printString("Q", 1);
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 	USB.print(F("WS TX:"));
 	USB.println(F("Q"));
 	#endif
@@ -3048,7 +3186,7 @@ uint8_t weatherStation::read()
 		if ( millis() < previous ) previous = millis();
 	}
 	
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 	USB.print(F("WS RX:"));
 	USB.println(buffer_ws_raw);
 	#endif
@@ -3080,18 +3218,18 @@ uint8_t weatherStation::read()
 		//"%c %s %s %c %s %s %s %s %s %s"
 		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[12])));
 		sscanf (buffer_ws_raw, buffer_table,
-		&gmx240.node_letter,
-		gmx240.precipitation_total,
-		gmx240.precipitation_intensity,
-		&gmx240.precipitation_status,
-		gmx240.x_tilt,
-		gmx240.y_tilt,
-		gmx240.z_orient,
-		gmx240.timestamp,
-		gmx240.supply_voltage,
-		gmx240.status);
+		&gmx.node_letter,
+		gmx.precipitation_total,
+		gmx.precipitation_intensity,
+		&gmx.precipitation_status,
+		gmx.x_tilt,
+		gmx.y_tilt,
+		gmx.z_orient,
+		gmx.timestamp,
+		gmx.supply_voltage,
+		gmx.status);
 		
-		return 1;
+		dataFrameParsed = 1;
 	}
 	else if(dataFrameFound && stationModel == WS_GMX101)
 	{
@@ -3101,62 +3239,64 @@ uint8_t weatherStation::read()
 		//"%c %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[13])));
 		sscanf (buffer_ws_raw, buffer_table,
-		&gmx240.node_letter,
-		gmx240.solar_radiation,
-		gmx240.sunshine_hours,
-		gmx240.sunrise_time,
-		gmx240.solar_noon_time,
-		gmx240.sunset_time,
-		gmx240.position_of_sun,
-		gmx240.twilight_civil,
-		gmx240.twilight_nautical,
-		gmx240.twilight_astronomical,
-		gmx240.x_tilt,
-		gmx240.y_tilt,
-		gmx240.z_orient,
-		gmx240.timestamp,
-		gmx240.supply_voltage,
-		gmx240.status);
+		&gmx.node_letter,
+		gmx.solar_radiation,
+		gmx.sunshine_hours,
+		gmx.sunrise_time,
+		gmx.solar_noon_time,
+		gmx.sunset_time,
+		gmx.position_of_sun,
+		gmx.twilight_civil,
+		gmx.twilight_nautical,
+		gmx.twilight_astronomical,
+		gmx.x_tilt,
+		gmx.y_tilt,
+		gmx.z_orient,
+		gmx.timestamp,
+		gmx.supply_voltage,
+		gmx.status);
 		
-		return 1;
+		dataFrameParsed = 1;
 	}
 	else if(dataFrameFound && stationModel == WS_GMX200)
 	{
-		if (!gps){
+		if (!gps)
+		{
 			//Frame is like: 
 			//"Q 048 000.02 106 000 000.00 000 000.00 000 0100 058 07:58 12:08 16:19 143:+09 16:57 17:39 18:19 00 +00 +1 2018-01-16T09:29:31.1 +05.0 0000"
 			
 			//"%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[14])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			&gmx240.compass,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			&gmx.compass,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
-		else{
+		else
+		{
 			//Frame is like: 
 			//"Q 048 000.02 106 000 000.00 000 000.00 000 0100 058 07:58 12:08 16:19 143:+09 16:57 17:39 18:19 00 +00 +1 2018-01-16T09:29:31.1 +05.0 0000
 			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
@@ -3164,76 +3304,78 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[24])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			&gmx240.compass,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status,
-			gmx240.gps_corrected_speed,
-			gmx240.gps_average_corrected_speed,
-			gmx240.gps_corrected_gust_speed,
-			&gmx240.gps_corrected_gust_direction,
-			gmx240.gps_location,
-			&gmx240.gps_heading,
-			gmx240.gps_speed,
-			gmx240.gps_status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			&gmx.compass,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status,
+			gmx.gps_corrected_speed,
+			gmx.gps_average_corrected_speed,
+			gmx.gps_corrected_gust_speed,
+			&gmx.gps_corrected_gust_direction,
+			gmx.gps_location,
+			&gmx.gps_heading,
+			gmx.gps_speed,
+			gmx.gps_status);
 			
-			return 1;
+			dataFrameParsed = 1;
 			
 		}
 	}
 	else if(dataFrameFound && stationModel == WS_GMX240)
 	{
-		if (!gps){
+		if (!gps)
+		{
 			//Frame is like: 
 			//"Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000"
 			
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[15])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.precipitation_total,
-			gmx240.precipitation_intensity,
-			&gmx240.precipitation_status,
-			&gmx240.compass,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.precipitation_total,
+			gmx.precipitation_intensity,
+			&gmx.precipitation_status,
+			&gmx.compass,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
-		else{
+		else
+		{
 			//Frame is like: 
 			//"Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000"
 			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
@@ -3241,36 +3383,36 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[25])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.precipitation_total,
-			gmx240.precipitation_intensity,
-			&gmx240.precipitation_status,
-			&gmx240.compass,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status,
-			gmx240.gps_corrected_speed,
-			gmx240.gps_average_corrected_speed,
-			gmx240.gps_corrected_gust_speed,
-			&gmx240.gps_corrected_gust_direction,
-			gmx240.gps_location,
-			&gmx240.gps_heading,
-			gmx240.gps_speed,
-			gmx240.gps_status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.precipitation_total,
+			gmx.precipitation_intensity,
+			&gmx.precipitation_status,
+			&gmx.compass,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status,
+			gmx.gps_corrected_speed,
+			gmx.gps_average_corrected_speed,
+			gmx.gps_corrected_gust_speed,
+			&gmx.gps_corrected_gust_direction,
+			gmx.gps_location,
+			&gmx.gps_heading,
+			gmx.gps_speed,
+			gmx.gps_status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
 		
 	}
@@ -3283,31 +3425,31 @@ uint8_t weatherStation::read()
 		//"%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[16])));
 		sscanf (buffer_ws_raw, buffer_table,
-		&gmx240.node_letter,
-		gmx240.pressure,
-		gmx240.pressure_sea_level,
-		gmx240.pressure_station,
-		&gmx240.relative_humidity,
-		gmx240.temperature,
-		gmx240.dewpoint,
-		gmx240.absolute_humidity,
-		gmx240.air_density,
-		gmx240.wet_build_temperature,
-		gmx240.sunrise_time,
-		gmx240.solar_noon_time,
-		gmx240.sunset_time,
-		gmx240.position_of_sun,
-		gmx240.twilight_civil,
-		gmx240.twilight_nautical,
-		gmx240.twilight_astronomical,
-		gmx240.x_tilt,
-		gmx240.y_tilt,
-		gmx240.z_orient,
-		gmx240.timestamp,
-		gmx240.supply_voltage,
-		gmx240.status);
+		&gmx.node_letter,
+		gmx.pressure,
+		gmx.pressure_sea_level,
+		gmx.pressure_station,
+		&gmx.relative_humidity,
+		gmx.temperature,
+		gmx.dewpoint,
+		gmx.absolute_humidity,
+		gmx.air_density,
+		gmx.wet_build_temperature,
+		gmx.sunrise_time,
+		gmx.solar_noon_time,
+		gmx.sunset_time,
+		gmx.position_of_sun,
+		gmx.twilight_civil,
+		gmx.twilight_nautical,
+		gmx.twilight_astronomical,
+		gmx.x_tilt,
+		gmx.y_tilt,
+		gmx.z_orient,
+		gmx.timestamp,
+		gmx.supply_voltage,
+		gmx.status);
 		
-		return 1;
+		dataFrameParsed = 1;
 	}
 	else if(dataFrameFound && stationModel == WS_GMX301)
 	{
@@ -3318,33 +3460,33 @@ uint8_t weatherStation::read()
 		//"%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[17])));
 		sscanf (buffer_ws_raw, buffer_table,
-		&gmx240.node_letter,
-		gmx240.pressure,
-		gmx240.pressure_sea_level,
-		gmx240.pressure_station,
-		&gmx240.relative_humidity,
-		gmx240.temperature,
-		gmx240.dewpoint,
-		gmx240.absolute_humidity,
-		gmx240.solar_radiation,
-		gmx240.sunshine_hours,
-		gmx240.air_density,
-		gmx240.wet_build_temperature,
-		gmx240.sunrise_time,
-		gmx240.solar_noon_time,
-		gmx240.sunset_time,
-		gmx240.position_of_sun,
-		gmx240.twilight_civil,
-		gmx240.twilight_nautical,
-		gmx240.twilight_astronomical,
-		gmx240.x_tilt,
-		gmx240.y_tilt,
-		gmx240.z_orient,
-		gmx240.timestamp,
-		gmx240.supply_voltage,
-		gmx240.status);
+		&gmx.node_letter,
+		gmx.pressure,
+		gmx.pressure_sea_level,
+		gmx.pressure_station,
+		&gmx.relative_humidity,
+		gmx.temperature,
+		gmx.dewpoint,
+		gmx.absolute_humidity,
+		gmx.solar_radiation,
+		gmx.sunshine_hours,
+		gmx.air_density,
+		gmx.wet_build_temperature,
+		gmx.sunrise_time,
+		gmx.solar_noon_time,
+		gmx.sunset_time,
+		gmx.position_of_sun,
+		gmx.twilight_civil,
+		gmx.twilight_nautical,
+		gmx.twilight_astronomical,
+		gmx.x_tilt,
+		gmx.y_tilt,
+		gmx.z_orient,
+		gmx.timestamp,
+		gmx.supply_voltage,
+		gmx.status);
 		
-		return 1;
+		dataFrameParsed = 1;
 	}
 	else if(dataFrameFound && stationModel == WS_GMX400)
 	{
@@ -3355,38 +3497,39 @@ uint8_t weatherStation::read()
 		//"%c %s %s %s %d %s %s %s %s %s %c %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[18])));
 		sscanf (buffer_ws_raw, buffer_table,
-		&gmx240.node_letter,
-		gmx240.pressure,
-		gmx240.pressure_sea_level,
-		gmx240.pressure_station,
-		&gmx240.relative_humidity,
-		gmx240.temperature,
-		gmx240.dewpoint,
-		gmx240.absolute_humidity,
-		gmx240.precipitation_total,
-		gmx240.precipitation_intensity,
-		&gmx240.precipitation_status,
-		gmx240.air_density,
-		gmx240.wet_build_temperature,
-		gmx240.sunrise_time,
-		gmx240.solar_noon_time,
-		gmx240.sunset_time,
-		gmx240.position_of_sun,
-		gmx240.twilight_civil,
-		gmx240.twilight_nautical,
-		gmx240.twilight_astronomical,
-		gmx240.x_tilt,
-		gmx240.y_tilt,
-		gmx240.z_orient,
-		gmx240.timestamp,
-		gmx240.supply_voltage,
-		gmx240.status);
+		&gmx.node_letter,
+		gmx.pressure,
+		gmx.pressure_sea_level,
+		gmx.pressure_station,
+		&gmx.relative_humidity,
+		gmx.temperature,
+		gmx.dewpoint,
+		gmx.absolute_humidity,
+		gmx.precipitation_total,
+		gmx.precipitation_intensity,
+		&gmx.precipitation_status,
+		gmx.air_density,
+		gmx.wet_build_temperature,
+		gmx.sunrise_time,
+		gmx.solar_noon_time,
+		gmx.sunset_time,
+		gmx.position_of_sun,
+		gmx.twilight_civil,
+		gmx.twilight_nautical,
+		gmx.twilight_astronomical,
+		gmx.x_tilt,
+		gmx.y_tilt,
+		gmx.z_orient,
+		gmx.timestamp,
+		gmx.supply_voltage,
+		gmx.status);
 		
-		return 1;
+		dataFrameParsed = 1;
 	}
 	else if(dataFrameFound && stationModel == WS_GMX500)
 	{
-		if(!gps){
+		if(!gps)
+		{
 			//Frame is like: 
 			//"Q 056 000.04 115 000 000.00 000 000.00 000 0100 0999.2 0999.2 0999.2 041 +023.2 +009.2 08.56 059 1.2 +015.1 07:58 12:08 16:19 166:+16 
 			// 16:57 17:39 18:19 +00 +01 +1 2018-01-16T11:13:19.5 +05.0 0000"
@@ -3394,43 +3537,44 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[19])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			&gmx240.compass,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			&gmx.compass,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
-		else{
+		else
+		{
 			//Frame is like: 
 			//"Q 056 000.04 115 000 000.00 000 000.00 000 0100 0999.2 0999.2 0999.2 041 +023.2 +009.2 08.56 059 1.2 +015.1 07:58 12:08 16:19 166:+16 
 			// 16:57 17:39 18:19 +00 +01 +1 2018-01-16T11:13:19.5 +05.0 0000"
@@ -3439,55 +3583,56 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[26])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			&gmx240.compass,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status,
-			gmx240.gps_corrected_speed,
-			gmx240.gps_average_corrected_speed,
-			gmx240.gps_corrected_gust_speed,
-			&gmx240.gps_corrected_gust_direction,
-			gmx240.gps_location,
-			&gmx240.gps_heading,
-			gmx240.gps_speed,
-			gmx240.gps_status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			&gmx.compass,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status,
+			gmx.gps_corrected_speed,
+			gmx.gps_average_corrected_speed,
+			gmx.gps_corrected_gust_speed,
+			&gmx.gps_corrected_gust_direction,
+			gmx.gps_location,
+			&gmx.gps_heading,
+			gmx.gps_speed,
+			gmx.gps_status);
 			
-			return 1;
+			dataFrameParsed = 1;
 			
 		}
 	}
 	else if(dataFrameFound && stationModel == WS_GMX501)
 	{
-		if (!gps){
+		if (!gps)
+		{
 			//Frame is like: 
 			//"Q,003,000.02,062,000,000.00,000,000.00,000,0100,0999.3,0999.3,0999.3,041,+023.3,+009.3,08.61,059,0001,00.00,,,1.2,+015.2,07:58,12:08,16:19,161:+15,16:57,17:39,18:19,+00,+00,+1,,2018-01-16T10:50:19.2,+05.0,0000"
 			// faltan los datos de radiacion en el frame de ejemplo
@@ -3495,45 +3640,46 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[20])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			&gmx240.compass,
-			gmx240.solar_radiation,
-			gmx240.sunshine_hours,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			&gmx.compass,
+			gmx.solar_radiation,
+			gmx.sunshine_hours,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
-		else{
+		else
+		{
 			//Frame is like: 
 			//"Q,003,000.02,062,000,000.00,000,000.00,000,0100,0999.3,0999.3,0999.3,041,+023.3,+009.3,08.61,059,0001,00.00,,,1.2,+015.2,07:58,12:08,16:19,161:+15,16:57,17:39,18:19,+00,+00,+1,,2018-01-16T10:50:19.2,+05.0,0000"
 			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
@@ -3542,56 +3688,57 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[27])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			&gmx240.compass,
-			gmx240.solar_radiation,
-			gmx240.sunshine_hours,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status,
-			gmx240.gps_corrected_speed,
-			gmx240.gps_average_corrected_speed,
-			gmx240.gps_corrected_gust_speed,
-			&gmx240.gps_corrected_gust_direction,
-			gmx240.gps_location,
-			&gmx240.gps_heading,
-			gmx240.gps_speed,
-			gmx240.gps_status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			&gmx.compass,
+			gmx.solar_radiation,
+			gmx.sunshine_hours,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status,
+			gmx.gps_corrected_speed,
+			gmx.gps_average_corrected_speed,
+			gmx.gps_corrected_gust_speed,
+			&gmx.gps_corrected_gust_direction,
+			gmx.gps_location,
+			&gmx.gps_heading,
+			gmx.gps_speed,
+			gmx.gps_status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
 	}
 	else if(dataFrameFound && (stationModel == WS_GMX531 || stationModel == WS_GMX541 || stationModel == WS_GMX551))
 	{
-		if(!gps){
+		if(!gps)
+		{
 			//Frame is like: 
 			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042 0001 01.20 
 			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
@@ -3599,50 +3746,51 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[21])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			gmx240.precipitation_total,
-			gmx240.precipitation_intensity,
-			&gmx240.precipitation_status,
-			&gmx240.compass,
-			gmx240.solar_radiation,
-			gmx240.sunshine_hours,
-			gmx240.wind_chill,
-			gmx240.heat_index,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			gmx.precipitation_total,
+			gmx.precipitation_intensity,
+			&gmx.precipitation_status,
+			&gmx.compass,
+			gmx.solar_radiation,
+			gmx.sunshine_hours,
+			gmx.wind_chill,
+			gmx.heat_index,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
-		else{
+		else
+		{
 			//Frame is like: 
 			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042 0001 01.20 
 			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
@@ -3651,61 +3799,62 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[28])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			gmx240.precipitation_total,
-			gmx240.precipitation_intensity,
-			&gmx240.precipitation_status,
-			&gmx240.compass,
-			gmx240.solar_radiation,
-			gmx240.sunshine_hours,
-			gmx240.wind_chill,
-			gmx240.heat_index,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status,
-			gmx240.gps_corrected_speed,
-			gmx240.gps_average_corrected_speed,
-			gmx240.gps_corrected_gust_speed,
-			&gmx240.gps_corrected_gust_direction,
-			gmx240.gps_location,
-			&gmx240.gps_heading,
-			gmx240.gps_speed,
-			gmx240.gps_status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			gmx.precipitation_total,
+			gmx.precipitation_intensity,
+			&gmx.precipitation_status,
+			&gmx.compass,
+			gmx.solar_radiation,
+			gmx.sunshine_hours,
+			gmx.wind_chill,
+			gmx.heat_index,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status,
+			gmx.gps_corrected_speed,
+			gmx.gps_average_corrected_speed,
+			gmx.gps_corrected_gust_speed,
+			&gmx.gps_corrected_gust_direction,
+			gmx.gps_location,
+			&gmx.gps_heading,
+			gmx.gps_speed,
+			gmx.gps_status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
 	}
 	else if(dataFrameFound && stationModel == WS_GMX550)
 	{
-		if(!gps){
+		if(!gps)
+		{
 			//Frame is like: 
 			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042
 			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
@@ -3713,48 +3862,49 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[22])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			gmx240.precipitation_total,
-			gmx240.precipitation_intensity,
-			&gmx240.precipitation_status,
-			&gmx240.compass,
-			gmx240.wind_chill,
-			gmx240.heat_index,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			gmx.precipitation_total,
+			gmx.precipitation_intensity,
+			&gmx.precipitation_status,
+			&gmx.compass,
+			gmx.wind_chill,
+			gmx.heat_index,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
-		else{
+		else
+		{
 			//Frame is like: 
 			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 00000.200 000.200 N 042
 			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
@@ -3763,59 +3913,60 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[29])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			gmx240.precipitation_total,
-			gmx240.precipitation_intensity,
-			&gmx240.precipitation_status,
-			&gmx240.compass,
-			gmx240.wind_chill,
-			gmx240.heat_index,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status,
-			gmx240.gps_corrected_speed,
-			gmx240.gps_average_corrected_speed,
-			gmx240.gps_corrected_gust_speed,
-			&gmx240.gps_corrected_gust_direction,
-			gmx240.gps_location,
-			&gmx240.gps_heading,
-			gmx240.gps_speed,
-			gmx240.gps_status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			gmx.precipitation_total,
+			gmx.precipitation_intensity,
+			&gmx.precipitation_status,
+			&gmx.compass,
+			gmx.wind_chill,
+			gmx.heat_index,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status,
+			gmx.gps_corrected_speed,
+			gmx.gps_average_corrected_speed,
+			gmx.gps_corrected_gust_speed,
+			&gmx.gps_corrected_gust_direction,
+			gmx.gps_location,
+			&gmx.gps_heading,
+			gmx.gps_speed,
+			gmx.gps_status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
 	}
 	else if(dataFrameFound && stationModel == WS_GMX600)
 	{
-		if(!gps){
+		if(!gps)
+		{
 			//Frame is like: 
 			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 042
 			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
@@ -3823,45 +3974,46 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[23])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			&gmx240.compass,
-			gmx240.wind_chill,
-			gmx240.heat_index,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			&gmx.compass,
+			gmx.wind_chill,
+			gmx.heat_index,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status);
 			
-			return 1;
+			dataFrameParsed = 1;
 		}
-		else{
+		else
+		{
 			//Frame is like: 
 			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 042
 			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
@@ -3870,52 +4022,65 @@ uint8_t weatherStation::read()
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_agrxtr[30])));
 			sscanf (buffer_ws_raw, buffer_table,
-			&gmx240.node_letter,
-			&gmx240.wind_direction,
-			gmx240.wind_speed,
-			&gmx240.corrected_wind_direction,
-			&gmx240.average_wind_direction,
-			gmx240.average_wind_speed,
-			&gmx240.average_wind_gust_direction,
-			gmx240.average_wind_gust_speed,
-			&gmx240.average_corrected_wind_direction,
-			gmx240.wind_sensor_status,
-			gmx240.pressure,
-			gmx240.pressure_sea_level,
-			gmx240.pressure_station,
-			&gmx240.relative_humidity,
-			gmx240.temperature,
-			gmx240.dewpoint,
-			gmx240.absolute_humidity,
-			&gmx240.compass,
-			gmx240.wind_chill,
-			gmx240.heat_index,
-			gmx240.air_density,
-			gmx240.wet_build_temperature,
-			gmx240.sunrise_time,
-			gmx240.solar_noon_time,
-			gmx240.sunset_time,
-			gmx240.position_of_sun,
-			gmx240.twilight_civil,
-			gmx240.twilight_nautical,
-			gmx240.twilight_astronomical,
-			gmx240.x_tilt,
-			gmx240.y_tilt,
-			gmx240.z_orient,
-			gmx240.timestamp,
-			gmx240.supply_voltage,
-			gmx240.status,
-			gmx240.gps_corrected_speed,
-			gmx240.gps_average_corrected_speed,
-			gmx240.gps_corrected_gust_speed,
-			&gmx240.gps_corrected_gust_direction,
-			gmx240.gps_location,
-			&gmx240.gps_heading,
-			gmx240.gps_speed,
-			gmx240.gps_status);
+			&gmx.node_letter,
+			&gmx.wind_direction,
+			gmx.wind_speed,
+			&gmx.corrected_wind_direction,
+			&gmx.average_wind_direction,
+			gmx.average_wind_speed,
+			&gmx.average_wind_gust_direction,
+			gmx.average_wind_gust_speed,
+			&gmx.average_corrected_wind_direction,
+			gmx.wind_sensor_status,
+			gmx.pressure,
+			gmx.pressure_sea_level,
+			gmx.pressure_station,
+			&gmx.relative_humidity,
+			gmx.temperature,
+			gmx.dewpoint,
+			gmx.absolute_humidity,
+			&gmx.compass,
+			gmx.wind_chill,
+			gmx.heat_index,
+			gmx.air_density,
+			gmx.wet_build_temperature,
+			gmx.sunrise_time,
+			gmx.solar_noon_time,
+			gmx.sunset_time,
+			gmx.position_of_sun,
+			gmx.twilight_civil,
+			gmx.twilight_nautical,
+			gmx.twilight_astronomical,
+			gmx.x_tilt,
+			gmx.y_tilt,
+			gmx.z_orient,
+			gmx.timestamp,
+			gmx.supply_voltage,
+			gmx.status,
+			gmx.gps_corrected_speed,
+			gmx.gps_average_corrected_speed,
+			gmx.gps_corrected_gust_speed,
+			&gmx.gps_corrected_gust_direction,
+			gmx.gps_location,
+			&gmx.gps_heading,
+			gmx.gps_speed,
+			gmx.gps_status);
 			
-			return 1;			
+			dataFrameParsed = 1;
 		}
+	}
+	
+	if(dataFrameParsed == 1)
+	{
+		if(gmx.precipitation_status == 'Y')
+		{
+			gmx.precipitation_status = 1;
+		}
+		else
+		{
+			gmx.precipitation_status = 0;
+		}
+		return 1;
 	}
 	else
 	{
@@ -4654,7 +4819,7 @@ float Apogee_SU100::read(void)
 	digitalWrite(SPI_ISO_EN, LOW);
 
 	// check value of the sensor in volts
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 	PRINT_AGR_XTR(F("radiation (V): "));
 	USB.printFloat(radiationVoltage, 5);
 	USB.println();
@@ -4791,7 +4956,7 @@ float Apogee_SQ110::read(void)
 	digitalWrite(SPI_ISO_EN, LOW);
 
 	// check value of the sensor in volts
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 	PRINT_AGR_XTR(F("radiation (V): "));
 	USB.printFloat(radiationVoltage, 5);
 	USB.println();
@@ -4932,7 +5097,7 @@ float Apogee_SP510::read(void)
 	digitalWrite(SPI_ISO_EN, LOW);
 
 	// check value of the sensor in volts
-	#if DEBUG_AGR_XTR == 2
+	#if DEBUG_AGR_XTR > 1
 	PRINT_AGR_XTR(F("radiation (V): "));
 	USB.printFloat(radiationVoltage, 5);
 	USB.println();

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascon
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -450,6 +450,50 @@ uint8_t WaspUtils::readEEPROM(int address)
 	return eeprom_read_byte((unsigned char *) address);
 }
 
+/* readWordEEPROM(address) - reads from the EEPROM specified address
+ *
+ * It reads from the EEPROM specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */
+uint16_t WaspUtils::readWordEEPROM(int address)
+{
+	return eeprom_read_word((uint16_t *) address);
+}
+  
+/* readDWordEEPROM(address) - reads from the EEPROM specified address
+ *
+ * It reads from the EEPROM specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */
+uint32_t WaspUtils::readDWordEEPROM(int address)
+{
+	return eeprom_read_dword((uint32_t *) address);
+}
+  
+/* readFloatEEPROM(address) - reads from the EEPROM specified address
+ *
+ * It reads from the EEPROM specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */
+float WaspUtils::readFloatEEPROM(int address)
+{
+	return eeprom_read_float((float *) address);
+}
+  
+/* readBlockEEPROM(address) - reads from the EEPROM specified address
+ *
+ * It reads from the EEPROM specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */
+void WaspUtils::readBlockEEPROM(int address, void *pointer, uint16_t length)
+{
+	eeprom_read_block(pointer, (uint8_t*) address, length );
+}
+
 
 /* writeEEPROM(address,value) - writes the specified value into the specified address
  *
@@ -462,6 +506,62 @@ void WaspUtils::writeEEPROM(int address, uint8_t value)
 	if( address >= EEPROM_START )
 	{	
 		eeprom_write_byte((uint8_t*) address, value);
+	}
+}
+
+/* writeWordEEPROM(address,value) - writes the specified value into the specified address
+ *
+ * It writes the specified value into the specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */
+void WaspUtils::writeWordEEPROM(int address, uint16_t value)
+{
+	if( address >= EEPROM_START )
+	{	
+		eeprom_write_word((uint16_t*) address, value);
+	}
+}
+
+/* writeDWordEEPROM(address,value) - writes the specified value into the specified address
+ *
+ * It writes the specified value into the specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */ 
+void WaspUtils::writeDWordEEPROM(int address, uint32_t value)
+{
+	if( address >= EEPROM_START )
+	{	
+		eeprom_write_dword((uint32_t*) address, value);
+	}
+}
+
+/* writeFloatEEPROM(address,value) - writes the specified value into the specified address
+ *
+ * It writes the specified value into the specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */  
+void WaspUtils::writeFloatEEPROM(int address, float value)
+{	
+	if( address >= EEPROM_START )
+	{	
+		eeprom_write_float((float*) address, value);
+	}
+}
+ 
+ /* writeBlockEEPROM(address, value, size) - writes the specified value into the specified address
+ *
+ * It writes the specified value into the specified address
+ * 
+ * EEPROM has 4096 Bytes of memory
+ */ 
+void WaspUtils::writeBlockEEPROM(int address, const void *value, size_t size)
+{
+	if( address >= EEPROM_START )
+	{	
+		eeprom_write_block (value, (uint8_t*) address, size);
 	}
 }
 

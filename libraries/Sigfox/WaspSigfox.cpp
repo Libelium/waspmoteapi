@@ -1,7 +1,7 @@
 /*! 
  * @file 	WaspSigfox.cpp
  * @author	Libelium Comunicaciones Distribuidas S.L.
- * @version	3.2
+ * @version	3.3
  * @brief 	Library for managing Sigfox modules TD1207 & TD1508
  *
  *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
@@ -64,7 +64,7 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
 		{
 			case SIGFOX_CMD_SET:		
 					// add "AT$"
-					strncat(_command, AT_HEADER, strlen(AT_HEADER) );
+					strncat(_command, SIGFOX_AT_HEADER, strlen(SIGFOX_AT_HEADER) );
 
 					// add command code
 					strncat(_command, cmdCode, strlen(cmdCode) );
@@ -75,7 +75,7 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
 			case SIGFOX_CMD_DISPLAY:
 
 					// add "AT/"
-					strncat(_command, AT_HEADER_SLASH, strlen(AT_HEADER_SLASH) );
+					strncat(_command, SIGFOX_AT_HEADER_SLASH, strlen(SIGFOX_AT_HEADER_SLASH) );
 
 					// add command code
 					strncat(_command, cmdCode, strlen(cmdCode) );
@@ -96,7 +96,7 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
 		{
 			case SIGFOX_CMD_SET:
 							// add "AT$"
-							strncat(_command, AT_HEADER, strlen(AT_HEADER) );
+							strncat(_command, SIGFOX_AT_HEADER, strlen(SIGFOX_AT_HEADER) );
 							
 							// add command code
 							strncat(_command, cmdCode, strlen(cmdCode) );
@@ -105,7 +105,7 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
 			
 			case SIGFOX_CMD_READ:
 							// add "AT$"
-							strncat(_command, AT_HEADER, strlen(AT_HEADER) );
+							strncat(_command, SIGFOX_AT_HEADER, strlen(SIGFOX_AT_HEADER) );
 
 							// add command code
 							strncat(_command, cmdCode, strlen(cmdCode) );
@@ -118,7 +118,7 @@ void WaspSigfox::generator(uint8_t type, int n, const char *cmdCode, ...)
 			case SIGFOX_CMD_DISPLAY:
 					
 							// add "AT/"
-							strncat(_command, AT_HEADER_SLASH, strlen(AT_HEADER_SLASH) );
+							strncat(_command, SIGFOX_AT_HEADER_SLASH, strlen(SIGFOX_AT_HEADER_SLASH) );
 							
 							// add command code
 							strncat(_command, cmdCode, strlen(cmdCode) );
@@ -323,7 +323,7 @@ uint8_t WaspSigfox::check()
 	uint8_t status;	
 	
 	// send command
-	status = sendCommand("AT\r", AT_OK, AT_ERROR, 5000 );
+	status = sendCommand("AT\r", SIGFOX_AT_OK, SIGFOX_AT_ERROR, 5000 );
 	
 	if( status == 1 )
 	{
@@ -359,7 +359,7 @@ uint8_t WaspSigfox::getID()
 	uint8_t answer;
 	
 	// 1. send command
-	answer = sendCommand("ATI7\r", "\r\n", AT_ERROR, 1000);
+	answer = sendCommand("ATI7\r", "\r\n", SIGFOX_AT_ERROR, 1000);
 	
 	// check possible error answers
 	if(answer == 2)
@@ -412,7 +412,7 @@ uint8_t WaspSigfox::setPower(uint8_t power)
 	snprintf(_command, sizeof(_command), "ATS302=%u\r", power);
 	
 	// 1. send command
-	answer = sendCommand(_command, AT_OK, AT_ERROR, 1000);	
+	answer = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);	
 	
 	// check possible error answers
 	if(answer == 2)
@@ -449,12 +449,12 @@ uint8_t WaspSigfox::getPower()
 	snprintf(_command, sizeof(_command), "ATS302?\r");
 	
 	// enter command mode
-	if( sendCommand(_command, AT_EOL, AT_ERROR, 1000) != 1)
+	if( sendCommand(_command, SIGFOX_AT_EOL, SIGFOX_AT_ERROR, 1000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	answer = waitFor(AT_EOL, 1000);
+	answer = waitFor(SIGFOX_AT_EOL, 1000);
 	
 	// enter command mode
 	if( answer != 1)
@@ -480,7 +480,7 @@ uint8_t WaspSigfox::getPower()
 uint8_t WaspSigfox::saveSettings()
 {	
 	// enter command mode
-	if( sendCommand("AT&W\r", AT_OK, AT_ERROR, 1000) != 1)
+	if( sendCommand("AT&W\r", SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
@@ -502,7 +502,7 @@ uint8_t WaspSigfox::factorySettings()
 {
 	uint8_t status;	
 	
-	status = sendCommand("AT&F\r", AT_OK, AT_ERROR, 1000);
+	status = sendCommand("AT&F\r", SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 	if( status == 1 )
 	{
 		//save config
@@ -535,7 +535,7 @@ uint8_t WaspSigfox::defaultConfiguration()
 {
 	uint8_t answer;	
 	
-	answer = sendCommand("ATZ\r", AT_OK, AT_ERROR, 1000);
+	answer = sendCommand("ATZ\r", SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 	if (answer == 1)
 	{
 		delay(2000);
@@ -589,7 +589,7 @@ uint8_t WaspSigfox::send(char* data)
 	GEN_ATCOMMAND_SET("SF", data);	
 	
 	// enter command mode
-	if( sendCommand(_command, AT_OK, AT_ERROR, 15000) != 1)
+	if( sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 15000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
@@ -667,12 +667,12 @@ uint8_t WaspSigfox::sendACK(char* data)
 	GEN_ATCOMMAND_SET("SF", data, "2","1");	
 	
 	// enter command mode
-	if( sendCommand(_command, AT_OK, AT_ERROR, 10000) != 1)
+	if( sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 10000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	status = waitFor("+RX BEGIN", AT_ERROR, 20000);
+	status = waitFor("+RX BEGIN", SIGFOX_AT_ERROR, 20000);
 	
 	if (status == 2)
 	{
@@ -683,7 +683,7 @@ uint8_t WaspSigfox::sendACK(char* data)
 		return SIGFOX_NO_ANSWER;	
 	}
 	
-	status = waitFor("+RX END", AT_ERROR, 25000);
+	status = waitFor("+RX END", SIGFOX_AT_ERROR, 25000);
 	
 	if (status == 1)
 	{
@@ -771,7 +771,7 @@ uint8_t WaspSigfox::testTransmit(uint16_t count, uint16_t period, int channel)
 	GEN_ATCOMMAND_SET("ST", param1, param2, param3);
 	
 	// enter command mode
-	if( sendCommand(_command, AT_OK, AT_ERROR, 10000*count*period) != 1)
+	if( sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 10000*count*period) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
@@ -797,13 +797,13 @@ uint8_t WaspSigfox::showFirmware()
 	uint8_t status;
 	
 	// enter command mode
-	if( sendCommand("ATI13\r", "SOFT", AT_ERROR, 1000) != 1)
+	if( sendCommand("ATI13\r", "SOFT", SIGFOX_AT_ERROR, 1000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
 	// wait for ending pattern
-	status = waitFor(AT_OK,1000);
+	status = waitFor(SIGFOX_AT_OK,1000);
 	
 	if( status != 1)
 	{
@@ -870,7 +870,7 @@ uint8_t WaspSigfox::sendKeepAlive(uint8_t period)
 	snprintf(_command, sizeof(_command),"ATS300=%u\r", period);
 	
 	// set frequency setting
-	if( sendCommand(_command, AT_OK, AT_ERROR, 10000) != 1)
+	if( sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 10000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
@@ -905,7 +905,7 @@ uint8_t WaspSigfox::continuosWave(uint32_t freq, bool enable)
 	GEN_ATCOMMAND_SET("CW", param1, param2);
 		
 	// set CW mode: enabled or disabled
-	if( sendCommand(_command, AT_OK, AT_ERROR, 500) != 1)
+	if( sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 500) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
@@ -936,7 +936,7 @@ uint8_t WaspSigfox::setAddressLAN(uint32_t naddress)
 	uint8_t status;	
 	snprintf( _command, sizeof(_command), "ATS400=%lu\r", naddress);
 	
-	status = sendCommand(_command, AT_OK, AT_ERROR, 1000);
+	status = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 	if( status == 1 )
 	{
 		// ok
@@ -972,14 +972,14 @@ uint8_t WaspSigfox::getAddressLAN()
 {
 	uint8_t status;	
 	
-	status = sendCommand("ATS400?\r", "\r\n", AT_ERROR, 1000);
+	status = sendCommand("ATS400?\r", "\r\n", SIGFOX_AT_ERROR, 1000);
 	
 	if (status != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	status = waitFor(AT_OK, AT_ERROR, 1000);
+	status = waitFor(SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 
 	if( status == 1 )
 	{
@@ -1018,7 +1018,7 @@ uint8_t WaspSigfox::setMask(uint32_t nmask)
 	
 	snprintf(_command,sizeof(_command),"ATS401=%lu\r",nmask);
 	
-	status = sendCommand(_command, AT_OK, AT_ERROR, 500);
+	status = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 500);
 	if( status == 1 )
 	{
 		// ok
@@ -1052,14 +1052,14 @@ uint8_t WaspSigfox::getMask()
 {
 	uint8_t status;	
 	
-	status = sendCommand("ATS401?\r", "\r\n", AT_ERROR, 1000);
+	status = sendCommand("ATS401?\r", "\r\n", SIGFOX_AT_ERROR, 1000);
 	
 	if (status != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	status = waitFor(AT_OK, AT_ERROR, 1000);
+	status = waitFor(SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 
 	if( status == 1 )
 	{
@@ -1096,7 +1096,7 @@ uint8_t WaspSigfox::setFrequency(uint32_t freq)
 	uint8_t status;	
 	snprintf(_command, sizeof(_command), "ATS403=%lu\r", freq);
 	
-	status = sendCommand(_command, AT_OK, AT_ERROR, 1000);
+	status = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 	if( status == 1 )
 	{
 		// ok
@@ -1132,14 +1132,14 @@ uint8_t WaspSigfox::getFrequency()
 {
 	uint8_t status;	
 	
-	status = sendCommand("ATS403?\r", "\r\n", AT_ERROR, 1000);
+	status = sendCommand("ATS403?\r", "\r\n", SIGFOX_AT_ERROR, 1000);
 	
 	if (status != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	status = waitFor(AT_OK, AT_ERROR, 1000);
+	status = waitFor(SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 
 	if( status == 1 )
 	{
@@ -1176,7 +1176,7 @@ uint8_t WaspSigfox::setPowerLAN(int power)
 	uint8_t status;	
 	snprintf(_command, sizeof(_command), "ATS404=%d\r", power);
 	
-	status = sendCommand(_command, AT_OK, AT_ERROR, 1000);
+	status = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 	if( status == 1 )
 	{
 		// ok
@@ -1212,14 +1212,14 @@ uint8_t WaspSigfox::getPowerLAN()
 {
 	uint8_t status;	
 	
-	status = sendCommand("ATS404?\r", "\r\n", AT_ERROR, 1000);
+	status = sendCommand("ATS404?\r", "\r\n", SIGFOX_AT_ERROR, 1000);
 	
 	if (status != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	status = waitFor(AT_OK, AT_ERROR, 1000);
+	status = waitFor(SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 
 	if( status == 1 )
 	{
@@ -1291,7 +1291,7 @@ uint8_t WaspSigfox::sendLAN(char* data)
 	strcat(_command,"\r");
 	
 	// send packet
-	status = sendCommand(_command, AT_OK, AT_ERROR, 5000);
+	status = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 5000);
 
 	if( status == 1 )
 	{
@@ -1353,7 +1353,7 @@ uint8_t WaspSigfox::receive(uint32_t wait)
 	
 	snprintf(_command, sizeof(_command), "AT$RL=1,%lu\r", wait);
 	
-	status = sendCommand(_command, "\r\n", AT_ERROR, wait*1001);
+	status = sendCommand(_command, "\r\n", SIGFOX_AT_ERROR, wait*1001);
 	
 	if( status == 2 )
 	{	
@@ -1366,7 +1366,7 @@ uint8_t WaspSigfox::receive(uint32_t wait)
 		return SIGFOX_NO_ANSWER;
 	}
 	
-	status = waitFor(AT_OK, AT_ERROR, 1000);
+	status = waitFor(SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 		
 	if( status == 1 )
 	{
@@ -1410,7 +1410,7 @@ uint8_t WaspSigfox::receive(uint32_t wait)
 uint8_t WaspSigfox::setMultiPacket()
 {
 	uint8_t status;	
-	status = sendCommand("AT$RL=2\r", AT_OK, AT_ERROR, 1000);
+	status = sendCommand("AT$RL=2\r", SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 	
 	if( status == 1 )
 	{
@@ -1442,7 +1442,7 @@ uint8_t WaspSigfox::setMultiPacket()
 uint8_t WaspSigfox::disableRX()
 {
 	uint8_t status;	
-	status = sendCommand("AT$RL=0\r", AT_OK, AT_ERROR, 1000);
+	status = sendCommand("AT$RL=0\r", SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 	
 	if( status == 1 )
 	{
@@ -1505,14 +1505,14 @@ uint8_t WaspSigfox::getRegion()
 {
 	uint8_t status;
 	
-	status = sendCommand("ATS304?\r", "\r\n", AT_ERROR, 1000);
+	status = sendCommand("ATS304?\r", "\r\n", SIGFOX_AT_ERROR, 1000);
 	
 	if (status != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	status = waitFor(AT_OK, AT_ERROR, 1000);
+	status = waitFor(SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);
 
 	if (status == 1 )
 	{
@@ -1555,7 +1555,7 @@ uint8_t WaspSigfox::setMacroChannelBitmask(char* bitmask)
 	snprintf(_command, sizeof(_command), "ATS306=%s\r", bitmask);
 	
 	// 1. send command
-	answer = sendCommand(_command, AT_OK, AT_ERROR, 1000);	
+	answer = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);	
 	
 	// check possible error answers
 	if (answer == 2)
@@ -1594,12 +1594,12 @@ uint8_t WaspSigfox::getMacroChannelBitmask()
 	snprintf(_command, sizeof(_command), "ATS306?\r");
 	
 	// enter command mode
-	if (sendCommand(_command, AT_EOL, AT_ERROR, 1000) != 1)
+	if (sendCommand(_command, SIGFOX_AT_EOL, SIGFOX_AT_ERROR, 1000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	answer = waitFor(AT_EOL, 1000);
+	answer = waitFor(SIGFOX_AT_EOL, 1000);
 	
 	// enter command mode
 	if (answer != 1)
@@ -1644,7 +1644,7 @@ uint8_t WaspSigfox::setMacroChannel(uint8_t config)
 	snprintf(_command, sizeof(_command), "ATS307=%u\r", config);
 	
 	// 1. send command
-	answer = sendCommand(_command, AT_OK, AT_ERROR, 1000);	
+	answer = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);	
 	
 	// check possible error answers
 	if (answer == 2)
@@ -1682,12 +1682,12 @@ uint8_t WaspSigfox::getMacroChannel()
 	snprintf(_command, sizeof(_command), "ATS307?\r");
 	
 	// enter command mode
-	if (sendCommand(_command, AT_EOL, AT_ERROR, 1000) != 1)
+	if (sendCommand(_command, SIGFOX_AT_EOL, SIGFOX_AT_ERROR, 1000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	answer = waitFor(AT_EOL, 1000);
+	answer = waitFor(SIGFOX_AT_EOL, 1000);
 	
 	// enter command mode
 	if (answer != 1)
@@ -1730,7 +1730,7 @@ uint8_t WaspSigfox::setDownFreqOffset(int32_t offset)
 	snprintf(_command, sizeof(_command), "ATS308=%li\r", offset);
 
 	// 1. send command
-	answer = sendCommand(_command, AT_OK, AT_ERROR, 1000);	
+	answer = sendCommand(_command, SIGFOX_AT_OK, SIGFOX_AT_ERROR, 1000);	
 	
 	// check possible error answers
 	if (answer == 2)
@@ -1768,12 +1768,12 @@ uint8_t WaspSigfox::getDownFreqOffset()
 	snprintf(_command, sizeof(_command), "ATS308?\r");
 	
 	// enter command mode
-	if (sendCommand(_command, AT_EOL, AT_ERROR, 1000) != 1)
+	if (sendCommand(_command, SIGFOX_AT_EOL, SIGFOX_AT_ERROR, 1000) != 1)
 	{
 		return SIGFOX_ANSWER_ERROR;
 	}
 	
-	answer = waitFor(AT_EOL, 1000);
+	answer = waitFor(SIGFOX_AT_EOL, 1000);
 	
 	// enter command mode
 	if (answer != 1)

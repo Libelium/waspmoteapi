@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.1
+	Version:		3.2
 	Design:			David Gascón
 	Implementation: Javier Siscart, Víctor Boria
 
@@ -33,7 +33,7 @@
 #include <inttypes.h>
 #include "./utility/MCP23008.h"
 #include "./utility/ADC.h"
-#include <./utility/SDI12.h>
+#include <SDI12.h>
 #include <BME280.h>
 #include <UltrasoundSensor.h>
 #include <TSL2561.h>
@@ -188,8 +188,8 @@ struct weatherStationVector
 	//! Variable: stores measured precipitation intensity in mm in a string type
 	char precipitation_intensity[8];
 	
-	//! Variable: stores measured precipitation status in a string type
-	char precipitation_status;
+	//! Variable: stores measured precipitation status in a uint8_t type: 0 is No, 1 is Yes
+	uint8_t precipitation_status;
 	
 	//! Variable: stores measured compass in degrees in uint16_t type
 	uint16_t compass;
@@ -706,7 +706,7 @@ class weatherStation: public WaspSensorAgrXtr
 {
 	public:
 		weatherStation();				//! Constructor
-		weatherStationVector gmx240;
+		weatherStationVector gmx;
 
 		void ON();
 		void OFF();

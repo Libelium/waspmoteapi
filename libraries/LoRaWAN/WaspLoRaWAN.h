@@ -17,8 +17,8 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.4
-    Design:			David Gascón
+    Version:		3.5
+    Design:		David Gascón
     Implementation:	Luis Miguel Martí
 
 */
@@ -60,6 +60,7 @@ enum ModuleTypersLoRaWAN
 	RN2483_MODULE = 1,		//	EU
 	RN2903_MODULE = 2,		//	US or AU
 	RN2903_IN_MODULE = 3,	//	IN
+	RN2903_AS_MODULE = 4,	//	AS
 };
 
 /******************************************************************************
