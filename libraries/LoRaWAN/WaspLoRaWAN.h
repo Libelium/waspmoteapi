@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.5
+    Version:		3.6
     Design:		David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -236,6 +236,7 @@ class WaspLoRaWAN : public WaspUART
 		void showFirmwareVersion();
 		uint8_t setBatteryLevel();
 		uint8_t setBatteryLevel(uint8_t bat);
+		uint8_t showChannelStatus();
 		
 	private:		
 		// Utils

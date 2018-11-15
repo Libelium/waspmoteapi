@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.8
+ *  Version:		3.9
  *  Design:		David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -1737,18 +1737,18 @@ uint8_t WaspLoRaWAN::saveConfig()
 	if (status == 1)
 	{
 		status = LoRaWAN.getUpCounter();
-		if (status == 1)
+		if (status == 0)
 		{
-			status = LoRaWAN.getUpCounter();
 			status = LoRaWAN.getDownCounter();
-			return LORAWAN_ANSWER_OK;
+			if (status == 0)
+			{
+				return LORAWAN_ANSWER_OK;
+			}
+			
+			return LORAWAN_ANSWER_ERROR;
 		}
-		status = LoRaWAN.getDownCounter();
-		if (status == 1)
-		{
-			return LORAWAN_ANSWER_OK;
-		}
-		return LORAWAN_ANSWER_OK;
+		
+		return LORAWAN_ANSWER_ERROR;
 	}
 	else if (status == 2)
 	{
@@ -3294,7 +3294,18 @@ uint8_t WaspLoRaWAN::setChannelStatus(uint8_t channel, char* state)
 	
 	if (status == 1)
 	{
-		_status[channel] = state;
+		memset(ans1,0x00,sizeof(ans1));
+		memset(ans2,0x00,sizeof(ans2));
+
+		// create "on" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[9])));
+		// create "off" answer
+		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[10])));
+		
+		// Store the status of the channel into _status[channel]
+		if (!strcmp(state,ans1)) _status[channel] = true;
+		if (!strcmp(state,ans2)) _status[channel] = false;
+		
 		return LORAWAN_ANSWER_OK;
 	}
 	else if (status == 2)
@@ -5748,6 +5759,51 @@ uint8_t WaspLoRaWAN::showMACStatus()
 	else USB.println(F("End device functional"));
 	
 }
+
+
+/*!
+ * @brief	This function returns all channel status
+ * 
+ * @return	
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error 
+ * 	@arg	'2' if no answer
+ */
+uint8_t WaspLoRaWAN::showChannelStatus()
+{
+	
+	switch (_version)
+	{
+		case RN2483_MODULE:
+		case RN2903_IN_MODULE:
+		case RN2903_AS_MODULE:
+				for (int i = 0; i < 16; i++)
+				{
+					getChannelStatus(i);
+					USB.print("Channel number: ");
+					USB.print(i,DEC);
+					USB.print(" status is ");
+					if (_status[i] == 1) USB.println("on");
+					else USB.println("off");
+				}
+				break;
+				
+		case RN2903_MODULE:
+				for (int i = 0; i < 64; i++)
+				{
+					USB.print("Channel number: ");
+					USB.print(i,DEC);
+					USB.print(" status is ");
+					if (_status[i] == 1) USB.println("on");
+					else USB.println("off");
+				}
+				break;
+		default:
+				break;
+	}
+	
+}
+
 
 void WaspLoRaWAN::convertString(char* string2convert, char* outputString)
 {	

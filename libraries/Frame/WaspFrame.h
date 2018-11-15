@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.4
+    Version:		3.5
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -44,7 +44,7 @@
 #include "WaspFrameConstantsv12.h"
 #include "WaspFrameConstantsv15.h"
 #include "AgrXtrFrameConstants.h"
-
+#include "WtrXtrFrameConstants.h"
 
 /******************************************************************************
  * Definitions & Declarations
@@ -93,6 +93,7 @@
 #define SERVICE2_FRAME 			     5
 #define INFORMATION_FRAME_V15	     6
 #define INFORMATION_FRAME_AGR_XTR    7
+#define INFORMATION_FRAME_WTR_XTR    8
 
 // Define frame types for encrypted frames in different formats
 #define AES_ECB_FRAME_V15		96

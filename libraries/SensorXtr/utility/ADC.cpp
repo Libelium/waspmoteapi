@@ -47,8 +47,8 @@ void LTC::begin(void)
 	SPI.begin();
 
 	// ADC chip select- HIGH by default
-	pinMode(AGR_XTR_ADC_CS, OUTPUT);
-	digitalWrite(AGR_XTR_ADC_CS, HIGH);
+	pinMode(XTR_ADC_CS, OUTPUT);
+	digitalWrite(XTR_ADC_CS, HIGH);
 
     // Initialization of the SPI bus
 	SPI.setBitOrder(MSBFIRST);
@@ -89,7 +89,7 @@ float LTC::readADC(uint8_t channel)
 	// A new conversion is started through a pulse in the chip selection pin and initiating
 	// a transfer
 
-	SPI.setSPISlave(SMART_AGR_XTR_SELECT);
+	SPI.setSPISlave(SMART_XTR_SELECT);
 	delay(2);
 	SPI.transfer(0x00);
 
@@ -106,7 +106,7 @@ float LTC::readADC(uint8_t channel)
 	// The next 24 bits are the conversion result, MSB first
 	// The remaining 4 bits are sub LSBs beyond the 24-bit level (eliminated dividing by 16)
 
-	SPI.setSPISlave(SMART_AGR_XTR_SELECT);
+	SPI.setSPISlave(SMART_XTR_SELECT);
 	delay(1);
 	// Read 4 times to get 4*8 = 32 bits
 	val[0] = SPI.transfer(0x00);
@@ -152,7 +152,7 @@ float LTC::readADC(uint8_t channel)
   uint8_t val_aux = (val[0] & B00010000) >> 4;
   if (val_aux == 1)
   {
-    #if DEBUG_AGR_XTR
+    #if DEBUG_XTR
     USB.print(F("(-) or out of range: "));
     USB.printFloat(value, 5);
     USB.println(F(" V"));

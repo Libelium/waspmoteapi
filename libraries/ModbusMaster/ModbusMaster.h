@@ -41,7 +41,7 @@
  * 	1: debug mode enabled for error output messages
  * 	2: debug mode enabled for both error and ok messages
  */
-#define DEBUG_MODBUS_MASTER	0
+#define DEBUG_MODBUS_MASTER		0
 #define PRINT_MODBUS_MASTER(str)	USB.print(F("[MB_MASTER] ")); USB.print(str);
 #define PRINTLN_MODBUS_MASTER(str)	USB.print(F("[MB_MASTER] ")); USB.println(str);
 

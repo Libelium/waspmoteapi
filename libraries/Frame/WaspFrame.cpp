@@ -1195,6 +1195,10 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
             {
                 strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
             }
+            else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+            {
+                strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+            }
             else
             {
                 strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
@@ -1272,13 +1276,17 @@ int8_t WaspFrame::addSensor(uint8_t type, int value)
 		if (_boot_version >= 'G')
 		{
 			if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
+			{
 				config = (uint8_t)pgm_read_word(&(AGR_XTR_TYPE_TABLE[type]));
-            }
-            else
-            {
-                config = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[type]));
-            }
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				config = (uint8_t)pgm_read_word(&(WTR_XTR_TYPE_TABLE[type]));
+			}
+			else
+			{
+				config = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[type]));
+			}
 		}
 		else
 		{
@@ -1365,14 +1373,18 @@ int8_t WaspFrame::addSensor(uint8_t type, uint16_t value)
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -1446,13 +1458,17 @@ int8_t WaspFrame::addSensor(uint8_t type, uint16_t value)
 		if (_boot_version >= 'G')
 		{
 			if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
+			{
 				config = (uint8_t)pgm_read_word(&(AGR_XTR_TYPE_TABLE[type]));
-            }
-            else
-            {
-                config = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[type]));
-            }
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				config = (uint8_t)pgm_read_word(&(WTR_XTR_TYPE_TABLE[type]));
+			}
+			else
+			{
+				config = (uint8_t)pgm_read_word(&(FRAME_SENSOR_TYPE_TABLE[type]));
+			}
 		}
 		else
 		{
@@ -1540,14 +1556,18 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long value)
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -1673,14 +1693,18 @@ int8_t WaspFrame::addSensor(uint8_t type, double value)
 
 	if (_boot_version >= 'G')
 	{
-        if (_frameType == INFORMATION_FRAME_AGR_XTR)
-        {
-            numDecimals = (uint8_t)pgm_read_word(&(AGR_XTR_DECIMAL_TABLE[type]));
-        }
-        else
-        {
-            numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type]));
-        }
+		if (_frameType == INFORMATION_FRAME_AGR_XTR)
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(AGR_XTR_DECIMAL_TABLE[type]));
+		}
+		else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(WTR_XTR_DECIMAL_TABLE[type]));
+		}
+		else
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type]));
+		}
 	}
 	else
 	{
@@ -1722,14 +1746,18 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -1882,14 +1910,18 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -2007,15 +2039,18 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                numDecimals = (uint8_t)pgm_read_word(&(AGR_XTR_DECIMAL_TABLE[type]));
-            }
-            else
-            {
-                numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type]));
-            }
-
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(AGR_XTR_DECIMAL_TABLE[type]));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(WTR_XTR_DECIMAL_TABLE[type]));
+			}
+			else
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type]));
+			}
 		}
 		else
 		{
@@ -2032,14 +2067,18 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 
 		if (_boot_version >= 'G')
 		{
-            if (type == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (type == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (type == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -2184,14 +2223,18 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long val1, unsigned long val2
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -2335,14 +2378,18 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -2494,14 +2541,18 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -2672,14 +2723,18 @@ int8_t WaspFrame::addSensor(uint8_t type, int val1,int val2,int val3)
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
-            }
-            else
-            {
-                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+			}
+			else
+			{
+				strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+			}
 		}
 		else
 		{
@@ -2824,14 +2879,18 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 
 		if (_boot_version >= 'G')
 		{
-            if (_frameType == INFORMATION_FRAME_AGR_XTR)
-            {
-                numDecimals = (uint8_t)pgm_read_word(&(AGR_XTR_DECIMAL_TABLE[type]));
-            }
-            else
-            {
-                numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type]));
-            }
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(AGR_XTR_DECIMAL_TABLE[type]));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(WTR_XTR_DECIMAL_TABLE[type]));
+			}
+			else
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type]));
+			}
 		}
 		else
 		{
@@ -3005,9 +3064,13 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 	// *1* check sensor typeVal
 	if (_boot_version >= 'G')
 	{
-        if (_frameType == INFORMATION_FRAME_AGR_XTR)
+		if (_frameType == INFORMATION_FRAME_AGR_XTR)
 		{
 			config = (uint8_t)pgm_read_word(&(AGR_XTR_TYPE_TABLE[type]));
+		}
+		else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+		{
+			config = (uint8_t)pgm_read_word(&(WTR_XTR_TYPE_TABLE[type]));
 		}
 		else
 		{
@@ -3062,6 +3125,10 @@ int8_t WaspFrame::checkFields(uint8_t type, uint8_t typeVal, uint8_t fields)
 		if (_frameType == INFORMATION_FRAME_AGR_XTR)
 		{
 			nfields = (uint8_t)pgm_read_word(&(AGR_XTR_FIELD_TABLE[type]));
+		}
+		else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+		{
+			nfields = (uint8_t)pgm_read_word(&(WTR_XTR_FIELD_TABLE[type]));
 		}
 		else
 		{

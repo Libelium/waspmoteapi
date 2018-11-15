@@ -363,22 +363,23 @@ static const uint16_t	REG_OTA				=	256;		// bit 8
 
 
 // WaspRegisterSensor
-static const uint16_t	REG_METERING		=	1;			// bit 0
-static const uint16_t	REG_AGRICULTURE		=	2;			// bit 1
-static const uint16_t	REG_DUST_GASES_PRO	=	4;			// bit 2
-static const uint16_t	REG_WATER_IONS		=	8;			// bit 3
-static const uint16_t	REG_GASES			=	16;			// bit 4
-static const uint16_t	REG_CITIES_PRO		=	32;			// bit 5
-static const uint16_t	REG_EVENTS			=	64;			// bit 6
-static const uint16_t	REG_CITIES_V14		=	128;		// bit 7
-static const uint16_t	REG_CITIES_V15		=	256;		// bit 8
-static const uint16_t	REG_RADIATION		=	512;		// bit 9
-static const uint16_t	REG_PROTOTYPING		=	1024;		// bit 10
-static const uint16_t	REG_PARKING			=	2048;		// bit 11
-static const uint16_t	REG_VIDEO_CAMERA	=	4096;		// bit 12
-static const uint16_t	REG_WATER			=	8192;		// bit 13
-static const uint16_t	REG_AMBIENT			=	16384;		// bit 14
-static const uint16_t	REG_AGR_XTR			=	32768;		// bit 15
+static const uint32_t	REG_METERING		=	1;			// bit 0
+static const uint32_t	REG_AGRICULTURE		=	2;			// bit 1
+static const uint32_t	REG_DUST_GASES_PRO	=	4;			// bit 2
+static const uint32_t	REG_WATER_IONS		=	8;			// bit 3
+static const uint32_t	REG_GASES			=	16;			// bit 4
+static const uint32_t	REG_CITIES_PRO		=	32;			// bit 5
+static const uint32_t	REG_EVENTS			=	64;			// bit 6
+static const uint32_t	REG_CITIES_V14		=	128;		// bit 7
+static const uint32_t	REG_CITIES_V15		=	256;		// bit 8
+static const uint32_t	REG_RADIATION		=	512;		// bit 9
+static const uint32_t	REG_PROTOTYPING		=	1024;		// bit 10
+static const uint32_t	REG_PARKING			=	2048;		// bit 11
+static const uint32_t	REG_VIDEO_CAMERA	=	4096;		// bit 12
+static const uint32_t	REG_WATER			=	8192;		// bit 13
+static const uint32_t	REG_AMBIENT			=	16384;		// bit 14
+static const uint32_t	REG_XTR				=	32768;		// bit 15
+
 
 
 /*******************************************************************************

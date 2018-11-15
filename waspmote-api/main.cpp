@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascon
  *  Implementation:	Yuri Carmona
  */
@@ -37,6 +37,14 @@ int main(void)
 	pinMode(POWER_3V3, OUTPUT);
 	digitalWrite(POWER_3V3,HIGH);	
 
+	//Disable Mux in Xtreme boards
+	if (WaspRegisterSensor & REG_XTR)
+	{
+		//MUX_EN
+		pinMode(20, OUTPUT);
+		digitalWrite(20, LOW);
+	}
+	
 	// get bootloader version
 	_boot_version = Utils.getBootVersion();
 	

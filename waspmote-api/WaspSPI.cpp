@@ -261,7 +261,7 @@ void WaspSPI::setSPISlave(uint8_t SELECTION)
 	}
 
 	// disable Smart Agr Xtr
-	if (WaspRegisterSensor & REG_AGR_XTR)
+	if (WaspRegisterSensor & REG_XTR)
 	{
 		pinMode(DIGITAL3,OUTPUT);
 		digitalWrite(DIGITAL3,HIGH);
@@ -294,9 +294,9 @@ void WaspSPI::setSPISlave(uint8_t SELECTION)
 									}
 									break;
 
-    case SMART_AGR_XTR_SELECT:		if (WaspRegisterSensor & REG_AGR_XTR)
+    case SMART_XTR_SELECT:		if (WaspRegisterSensor & REG_XTR)
     							{
-  									digitalWrite(DIGITAL3, LOW); // defined as AGR_XTR_ADC_CS already.
+  									digitalWrite(DIGITAL3, LOW);
   								}
   								break;
 

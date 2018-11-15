@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		1.2
+    Version:		1.3
     Design:			David Gascón
     Implementation:	Javier Siscart, Víctor Boria
 
@@ -87,7 +87,7 @@
 #define AGRX_CANBUS_TP					50
 #define AGRX_CANBUS_FP					51
 
-// Now some index are reserver for additional fiends, already defined
+// Now some index are reserved for additional fields, already defined
 #define AGRX_SO411_CO_A					134
 #define AGRX_SO411_CO_B					135
 #define AGRX_SO411_CO_C					136
@@ -1008,8 +1008,8 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 226
 	3,		// 227
 	
-	3,		// 228
-	3,		// 229
+	1,		// 228
+	2,		// 229
 	3,		// 230
 	3,		// 231
 	3,		// 232
@@ -1017,24 +1017,24 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	3,		// 234
 	3,		// 235
 	3,		// 236
-	3,		// 237
-	3,		// 238
-	3,		// 239
+	2,		// 237
+	2,		// 238
+	2,		// 239
 	1,		// 240
-	3,		// 241
-	3,		// 242
-	3,		// 243
-	3,		// 244
-	3,		// 245
-	3,		// 246
-	3,		// 247
-	3,		// 248
-	3,		// 249
-	3,		// 250
+	2,		// 241
+	2,		// 242
+	2,		// 243
+	2,		// 244
+	2,		// 245
+	2,		// 246
+	1,		// 247
+	2,		// 248
+	2,		// 249
+	2,		// 250
 	1,		// 251
 	3,		// 252
 	1,		// 253
-	3,		// 254
+	2,		// 254
 	3,		// 255
 	
 };
@@ -1554,8 +1554,8 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 214
 	2,		// 215
 	0,		// 216
-	2,		// 217
-	2,		// 218
+	3,		// 217
+	3,		// 218
 	0,		// 219
 	0,		// 220
 	0,		// 221
@@ -1567,7 +1567,7 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 227
 	
 	0,		// 228
-	0,		// 229
+	2,		// 229
 	0,		// 230
 	0,		// 231
 	0,		// 232
@@ -1575,24 +1575,24 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 234
 	0,		// 235
 	0,		// 236
-	0,		// 237
-	0,		// 238
-	0,		// 239
+	1,		// 237
+	1,		// 238
+	1,		// 239
 	0,		// 240
-	0,		// 241
-	0,		// 242
-	0,		// 243
-	0,		// 244
-	0,		// 245
+	1,		// 241
+	1,		// 242
+	2,		// 243
+	1,		// 244
+	1,		// 245
 	0,		// 246
 	0,		// 247
-	0,		// 248
-	0,		// 249
-	0,		// 250
+	2,		// 248
+	2,		// 249
+	2,		// 250
 	0,		// 251
 	0,		// 252
 	0,		// 253
-	0,		// 254
+	2,		// 254
 	0,		// 255
 
 };
