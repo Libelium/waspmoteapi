@@ -1,4 +1,4 @@
-/*! \file ModbusSensors.h
+/*! \file AqualaboModbusSensors.h
 	\brief Library for managing the modbus sensors in Smart Water Xtreme.
 	This library is not compatible con Smart water version.
 
@@ -123,7 +123,7 @@
 
 // This address will be configured as a first step
 #define DEFAULT_ADDRESS			40
-#define DEFAULT_WAITING_TIME	300 // in ms
+#define DEFAULT_WAITING_TIME	500 // in ms
 
 
 // Supported sensors with Xtreme boards
@@ -146,18 +146,17 @@
  * Class
  ******************************************************************************/
 
-//! Turbidity Sensor Class
+//! Modbus Sensors Class
 /*!
 	This Class defines all the variables and functions used for
-	managing the Turbidity Sensor
+	managing the Modbus Sensors
  */
-class modbusSensorsClass
+class aqualaboModbusSensorsClass
 {
 	public:
 
 		// Public functions
-		modbusSensorsClass();
-		modbusSensorsClass(uint8_t);
+		aqualaboModbusSensorsClass();
 		
 		void initCommunication();
 		
@@ -177,7 +176,11 @@ class modbusSensorsClass
 							float &parameter4);
 						
 		uint8_t readSerialNumber(char *sensorSerialNumber);
+		uint8_t searchAddress(uint8_t _sensorAddr);
+		uint8_t changeAddress(uint8_t _sensorAddr);
 		
+		uint8_t sensorAddr; //!< Sensor address
+		uint16_t waitingTime;
 		
 		// Sensor managemente functions
 		uint8_t writeAverage(uint8_t average);
@@ -207,10 +210,6 @@ class modbusSensorsClass
 
 		void setParametersBySensor(uint8_t sensorType);
 		
-		////////////////////////////////////////////////////////////////////
-		// This declaration is used to generate a float from two integers
-		// integer(16 bits) + integer (16 bits) => float (32bits)
-		////////////////////////////////////////////////////////////////////
 		union
 		{
 			uint16_t ints[2];
@@ -218,10 +217,6 @@ class modbusSensorsClass
 		}
 		foo;
 		
-		////////////////////////////////////////////////////////////////////
-		// This declaration is used to generate a float from two integers
-		// integer(16 bits) + integer (16 bits) => float (32bits)
-		////////////////////////////////////////////////////////////////////
 		union
 		{
 			uint8_t uint8t[2];
@@ -237,7 +232,7 @@ class modbusSensorsClass
 
 
 // object to manage Modbus sensors in Xtreme boards
-extern modbusSensorsClass modbusSensorsXtr;
+extern aqualaboModbusSensorsClass aqualaboModbusSensors;
 
 
 

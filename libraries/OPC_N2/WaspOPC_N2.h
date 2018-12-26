@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Marcos Yarza, Alejandro Gállego
 
@@ -101,6 +101,9 @@ class WaspOPC_N2 : public WaspUART
 
 	/// private methods //////////////////////////
 	private:
+
+	#define SENSOR_DUST_UART_SIZE 110
+	uint8_t class_buffer[SENSOR_DUST_UART_SIZE];
 
 	//! Variable : status variable from the OPC-N2 module
     /*!

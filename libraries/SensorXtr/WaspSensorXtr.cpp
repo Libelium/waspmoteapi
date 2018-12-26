@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.0
+	Version:		3.1
 	Design:			David Gascón
 	Implementation: Victor Boria, Javier Siscart
 
@@ -42,8 +42,8 @@ const char string_04[] PROGMEM = "";
 const char string_05[] PROGMEM = "";
 const char string_06[] PROGMEM = "WARNING - Redefinition of sensor socket detected";
 const char string_07[] PROGMEM = "WARNING - The following sensor can not work in the defined socket: ";
-const char string_08[] PROGMEM = "sensor not detected";
-const char string_09[] PROGMEM = "invalid data";
+const char string_08[] PROGMEM = "";
+const char string_09[] PROGMEM = "";
 const char string_10[] PROGMEM = "socket (!): ";
 const char string_11[] PROGMEM = "WARNING - Not possible to turn on two sensors at the same time: ";
 const char string_12[] PROGMEM = "%c %s %s %c %s %s %s %s %s %s";							//GMX100 frame format
@@ -113,7 +113,7 @@ WaspSensorXtr::WaspSensorXtr()
 	// init variables
 	// SW_XTR MUX -> done in main.cpp
 	//pinMode(MUX_EN, OUTPUT);
-	//digitalWrite(MUX_EN, LOW);
+	//digitalWrite(MUX_EN, HIGH);
 
 	// pin configuration
 	pinMode(MUX_A, OUTPUT);
@@ -207,6 +207,7 @@ void WaspSensorXtr::ON(uint8_t power)
 		default:
 			break;
 	}
+	delay(10);
 }
 
 /*!
@@ -410,7 +411,7 @@ void WaspSensorXtr::setMux(uint8_t socket, uint8_t _state)
 	}
 	else
 	{
-		// enable mux
+		// disable mux
 		digitalWrite(MUX_EN, HIGH);
 	}
 
@@ -600,9 +601,11 @@ uint8_t Decagon_5TE::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -614,7 +617,10 @@ uint8_t Decagon_5TE::ON()
 
 		return 0;
 	}
-
+	
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -659,15 +665,19 @@ uint8_t Decagon_5TE::read()
 	uint8_t response = 0;
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
-
+	
+	char sensorNameStr[4]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "5TE", 3);
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
-		response = sdi12SensorXtr.readMeasures(	_5TE,
-												sensor5TE.sensorSerialNumber,
-												sensor5TE.dielectricPermittivity,
-												sensor5TE.electricalConductivity,
-												sensor5TE.temperature,
-												parameter4_dummy);
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensor5TE.sensorSerialNumber,
+											sensor5TE.dielectricPermittivity,
+											sensor5TE.electricalConductivity,
+											sensor5TE.temperature,
+											parameter4_dummy);
 
 		if ((sensor5TE.dielectricPermittivity != 0)
 		|| (sensor5TE.electricalConductivity != 0)
@@ -732,9 +742,11 @@ uint8_t Decagon_5TM::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -747,6 +759,9 @@ uint8_t Decagon_5TM::ON()
 		return 0;
 	}
 
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -794,17 +809,21 @@ uint8_t Decagon_5TM::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
+	char sensorNameStr[4]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "5TM", 3);
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
-		response = sdi12SensorXtr.readMeasures(	_5TM,
-												sensor5TM.sensorSerialNumber,
-												sensor5TM.dielectricPermittivity,
-												sensor5TM.temperature,
-												parameter3_dummy,
-												parameter4_dummy);
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensor5TM.sensorSerialNumber,
+											sensor5TM.dielectricPermittivity,
+											sensor5TM.temperature,
+											parameter3_dummy,
+											parameter4_dummy);
 
 		if ((sensor5TM.dielectricPermittivity != 0)
-				|| (sensor5TM.temperature != 0))
+		|| (sensor5TM.temperature != 0))
 		{
 			validMeasure = 1;
 		}
@@ -864,9 +883,11 @@ uint8_t Decagon_GS3::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -879,6 +900,9 @@ uint8_t Decagon_GS3::ON()
 		return 0;
 	}
 
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -926,19 +950,23 @@ uint8_t Decagon_GS3::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
+	char sensorNameStr[4]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "GS3", 3);
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
 
-		response = sdi12SensorXtr.readMeasures(	GS3,
-												sensorGS3.sensorSerialNumber,
-												sensorGS3.dielectricPermittivity,
-												sensorGS3.temperature,
-												sensorGS3.electricalConductivity,
-												parameter4_dummy);
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorGS3.sensorSerialNumber,
+											sensorGS3.dielectricPermittivity,
+											sensorGS3.temperature,
+											sensorGS3.electricalConductivity,
+											parameter4_dummy);
 
 		if ((sensorGS3.dielectricPermittivity != 0)
-				|| (sensorGS3.temperature != 0)
-				|| (sensorGS3.electricalConductivity != 0))
+		|| (sensorGS3.temperature != 0)
+		|| (sensorGS3.electricalConductivity != 0))
 		{
 			validMeasure = 1;
 		}
@@ -1000,9 +1028,11 @@ uint8_t Decagon_VP4::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -1015,6 +1045,9 @@ uint8_t Decagon_VP4::ON()
 		return 0;
 	}
 
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -1062,23 +1095,40 @@ uint8_t Decagon_VP4::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
+	char sensorNameStr[6]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "VP-4", 4);
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
 
-		response = sdi12SensorXtr.readMeasures(	VP4,
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorVP4.sensorSerialNumber,
+											sensorVP4.vaporPressure,
+											sensorVP4.temperature,
+											sensorVP4.relativeHumidity,
+											sensorVP4.atmosphericPressure);
+
+		if(response == 0)
+		{
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "ATM14", 5);
+	
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
 												sensorVP4.sensorSerialNumber,
 												sensorVP4.vaporPressure,
 												sensorVP4.temperature,
 												sensorVP4.relativeHumidity,
 												sensorVP4.atmosphericPressure);
-
-
+		}
+		
 		if ((sensorVP4.vaporPressure != 0)
 		|| (sensorVP4.temperature != 0)
 		|| (sensorVP4.relativeHumidity != 0)
 		|| (sensorVP4.atmosphericPressure != 0))
 		{
 			validMeasure = 1;
+			sensorVP4.relativeHumidity = sensorVP4.relativeHumidity * 100.0;
 		}
 		else
 		{
@@ -1136,9 +1186,11 @@ uint8_t Decagon_MPS6::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -1151,6 +1203,9 @@ uint8_t Decagon_MPS6::ON()
 		return 0;
 	}
 
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -1198,17 +1253,35 @@ uint8_t Decagon_MPS6::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
+	char sensorNameStr[6]; 
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
-		response = sdi12SensorXtr.readMeasures(	MPS6,
+		memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+		strncpy(sensorNameStr, "MPS-6", 5);
+	
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorMPS6.sensorSerialNumber,
+											sensorMPS6.waterPotential,
+											sensorMPS6.temperature,
+											parameter3_dummy,
+											parameter4_dummy);
+											
+		if(response == 0)
+		{
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "TER21", 5);
+	
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
 												sensorMPS6.sensorSerialNumber,
 												sensorMPS6.waterPotential,
 												sensorMPS6.temperature,
 												parameter3_dummy,
 												parameter4_dummy);
-
+		}
+		
 		if ((sensorMPS6.waterPotential != 0)
-				|| (sensorMPS6.temperature != 0))
+		|| (sensorMPS6.temperature != 0))
 		{
 			validMeasure = 1;
 		}
@@ -1271,9 +1344,11 @@ uint8_t Apogee_SO411::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -1287,6 +1362,9 @@ uint8_t Apogee_SO411::ON()
 	}
 
 
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -1336,14 +1414,18 @@ uint8_t Apogee_SO411::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
+	char sensorNameStr[7]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "SO-411", 6);
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
-		response = sdi12SensorXtr.readMeasures(	SO411,
-												sensorSO411.sensorSerialNumber,
-												sensorSO411.calibratedOxygen,
-												sensorSO411.bodyTemperature,
-												sensorSO411.milliVolts,
-												parameter4_dummy);
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorSO411.sensorSerialNumber,
+											sensorSO411.calibratedOxygen,
+											sensorSO411.bodyTemperature,
+											sensorSO411.milliVolts,
+											parameter4_dummy);
 
 		if ((sensorSO411.calibratedOxygen != 0)
 		|| (sensorSO411.bodyTemperature != 0)
@@ -1409,9 +1491,11 @@ uint8_t Apogee_SI411::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -1425,6 +1509,9 @@ uint8_t Apogee_SI411::ON()
 	}
 
 
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -1473,14 +1560,18 @@ uint8_t Apogee_SI411::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
+	char sensorNameStr[7]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "SI-411", 6);
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
-		response = sdi12SensorXtr.readMeasures(	SI411,
-												sensorSI411.sensorSerialNumber,
-												sensorSI411.targetTemperature,
-												parameter2_dummy,
-												parameter3_dummy,
-												parameter4_dummy);
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorSI411.sensorSerialNumber,
+											sensorSI411.targetTemperature,
+											parameter2_dummy,
+											parameter3_dummy,
+											parameter4_dummy);
 
 		if ((sensorSI411.sensorSerialNumber[0] != 0)
 		|| (sensorSI411.targetTemperature != 0))
@@ -1549,9 +1640,11 @@ uint8_t Apogee_SF421::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
@@ -1564,6 +1657,9 @@ uint8_t Apogee_SF421::ON()
 		return 0;
 	}
 
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -1612,14 +1708,18 @@ uint8_t Apogee_SF421::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
+	char sensorNameStr[7]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "SF-421", 6);
+	
 	while ((validMeasure == 0) && (retries < 3))
 	{
-		response = sdi12SensorXtr.readMeasures(	SF421,
-												sensorSF421.sensorSerialNumber,
-												sensorSF421.budTemperature,
-												sensorSF421.leafTemperature,
-												parameter3_dummy,
-												parameter4_dummy);
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorSF421.sensorSerialNumber,
+											sensorSF421.budTemperature,
+											sensorSF421.leafTemperature,
+											parameter3_dummy,
+											parameter4_dummy);
 
 
 
@@ -1686,9 +1786,11 @@ void leafWetness::ON()
 	if (SensorXtr.redefinedSocket == 1)
 	{
 		char message[50];
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	SensorXtr.ON(REG_3V3);
@@ -1808,9 +1910,11 @@ void dendrometer::ON()
 	if (SensorXtr.redefinedSocket == 1)
 	{
 		char message[50];
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 
@@ -1928,7 +2032,7 @@ float dendrometer::readGrowth(void)
 
 
 //******************************************************************************
-// GMX-240 Weather station Sensor Class functions
+// Weather station Sensor Class functions
 //******************************************************************************
 
 
@@ -1961,9 +2065,11 @@ void weatherStation::ON()
 	if (SensorXtr.redefinedSocket == 1)
 	{
 		char message[50];
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	Utils.setMuxAux2();
@@ -1986,6 +2092,11 @@ void weatherStation::ON()
 	//Capture buffer
 	while (((millis() - previous) < 10000) && exitWhile == 0)
 	{
+		#if SIMULATE_WEATHER_STATION > 0
+		//Snippet for simulating a weather station connected
+		exitWhile = 1;
+		#endif
+		
 		if (serialAvailable(1) > 0)
 		{
 			//Avoid storing 0x00 in our buffer string
@@ -2014,6 +2125,11 @@ void weatherStation::ON()
 	USB.println(buffer);
 #endif
 
+	#if SIMULATE_WEATHER_STATION > 0
+	//Snippet for simulating a weather station connected
+	strcpy(buffer, "GMX240");
+	#endif
+	
 	if (strstr(buffer, "GMX100") != NULL)
 	{
 #if DEBUG_XTR > 1
@@ -2476,6 +2592,11 @@ uint8_t weatherStation::read()
 	//Capture buffer
 	while (((millis() - previous) < 8000) && (exitWhile == 0) && (dataFrameFound == 0))
 	{
+		#if SIMULATE_WEATHER_STATION > 0
+		//Snippet for simulating a weather station connected
+		dataFrameFound = 1;
+		#endif
+		
 		if (serialAvailable(1) > 0)
 		{
 			//Avoid storing 0x00 in our buffer string or 0x02 STX (Start of Text)
@@ -2510,30 +2631,26 @@ uint8_t weatherStation::read()
 		if ( millis() < previous ) previous = millis();
 	}
 
+	#if SIMULATE_WEATHER_STATION > 0
 	//Snippet for simulating a weather station connected
-	//dataFrameFound = 1;
-
 	//GMX240 example frame
-	//stationModel = WS_GMX240;
-	//strcpy(buffer_ws_raw, "Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000");
+	strcpy(buffer_ws_raw, "Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000");
 
 	//GMX100 example frame
-	//stationModel = WS_GMX100;
 	//strcpy(buffer_ws_raw, "Q 00000.080 000.080 Y +26 -56 +1 2018-06-12T16:31:11.1 +12.0 00000");
 
 	//GMX101 example frame
-	//stationModel = WS_GMX101;
-	//Q 0001 01.20 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +32 -17 +1 2017-01-20T11:46:01.3 +05.0 0000
+	//strcpy(buffer_ws_raw, "Q 0001 01.20 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +32 -17 +1 2017-01-20T11:46:01.3 +05.0 0000");
 	
-	//GMX541 example frame
-	//stationModel = WS_GMX541;
+	//GMX531, GMX541, GMX551 example frame
 	//strcpy(buffer_ws_raw, "Q 264 000.05 052 000 000.00 000 000.00 000 0100 00000.000 000.000 N 148 1001.4 1001.4 1001.4 047 +025.2 +013.4 11.18 0006 00.00  +026 1.2 +017.9 06:49 11:47 16:46 153:+26 17:16 17:49 18:22 +03 -82 +1 2018-11-13T10:06:56.5 +11.8 0000");
+	#endif 
 	
 	
-#if DEBUG_XTR > 1
+	#if DEBUG_XTR > 1
 	USB.print(F("WS RX:"));
 	USB.println(buffer_ws_raw);
-#endif
+	#endif
 
 	if (dataFrameFound && stationModel == WS_GMX100)
 	{
@@ -3492,9 +3609,11 @@ uint8_t bme::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_B)
@@ -3511,6 +3630,7 @@ uint8_t bme::ON()
 	}
 
 	SensorXtr.ON(REG_3V3);
+
 	SensorXtr.set3v3(socket, SWITCH_ON);
 
 	// switch ON I2C isolator Enable, detect if other sensor is already enabled
@@ -3685,9 +3805,11 @@ uint8_t ultrasound::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_B)
@@ -3825,9 +3947,11 @@ uint8_t luxes::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_B)
@@ -3980,9 +4104,11 @@ uint8_t _4_20mA::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_A)
@@ -4118,9 +4244,11 @@ uint8_t Apogee_SU100::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_A)
@@ -4263,9 +4391,11 @@ uint8_t Apogee_SQ110::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_A)
@@ -4406,9 +4536,11 @@ uint8_t Apogee_SP510::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if ((socket == XTR_SOCKET_A)
@@ -4566,9 +4698,11 @@ uint8_t Aqualabo_OPTOD::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if (socket == XTR_SOCKET_F)
@@ -4581,21 +4715,25 @@ uint8_t Aqualabo_OPTOD::ON()
 		return 0;
 	}
 
-	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
-	SensorXtr.set12v(socket, SWITCH_ON);
-
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
+		SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//Enable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_ON);
 
 		//Set modbus address and modbus waiting time acording to sensor
-		modbusSensorsXtr.setParametersBySensor(OPTOD);
+		aqualaboModbusSensors.setParametersBySensor(OPTOD);
 	}
 	//The rest of the sockets use SDI-12
 	else
 	{
+		//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+		SensorXtr.setMux(socket, DISABLED);
+	
+		SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//neccessary delay after powering the sensor
 		delay(1000);
 	}
@@ -4621,7 +4759,7 @@ void Aqualabo_OPTOD::OFF()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		//Enable RS-485 chip on (shared with 3v3 pin)
+		//Disable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_OFF);
 	}
 	SensorXtr.OFF();
@@ -4651,25 +4789,29 @@ uint8_t Aqualabo_OPTOD::read()
 		//Socket E is the only with RS-485
 		if (socket == XTR_SOCKET_E)
 		{
-			response = modbusSensorsXtr.readMeasures(	sensorOPTOD.temperature,
-														sensorOPTOD.oxygenSAT,
-														sensorOPTOD.oxygenMGL,
-														sensorOPTOD.oxygenPPM);
+			response = aqualaboModbusSensors.readMeasures(sensorOPTOD.temperature,
+													sensorOPTOD.oxygenSAT,
+													sensorOPTOD.oxygenMGL,
+													sensorOPTOD.oxygenPPM);
 		}
 		//The rest of the sockets use SDI-12
 		else
 		{
+			char sensorNameStr[4]; 
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "ODO", 3);
+			
 			SensorXtr.setMux(socket, ENABLED);
 
 			memset(sensorOPTOD.sensorSerialNumber, 0x00, sizeof(sensorOPTOD.sensorSerialNumber));
 
-			response = sdi12SensorXtr.readMeasures(	OPTOD,
-													sensorOPTOD.sensorSerialNumber,
-													sensorOPTOD.temperature,
-													sensorOPTOD.oxygenSAT,
-													sensorOPTOD.oxygenMGL,
-													sensorOPTOD.oxygenPPM);
-																									
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+												sensorOPTOD.sensorSerialNumber,
+												sensorOPTOD.temperature,
+												sensorOPTOD.oxygenSAT,
+												sensorOPTOD.oxygenMGL,
+												sensorOPTOD.oxygenPPM);
+
 			SensorXtr.setMux(socket, DISABLED);
 		}
 
@@ -4702,7 +4844,7 @@ uint8_t Aqualabo_OPTOD::readSerialNumber()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		uint8_t response = modbusSensorsXtr.readSerialNumber(sensorOPTOD.sensorSerialNumber);
+		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorOPTOD.sensorSerialNumber);
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -4744,9 +4886,11 @@ uint8_t Aqualabo_PHEHT::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if (socket == XTR_SOCKET_F)
@@ -4759,22 +4903,26 @@ uint8_t Aqualabo_PHEHT::ON()
 		return 0;
 	}
 
-	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
-	SensorXtr.set12v(socket, SWITCH_ON);
-
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
+		SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//Enable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_ON);
 
 		//Set modbus address and modbus waiting time acording to sensor
-		modbusSensorsXtr.setParametersBySensor(PHEHT);
+		aqualaboModbusSensors.setParametersBySensor(PHEHT);
 	}
 	//The rest of the sockets use SDI-12
 	else
 	{
-		//neccessary delay after powering the sensor for SDI-12
+		//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+		SensorXtr.setMux(socket, DISABLED);
+	
+		SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+		SensorXtr.set12v(socket, SWITCH_ON);
+		//neccessary delay after powering the sensor
 		delay(1000);
 	}
 
@@ -4799,7 +4947,7 @@ void Aqualabo_PHEHT::OFF()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		//Enable RS-485 chip on (shared with 3v3 pin)
+		//Disable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_OFF);
 	}
 	SensorXtr.OFF();
@@ -4828,32 +4976,36 @@ uint8_t Aqualabo_PHEHT::read()
 		//Socket E is the only with RS-485
 		if (socket == XTR_SOCKET_E)
 		{
-			response = modbusSensorsXtr.readMeasures(	sensorPHEHT.temperature,
-														sensorPHEHT.pH,
-														sensorPHEHT.redox,
-														sensorPHEHT.pHMV);
+			response = aqualaboModbusSensors.readMeasures(sensorPHEHT.temperature,
+													sensorPHEHT.pH,
+													sensorPHEHT.redox,
+													sensorPHEHT.pHMV);
 		}
 		//The rest of the sockets use SDI-12
 		else
 		{
+			char sensorNameStr[6]; 
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "pH/EH", 5);
+			
 			SensorXtr.setMux(socket, ENABLED);
 
 			memset(sensorPHEHT.sensorSerialNumber, 0x00, sizeof(sensorPHEHT.sensorSerialNumber));
 
-			response = sdi12SensorXtr.readMeasures(	PHEHT,
-													sensorPHEHT.sensorSerialNumber,
-													sensorPHEHT.temperature,
-													sensorPHEHT.pH,
-													sensorPHEHT.redox,
-													sensorPHEHT.pHMV);
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+												sensorPHEHT.sensorSerialNumber,
+												sensorPHEHT.temperature,
+												sensorPHEHT.pH,
+												sensorPHEHT.redox,
+												sensorPHEHT.pHMV);
 
 			SensorXtr.setMux(socket, DISABLED);
 		}
 
 		if ((sensorPHEHT.temperature != 0)
-				|| (sensorPHEHT.pH != 0)
-				|| (sensorPHEHT.redox != 0)
-				|| (sensorPHEHT.pHMV != 0))
+		|| (sensorPHEHT.pH != 0)
+		|| (sensorPHEHT.redox != 0)
+		|| (sensorPHEHT.pHMV != 0))
 		{
 			validMeasure = 1;
 		}
@@ -4880,7 +5032,7 @@ uint8_t Aqualabo_PHEHT::readSerialNumber()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		uint8_t response = modbusSensorsXtr.readSerialNumber(sensorPHEHT.sensorSerialNumber);
+		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorPHEHT.sensorSerialNumber);
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -4924,9 +5076,11 @@ uint8_t Aqualabo_C4E::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if (socket == XTR_SOCKET_F)
@@ -4939,21 +5093,25 @@ uint8_t Aqualabo_C4E::ON()
 		return 0;
 	}
 
-	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
-	SensorXtr.set12v(socket, SWITCH_ON);
-
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
+		SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//Enable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_ON);
 
 		//Set modbus address and modbus waiting time acording to sensor
-		modbusSensorsXtr.setParametersBySensor(C4E);
+		aqualaboModbusSensors.setParametersBySensor(C4E);
 	}
 	//The rest of the sockets use SDI-12
 	else
 	{
+		//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+		SensorXtr.setMux(socket, DISABLED);
+	
+		SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//neccessary delay after powering the sensor
 		delay(500);
 	}
@@ -4978,7 +5136,7 @@ void Aqualabo_C4E::OFF()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		//Enable RS-485 chip on (shared with 3v3 pin)
+		//Disable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_OFF);
 	}
 	SensorXtr.OFF();
@@ -5007,22 +5165,28 @@ uint8_t Aqualabo_C4E::read()
 		//Socket E is the only with RS-485
 		if (socket == XTR_SOCKET_E)
 		{
-			response = modbusSensorsXtr.readMeasures(	sensorC4E.temperature,
-														sensorC4E.conductivity,
-														sensorC4E.conductivity,
-														sensorC4E.totalDissolvedSolids);
+			response = aqualaboModbusSensors.readMeasures(sensorC4E.temperature,
+													sensorC4E.conductivity,
+													sensorC4E.salinity,
+													sensorC4E.totalDissolvedSolids);
 		}
 		//The rest of the sockets use SDI-12
 		else
 		{
+			char sensorNameStr[4]; 
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "C4E", 3);
+
+			memset(sensorC4E.sensorSerialNumber, 0x00, sizeof(sensorC4E.sensorSerialNumber));
+			
 			SensorXtr.setMux(socket, ENABLED);
 
-			response = sdi12SensorXtr.readMeasures(	C4E,
-													sensorC4E.sensorSerialNumber,
-													sensorC4E.temperature,
-													sensorC4E.conductivity,
-													sensorC4E.salinity,
-													sensorC4E.totalDissolvedSolids);
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+												sensorC4E.sensorSerialNumber,
+												sensorC4E.temperature,
+												sensorC4E.conductivity,
+												sensorC4E.salinity,
+												sensorC4E.totalDissolvedSolids);
 
 			SensorXtr.setMux(socket, DISABLED);
 		}
@@ -5056,7 +5220,7 @@ uint8_t Aqualabo_C4E::readSerialNumber()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		uint8_t response = modbusSensorsXtr.readSerialNumber(sensorC4E.sensorSerialNumber);
+		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorC4E.sensorSerialNumber);
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -5098,9 +5262,11 @@ uint8_t Aqualabo_NTU::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if (socket == XTR_SOCKET_F)
@@ -5113,22 +5279,26 @@ uint8_t Aqualabo_NTU::ON()
 		return 0;
 	}
 
-	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
-	SensorXtr.set12v(socket, SWITCH_ON);
-
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
+		SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//Enable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_ON);
 
 		//Set modbus address and modbus waiting time acording to sensor
-		modbusSensorsXtr.setParametersBySensor(NTU);
+		aqualaboModbusSensors.setParametersBySensor(NTU);
 	}
 	//The rest of the sockets use SDI-12
 	else
 	{
-		//neccessary delay after powering the sensor for SDI-12
+		//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+		SensorXtr.setMux(socket, DISABLED);
+	
+		SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+		SensorXtr.set12v(socket, SWITCH_ON);
+		//neccessary delay after powering the sensor
 		delay(1000);
 	}
 
@@ -5153,7 +5323,7 @@ void Aqualabo_NTU::OFF()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		//Enable RS-485 chip on (shared with 3v3 pin)
+		//Disable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_OFF);
 	}
 	SensorXtr.OFF();
@@ -5184,22 +5354,28 @@ uint8_t Aqualabo_NTU::read()
 		//Socket E is the only with RS-485
 		if (socket == XTR_SOCKET_E)
 		{
-			response = modbusSensorsXtr.readMeasures(	sensorNTU.temperature,
-														sensorNTU.turbidityNTU,
-														parameter3_dummy,
-														sensorNTU.turbidityMGL);
+			response = aqualaboModbusSensors.readMeasures(sensorNTU.temperature,
+													sensorNTU.turbidityNTU,
+													parameter3_dummy,
+													sensorNTU.turbidityMGL);
 		}
 		//The rest of the sockets use SDI-12
 		else
 		{
+			char sensorNameStr[6]; 
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "Nep/T", 5);
+			
 			SensorXtr.setMux(socket, ENABLED);
-
-			response = sdi12SensorXtr.readMeasures(	NTU,
-													sensorNTU.sensorSerialNumber,
-													sensorNTU.temperature,
-													sensorNTU.turbidityNTU,
-													parameter3_dummy,
-													sensorNTU.turbidityMGL);
+			
+			memset(sensorNTU.sensorSerialNumber, 0x00, sizeof(sensorNTU.sensorSerialNumber));
+			
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+												sensorNTU.sensorSerialNumber,
+												sensorNTU.temperature,
+												sensorNTU.turbidityNTU,
+												parameter3_dummy,
+												sensorNTU.turbidityMGL);
 
 			SensorXtr.setMux(socket, DISABLED);
 
@@ -5233,7 +5409,7 @@ uint8_t Aqualabo_NTU::readSerialNumber()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		uint8_t response = modbusSensorsXtr.readSerialNumber(sensorNTU.sensorSerialNumber);
+		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorNTU.sensorSerialNumber);
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -5276,9 +5452,11 @@ uint8_t Aqualabo_CTZN::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if (socket == XTR_SOCKET_F)
@@ -5291,21 +5469,25 @@ uint8_t Aqualabo_CTZN::ON()
 		return 0;
 	}
 
-	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
-	SensorXtr.set12v(socket, SWITCH_ON);
-
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
+		SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//Enable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_ON);
 
 		//Set modbus address and modbus waiting time acording to sensor
-		modbusSensorsXtr.setParametersBySensor(CTZN);
+		aqualaboModbusSensors.setParametersBySensor(CTZN);
 	}
 	//The rest of the sockets use SDI-12
 	else
 	{
+		//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+		SensorXtr.setMux(socket, DISABLED);
+	
+		SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//neccessary delay after powering the sensor
 		delay(1000);
 	}
@@ -5330,7 +5512,7 @@ void Aqualabo_CTZN::OFF()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		//Enable RS-485 chip on (shared with 3v3 pin)
+		//Disable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_OFF);
 	}
 	SensorXtr.OFF();
@@ -5359,22 +5541,28 @@ uint8_t Aqualabo_CTZN::read()
 		//Socket E is the only with RS-485
 		if (socket == XTR_SOCKET_E)
 		{
-			response = modbusSensorsXtr.readMeasures(	sensorCTZN.temperature,
-														sensorCTZN.conductivity,
-														sensorCTZN.salinity,
-														sensorCTZN.conductivityNotCompensated);
+			response = aqualaboModbusSensors.readMeasures(sensorCTZN.temperature,
+													sensorCTZN.conductivity,
+													sensorCTZN.salinity,
+													sensorCTZN.conductivityNotCompensated);
 		}
 		//The rest of the sockets use SDI-12
 		else
 		{
+			char sensorNameStr[6]; 
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "CTZ-T", 5);
+			
+			memset(sensorCTZN.sensorSerialNumber, 0x00, sizeof(sensorCTZN.sensorSerialNumber));
+			
 			SensorXtr.setMux(socket, ENABLED);
 
-			response = sdi12SensorXtr.readMeasures(	CTZN,
-													sensorCTZN.sensorSerialNumber,
-													sensorCTZN.temperature,
-													sensorCTZN.conductivity,
-													sensorCTZN.salinity,
-													sensorCTZN.conductivityNotCompensated);
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+												sensorCTZN.sensorSerialNumber,
+												sensorCTZN.temperature,
+												sensorCTZN.conductivity,
+												sensorCTZN.salinity,
+												sensorCTZN.conductivityNotCompensated);
 
 			SensorXtr.setMux(socket, DISABLED);
 
@@ -5408,7 +5596,7 @@ uint8_t Aqualabo_CTZN::readSerialNumber()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		uint8_t response = modbusSensorsXtr.readSerialNumber(sensorCTZN.sensorSerialNumber);
+		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorCTZN.sensorSerialNumber);
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -5450,9 +5638,11 @@ uint8_t Aqualabo_MES5::ON()
 
 	if (SensorXtr.redefinedSocket == 1)
 	{
+		#ifndef MANUFACTURER_TEST
 		//"WARNING: Redefinition of sensor socket detected"
 		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
 		PRINTLN_XTR(message);
+		#endif
 	}
 
 	if (socket == XTR_SOCKET_F)
@@ -5465,21 +5655,25 @@ uint8_t Aqualabo_MES5::ON()
 		return 0;
 	}
 
-	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
-	SensorXtr.set12v(socket, SWITCH_ON);
-
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
+		SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//Enable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_ON);
 
 		//Set modbus address and modbus waiting time acording to sensor
-		modbusSensorsXtr.setParametersBySensor(MES5);
+		aqualaboModbusSensors.setParametersBySensor(MES5);
 	}
 	//The rest of the sockets use SDI-12
 	else
 	{
+		//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+		SensorXtr.setMux(socket, DISABLED);
+	
+		SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+		SensorXtr.set12v(socket, SWITCH_ON);
 		//neccessary delay after powering the sensor
 		delay(1000);
 	}
@@ -5505,7 +5699,7 @@ void Aqualabo_MES5::OFF()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		//Enable RS-485 chip on (shared with 3v3 pin)
+		//Disable RS-485 chip on (shared with 3v3 pin)
 		SensorXtr.set3v3(socket, SWITCH_OFF);
 	}
 	SensorXtr.OFF();
@@ -5535,22 +5729,28 @@ uint8_t Aqualabo_MES5::read()
 		//Socket E is the only with RS-485
 		if (socket == XTR_SOCKET_E)
 		{
-			response = modbusSensorsXtr.readMeasures(	sensorMES5.temperature,
-														sensorMES5.sludgeBlanket,
-														sensorMES5.suspendedSolids,
-														sensorMES5.turbidityFAU);
+			response = aqualaboModbusSensors.readMeasures(sensorMES5.temperature,
+													sensorMES5.sludgeBlanket,
+													sensorMES5.suspendedSolids,
+													sensorMES5.turbidityFAU);
 		}
 		//The rest of the sockets use SDI-12
 		else
 		{
+			char sensorNameStr[5]; 
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "Turb", 4);
+			
 			SensorXtr.setMux(socket, ENABLED);
 
-			response = sdi12SensorXtr.readMeasures(	MES5,
-													sensorMES5.sensorSerialNumber,
-													sensorMES5.temperature,
-													sensorMES5.sludgeBlanket,
-													sensorMES5.suspendedSolids,
-													sensorMES5.turbidityFAU);
+			memset(sensorMES5.sensorSerialNumber, 0x00, sizeof(sensorMES5.sensorSerialNumber));
+			
+			response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+												sensorMES5.sensorSerialNumber,
+												sensorMES5.temperature,
+												sensorMES5.sludgeBlanket,
+												sensorMES5.suspendedSolids,
+												sensorMES5.turbidityFAU);
 
 			SensorXtr.setMux(socket, DISABLED);
 		}
@@ -5585,7 +5785,7 @@ uint8_t Aqualabo_MES5::readSerialNumber()
 	//Socket E is the only with RS-485
 	if (socket == XTR_SOCKET_E)
 	{
-		uint8_t response = modbusSensorsXtr.readSerialNumber(sensorMES5.sensorSerialNumber);
+		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorMES5.sensorSerialNumber);
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -5597,7 +5797,7 @@ uint8_t Aqualabo_MES5::readSerialNumber()
 
 
 //! class constructor
-WaspSensorWaterXtr::WaspSensorWaterXtr()
+AqualaboWaterXtr::AqualaboWaterXtr()
 {
 }
 
@@ -5606,9 +5806,9 @@ WaspSensorWaterXtr::WaspSensorWaterXtr()
 	\param void
 	\return 0 if ok, 1 if error
 */
-uint8_t WaspSensorWaterXtr::init()
+uint8_t AqualaboWaterXtr::init()
 {
-	return modbusSensorsXtr.initSensor();
+	return aqualaboModbusSensors.initSensor();
 }
 
 /*!
@@ -5616,9 +5816,29 @@ uint8_t WaspSensorWaterXtr::init()
 	\param void
 	\return 0 if ok, 1 if error
 */
-uint8_t WaspSensorWaterXtr::init(uint8_t range)
+uint8_t AqualaboWaterXtr::init(uint8_t range)
 {
-	return modbusSensorsXtr.initSensor(range);
+	return aqualaboModbusSensors.initSensor(range);
+}
+
+/*!
+	\brief Check the sensor MODBUS slave address
+	\param void
+	\return 0 if ok, 1 if error
+*/
+uint8_t AqualaboWaterXtr::searchAddress(uint8_t _sensorAddr)
+{
+	return aqualaboModbusSensors.searchAddress(_sensorAddr);
+}
+
+/*!
+	\brief Change the sensor MODBUS slave address
+	\param void
+	\return 0 if ok, 1 if error
+*/
+uint8_t AqualaboWaterXtr::changeAddress(uint8_t _sensorAddr)
+{
+	return aqualaboModbusSensors.changeAddress(_sensorAddr);
 }
 
 
@@ -5627,9 +5847,9 @@ uint8_t WaspSensorWaterXtr::init(uint8_t range)
 	\param void
 	\return 0 if ok, 1 if error
 */
-uint8_t WaspSensorWaterXtr::init(uint8_t range, uint8_t avg)
+uint8_t AqualaboWaterXtr::init(uint8_t range, uint8_t avg)
 {
-	return modbusSensorsXtr.initSensor(range, avg);
+	return aqualaboModbusSensors.initSensor(range, avg);
 }
 
 /*!
@@ -5637,9 +5857,9 @@ uint8_t WaspSensorWaterXtr::init(uint8_t range, uint8_t avg)
 	\param void
 	\return 0 if ok, 1 if error
 */
-uint8_t WaspSensorWaterXtr::calibrate(uint8_t sensor, uint8_t parameter, uint8_t step, float value)
+uint8_t AqualaboWaterXtr::calibrate(uint8_t sensor, uint8_t parameter, uint8_t step, float value)
 {
-	return modbusSensorsXtr.calibrate(sensor, parameter, step, value);
+	return aqualaboModbusSensors.calibrate(sensor, parameter, step, value);
 }
 
 
@@ -5649,10 +5869,10 @@ uint8_t WaspSensorWaterXtr::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 	\param void
 	\return 0 if ok, 1 if error
 */
-void WaspSensorWaterXtr::fillOperatorsName(char* name)
+void AqualaboWaterXtr::fillOperatorsName(char* name)
 {
-	memset(modbusSensorsXtr.calibrationOperatorsName, 0x00, sizeof(modbusSensorsXtr.calibrationOperatorsName));
-	strcpy(modbusSensorsXtr.calibrationOperatorsName, name);
+	memset(aqualaboModbusSensors.calibrationOperatorsName, 0x00, sizeof(aqualaboModbusSensors.calibrationOperatorsName));
+	strcpy(aqualaboModbusSensors.calibrationOperatorsName, name);
 }
 
 
@@ -5661,10 +5881,10 @@ void WaspSensorWaterXtr::fillOperatorsName(char* name)
 	\param void
 	\return 0 if ok, 1 if error
 */
-void WaspSensorWaterXtr::fillCalibrationDate(char* date)
+void AqualaboWaterXtr::fillCalibrationDate(char* date)
 {
-	memset(modbusSensorsXtr.calibrationDate, 0x00, sizeof(modbusSensorsXtr.calibrationDate));
-	strcpy(modbusSensorsXtr.calibrationDate, date);
+	memset(aqualaboModbusSensors.calibrationDate, 0x00, sizeof(aqualaboModbusSensors.calibrationDate));
+	strcpy(aqualaboModbusSensors.calibrationDate, date);
 }
 
 /*!
@@ -5672,9 +5892,9 @@ void WaspSensorWaterXtr::fillCalibrationDate(char* date)
 	\param void
 	\return 0 if ok, 1 if error
 */
-uint8_t WaspSensorWaterXtr::restoreToFactoryCalibration(uint8_t parameter)
+uint8_t AqualaboWaterXtr::restoreToFactoryCalibration(uint8_t parameter)
 {
-	return modbusSensorsXtr.restoreToFactoryCalibration(parameter);
+	return aqualaboModbusSensors.restoreToFactoryCalibration(parameter);
 }
 
 /*!
@@ -5682,9 +5902,9 @@ uint8_t WaspSensorWaterXtr::restoreToFactoryCalibration(uint8_t parameter)
 	\param void
 	\return 0 if ok, 1 if error
 */
-uint8_t WaspSensorWaterXtr::resetTemporaryCalibrationData(uint8_t returnAvgTo1)
+uint8_t AqualaboWaterXtr::resetTemporaryCalibrationData(uint8_t returnAvgTo1)
 {
-	return modbusSensorsXtr.resetTemporaryCalibrationData(returnAvgTo1);
+	return aqualaboModbusSensors.resetTemporaryCalibrationData(returnAvgTo1);
 }
 
 
@@ -5722,7 +5942,7 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
 		USB.println(F("Example: 0.350"));
 		USB.print(F("> "));
@@ -5788,7 +6008,7 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 				calibrate(OPTOD, TEMPERATURE, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
 				USB.println(F("Example: 25.140"));
 				USB.print(F("> "));
@@ -5854,7 +6074,23 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -6045,7 +6281,7 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 				slope = 100;
 
 				printLine();
-				USB.println(F("2. Set sensor at standart slope: 100%"));
+				USB.println(F("2. Set sensor at standard slope: 100%"));
 				USB.println(F("Wait some minutes until the measure stabilizes."));
 				USB.println(F("Then insert 'N' for Next step and press Enter."));
 
@@ -6091,7 +6327,23 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 					USB.print(F("> "));
 
 					serialClean();
-					while (getData(input, inputSize) == 0);
+					uint8_t validInput = 0;
+					while (!validInput)
+					{
+						while (getData(input, inputSize) == 0);
+
+						if (strlen(input) > 15)
+						{
+							USB.println(F("Invalid name."));
+							USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+							USB.print(F("> "));
+							serialClean();
+						}
+						else
+						{
+							validInput = 1;
+						}
+					}
 
 					char calibrationOperatorsName_temp[17];
 					memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -6274,7 +6526,7 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 					slope = 100;
 
 					printLine();
-					USB.println(F("5. Set sensor at standart slope: 100%"));
+					USB.println(F("5. Set sensor at standard slope: 100%"));
 					USB.println(F("Wait some minutes until the measure stabilizes."));
 					USB.println(F("Then insert 'N' for Next step and press Enter."));
 
@@ -6495,7 +6747,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
 		USB.println(F("Example: 0.350"));
 		USB.print(F("> "));
@@ -6561,7 +6813,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 				calibrate(PHEHT, TEMPERATURE, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
 				USB.println(F("Example: 25.140"));
 				USB.print(F("> "));
@@ -6627,7 +6879,23 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -6813,7 +7081,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 			{
 				USB.println(F("Two point calibration method selected"));
 				
-				USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+				USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 				USB.println(F("Example: 4"));
 				USB.print(F("> "));
 
@@ -6878,7 +7146,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 						calibrate(PHEHT, PH, STEP_2, offset);
 
 						printLine();
-						USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+						USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 						USB.println(F("Example: 7"));
 						USB.print(F("> "));
 
@@ -6943,7 +7211,23 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 								USB.print(F("> "));
 
 								serialClean();
-								while (getData(input, inputSize) == 0);
+								uint8_t validInput = 0;
+								while (!validInput)
+								{
+									while (getData(input, inputSize) == 0);
+
+									if (strlen(input) > 15)
+									{
+										USB.println(F("Invalid name."));
+										USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+										USB.print(F("> "));
+										serialClean();
+									}
+									else
+									{
+										validInput = 1;
+									}
+								}
 
 								char calibrationOperatorsName_temp[17];
 								memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -7083,7 +7367,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 			{
 				USB.println(F("Three point calibration method selected"));
 				
-				USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+				USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 				USB.println(F("Example: 4"));
 				USB.print(F("> "));
 
@@ -7148,7 +7432,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 						calibrate(PHEHT, PH, STEP_2, offset);
 
 						printLine();
-						USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+						USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 						USB.println(F("Example: 7"));
 						USB.print(F("> "));
 
@@ -7209,7 +7493,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 								
 								printLine();
 								
-								USB.println(F("5. Insert the third calibration standart value and press Enter."));
+								USB.println(F("5. Insert the third calibration standard value and press Enter."));
 								USB.println(F("Example: 9"));
 								USB.print(F("> "));
 
@@ -7481,7 +7765,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 			calibrate(PHEHT, REDOX, STEP_2, offset);
 
 			printLine();
-			USB.println(F("2. Insert the second calibration standart value (slope) and press Enter."));
+			USB.println(F("2. Insert the second calibration standard value (slope) and press Enter."));
 			USB.println(F("240 mV is recommended)"));
 			USB.println(F("Example: 240"));
 			USB.print(F("> "));
@@ -7547,7 +7831,23 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 					USB.print(F("> "));
 
 					serialClean();
-					while (getData(input, inputSize) == 0);
+					uint8_t validInput = 0;
+					while (!validInput)
+					{
+						while (getData(input, inputSize) == 0);
+
+						if (strlen(input) > 15)
+						{
+							USB.println(F("Invalid name."));
+							USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+							USB.print(F("> "));
+							serialClean();
+						}
+						else
+						{
+							validInput = 1;
+						}
+					}
 
 					char calibrationOperatorsName_temp[17];
 					memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -7720,7 +8020,7 @@ void Aqualabo_C4E::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
 		USB.println(F("Example: 0.350"));
 		USB.print(F("> "));
@@ -7786,7 +8086,7 @@ void Aqualabo_C4E::calibrationProcess(uint8_t parameter)
 				calibrate(C4E, TEMPERATURE, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
 				USB.println(F("Example: 25.140"));
 				USB.print(F("> "));
@@ -7852,7 +8152,24 @@ void Aqualabo_C4E::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -8048,7 +8365,7 @@ void Aqualabo_C4E::calibrationProcess(uint8_t parameter)
 
 
 		printLine();
-		USB.println(F("2. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("2. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0 uS/cm is recommended (sensor exposed to the air)"));
 		USB.println(F("Example: 0"));
 		USB.print(F("> "));
@@ -8114,7 +8431,7 @@ void Aqualabo_C4E::calibrationProcess(uint8_t parameter)
 				calibrate(C4E, PARAMETER_1, STEP_2, offset);
 
 				printLine();
-				USB.println(F("4. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("4. Insert the second calibration standard value (slope) and press Enter."));
 				USB.print(F("A solution recommended for your selected range is "));
 				switch (range)
 				{
@@ -8199,7 +8516,24 @@ void Aqualabo_C4E::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -8379,7 +8713,7 @@ void Aqualabo_NTU::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
 		USB.println(F("Example: 0.350"));
 		USB.print(F("> "));
@@ -8445,7 +8779,7 @@ void Aqualabo_NTU::calibrationProcess(uint8_t parameter)
 				calibrate(NTU, TEMPERATURE, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
 				USB.println(F("Example: 25.140"));
 				USB.print(F("> "));
@@ -8511,7 +8845,23 @@ void Aqualabo_NTU::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -8707,7 +9057,7 @@ void Aqualabo_NTU::calibrationProcess(uint8_t parameter)
 
 
 		printLine();
-		USB.println(F("2. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("2. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0 NTU is recommended (demineralised water)"));
 		USB.println(F("Example: 0"));
 		USB.print(F("> "));
@@ -8773,7 +9123,7 @@ void Aqualabo_NTU::calibrationProcess(uint8_t parameter)
 				calibrate(NTU, PARAMETER_1, STEP_2, offset);
 
 				printLine();
-				USB.println(F("4. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("4. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("A solution with concentration matching the middle of the measurement range"));
 				USB.print(F("is recommended. For your selected range is "));
 				switch (range)
@@ -8859,7 +9209,23 @@ void Aqualabo_NTU::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -9039,7 +9405,7 @@ void Aqualabo_CTZN::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
 		USB.println(F("Example: 0.350"));
 		USB.print(F("> "));
@@ -9105,7 +9471,7 @@ void Aqualabo_CTZN::calibrationProcess(uint8_t parameter)
 				calibrate(CTZN, TEMPERATURE, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
 				USB.println(F("Example: 25.140"));
 				USB.print(F("> "));
@@ -9171,7 +9537,23 @@ void Aqualabo_CTZN::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -9324,7 +9706,7 @@ void Aqualabo_CTZN::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0 mS/cm is recommended (sensor exposed to the air)"));
 		USB.println(F("Example: 0"));
 		USB.print(F("> "));
@@ -9390,7 +9772,7 @@ void Aqualabo_CTZN::calibrationProcess(uint8_t parameter)
 				calibrate(CTZN, PARAMETER_1, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("20 mS/cm is recommended"));
 				USB.println(F("Example: 20"));
 				USB.print(F("> "));
@@ -9456,7 +9838,23 @@ void Aqualabo_CTZN::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -9630,7 +10028,7 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
 		USB.println(F("Example: 0.350"));
 		USB.print(F("> "));
@@ -9696,7 +10094,7 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 				calibrate(MES5, TEMPERATURE, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
 				USB.println(F("Example: 25.140"));
 				USB.print(F("> "));
@@ -9762,7 +10160,23 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -9915,7 +10329,7 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("100% is recommended"));
 		USB.println(F("Example: 100"));
 		USB.print(F("> "));
@@ -9988,7 +10402,23 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 				USB.print(F("> "));
 
 				serialClean();
-				while (getData(input, inputSize) == 0);
+				uint8_t validInput = 0;
+				while (!validInput)
+				{
+					while (getData(input, inputSize) == 0);
+
+					if (strlen(input) > 15)
+					{
+						USB.println(F("Invalid name."));
+						USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+						USB.print(F("> "));
+						serialClean();
+					}
+					else
+					{
+						validInput = 1;
+					}
+				}
 
 				char calibrationOperatorsName_temp[17];
 				memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -10141,7 +10571,7 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
 		USB.println(F("and press Enter."));
 		printLine();
-		USB.println(F("1. Insert the first calibration standart value you will use (offset) and press Enter."));
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
 		USB.println(F("0 FAU is recommended"));
 		USB.println(F("Example: 0"));
 		USB.print(F("> "));
@@ -10207,7 +10637,7 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 				calibrate(MES5, PARAMETER_3, STEP_2, offset);
 
 				printLine();
-				USB.println(F("3. Insert the second calibration standart value (slope) and press Enter."));
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
 				USB.println(F("2000 FAU is recommended"));
 				USB.println(F("Example: 2000"));
 				USB.print(F("> "));
@@ -10273,7 +10703,23 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 						USB.print(F("> "));
 
 						serialClean();
-						while (getData(input, inputSize) == 0);
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
 
 						char calibrationOperatorsName_temp[17];
 						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
@@ -10412,14 +10858,14 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 
 }
 
-void WaspSensorWaterXtr::exitCalibration()
+void AqualaboWaterXtr::exitCalibration()
 {
 	printLine();
 	USB.println(F("Exiting the calibration without considering anything"));
 	resetTemporaryCalibrationData(RETURN_AVG_TO_1);
 }
 
-void WaspSensorWaterXtr::exitCalibrationAndStopElectronicZero()
+void AqualaboWaterXtr::exitCalibrationAndStopElectronicZero()
 {
 	printLine();
 	USB.println(F("Exiting the calibration without considering anything"));
@@ -10427,25 +10873,25 @@ void WaspSensorWaterXtr::exitCalibrationAndStopElectronicZero()
 }
 
 
-void WaspSensorWaterXtr::printLine()
+void AqualaboWaterXtr::printLine()
 {
 	USB.println(F("\r\n****************\r\n"));
 }
 
-void WaspSensorWaterXtr::printBigLine()
+void AqualaboWaterXtr::printBigLine()
 {
 	USB.println(F("\r\n*********************************************\r\n"));
 }
 
 
-uint8_t WaspSensorWaterXtr::getData(char* _input , uint8_t _inputSize)
+uint8_t AqualaboWaterXtr::getData(char* _input , uint8_t _inputSize)
 {
 	memset(_input, 0x00, _inputSize);
 	uint8_t i = 0;
 
 	if (USB.available() > 0)
 	{
-		while (USB.available() > 0)
+		while ((USB.available() > 0)  && (i < _inputSize))
 		{
 			_input[i] = USB.read();
 			//USB.print("READ:");
@@ -10464,7 +10910,7 @@ uint8_t WaspSensorWaterXtr::getData(char* _input , uint8_t _inputSize)
 	return i;
 }
 
-boolean WaspSensorWaterXtr::getDate(char* input, uint8_t inputSize, int numBytes)
+boolean AqualaboWaterXtr::getDate(char* input, uint8_t inputSize, int numBytes)
 {
 	memset(input, 0x00, inputSize);
 	int i = 0;
@@ -10506,7 +10952,7 @@ boolean WaspSensorWaterXtr::getDate(char* input, uint8_t inputSize, int numBytes
 
 }
 
-void WaspSensorWaterXtr::serialClean()
+void AqualaboWaterXtr::serialClean()
 {
 	while (USB.available() > 0)
 	{
@@ -10524,7 +10970,7 @@ void WaspSensorWaterXtr::serialClean()
 				'1' pattern found
 
 */
-bool WaspSensorWaterXtr::find( uint8_t* buffer, uint16_t length, char* pattern)
+bool AqualaboWaterXtr::find( uint8_t* buffer, uint16_t length, char* pattern)
 {
 	int result;
 
@@ -10554,6 +11000,6 @@ bool WaspSensorWaterXtr::find( uint8_t* buffer, uint16_t length, char* pattern)
 
 WaspSensorXtr SensorXtr = WaspSensorXtr();
 
-//WaspSensorWaterXtr SmartWaterXtr = WaspSensorWaterXtr();
+//AqualaboWaterXtr SmartWaterXtr = AqualaboWaterXtr();
 
 ////////////////////////////////////////////////////////////////////////////////

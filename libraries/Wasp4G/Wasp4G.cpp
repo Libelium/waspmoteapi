@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.8
+ *  Version:		3.9
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -43,6 +43,10 @@ Wasp4G::Wasp4G()
 	
 	// Set "application/x-www-form-urlencoded" as default Content-Type
 	sprintf_P(_contentType, (char*)pgm_read_word(&(table_HTTP[7])));
+	
+	// assign class pointer to UART buffer
+	_buffer = class_buffer;
+	_bufferSize = RADIO_4G_UART_SIZE;
 }
 
 
@@ -7436,6 +7440,7 @@ void Wasp4G::printErrorCode( uint16_t error )
 		case WASP4G_CMS_ERROR_0332: USB.println(F("network time-out")); break;
 		case WASP4G_CMS_ERROR_0340: USB.println(F("no +CNMA acknowledgement expected")); break;
 		case WASP4G_CMS_ERROR_0500: USB.println(F("unknown error")); break;
+		case WASP4G_CME_ERROR_0839: USB.println(F("SSL error during handshake")); break;
 		case WASP4G_CME_ERROR_1000: USB.println(F("SSL not activated")); break;
 		case WASP4G_CME_ERROR_1001: USB.println(F("SSL certs and keys wrong or not stored")); break;
 		case WASP4G_CME_ERROR_1003: USB.println(F("SSL already activated")); break;

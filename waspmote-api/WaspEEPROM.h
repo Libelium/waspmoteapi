@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascon
  *  Implementation:	Yuri Carmona
  */
@@ -30,6 +30,18 @@
 
 #include <inttypes.h>
 #include <eeprom_utilities/aes132_comm.h>
+
+
+//! DEBUG MODE
+/*! 0: No debug mode enabled
+ * 	1: debug mode enabled for error output messages
+ * 	2: debug mode enabled for both error and ok messages 
+ * \Remarks do not enable mode 2 unless SOCKET1 is used
+ */
+#define DEBUG_EEPROM 0
+
+// define print MACRO
+#define PRINT_EEPROM(str)		USB.print(F("[EEPROM] ")); USB.print(str);
 
 
 // I2C_EEPROM_PAGESIZE must be multiple of 2 e.g. 16, 32 or 64
@@ -54,8 +66,8 @@ class WaspEEPROM
 public:
     WaspEEPROM();
     
-    uint8_t _buffer[32];
-	uint8_t _response[32];
+    uint8_t _buffer[100];
+	uint8_t _response[100];
 	uint8_t _length;
 
 	uint8_t ON();
@@ -76,6 +88,12 @@ public:
 	uint8_t blockRead(uint16_t address, uint8_t length);
 	uint8_t readJEDEC();
 	uint8_t reset();
+	
+	uint8_t encrypt(uint8_t index, uint8_t *data, uint16_t length, uint8_t *encryptedData, uint16_t *encryptedLength);
+	uint8_t encryptBlock16(uint8_t index, uint8_t *data, uint8_t len);
+	uint8_t saveKey(uint8_t index, uint8_t *key, uint8_t len);
+	uint8_t setKeyConfig(uint8_t index, uint8_t *reg);
+	uint8_t showConfigurationMemoryMap();
 
 private:
     uint8_t _deviceAddress;

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *	
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -3325,7 +3325,7 @@ uint8_t WaspWIFI_PRO::ftpDownload( uint16_t handle, char* server_path, char* sd_
     {	
 		
 		// check if buffer is full, means data lost almost 100% sure
-		if (serialAvailable(_uart) >= (sizeof(_buffer)-1))
+		if (serialAvailable(_uart) >= (_bufferSize-1))
 		{
 			// abort tx
 			userAbort();	
@@ -3337,9 +3337,9 @@ uint8_t WaspWIFI_PRO::ftpDownload( uint16_t handle, char* server_path, char* sd_
 		}
 		
 		// read "_buffer"-size data block
-		if (server_filesize > sizeof(_buffer))
+		if (server_filesize > _bufferSize)
 		{
-			nBytes = readBuffer((int)(sizeof(_buffer)/2));
+			nBytes = readBuffer((int)(_bufferSize/2));
 		}
 		else
 		{
@@ -3739,7 +3739,7 @@ uint8_t WaspWIFI_PRO::ftpListing(uint16_t handle, char* path)
 	
 	while (nBytes > 0)
 	{
-		nBytes = readBuffer(sizeof(_buffer));
+		nBytes = readBuffer(_bufferSize);
 		
 		// write data to file if there is something to be written						
 		if (nBytes > 0)
@@ -4134,9 +4134,9 @@ uint8_t WaspWIFI_PRO::ftpUpload( uint16_t handle, char* server_path, char* sd_pa
     while (sd_filesize > 0)
     {	
 		// read "_buffer"-size data block
-		if(sd_filesize>sizeof(_buffer))
+		if(sd_filesize>_bufferSize)
 		{
-			nBytes = file.read( _buffer, sizeof(_buffer) );	
+			nBytes = file.read( _buffer, _bufferSize );	
 		}
 		else
 		{
@@ -5599,14 +5599,14 @@ uint8_t WaspWIFI_PRO::scan()
 	previous = millis();
 	
 	// clear buffer
-	memset( _buffer, 0x00, sizeof(_buffer) );
+	memset( _buffer, 0x00, _bufferSize );
 	_length = 0;
 	
 	nBytes = serialAvailable(_uart);	
 	
 	while (nBytes > 0)
 	{
-		nBytes = readBuffer(sizeof(_buffer));
+		nBytes = readBuffer(_bufferSize);
 		
 		// write data to file if there is something to be written						
 		if (nBytes > 0)
@@ -6342,10 +6342,10 @@ uint8_t WaspWIFI_PRO::requestOTA(char* server,
 	SD.goRoot();
 	
 	// clear buffer
-	memset(_buffer, 0x00, sizeof(_buffer));
+	memset(_buffer, 0x00, _bufferSize);
 	
 	// Reads the file and copy to '_buffer'
-	SD.cat(OTA_ver_file, 0, sizeof(_buffer));
+	SD.cat(OTA_ver_file, 0, _bufferSize);
 	strcpy((char*)_buffer, SD.buffer );
 	
 	/// 1. Search the file name

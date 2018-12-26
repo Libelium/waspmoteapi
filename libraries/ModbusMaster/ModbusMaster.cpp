@@ -20,7 +20,7 @@
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>  
   Modified for Waspmote by Libelium, 2018
   
-  Version:	3.6
+  Version:	3.7
 */
 
 #include "ModbusMaster.h"
@@ -566,7 +566,7 @@ The request specifies the address and number of registers to be read
 @return 0 on success; exception number on failure
 @ingroup register
 ***********************************************************************/
-uint8_t  ModbusMaster::readRegiters(uint16_t u16ReadAddress, uint16_t u16ReadQty, uint8_t functionCode)
+uint8_t  ModbusMaster::readRegisters(uint16_t u16ReadAddress, uint16_t u16ReadQty, uint8_t functionCode)
 {
 	if (functionCode == ku8MBReadCoils) 
 	{
@@ -732,6 +732,8 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 		PRINT_MODBUS_MASTER("Master send:");
 		USB.printHexln(u8ModbusADU, u8ModbusADUSize);
 	#endif
+	
+	delay(100);
 	
 	// clear buffer
 	memset(u8ModbusADU, 0x00, sizeof(u8ModbusADU));	

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		1.4
+ *  Version:		1.5
  *  Design:			David Gascón
  *  Implementation:	Marcos Yarza, Alejandro Gállego
  */
@@ -74,6 +74,10 @@ WaspOPC_N2::WaspOPC_N2()
 	_PM10 = 0.0;
 
 	pwrGasPRORegister = 0;
+	
+	// assign class pointer to UART buffer
+	_buffer = class_buffer;
+	_bufferSize = SENSOR_DUST_UART_SIZE;
 }
 
 

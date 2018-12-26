@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.5
+    Version:		3.6
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -96,13 +96,14 @@
 #define INFORMATION_FRAME_WTR_XTR    8
 
 // Define frame types for encrypted frames in different formats
-#define AES_ECB_FRAME_V15		96
-#define AES128_ECB_FRAME_V12	97
-#define AES192_ECB_FRAME_V12	98
-#define AES256_ECB_FRAME_V12	99
-#define AES_ECB_END_TO_END_V15	100
-#define AES_ECB_END_TO_END_V12	101
-
+#define AES_ECB_FRAME_V15			96
+#define AES128_ECB_FRAME_V12		97
+#define AES192_ECB_FRAME_V12		98
+#define AES256_ECB_FRAME_V12		99
+#define AES_ECB_END_TO_END_V15		100
+#define AES_ECB_END_TO_END_V12		101
+#define AES_LIBELIUM_CLOUD_SW_FRAME	102
+#define AES_LIBELIUM_CLOUD_HW_FRAME	103
 
 /*! \def TYPE_UINT8
     \brief TYPE_UINT8 defines the constant for uint8_t variables types (1 Byte)
@@ -141,7 +142,7 @@
 //! Variable :  Waspmote serial id
 extern volatile uint8_t _serial_id[8];
 
-const uint8_t max_fields = 20;
+const uint8_t max_fields = 30;
 
 
 /******************************************************************************
@@ -214,31 +215,22 @@ public:
      */ 
 	void setFrameSize(uint16_t size);   
     
-    //! Function : set the frame maximum size
-    /*! This function sets the frame maximum size depending on the protocol, 
-    addressing, linkEncryption mode, AESEncryption.
-	\param uint8_t protocol defines the procotol used
-	\param uint8_t linkEncryption defines if XBee encryption is enabled or not
-	\param uint8_t AESEncryption defines if AES encryption is used or not
-	\return maximum size
-     */ 
+
 	uint16_t getMaxSizeForXBee(	uint8_t protocol,
 								uint8_t linkEncryption, 
-								uint8_t AESEncryption);    
-    
-    //! Function : set the frame maximum size
-    /*! This function sets the frame maximum size depending on the protocol, 
-    addressing, linkEncryption mode, AESEncryption.
-	\param uint8_t protocol defines the procotol used
-	\param uint8_t addressing defines the addressing used
-	\param uint8_t linkEncryption defines if XBee encryption is enabled or not
-	\param uint8_t AESEncryption defines if AES encryption is used or not
-	\return maximum size
-     */ 
+								uint8_t AESEncryption);
+
 	uint16_t getMaxSizeForXBee(	uint8_t protocol,
 								uint8_t addressing, 
 								uint8_t linkEncryption, 
 								uint8_t AESEncryption); 
+	
+	uint16_t getMaxSizeForXBee(	uint8_t protocol,
+								uint8_t addressing, 
+								uint8_t linkEncryption, 
+								uint8_t AESEncryption,
+								uint8_t HwEncryption); 						
+								
 	
 	//! Function : calculates the frame maximum size for WiFi PRO module
     /*! This function sets the frame maximum size depending on the protocol, 
@@ -276,28 +268,11 @@ public:
      */ 
 	uint16_t getFrameSize( void );
   
-    //! Function : creates a new frame
-    /*! This function creates a new ASCII frame getting the mote ID from the 
-     * EEPROM memory.
-     */ 
-    void createFrame(uint8_t mode);   
-  
-    //! Function : creates a new frame
-    /*! This function creates a new frame.
-	\param uint8_t mode specifies the frame mode: BINARY or ASCII
-	\return char* moteID defines the mote Identifier
-     */
+    void createFrame(uint8_t mode);
     void createFrame(uint8_t mode, char* moteID);
     
-    //! Function : creates a encrypted frame
-    /*! This function creates a new frame, encrypting the current contents of the
-     * Waspmote Frame with the AES-key specified as input. The encrypted message 
-     * becomes the payload of the new encapsultad frame
-	\param uint16_t keySize: specifies the AES key mode: AES_128, AES_192 or AES_256
-	\param char* password: specifies the AES key as a string (16, 24 or 32 chars)
-	\return '1' if OK; '0' otherwise
-	 */
     uint8_t encryptFrame(uint16_t keySize, char* password);
+    uint8_t encryptFrameHw(uint8_t keyIndex);
     
     //! Function : creates a encrypted frame from a fragment
     /*! This function creates a new frame, encrypting the current contents of the
@@ -307,11 +282,9 @@ public:
 	\param char* password: specifies the AES key as a string (16, 24 or 32 chars)
 	\return '0' if OK; '1' otherwise
 	 */
-    uint8_t encryptFragment(uint16_t keySize, char* password);
-    
-	/*! Function: Enabled/Disabled the encryption mode to Cloud	
-	\param uint8_t flag: ENABLED or DISABLED
-	*/
+    uint8_t encryptFragment(uint16_t keySize, char* password);    
+    uint8_t encryptFragmentHw(uint8_t keyIndex);
+	
     void encryptionToCloud(uint8_t flag);
     
 	//! Function : set the frame type
@@ -343,6 +316,7 @@ public:
     int8_t addSensor(uint8_t type, unsigned long val1, unsigned long val2);
     int8_t addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t val3);
     int8_t addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t val3, int val4);
+    int8_t addSensor(uint8_t type, int val1,int val2);
     int8_t addSensor(uint8_t type, int val1,int val2,int val3);
     int8_t addSensor(uint8_t type, double val1,double val2,double val3);
 
@@ -378,7 +352,7 @@ public:
     //! Function: checks if fragmentation is needed given the input max size
     bool isFragmentationNeeded(uint16_t maxSize);
     //! Function: init structures for fragmenting the frame
-    uint8_t createFragmentHeader(uint8_t fragmentSize);
+    uint8_t createFragmentHeader(uint16_t fragmentSize);
     //! Function: generate frame with optimum capacity
     uint8_t generateFragment();
     
@@ -389,7 +363,7 @@ public:
     
     //! Variable : buffer where the fragment frame is created
     uint8_t bufferFragment[101]; 
-    uint8_t lengthFragment;
+    uint16_t lengthFragment;
     
     //! Structure for storing all fields in binary frame
     struct

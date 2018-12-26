@@ -1,4 +1,4 @@
-/*! \file ModbusSensors.cpp
+/*! \file AqualaboModbusSensors.cpp
 	\brief Library for managing the modbus sensors in Smart Water Xtreme.
 	This library is not compatible con Smart water version.
 
@@ -31,30 +31,20 @@
 	#include <WaspClasses.h>
 #endif
 
-#include "ModbusSensors.h"
+#include "AqualaboModbusSensors.h"
 
-
-uint8_t sensorAddress; //!< Sensor address
-uint16_t waitingTime;
-
-/***********************************************************************
- * Class contructors
- ***********************************************************************/
-modbusSensorsClass::modbusSensorsClass()
-{
-	waitingTime = DEFAULT_WAITING_TIME;
-	temporaryCoefficientListBuffer = 0;
-}
 
 
 /***********************************************************************
  * Class contructors
  ***********************************************************************/
-modbusSensorsClass::modbusSensorsClass(uint8_t address)
+aqualaboModbusSensorsClass::aqualaboModbusSensorsClass()
 {
 	waitingTime = DEFAULT_WAITING_TIME;
+	sensorAddr = DEFAULT_ADDRESS;
 	temporaryCoefficientListBuffer = 0;
 }
+
 
 /***********************************************************************
  * Methods of the Class
@@ -66,20 +56,190 @@ modbusSensorsClass::modbusSensorsClass(uint8_t address)
 //!	Param : void
 //!	Returns: void
 //!*************************************************************
-void modbusSensorsClass::initCommunication()
+void aqualaboModbusSensorsClass::initCommunication()
 {
-	sensor = ModbusMaster(RS232_COM, sensorAddress);
+	sensor = ModbusMaster(RS232_COM, sensorAddr);
 
 	// The sensor uses 9600 bps speed communication
 	sensor.begin(9600, 1);
 
-	// Two stop bits configuration
-	//sbi(UCSR1C, USBS1);		//FIX: this is not needed and also there is a dedicated function for this.
-	
 	// set Auxiliar2 socket
 	Utils.setMuxAux2();
 	
 	clearBuffer();
+}
+
+
+//!*************************************************************
+//!	Name:	searchAddress()
+//!	Description: check if slave address is correct
+//!	Param : void
+//!	Returns: uint8_t "0" if no error, "1" if error
+//!*************************************************************
+uint8_t aqualaboModbusSensorsClass::searchAddress(uint8_t _sensorAddr)
+{
+	sensorAddr = _sensorAddr;
+	
+	initCommunication();
+	
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+	
+	while ((status !=0) && (retries < 3))
+	{
+		//Read 1 register: POD description
+		status = sensor.readHoldingRegisters(0x0D00, 16);
+		delay(10);
+		retries++;
+	}
+
+	if (status == 0)
+	{
+		uint8_t sensorAddress = sensor.getResponseBuffer(0);
+		
+		char podDescription[33];
+		memset(podDescription, 0x00, sizeof(podDescription));
+		
+		uint8_t j = 0;
+	
+		for (int i=0; i<16; i++)
+		{
+			podDescription[j++] = sensor.getResponseBuffer(i) >>8 & 0xFF;
+			podDescription[j++] = sensor.getResponseBuffer(i) & 0xFF;
+		}
+	
+		#if DEBUG_XTR_MODBUS > 1
+			PRINT_XTR_MODBUS(F("POD description:"));
+			USB.println(podDescription);
+		#endif
+		
+		uint8_t desiredDefaultAddress = 0;
+		
+		//Compare the POD description returned by the sensor 
+		
+		//"ODO / Temperature PONSEL        "
+		if(strncmp(podDescription, "ODO / Te" , 8) == 0)
+		{
+			USB.println("OPTOD sensor found");
+			desiredDefaultAddress = 10;
+		}
+		//"pH / Redox / Temperature PONSEL "
+		if(strncmp(podDescription, "pH / Red" , 8) == 0)
+		{
+			USB.println("PHEHT sensor found");
+			desiredDefaultAddress = 20;
+		}
+		//"C4E /Salinite/Temp PONSEL       "
+		if(strncmp(podDescription, "C4E /Sal" , 8) == 0)
+		{
+			USB.println("C4E sensor found");
+			desiredDefaultAddress = 30;
+		}
+		//"Nephelo/TU / Temperature PONSEL "
+		if(strncmp(podDescription, "Nephelo/" , 8) == 0)
+		{
+			USB.println("NTU sensor found");
+			desiredDefaultAddress = 40;
+		}
+		//"CTZ/Salinity/Temp PONSEL        "
+		if(strncmp(podDescription, "CTZ/Sali" , 8) == 0)
+		{
+			USB.println("CTZN sensor found");
+			desiredDefaultAddress = 50;
+		}
+		//"TU/MES/VB 5 PONSEL              "
+		if(strncmp(podDescription, "TU/MES/V" , 8) == 0)
+		{
+			USB.println("MES5 sensor found");
+			desiredDefaultAddress = 60;
+		}
+		
+		if(desiredDefaultAddress != 0)
+		{
+			#if DEBUG_XTR_MODBUS > 1
+			//Change MODBUS slave address to default
+			USB.print("Changing MODBUS slave address to ");
+			USB.println(desiredDefaultAddress, DEC);
+			#endif
+
+			if (changeAddress(desiredDefaultAddress) == 0)
+			{
+				#if DEBUG_XTR_MODBUS > 1
+				USB.println(F("Sensor MODBUS slave address changed to default"));
+				#endif
+			}
+			else
+			{
+				#if DEBUG_XTR_MODBUS > 0
+				USB.println(F("Error changing sensor MODBUS slave address to default"));
+				#endif
+			}
+			return 0;
+		}
+		else
+		{
+			//if fails return 1
+			return 1;
+		}
+	}
+	else
+	{
+		// If no response from the slave, print an error message.
+		#if DEBUG_XTR_MODBUS > 0
+			PRINTLN_XTR_MODBUS(F("Communication error reading address"));
+		#endif
+		
+		//if fails return 1
+		return 1;
+	}
+
+	return 0;
+}
+
+
+//!*************************************************************
+//!	Name:	changeAddress(uint8_t _sensorAddress)
+//!	Description: Change the sensor slave address
+//!	Param : _sensorAddress
+//!	Returns: uint8_t "0" if no error, "1" if error
+//!*************************************************************
+uint8_t aqualaboModbusSensorsClass::changeAddress(uint8_t _sensorAddr)
+{
+	initCommunication();
+	
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+
+	if (_sensorAddr > 247) _sensorAddr = 247;
+
+
+	while ((status !=0) && (retries < 5))
+	{
+		status = sensor.writeSingleRegister(0x00A3, _sensorAddr);
+
+		delay(100);
+		retries++;
+	}
+
+	// Check that the address has been well written
+	if (status == 0)
+	{
+		#if DEBUG_XTR_MODBUS > 1
+			PRINT_XTR_MODBUS(F("Sensor address configured with value: "));
+			USB.println(_sensorAddr, DEC);
+		#endif
+		sensorAddr = _sensorAddr;
+		
+		return 0;
+	}
+	else
+
+	{
+		#if DEBUG_XTR_MODBUS > 0
+			PRINTLN_XTR_MODBUS(F("Communication Error. Sensor address not configured."));
+		#endif
+		return 1;
+	}
 }
 
 
@@ -89,7 +249,7 @@ void modbusSensorsClass::initCommunication()
 //!	Param : void
 //!	Returns: void
 //!*************************************************************
-uint8_t modbusSensorsClass::initSensor()
+uint8_t aqualaboModbusSensorsClass::initSensor()
 {
 	initCommunication();
 	
@@ -132,7 +292,7 @@ uint8_t modbusSensorsClass::initSensor()
 //!	Param : void
 //!	Returns: void
 //!*************************************************************
-uint8_t modbusSensorsClass::initSensor(uint8_t range)
+uint8_t aqualaboModbusSensorsClass::initSensor(uint8_t range)
 {
 	initCommunication();
 	
@@ -197,7 +357,7 @@ uint8_t modbusSensorsClass::initSensor(uint8_t range)
 //!	Param : void
 //!	Returns: void
 //!*************************************************************
-uint8_t modbusSensorsClass::initSensor(uint8_t range, uint8_t avg)
+uint8_t aqualaboModbusSensorsClass::initSensor(uint8_t range, uint8_t avg)
 {
 	initCommunication();
 	
@@ -258,7 +418,7 @@ uint8_t modbusSensorsClass::initSensor(uint8_t range, uint8_t avg)
 //!	Param : paramNumber
 //!	Returns: 0 is OK, 1 if error
 //!*************************************************************
-uint8_t modbusSensorsClass::writeParamConfig(uint8_t paramNumber, uint8_t range)
+uint8_t aqualaboModbusSensorsClass::writeParamConfig(uint8_t paramNumber, uint8_t range)
 {
 	initCommunication();
 	
@@ -302,7 +462,7 @@ uint8_t modbusSensorsClass::writeParamConfig(uint8_t paramNumber, uint8_t range)
 		status =  sensor.writeSingleRegister(address, configRegister);
 		
 		retries++;
-		delay(10);
+		delay(100);
 	}
 	
 	if (status == 0)
@@ -335,7 +495,7 @@ uint8_t modbusSensorsClass::writeParamConfig(uint8_t paramNumber, uint8_t range)
 //!	Param : paramNumber
 //!	Returns: paramConfig if OK, 0 if error
 //!*************************************************************
-uint16_t modbusSensorsClass::readParamConfig(uint8_t paramNumber)
+uint16_t aqualaboModbusSensorsClass::readParamConfig(uint8_t paramNumber)
 {
 	uint16_t address;
 	
@@ -371,7 +531,7 @@ uint16_t modbusSensorsClass::readParamConfig(uint8_t paramNumber)
 	{
 		//Read 1 register
 		status = sensor.readHoldingRegisters(address, 1);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 	
@@ -405,7 +565,7 @@ uint16_t modbusSensorsClass::readParamConfig(uint8_t paramNumber)
 //!	Param : address and value
 //!	Returns: uint8_t "0" if no error, "1" if error
 //!*************************************************************
-uint8_t modbusSensorsClass::writeCalibrationStandard(uint16_t address, float value)
+uint8_t aqualaboModbusSensorsClass::writeCalibrationStandard(uint16_t address, float value)
 {
 	initCommunication();
 	
@@ -419,7 +579,7 @@ uint8_t modbusSensorsClass::writeCalibrationStandard(uint16_t address, float val
 	while ((status !=0) && (retries < 5))
 	{
 		status = sensor.writeMultipleRegisters(address, 2);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -450,7 +610,7 @@ uint8_t modbusSensorsClass::writeCalibrationStandard(uint16_t address, float val
 //!	Param : address
 //!	Returns: calibrationStandard if OK, -1 if error
 //!*************************************************************
-float modbusSensorsClass::readCalibrationStandard(uint16_t address)
+float aqualaboModbusSensorsClass::readCalibrationStandard(uint16_t address)
 {
 	
 	uint8_t status = 0xFF;
@@ -462,7 +622,7 @@ float modbusSensorsClass::readCalibrationStandard(uint16_t address)
 	{
 		//Read 2 register -> 1 float (4 bytes)
 		status = sensor.readHoldingRegisters(address, 2);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 	
@@ -502,7 +662,7 @@ float modbusSensorsClass::readCalibrationStandard(uint16_t address)
 //!	Param : the use of value depends on the step
 //!	Returns: "0" if no error, "1" if error
 //!*************************************************************
-uint8_t modbusSensorsClass::restoreToFactoryCalibration(uint8_t parameter)
+uint8_t aqualaboModbusSensorsClass::restoreToFactoryCalibration(uint8_t parameter)
 {
 	initCommunication();
 	
@@ -536,7 +696,7 @@ uint8_t modbusSensorsClass::restoreToFactoryCalibration(uint8_t parameter)
 	while ((status !=0) && (retries < 5))
 	{
 		status = sensor.writeSingleRegister(RESTORE_CALIB_REG, transmit_buffer);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -563,7 +723,7 @@ uint8_t modbusSensorsClass::restoreToFactoryCalibration(uint8_t parameter)
 //!	Param : the use of value depends on the step
 //!	Returns: "0" if no error, "1" if error
 //!*************************************************************
-uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t step, float value)
+uint8_t aqualaboModbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t step, float value)
 {
 	// General calibration process for several parameters
 	switch (step)
@@ -577,13 +737,13 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					switch (parameter)
 					{
 						case TEMPERATURE:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_TEMP_1;
-							modbusSensorsXtr.address_slope = CALIB_STANDARD_TEMP_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_TEMP_1;
+							aqualaboModbusSensors.address_slope = CALIB_STANDARD_TEMP_2;
 						break;
 						
 						case PARAMETER_1:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_1;
-							modbusSensorsXtr.address_slope = CALIB_STANDARD_4;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_1;
+							aqualaboModbusSensors.address_slope = CALIB_STANDARD_4;
 						break;
 					}
 				break;
@@ -592,18 +752,18 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					switch (parameter)
 					{
 						case TEMPERATURE:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_TEMP_1;
-							modbusSensorsXtr.address_slope = CALIB_STANDARD_TEMP_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_TEMP_1;
+							aqualaboModbusSensors.address_slope = CALIB_STANDARD_TEMP_2;
 						break;
 						
 						case PARAMETER_1:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_1;
-							modbusSensorsXtr.address_slope = CALIB_STANDARD_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_1;
+							aqualaboModbusSensors.address_slope = CALIB_STANDARD_2;
 						break;
 						
 						case PARAMETER_2:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_3;
-							modbusSensorsXtr.address_slope = CALIB_STANDARD_4;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_3;
+							aqualaboModbusSensors.address_slope = CALIB_STANDARD_4;
 						break;
 					}
 				break;
@@ -613,31 +773,31 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					switch (parameter)
 					{
 						case TEMPERATURE:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_TEMP_1;
-							modbusSensorsXtr.address_slope = CALIB_STANDARD_TEMP_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_TEMP_1;
+							aqualaboModbusSensors.address_slope = CALIB_STANDARD_TEMP_2;
 						break;
 						
 						case PARAMETER_1:
 							switch ((uint8_t)value)
 							{
 								case RANGE_1:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_1;
-									modbusSensorsXtr.address_slope = CALIB_STANDARD_2;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_1;
+									aqualaboModbusSensors.address_slope = CALIB_STANDARD_2;
 									break;
 								
 								case RANGE_2:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_3; 
-									modbusSensorsXtr.address_slope	 = CALIB_STANDARD_4;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_3; 
+									aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_4;
 									break;
 								
 								case RANGE_3:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_5; 
-									modbusSensorsXtr.address_slope	 = CALIB_STANDARD_6;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_5; 
+									aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_6;
 									break;
 								
 								case RANGE_4:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_7; 
-									modbusSensorsXtr.address_slope	 = CALIB_STANDARD_8;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_7; 
+									aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_8;
 									break;
 							}
 						break;
@@ -649,31 +809,31 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					switch (parameter)
 					{
 						case TEMPERATURE:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_TEMP_1;
-							modbusSensorsXtr.address_slope	 = CALIB_STANDARD_TEMP_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_TEMP_1;
+							aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_TEMP_2;
 						break;
 						
 						case PARAMETER_1:
 							switch ((uint8_t)value)
 							{
 								case RANGE_1:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_1;
-									modbusSensorsXtr.address_slope	 = CALIB_STANDARD_2;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_1;
+									aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_2;
 									break;
 								
 								case RANGE_2:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_3; 
-									modbusSensorsXtr.address_slope	 = CALIB_STANDARD_4;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_3; 
+									aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_4;
 									break;
 								
 								case RANGE_3:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_5; 
-									modbusSensorsXtr.address_slope	 = CALIB_STANDARD_6;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_5; 
+									aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_6;
 									break;
 								
 								case RANGE_4:
-									modbusSensorsXtr.address_offset = CALIB_STANDARD_7; 
-									modbusSensorsXtr.address_slope	 = CALIB_STANDARD_8;
+									aqualaboModbusSensors.address_offset = CALIB_STANDARD_7; 
+									aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_8;
 									break;
 							}
 						break;
@@ -685,13 +845,13 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					switch (parameter)
 					{
 						case TEMPERATURE:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_TEMP_1;
-							modbusSensorsXtr.address_slope	 = CALIB_STANDARD_TEMP_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_TEMP_1;
+							aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_TEMP_2;
 						break;
 						
 						case PARAMETER_1:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_1;
-							modbusSensorsXtr.address_slope	 = CALIB_STANDARD_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_1;
+							aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_2;
 						break;
 					}
 				break;
@@ -700,18 +860,18 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					switch (parameter)
 					{
 						case TEMPERATURE:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_TEMP_1;
-							modbusSensorsXtr.address_slope	 = CALIB_STANDARD_TEMP_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_TEMP_1;
+							aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_TEMP_2;
 						break;
 						
 						case PARAMETER_1:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_3;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_3;
 							//address_slope = CALIB_STANDARD_2;
 						break;
 						
 						case PARAMETER_3:
-							modbusSensorsXtr.address_offset = CALIB_STANDARD_1;
-							modbusSensorsXtr.address_slope	 = CALIB_STANDARD_2;
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_1;
+							aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_2;
 						break;
 					}
 				break;
@@ -723,8 +883,8 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 			
 			//Read all calibration standard registers
 			//must be set to 0 after the reset
-			if((readCalibrationStandard(modbusSensorsXtr.address_offset) != 0)
-			|| (readCalibrationStandard(modbusSensorsXtr.address_slope) != 0))
+			if((readCalibrationStandard(aqualaboModbusSensors.address_offset) != 0)
+			|| (readCalibrationStandard(aqualaboModbusSensors.address_slope) != 0))
 			{
 				#if DEBUG_XTR_MODBUS > 0
 					PRINTLN_XTR_MODBUS(F("Error reseting temporary calibration data"));
@@ -758,7 +918,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 				if((sensor == PHEHT) && (parameter == REDOX))
 				{
 					//Write float 1.0 in 0x0208 address
-					if(writeCalibrationStandard(modbusSensorsXtr.address_offset, (float)1.0) == 1)
+					if(writeCalibrationStandard(aqualaboModbusSensors.address_offset, (float)1.0) == 1)
 					{
 						#if DEBUG_XTR_MODBUS > 0
 							PRINTLN_XTR_MODBUS(F("Error writing calibration standart for offset for 1st time (electronic zero)"));
@@ -778,7 +938,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 			if((sensor == PHEHT) && (parameter == REDOX))
 			{
 				//Write float 2.0 in 0x0208 address
-				if(writeCalibrationStandard(modbusSensorsXtr.address_offset, (float)2.0) == 1)
+				if(writeCalibrationStandard(aqualaboModbusSensors.address_offset, (float)2.0) == 1)
 				{
 					#if DEBUG_XTR_MODBUS > 0
 						PRINTLN_XTR_MODBUS(F("Error writing calibration standart for offset for 2nd time (electronic zero)"));
@@ -796,7 +956,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					return 1;
 				}
 				//Then we update with the right bit in the list
-				if(writeTemporaryCoefficientList(modbusSensorsXtr.address_offset) == 1)
+				if(writeTemporaryCoefficientList(aqualaboModbusSensors.address_offset) == 1)
 				{
 					#if DEBUG_XTR_MODBUS > 0
 						PRINTLN_XTR_MODBUS(F("Error updating temporary coef list for offset"));
@@ -805,7 +965,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 				}
 				
 				//Write float 0.0 in 0x0208 address
-				if(writeCalibrationStandard(modbusSensorsXtr.address_offset, (float)0.0) == 1)
+				if(writeCalibrationStandard(aqualaboModbusSensors.address_offset, (float)0.0) == 1)
 				{
 					#if DEBUG_XTR_MODBUS > 0
 						PRINTLN_XTR_MODBUS(F("Error writing calibration standart for offset for 3rd time (electronic zero)"));
@@ -818,7 +978,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 			{
 				//[170] It stores the calibration standart, calculates automatically the coefficient
 				//using the last measurement
-				if(writeCalibrationStandard(modbusSensorsXtr.address_offset, value) == 1)
+				if(writeCalibrationStandard(aqualaboModbusSensors.address_offset, value) == 1)
 				{
 					#if DEBUG_XTR_MODBUS > 0
 						PRINTLN_XTR_MODBUS(F("Error writing calibration standart for offset"));
@@ -835,7 +995,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 					return 1;
 				}
 				//Then we update with the right bit in the list
-				if(writeTemporaryCoefficientList(modbusSensorsXtr.address_offset) == 1)
+				if(writeTemporaryCoefficientList(aqualaboModbusSensors.address_offset) == 1)
 				{
 					#if DEBUG_XTR_MODBUS > 0
 						PRINTLN_XTR_MODBUS(F("Error updating temporary coef list for offset"));
@@ -851,7 +1011,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 		case STEP_3:
 			//[170] It stores the calibration standart, calculates automatically the coefficient
 			//using the last measurement
-			if(writeCalibrationStandard(modbusSensorsXtr.address_slope, value) == 1)
+			if(writeCalibrationStandard(aqualaboModbusSensors.address_slope, value) == 1)
 			{
 				#if DEBUG_XTR_MODBUS > 0
 					PRINTLN_XTR_MODBUS(F("Error writing calibration standart for slope"));
@@ -868,7 +1028,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 				return 1;
 			}
 			//Then we update with the right bit in the list
-			if(writeTemporaryCoefficientList(modbusSensorsXtr.address_slope) == 1)
+			if(writeTemporaryCoefficientList(aqualaboModbusSensors.address_slope) == 1)
 			{
 				#if DEBUG_XTR_MODBUS > 0
 					PRINTLN_XTR_MODBUS(F("Error updating temporary coef list for slope"));
@@ -884,11 +1044,11 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 		case STEP_3B:
 		
 		
-			modbusSensorsXtr.address_slope = CALIB_STANDARD_5;
+			aqualaboModbusSensors.address_slope = CALIB_STANDARD_5;
 			
 			//[170] It stores the calibration standart, calculates automatically the coefficient
 			//using the last measurement
-			if(writeCalibrationStandard(modbusSensorsXtr.address_slope, value) == 1)
+			if(writeCalibrationStandard(aqualaboModbusSensors.address_slope, value) == 1)
 			{
 				#if DEBUG_XTR_MODBUS > 0
 					PRINTLN_XTR_MODBUS(F("Error writing calibration standart for slope"));
@@ -905,7 +1065,7 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 				return 1;
 			}
 			//Then we update with the right bit in the list
-			if(writeTemporaryCoefficientList(modbusSensorsXtr.address_slope) == 1)
+			if(writeTemporaryCoefficientList(aqualaboModbusSensors.address_slope) == 1)
 			{
 				#if DEBUG_XTR_MODBUS > 0
 					PRINTLN_XTR_MODBUS(F("Error updating temporary coef list for slope"));
@@ -913,10 +1073,13 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 				return 1;
 			}
 		break;
+		
 		//In step 4 user validates the entire calibration entering operator's name and date
 		case STEP_4:
 			//[210]
 			uint8_t response_1 = writeCalibrationValidation((uint8_t)parameter);
+			
+			delay(500);
 			
 			//[231] Reset all temporary calibration data for finishing the validation and return averaging to 1
 			uint8_t response_2 = resetTemporaryCalibrationData(RETURN_AVG_TO_1);
@@ -940,104 +1103,71 @@ uint8_t modbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter, uint8_t
 //!	Param : void
 //!	Returns: 0 if OK, 1 if error
 //!*************************************************************
-uint8_t modbusSensorsClass::writeCalibrationValidation(uint8_t value)
+uint8_t aqualaboModbusSensorsClass::writeCalibrationValidation(uint8_t value)
 {
 	initCommunication();
 	
 	uint8_t status = 0xFF;
 	uint8_t retries = 0;
 	
-	uint16_t nameAddress;
-	uint16_t dateAddress;
+	uint16_t validationAddress;
 	
 	switch (value)
 	{
 		case TEMPERATURE:
-			nameAddress = 0x027E;
-			dateAddress = 0x0286;
+			validationAddress = 0x027E;
 			break;
 		
 		case PARAMETER_1:
-			nameAddress = 0x028E;
-			dateAddress = 0x0296;
+			validationAddress = 0x028E;
 			break;
 			
 		case PARAMETER_2:
-			nameAddress = 0x029E;
-			dateAddress = 0x02A6;
+			validationAddress = 0x029E;
 			break;
 			
 		case PARAMETER_3:
-			nameAddress = 0x02AE;
-			dateAddress = 0x02B6;
+			validationAddress = 0x02AE;
 			break;
 	}
-
+	
 	//Prepare operator name in buffer
-	for(uint8_t i = 0; i<8; i++)
+	for(uint8_t i = 0; i < 8; i++)
 	{
 		foo2.uint8t[0] = calibrationOperatorsName[(i*2)+1];
 		foo2.uint8t[1] = calibrationOperatorsName[(i*2)];
 		sensor.setTransmitBuffer(i, foo2.uint16t);
 	}
 	
-	while ((status !=0) && (retries < 5))
-	{
-		status = sensor.writeMultipleRegisters(nameAddress, 8);
-		delay(10);
-		retries++;
-	}
-
-	// Check that the direction has been well written
-	if (status == 0)
-	{
-		#if DEBUG_XTR_MODBUS > 1
-			PRINTLN_XTR_MODBUS(F("Operator name written"));
-		#endif
-	}
-	else
-	{
-		#if DEBUG_XTR_MODBUS > 0
-			PRINTLN_XTR_MODBUS(F("Error writing operator name"));
-		#endif
-		return 1;
-	}
-	
-	
 	//Now prepare calibration date in buffer
-	for(uint8_t i = 0; i<8; i++)
+	for(uint8_t j = 8; j < 16; j++)
 	{
-		foo2.uint8t[0] = calibrationDate[(i*2)+1];
-		foo2.uint8t[1] = calibrationDate[(i*2)];
-		sensor.setTransmitBuffer(i, foo2.uint16t);
+		foo2.uint8t[0] = calibrationDate[((j-8)*2)+1];
+		foo2.uint8t[1] = calibrationDate[((j-8)*2)];
+		sensor.setTransmitBuffer(j, foo2.uint16t);
 	}
-	
-	//Now write date of calibration
-	status = -1;
-	retries = 0;
 	
 	while ((status !=0) && (retries < 5))
 	{
-		status = sensor.writeMultipleRegisters(dateAddress, 8);
-		delay(10);
+		status = sensor.writeMultipleRegisters(validationAddress, 16);
+		delay(100);
 		retries++;
 	}
 
-	// Check that the direction has been well written
+	// Check that the operater name and date has been well written
 	if (status == 0)
 	{
 		#if DEBUG_XTR_MODBUS > 1
-			PRINTLN_XTR_MODBUS(F("Calibration date written"));
+			PRINTLN_XTR_MODBUS(F("Operator name and date written"));
 		#endif
 	}
 	else
 	{
 		#if DEBUG_XTR_MODBUS > 0
-			PRINTLN_XTR_MODBUS(F("Error writing calibration date"));
+			PRINTLN_XTR_MODBUS(F("Error writing operator name and date"));
 		#endif
 		return 1;
 	}
-	
 	return 0;
 }
 
@@ -1047,7 +1177,7 @@ uint8_t modbusSensorsClass::writeCalibrationValidation(uint8_t value)
 //!	Param : void
 //!	Returns: 0 if OK, 1 if error
 //!*************************************************************
-uint8_t modbusSensorsClass::readTemporaryCoefficientList()
+uint8_t aqualaboModbusSensorsClass::readTemporaryCoefficientList()
 {
 	initCommunication();
 	
@@ -1060,7 +1190,7 @@ uint8_t modbusSensorsClass::readTemporaryCoefficientList()
 	{
 		//Read 1 register
 		status = sensor.readHoldingRegisters(TEMP_COEF_LIST_REG, 2);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -1100,7 +1230,7 @@ uint8_t modbusSensorsClass::readTemporaryCoefficientList()
 //!	Param : coefficient
 //!	Returns: "0" if no error, "1" if error
 //!*************************************************************
-uint8_t modbusSensorsClass::writeTemporaryCoefficientList(uint16_t coefficient)
+uint8_t aqualaboModbusSensorsClass::writeTemporaryCoefficientList(uint16_t coefficient)
 {
 	initCommunication();
 	
@@ -1164,7 +1294,7 @@ uint8_t modbusSensorsClass::writeTemporaryCoefficientList(uint16_t coefficient)
 	while ((status !=0) && (retries < 5))
 	{
 		status = sensor.writeMultipleRegisters(TEMP_COEF_LIST_REG, 2);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -1195,7 +1325,7 @@ uint8_t modbusSensorsClass::writeTemporaryCoefficientList(uint16_t coefficient)
 //!	Param : void
 //!	Returns: "0" if no error, "1" if error
 //!*************************************************************
-uint8_t modbusSensorsClass::resetTemporaryCalibrationData(uint8_t returnAvgTo1_stopElectronicZero)
+uint8_t aqualaboModbusSensorsClass::resetTemporaryCalibrationData(uint8_t returnAvgTo1_stopElectronicZero)
 {
 	//Write '0x00000000 ' at 0x014C address 
 	//List of temporary coefficients to be used in measurement calculation
@@ -1210,7 +1340,7 @@ uint8_t modbusSensorsClass::resetTemporaryCalibrationData(uint8_t returnAvgTo1_s
 	while ((status !=0) && (retries < 5))
 	{
 		status = sensor.writeMultipleRegisters(0x014C, 2);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -1235,7 +1365,7 @@ uint8_t modbusSensorsClass::resetTemporaryCalibrationData(uint8_t returnAvgTo1_s
 	{
 		//List of temporary coefficients to be used in measurement calculation 
 		status = sensor.writeMultipleRegisters(0x004C, 1);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -1293,7 +1423,7 @@ uint8_t modbusSensorsClass::resetTemporaryCalibrationData(uint8_t returnAvgTo1_s
 //!	Param : avg
 //!	Returns: uint8_t "0" if no error, "1" if error
 //!*************************************************************
-uint8_t modbusSensorsClass::writeAverage(uint8_t avg)
+uint8_t aqualaboModbusSensorsClass::writeAverage(uint8_t avg)
 {
 	initCommunication();
 	
@@ -1308,7 +1438,7 @@ uint8_t modbusSensorsClass::writeAverage(uint8_t avg)
 
 		status = sensor.writeSingleRegister(AVRG_PARA_REG, avg);
 
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -1337,11 +1467,9 @@ uint8_t modbusSensorsClass::writeAverage(uint8_t avg)
 //!	Param : void
 //!	Returns: 0 if OK, 1 if error
 //!*************************************************************
-uint8_t modbusSensorsClass::readWaitingTime()
+uint8_t aqualaboModbusSensorsClass::readWaitingTime()
 {
 	initCommunication();
-	
-	uint16_t average = 0;
 	
 	uint8_t status = 0xFF;
 	uint8_t retries = 0;
@@ -1350,7 +1478,7 @@ uint8_t modbusSensorsClass::readWaitingTime()
 	{
 		//Read 1 register
 		status = sensor.readHoldingRegisters(WAITING_TIME_REG, 1);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -1384,7 +1512,7 @@ uint8_t modbusSensorsClass::readWaitingTime()
 //!	Param : void
 //!	Returns: average value (1-50) if OK, 0 if error
 //!*************************************************************
-uint16_t modbusSensorsClass::readAverage()
+uint16_t aqualaboModbusSensorsClass::readAverage()
 {
 	initCommunication();
 	
@@ -1397,7 +1525,7 @@ uint16_t modbusSensorsClass::readAverage()
 	{
 		//Read 1 register
 		status = sensor.readHoldingRegisters(AVRG_PARA_REG, 1);
-		delay(10);
+		delay(100);
 		retries++;
 	}
 
@@ -1430,7 +1558,7 @@ uint16_t modbusSensorsClass::readAverage()
 //!	Param : void
 //!	Returns: void
 //!*************************************************************
-void modbusSensorsClass::clearBuffer()
+void aqualaboModbusSensorsClass::clearBuffer()
 {
 	// Clear Response Buffer
 	sensor.clearResponseBuffer();
@@ -1446,7 +1574,7 @@ void modbusSensorsClass::clearBuffer()
 //!	Param : void
 //!	Returns: "0" if no error, "1" if error
 //!*************************************************************
-uint8_t modbusSensorsClass::readSerialNumber(char *sensorSerialNumber)
+uint8_t aqualaboModbusSensorsClass::readSerialNumber(char *sensorSerialNumber)
 {
 
 	initCommunication();
@@ -1459,7 +1587,7 @@ uint8_t modbusSensorsClass::readSerialNumber(char *sensorSerialNumber)
 		retries++;
 		
 		status =  sensor.readHoldingRegisters(SERIAL_NUMBER_REG, 16);
-		delay(10);
+		delay(100);
 	}
 	
 	uint8_t j = 0;
@@ -1486,43 +1614,43 @@ uint8_t modbusSensorsClass::readSerialNumber(char *sensorSerialNumber)
 }
 
 
-void modbusSensorsClass::setParametersBySensor(uint8_t sensorType)
+void aqualaboModbusSensorsClass::setParametersBySensor(uint8_t sensorType)
 {
 	switch (sensorType)
 	{
 		case OPTOD:
-			sensorAddress = 10;
+			sensorAddr = 10;
 			waitingTime = 500;
 			break;
 		
 		case PHEHT:
-			sensorAddress = 20;
+			sensorAddr = 20;
 			waitingTime = 400;
 			break;
 		
 		case C4E:
-			sensorAddress = 30;
+			sensorAddr = 30;
 			waitingTime = 500;
 			break;
 		
 		case NTU:
-			sensorAddress = 40;
+			sensorAddr = 40;
 			waitingTime = 300;
 			break;
 		
 		case CTZN:
-			sensorAddress = 50;
+			sensorAddr = 50;
 			waitingTime = 500;
 			break;
 		
 		case MES5:
-			sensorAddress = 60;
+			sensorAddr = 60;
 			waitingTime = 500;
 			break;
 		
 		default:
-			sensorAddress = 40;
-			waitingTime = 400;
+			sensorAddr = DEFAULT_ADDRESS;
+			waitingTime = DEFAULT_WAITING_TIME;
 			break;
 	}
 }
@@ -1534,7 +1662,7 @@ void modbusSensorsClass::setParametersBySensor(uint8_t sensorType)
 //!	Param : void
 //!	Returns: 1 if OK, 0 if error
 //!*************************************************************
-uint8_t modbusSensorsClass::readMeasures(float &parameter1, float &parameter2, float &parameter3, float &parameter4)
+uint8_t aqualaboModbusSensorsClass::readMeasures(float &parameter1, float &parameter2, float &parameter3, float &parameter4)
 {
 	initCommunication();
 	
@@ -1554,7 +1682,7 @@ uint8_t modbusSensorsClass::readMeasures(float &parameter1, float &parameter2, f
 		
 		//Write 1 register (set previouly in TX buffer) in address "NEW_MEAS_REG"
 		status =  sensor.writeMultipleRegisters(NEW_MEAS_REG, 1);
-		delay(10);
+		delay(100);
 	}
 
 	// Important delay
@@ -1570,7 +1698,7 @@ uint8_t modbusSensorsClass::readMeasures(float &parameter1, float &parameter2, f
 			//Read 8 registers with the 4 measures (each register is 2 bytes)
 			status = sensor.readHoldingRegisters(MEASUREMENTS_REG, 0x08);
 			retries++;
-			delay(10);
+			delay(100);
 		}
 
 		if (status == 0)
@@ -1617,5 +1745,5 @@ uint8_t modbusSensorsClass::readMeasures(float &parameter1, float &parameter2, f
 
 
 
-modbusSensorsClass	modbusSensorsXtr = modbusSensorsClass();
+aqualaboModbusSensorsClass	aqualaboModbusSensors = aqualaboModbusSensorsClass();
 

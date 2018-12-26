@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.6
+ *  Version:		3.7
  *  Design:			David Gascón
  *  Implementation: Alejandro Gállego, Ahmad Saad
  */
@@ -260,6 +260,10 @@ noiseSensor::noiseSensor()
 	_uart = 0x01;
 	_baudrate = 115200;
 	_def_delay = 50;
+	
+	// assign class pointer to UART buffer
+	_buffer = class_buffer;
+	_bufferSize = SENSOR_NOISE_UART_SIZE;
 }
 
 

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascon
     Implementation:	Ahmad Saad
 
@@ -120,7 +120,7 @@ char Wasp232::read(void)
 uint16_t Wasp232::receive(void)
 {
 	uint16_t nBytes = 0;
-	nBytes = readBuffer(sizeof(_buffer));
+	nBytes = readBuffer(_bufferSize);
 	
 	return nBytes;
 }

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.6
+    Version:		3.7
     Design:		David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -70,6 +70,9 @@ class WaspLoRaWAN : public WaspUART
 {
 	// private methods //////////////////////////
 	private:
+		#define RADIO_LORAWAN_UART_SIZE 300
+		uint8_t class_buffer[RADIO_LORAWAN_UART_SIZE];
+	
 		char _command[250];
     	
 	// public methods //////////////////////////
@@ -125,7 +128,12 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t _syncWord;
 		
 		// constructor
-		WaspLoRaWAN() {};
+		WaspLoRaWAN() 
+		{			
+			// assign class pointer to UART buffer
+			_buffer = class_buffer;
+			_bufferSize = RADIO_LORAWAN_UART_SIZE;	
+		};
 		
 		// System functions
 		uint8_t ON(uint8_t socket);	
@@ -236,7 +244,8 @@ class WaspLoRaWAN : public WaspUART
 		void showFirmwareVersion();
 		uint8_t setBatteryLevel();
 		uint8_t setBatteryLevel(uint8_t bat);
-		uint8_t showChannelStatus();
+		void showChannelStatus();
+		void showChannelStatus(uint8_t channel);
 		
 	private:		
 		// Utils

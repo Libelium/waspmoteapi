@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascon
  *  Implementation:	Yuri Carmona
  */
@@ -40,9 +40,9 @@ int main(void)
 	//Disable Mux in Xtreme boards
 	if (WaspRegisterSensor & REG_XTR)
 	{
-		//MUX_EN
+		//20 is MUX_EN in Xtreme board, HIGH for disabling
 		pinMode(20, OUTPUT);
-		digitalWrite(20, LOW);
+		digitalWrite(20, HIGH);
 	}
 	
 	// get bootloader version

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.4
+    Version:		3.5
     Design:			David Gascón
     Implementation:	Alejandro Gállego, Ahmad Saad
 
@@ -121,10 +121,13 @@ extern WaspSensorCitiesPRO SensorCitiesPRO;
 #define FAST_MODE	0x00
 #define SLOW_MODE	0x01
 
-class noiseSensor : WaspUART
+class noiseSensor : public WaspUART
 {
-
-	public:
+	private:
+		#define SENSOR_NOISE_UART_SIZE 20
+		uint8_t class_buffer[SENSOR_NOISE_UART_SIZE];
+		
+	public:		
 
 		// Constructor
 		noiseSensor();
@@ -136,8 +139,6 @@ class noiseSensor : WaspUART
 		uint8_t getSPLA(uint8_t);
 		// Configure the UART for communicating with the sensor
 		void configure();
-
-	private:
 
 };
 

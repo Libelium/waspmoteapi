@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -55,7 +55,6 @@ void WaspUART::beginUART()
 	if(_uart==SOCKET0)	WaspRegister |= REG_SOCKET0;
 	if(_uart==SOCKET1)	WaspRegister |= REG_SOCKET1;
 	
-	secureBegin();
 }
 
 
@@ -220,9 +219,7 @@ uint8_t  WaspUART::sendCommand(	char* command,
 {
 	// index counter
 	uint16_t i = 0;
-	
-	secureBegin();
-    
+	    
   	#if DEBUG_UART > 0
 		PRINT_UART(F("cmd:")); USB.println(command);  	
   	#endif
@@ -246,7 +243,7 @@ uint8_t  WaspUART::sendCommand(	char* command,
 	
 	/// 2. read answer	
 	// clear _buffer
-	memset( _buffer, 0x00, sizeof(_buffer) );
+	memset( _buffer, 0x00, _bufferSize );
 	_length = 0;
 	
 	// get actual instant
@@ -257,10 +254,14 @@ uint8_t  WaspUART::sendCommand(	char* command,
     {
 		if (serialAvailable(_uart))
 		{
-			if (i < (sizeof(_buffer)-1))
+			if (i < (_bufferSize-1))
 			{	
 				_buffer[i++] = serialRead(_uart);		
 				_length++;
+				#if DEBUG_UART > 1
+					PRINT_UART(F("buffer:"));
+					USB.println((char*)_buffer);
+				#endif					
 			}
 		}
 			
@@ -376,8 +377,6 @@ bool WaspUART::find( uint8_t* buffer, uint16_t length, char* pattern)
  */
 void  WaspUART::sendCommand( uint8_t* command, uint16_t length )
 {  	
-	secureBegin();
-	
 	// clear uart buffer before sending command
 	if (_flush_mode == true)
 	{
@@ -475,10 +474,8 @@ uint8_t  WaspUART::waitFor( char* ans1,
 	// index counter
 	uint16_t i = 0;
 	
-	secureBegin();
-	
 	// clear _buffer
-	memset( _buffer, 0x00, sizeof(_buffer) );
+	memset( _buffer, 0x00, _bufferSize );
 	_length = 0;
 	
 	// get actual instant
@@ -489,7 +486,7 @@ uint8_t  WaspUART::waitFor( char* ans1,
     {
 		if( serialAvailable(_uart) )
 		{
-			if ( i < (sizeof(_buffer)-1) )
+			if ( i < (_bufferSize-1) )
 			{	
 				_buffer[i++] = serialRead(_uart);				
 				_length++;				
@@ -587,19 +584,17 @@ uint16_t  WaspUART::readBuffer(uint16_t requestBytes, bool clearBuffer)
 	uint16_t i = 0;
 	uint16_t nBytes = 0;
 	
-	secureBegin();
-	
 	if( clearBuffer == true )
 	{
 		// clear _buffer
-		memset( _buffer, 0x00, sizeof(_buffer) );
+		memset( _buffer, 0x00, _bufferSize );
 		_length = 0;
 	}
 	
 	// read available data
 	while (serialAvailable(_uart))
 	{
-		if ((i < (sizeof(_buffer)-1)) && (requestBytes>0))
+		if ((i < (_bufferSize-1)) && (requestBytes>0))
 		{
 			_buffer[i++] = serialRead(_uart);		
 			_length++;
@@ -994,32 +989,6 @@ uint8_t WaspUART::parseInt(int* value, char* delimiters)
 	{
 		return 1;
 	}
-}
-
-/*!
- * 
- */
-void WaspUART::secureBegin()
-{
-	/*
-	if (_uart == SOCKET1)
-	{	
-		// set ss pin in socket0 to low
-		pinMode(SOCKET0_SS,OUTPUT);
-		digitalWrite(SOCKET0_SS,HIGH);
-		
-		if (WaspRegister & REG_XBEE_SOCKET0)
-		{
-			// switch module ON
-			PWR.powerSocket(SOCKET0, HIGH);
-		
-			// set ss pin in socket0 to low
-			//pinMode(XBEE_MON,OUTPUT);
-			//digitalWrite(XBEE_MON,LOW);
-		}		
-	}	
-	*/
-	
 }
 
 

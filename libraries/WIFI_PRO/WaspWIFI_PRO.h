@@ -1,7 +1,7 @@
 /*! \file WaspWIFI_PRO.h
     \brief Library for managing WIFI modules
     
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Yuri Carmona
  */
@@ -123,6 +123,9 @@ class WaspWIFI_PRO : public WaspUART
   
 private:	
 	
+	#define RADIO_WIFI_UART_SIZE 512
+	uint8_t class_buffer[RADIO_WIFI_UART_SIZE];
+	
 	//! Private Methods	
 	uint16_t getErrorCode();
 	uint16_t getResponse();
@@ -138,7 +141,9 @@ public:
 	//! class constructor
     WaspWIFI_PRO()
     {
-		//do nothing
+		// assign class pointer to UART buffer
+		_buffer = class_buffer;
+		_bufferSize = RADIO_WIFI_UART_SIZE;
 	};
 
 

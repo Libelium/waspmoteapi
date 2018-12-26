@@ -1,7 +1,7 @@
 /*! \file WaspUART.h
     \brief Library for managing UART bus
     
-    Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	Yuri Carmona
 
@@ -95,7 +95,8 @@ public:
 	};
 	
 	//! buffer for rx data
-	uint8_t	_buffer[512];
+	uint8_t	*_buffer;
+	uint16_t _bufferSize;
 	
 	//! length of the contents in '_buffer'
 	uint16_t _length;
@@ -265,9 +266,7 @@ protected:
 	uint8_t parseInt(int* value, char* delimiters);	
 	
 	//! It parses the contents of _buffer and converts it to a uint16_t type
-	uint8_t parseHex(uint8_t* value, char* delimiters);
-	
-	void secureBegin();
+	uint8_t parseHex(uint8_t* value, char* delimiters);	
 	
 };
 

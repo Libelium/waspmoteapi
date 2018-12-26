@@ -1,7 +1,7 @@
 /*! 
  * @file 	WaspSigfox.h
  * @author	Libelium Comunicaciones Distribuidas S.L.
- * @version	3.3
+ * @version	3.4
  * @brief 	Library for managing Sigfox modules TD1207 & TD1508
  * 
  * Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
@@ -107,6 +107,10 @@ class WaspSigfox : public WaspUART
 {
 	  
 	private:
+	
+		#define RADIO_SIGFOX_UART_SIZE 100
+		uint8_t class_buffer[RADIO_SIGFOX_UART_SIZE];
+	
 		// private attributes
 		char _command[100];
 		
@@ -133,7 +137,9 @@ class WaspSigfox : public WaspUART
 		//! class constructor
 		WaspSigfox()
 		{
-			//do nothing
+			// assign class pointer to UART buffer
+			_buffer = class_buffer;
+			_bufferSize = RADIO_SIGFOX_UART_SIZE;	
 		};
 		
 		// Switch on/off functions

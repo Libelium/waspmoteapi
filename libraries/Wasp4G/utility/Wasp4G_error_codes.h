@@ -166,6 +166,8 @@
 #define WASP4G_CMS_ERROR_0340 340  // no +CNMA acknowledgement expected
 #define WASP4G_CMS_ERROR_0500 500  // unknown error
 
+// SSL error
+#define WASP4G_CME_ERROR_0839 839  // SSL error during handshake
 #define WASP4G_CME_ERROR_1000 1000 // SSL not activated
 #define WASP4G_CME_ERROR_1001 1001 // SSL certs and keys wrong or not stored
 #define WASP4G_CME_ERROR_1003 1003 // SSL already activated

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascon
     Implementation:	Ahmad Saad
 
@@ -58,13 +58,18 @@ enum ParityModes
 
 class Wasp232 : public WaspUART
 {
-//**********************************************************************
-// Private functions
-//**********************************************************************
+	#define RADIO_RS232_UART_SIZE 100
+	uint8_t class_buffer[RADIO_RS232_UART_SIZE];
+
 	public:
 
 		//! Class Constructor
-		Wasp232(){};
+		Wasp232()
+		{
+			// assign class pointer to UART buffer
+			_buffer = class_buffer;
+			_bufferSize = RADIO_RS232_UART_SIZE;			
+		};
 
 		//! Powers the 232 module and opens the UART.
 		void ON(char socket);

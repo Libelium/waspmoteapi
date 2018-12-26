@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Marcos Yarza, Yuri Carmona
  */
@@ -274,9 +274,7 @@ char* WaspRTC::getTimestamp()
  */
 int WaspRTC::readRTC(uint8_t endAddress) 
 {
-	uint16_t timecount = 0;
-	uint16_t timeout = 0;	
-	uint8_t data[endAddress];
+	uint8_t data[endAddress+1];
 	int error;
 	
 	// init I2C bus
@@ -286,11 +284,11 @@ int WaspRTC::readRTC(uint8_t endAddress)
 	// the address specified in the datasheet is 208 (0xD0)
 	// but i2c adressing uses the high 7 bits so it's 104    
 	// transmit to device #104 (0x68)
-	error = I2C.read(I2C_ADDRESS_WASP_RTC, RTC_START_ADDRESS, data, endAddress);
+	error = I2C.read(I2C_ADDRESS_WASP_RTC, RTC_START_ADDRESS, data, endAddress+1);
 	
 	if (error == TWI_SUCCESS)
 	{
-		for (int i = 0; i < endAddress; i++)
+		for (int i = 0; i <= endAddress; i++)
 		{
 			registersRTC[i] = data[i];
 			switch (i)
@@ -322,6 +320,8 @@ int WaspRTC::readRTC(uint8_t endAddress)
 				case 12:hour_alarm2 = BCD2byte((data[i]>>4)&B00000011, data[i]&B00001111);
 						break;
 				case 13:day_alarm2 = BCD2byte((data[i]>>4)&B00000011, data[i]&B00001111);
+						break;
+				default:
 						break;
 			}
 		}	

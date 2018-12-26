@@ -21,7 +21,7 @@
   Copyright © 2009-2013 Doc Walker <4-20ma at wvfans dot net>
   Modified for Waspmote by Libelium, 2018
   
-  Version:	3.4
+  Version:	3.5
   
 */
 
@@ -257,7 +257,7 @@ class ModbusMaster
 		uint8_t  maskWriteRegister(uint16_t, uint16_t, uint16_t);
 		uint8_t  readWriteMultipleRegisters(uint16_t, uint16_t, uint16_t, uint16_t);
 		uint8_t  readWriteMultipleRegisters(uint16_t, uint16_t);
-		uint8_t  readRegiters(uint16_t, uint16_t, uint8_t);
+		uint8_t  readRegisters(uint16_t, uint16_t, uint8_t);
 	
 	//**********************************************************************
 	// Protected functions

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	Alvaro Gonzalez, Yuri Carmona
  *
@@ -1040,6 +1040,10 @@ uint8_t WaspAES::decrypt(	uint16_t keySize,
 		if (mode == CBC)
 		{
 			CBCDecrypt(original_data,size,InitialVector,keySize);
+		}
+		else if (mode == ECB)
+		{
+			ECBDecrypt(original_data,size,keySize);
 		}
 
 		decrypted_message = paddingDecrypt(original_data,size,padding);

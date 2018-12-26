@@ -19,7 +19,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascon
  *  Implementation:	Yuri Carmona
  */
@@ -261,20 +261,28 @@ uint8_t WaspEEPROM::sendCommand(uint8_t* command)
 		aes132c_calculate_crc(length, command, crc_tx);
 
 		// wait until chip is ready
-		waitReady();
+		//~ waitReady();
 		
 		memset(_buffer,0x00,sizeof(_buffer));
+		memset(_response,0x00,sizeof(_response));
 		memcpy(_buffer,command,sizeof(_buffer));
 		
 		_buffer[length] = crc_tx[0];
 		_buffer[length+1] = crc_tx[1];
+		
+		#if DEBUG_EEPROM > 0
+			PRINT_EEPROM("Command: ");
+			USB.printHexln(_buffer, length+2);
+		#endif
 		
 		x = I2C.write(_deviceAddress,address,_buffer,length+2);
 		
 		
 		if (x != 0)
 		{
-			//USB.println(F("Error endTransmission"));	
+			#if DEBUG_EEPROM > 1
+				PRINT_EEPROM(F("Error endTransmission\r\n"));	
+			#endif
 		}
 		delay(100);
 		retries--;
@@ -283,7 +291,7 @@ uint8_t WaspEEPROM::sendCommand(uint8_t* command)
 	while(x != 0);
 
 	// read response	
-	x = I2C.read(_deviceAddress,_buffer,rx_length);
+	x = I2C.read(_deviceAddress,_buffer,90);
 	
 	if (x != 0)
 	{		
@@ -292,7 +300,51 @@ uint8_t WaspEEPROM::sendCommand(uint8_t* command)
 	
 	// Parse response
 	uint8_t count = _buffer[0];
-//~ 	uint8_t success = _buffer[1];	
+	uint8_t status = _buffer[1];
+	
+	#if DEBUG_EEPROM > 0
+		PRINT_EEPROM("[EEPROM] Response count: ");
+		USB.println(count, DEC);
+		
+		PRINT_EEPROM("[EEPROM] Response status: 0x");
+		USB.printHex(status);
+		USB.print(F(" => "));	
+		
+		switch (status)
+		{
+			case 0x00:
+				USB.println(F("Success"));
+				break;
+			case 0x02:
+				USB.println(F("BoundaryError"));
+				break;
+			case 0x04:
+				USB.println(F("RWConfig"));
+				break;
+			case 0x08:
+				USB.println(F("BadAddr"));
+				break;
+			case 0x10:
+				USB.println(F("CountErr"));
+				break;
+			case 0x20:
+				USB.println(F("NonceError"));
+				break;
+			case 0x40:
+				USB.println(F("MacError"));
+				break;
+			case 0x50:
+				USB.println(F("ParseError"));
+				break;
+			case 0x60:
+				USB.println(F("DataMatch"));
+				break;
+			default:
+				USB.println(F("Unknown"));			
+		}
+		USB.println();
+	#endif
+	
 	_length = 0;	
 	for (int i = 2; i < (count-2); i++)
 	{
@@ -459,7 +511,195 @@ uint8_t WaspEEPROM::blockRead(uint16_t address, uint8_t length)
 }
 
 
+/* 
+ * @brief Encrypt a 16-byte block of data using AES ECB legacy mode
+ * @param uint8_t index: Index of the key memory map (from 0x00 to 0x0F)
+ * @param uint8_t *data: Pointer to the plain text data to encrypt
+ * @param uint8_t len: Length of the plain text data (max: 16 bytes)
+ * @return
+ * 	@arg '0' OK
+ * 	@arg '1' error
+ * 
+ */
+uint8_t WaspEEPROM::encryptBlock16(uint8_t index, uint8_t *data, uint8_t len)
+{
+  uint8_t error = 0;
+  uint8_t i = 0;
 
+  uint8_t command[1 + 1 + 1 + 2 + 2 + 16];
+  memset(command, 0x00, sizeof(command));
+
+  // define command
+  command[i++] = 1 + 1 + 1 + 2 + 2 + 16 + 2; // Count
+  command[i++] = 0x0F; // Opcode
+  command[i++] = 0x00; // Mode
+  command[i++] = 0x00; // Param1 Upper byte (LKeyID)
+  command[i++] = index; // Param1 Lower byte (LKeyID)
+  command[i++] = 0x00; // Param2 Upper byte (Zero)
+  command[i++] = 0x00; // Param2 Upper byte (Zero)
+
+  
+  uint8_t length = len;
+  if (length > 16) length = 16;
+
+  for (uint8_t j = 0; j < length; j++)
+  {
+    command[i++] = data[j]; // Data
+  }
+  
+  error = eeprom.sendCommand(command);
+
+  return error;
+}
+
+
+
+
+/* 
+ * @brief Encrypt a
+ * @param uint8_t index: Index of the key memory map (from 0x00 to 0x0F)
+ * @param uint8_t *data: Pointer to the plain text data to encrypt
+ * @param uint8_t len: Length of the plain text data (max: 16 bytes)
+ * @return
+ * 	@arg '0' OK
+ * 	@arg '1' error
+ * 
+ */
+uint8_t WaspEEPROM::encrypt(uint8_t index, uint8_t *data, uint16_t length, uint8_t *encryptedData, uint16_t *encryptedLength)
+{
+	uint8_t error = 0;
+		
+	uint16_t aux = (length-1) / 16;
+	uint16_t n_iterations;
+	
+	if (aux == 0)
+	{
+		n_iterations = 1;
+	}
+	else 
+	{
+		n_iterations = (aux*16+16)/16;
+	}		
+
+	// iterate through all 16-byte blocks of the original message
+	// Examples: 
+	// 	16-byte length requires 1 iteration
+	// 	17-byte length requires 2 iterations 
+	for (uint8_t i = 0; i < n_iterations; i++)
+	{
+		error = encryptBlock16(index, &data[i*16], 16);		
+
+		if (error == 0)
+		{
+			// copy encrypted block to final buffer
+			memcpy(&encryptedData[i*16], _response, 16);
+			
+			// update length
+			*encryptedLength = i*16+16;
+		}		
+	}
+	
+
+	return error;
+}
+
+
+
+
+/* 
+ * @brief Store the 16-byte encryption key in Key Memory map (from F200h to F2FFh)
+ * @param uint8_t index: Index of the key memory map (from 0x00 to 0x0F)
+ * @param uint8_t *key: Pointer to the key to save
+ * @param uint8_t len: Length of the key (MUST BE 16)
+ * @return
+ * 	@arg '0' OK
+ * 	@arg '1' bad key length
+ * 	@arg '2' bad key index
+ * 	@arg '3' error executing the command
+ * 
+ */
+uint8_t WaspEEPROM::saveKey(uint8_t index, uint8_t *key, uint8_t len)
+{
+	uint8_t error;
+	uint8_t length = len;
+	
+	// check key length
+	if (length != 16) 
+	{
+		return 1;
+	}
+	
+	// check key index (from 0 to 15)
+	if (index > 15)
+	{
+		return 2;
+	}
+	
+	// calculate key address
+	uint16_t address = 0xF200 + index*0x10;
+	
+	error = eeprom.writeBlock(address, (uint8_t*)key, 16);
+  
+	if (error != 0)
+	{
+		return 3;
+	}
+	return 0;
+}
+
+
+
+/* 
+ * @brief Set the KeyConfig register value
+ * @param uint8_t index: Index of the key memory map (from 0x00 to 0x0F)
+ * @param uint8_t *reg: Pointer to the 4 bytes which define the KeyConfig
+ * @return 
+ * 	@arg '0' OK
+ * 	@arg 'x' error
+ * 
+ */
+uint8_t WaspEEPROM::setKeyConfig(uint8_t index, uint8_t *reg)
+{
+  return eeprom.writeBlock(0xF080 + index*0x04, reg, 4);
+}
+
+
+/* 
+ * @brief Show Configuration Memory Map (from F000h)
+ * @return * 
+ * 	@arg '0' OK
+ * 	@arg 'x' error
+ * 
+ */
+uint8_t WaspEEPROM::showConfigurationMemoryMap()
+{
+  uint8_t error = 0;
+
+  // define command
+  uint8_t command[] = {0x09, 0x10, 0x00, 0xF0, 0x00, 0x00, 0x08};
+  
+  USB.println(F("----------------------------------"));
+  for (uint8_t i = 0; i < 26; i++)
+  {
+	command[4] = i*0x08;
+  
+    error = eeprom.sendCommand(command);    
+    
+    if (error == 0)
+    {
+	  USB.print(F("F0"));
+	  USB.printHex(command[4]);
+	  USB.print(F("h-F0"));
+	  USB.printHex(command[4]+7);
+	  USB.print(F("h ==> "));
+	  USB.printHexln(&eeprom._response[0], 8);
+    }  
+  }
+  
+  USB.println(F("----------------------------------"));  
+  
+  return error;
+}
 
 
 WaspEEPROM eeprom = WaspEEPROM();

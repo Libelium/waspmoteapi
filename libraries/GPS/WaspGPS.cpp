@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.3
+ *  Version:		3.4
  *  Design:			David Gascón
  *  Implementation:	Javier Siscart
  */
@@ -421,7 +421,7 @@ char* WaspGPS::setChecksum(char * command)
  * '-2' if no gps data, '1' if connected.
  */
 int8_t WaspGPS::parseRMC()
-{
+{  
 	#ifdef GPS_DEBUG
 	PRINT_GPS(F("parseRMC\n"));
 	#endif
@@ -501,6 +501,9 @@ int8_t WaspGPS::parseRMC()
 		// Now parse the read NMEA sentence
 		// separate all the subarrays from 'dataBuffer' to 'argument' pointer
 		// Example: $GPRMC,161229.487,A,3723.2475,N,12158.3416,W,0.13,309.62,120598, ,*10
+		// Define buffer to parse received data
+		char _dataBuffer2[GPS_BUFFER_SIZE];
+		memset(_dataBuffer2, 0x00, sizeof(_dataBuffer2));
 		strncpy(_dataBuffer2, _dataBuffer, strlen(_dataBuffer));
 		_dataBuffer2[strlen(_dataBuffer)]='\0';
 
@@ -726,6 +729,9 @@ int8_t WaspGPS::parseGGA()
 
 		// Now parse the read NMEA sentence
 		// separate all the subarrays from '_dataBuffer' to 'argument' pointer
+		// Define buffer to parse received data
+		char _dataBuffer2[GPS_BUFFER_SIZE];
+		memset(_dataBuffer2, 0x00, sizeof(_dataBuffer2));
 		strncpy(_dataBuffer2, _dataBuffer, strlen(_dataBuffer));
 		_dataBuffer2[strlen(_dataBuffer)] = '\0';
 
@@ -939,6 +945,9 @@ int8_t WaspGPS::parseGSA()
 
 		// Now parse the read NMEA sentence
 		// separate all the subarrays from '_dataBuffer' to 'argument' pointer
+		// Define buffer to parse received data
+		char _dataBuffer2[GPS_BUFFER_SIZE];
+		memset(_dataBuffer2, 0x00, sizeof(_dataBuffer2));
 		strncpy(_dataBuffer2, _dataBuffer, strlen(_dataBuffer));
 		_dataBuffer2[strlen(_dataBuffer)] = '\0';
 
@@ -1110,6 +1119,9 @@ int8_t WaspGPS::parseGSV()
 
 		// Now parse the read NMEA sentence
 		// separate all the subarrays from '_dataBuffer' to 'argument' pointer
+		// Define buffer to parse received data
+		char _dataBuffer2[GPS_BUFFER_SIZE];
+		memset(_dataBuffer2, 0x00, sizeof(_dataBuffer2));
 		strncpy(_dataBuffer2, _dataBuffer, strlen(_dataBuffer));
 		_dataBuffer2[strlen(_dataBuffer)] = '\0';
 
@@ -1243,6 +1255,9 @@ int8_t WaspGPS::parseGLL()
 		// Now parse the read NMEA sentence
 		// separate all the subarrays from '_dataBuffer' to 'argument' pointer
 		// Example: $GPGLL,3723.2475,N,12158.3416,W,161229.487,A,A*41
+		// Define buffer to parse received data
+		char _dataBuffer2[GPS_BUFFER_SIZE];
+		memset(_dataBuffer2, 0x00, sizeof(_dataBuffer2));
 		strncpy(_dataBuffer2, _dataBuffer, strlen(_dataBuffer));
 		_dataBuffer2[strlen(_dataBuffer)] = '\0';
 
@@ -1409,6 +1424,9 @@ int8_t WaspGPS::parseVTG()
 		// Now parse the read NMEA sentence
 		// separate all the subarrays from '_dataBuffer' to 'argument' pointer
 		// Example: $GPVTG,309.62,T, ,M,0.13,N,0.2,K,A*23
+		// Define buffer to parse received data
+		char _dataBuffer2[GPS_BUFFER_SIZE];
+		memset(_dataBuffer2, 0x00, sizeof(_dataBuffer2));
 		strncpy(_dataBuffer2, _dataBuffer, strlen(_dataBuffer));
 		_dataBuffer2[strlen(_dataBuffer)] = '\0';
 

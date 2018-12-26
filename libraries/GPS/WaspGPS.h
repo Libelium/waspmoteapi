@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	Javier Siscart
 
@@ -172,11 +172,6 @@ private:
     /*!
     */
     char _dataBuffer[GPS_BUFFER_SIZE];
-
-    //! Variable : buffer to parse received data
-    /*!
-    */
-    char _dataBuffer2[GPS_BUFFER_SIZE];
 
     //! It powers up GPS module and opens selected UART to communicate with it
     /*!

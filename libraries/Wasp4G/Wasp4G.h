@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascón
     Implementation:	A. Gállego, Y. Carmona
 
@@ -134,6 +134,10 @@ class Wasp4G : public WaspUART
 {
 
 private:
+
+	#define RADIO_4G_UART_SIZE 512
+	uint8_t class_buffer[RADIO_4G_UART_SIZE];
+
 	//!	Attribute for APN 
 	char _apn[30];
 	

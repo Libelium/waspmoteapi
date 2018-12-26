@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.0
+	Version:		3.1
 	Design:			David Gascón
 	Implementation: Victor Boria, Javier Siscart
 
@@ -36,8 +36,8 @@
 #include <BME280.h>
 #include <UltrasoundSensor.h>
 #include <TSL2561.h>
-#include "./utility/Sdi12SensorXtr.h"
-#include <./utility/ModbusSensors.h>
+#include <SDI12.h>
+#include <./utility/AqualaboModbusSensors.h>
 
 /*******************************************************************************
  * Definitions
@@ -54,6 +54,10 @@
 #define DEBUG_XTR			0
 #define PRINT_XTR(str)		USB.print(F("[XTR] ")); USB.print(str);
 #define PRINTLN_XTR(str)	USB.print(F("[XTR] ")); USB.println(str);
+
+#define SIMULATE_WEATHER_STATION	0
+
+//#define MANUFACTURER_TEST
 
 // Generic _socket definitions according to MCP GPIOs
 #define XTR_SOCKET_A		7
@@ -466,6 +470,7 @@ struct sensorSF421Vector
 };
 
 
+
 /*******************************************************************************
  * Smart Water Xtreme Structs
  ******************************************************************************/
@@ -688,6 +693,7 @@ class Decagon_5TE
 		uint8_t readSerialNumber();
 	
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -710,6 +716,7 @@ class Decagon_5TM
 		uint8_t readSerialNumber();
 		
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -731,6 +738,7 @@ class Decagon_GS3
 		uint8_t readSerialNumber();
 
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -752,6 +760,7 @@ class Decagon_VP4
 		uint8_t readSerialNumber();
 
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -773,6 +782,7 @@ class Decagon_MPS6
 		uint8_t readSerialNumber();
 
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -795,6 +805,7 @@ class Apogee_SO411
 		uint8_t readSerialNumber();
 
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -816,6 +827,7 @@ class Apogee_SI411
 		uint8_t readSerialNumber();
 
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -837,6 +849,7 @@ class Apogee_SF421
 		uint8_t readSerialNumber();
 
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -1000,14 +1013,14 @@ class Apogee_SP510
  ******************************************************************************/
 
 /*!
- * \class WaspSensorWaterXtr
- * \brief class only for Water Xtreme board
+ * \class AqualaboWaterXtr
+ * \brief class for Aqualabo sensors in Water Xtreme board
  */
-class WaspSensorWaterXtr
+class AqualaboWaterXtr
 {
 	public:
 		//! Constructor
-		WaspSensorWaterXtr();
+		AqualaboWaterXtr();
 	
 		//Modbus
 		uint8_t init();
@@ -1018,6 +1031,8 @@ class WaspSensorWaterXtr
 		void fillCalibrationDate(char* date);
 		uint8_t restoreToFactoryCalibration(uint8_t parameter);
 		uint8_t resetTemporaryCalibrationData(uint8_t returnAvgTo1);
+		uint8_t searchAddress(uint8_t _sensorAddr);
+		uint8_t changeAddress(uint8_t _sensorAddr);
 		
 		//Menu assisted calibration functions
 		void exitCalibration();
@@ -1035,7 +1050,7 @@ class WaspSensorWaterXtr
  * \class Aqualabo OPTOD
  * \brief class for OPTOD sensor
  */
-class Aqualabo_OPTOD: public WaspSensorWaterXtr
+class Aqualabo_OPTOD: public AqualaboWaterXtr
 {
 	public:
 		// constructor
@@ -1050,6 +1065,7 @@ class Aqualabo_OPTOD: public WaspSensorWaterXtr
 		void calibrationProcess(uint8_t parameter);
 		
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -1060,7 +1076,7 @@ class Aqualabo_OPTOD: public WaspSensorWaterXtr
  * \class Aqualabo PHEHT
  * \brief class for PHEHT sensor
  */
-class Aqualabo_PHEHT: public WaspSensorWaterXtr
+class Aqualabo_PHEHT: public AqualaboWaterXtr
 {
 	public:
 		// constructor
@@ -1075,6 +1091,7 @@ class Aqualabo_PHEHT: public WaspSensorWaterXtr
 		void calibrationProcess(uint8_t parameter);
 		
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -1082,7 +1099,7 @@ class Aqualabo_PHEHT: public WaspSensorWaterXtr
  * \class Aqualabo C4E
  * \brief class for C4E sensor
  */
-class Aqualabo_C4E: public WaspSensorWaterXtr
+class Aqualabo_C4E: public AqualaboWaterXtr
 {
 	public:
 		// constructor
@@ -1097,6 +1114,7 @@ class Aqualabo_C4E: public WaspSensorWaterXtr
 		void calibrationProcess(uint8_t parameter);
 		
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -1106,7 +1124,7 @@ class Aqualabo_C4E: public WaspSensorWaterXtr
  * \class Aqualabo NTU
  * \brief class for NTU sensor
  */
-class Aqualabo_NTU: public WaspSensorWaterXtr
+class Aqualabo_NTU: public AqualaboWaterXtr
 {
 	public:
 		// constructor
@@ -1121,6 +1139,7 @@ class Aqualabo_NTU: public WaspSensorWaterXtr
 		void calibrationProcess(uint8_t parameter);
 		
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 
 };
@@ -1130,7 +1149,7 @@ class Aqualabo_NTU: public WaspSensorWaterXtr
  * \class Aqualabo CTZN
  * \brief class for CTZN sensor
  */
-class Aqualabo_CTZN: public WaspSensorWaterXtr
+class Aqualabo_CTZN: public AqualaboWaterXtr
 {
 	public:
 		// constructor
@@ -1145,6 +1164,7 @@ class Aqualabo_CTZN: public WaspSensorWaterXtr
 		void calibrationProcess(uint8_t parameter);
 		
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
@@ -1153,7 +1173,7 @@ class Aqualabo_CTZN: public WaspSensorWaterXtr
  * \class Aqualabo MES5
  * \brief class for MES5 sensor
  */
-class Aqualabo_MES5: public WaspSensorWaterXtr
+class Aqualabo_MES5: public AqualaboWaterXtr
 {
 	public:
 		// constructor
@@ -1168,6 +1188,7 @@ class Aqualabo_MES5: public WaspSensorWaterXtr
 		void calibrationProcess(uint8_t parameter);
 		
 	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
 };
 
