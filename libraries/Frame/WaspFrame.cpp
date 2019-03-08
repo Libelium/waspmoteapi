@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.5
+ *  Version:		3.6
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -103,18 +103,18 @@ uint16_t WaspFrame::getFrameSize( void )
 /**
  * @brief This function sets the frame maximum size
  * @remarks This function MUST only be used when using an XBee module.
- * 
+ *
  * @param uint8_t protocol defines the procotol used
  * 	@arg XBEE_802_15_4
  * 	@arg ZIGBEE
  * 	@arg DIGIMESH
  * 	@arg XBEE_900
  * 	@arg XBEE_868
- * 
+ *
  * @param uint8_t linkEncryption defines if XBee encryption is enabled or not.
  * 	@arg ENABLED = 1
  * 	@arg DISABLED = 0
- * 
+ *
  * @param uint8_t AESEncryption defines if AES encryption is used or not.
  * 	@arg ENABLED = 1
  * 	@arg DISABLED = 0
@@ -135,23 +135,23 @@ uint16_t WaspFrame::getMaxSizeForXBee(	uint8_t protocol,
 /**
  * @brief This function sets the frame maximum size
  * @remarks This function MUST only be used when using an XBee module.
- * 
+ *
  * @param uint8_t protocol defines the procotol used
  * 	@arg XBEE_802_15_4
  * 	@arg ZIGBEE
  * 	@arg DIGIMESH
  * 	@arg XBEE_900
  * 	@arg XBEE_868
- * 
+ *
  * @param uint8_t addressing defines the addressing used
  * 	@arg UNICAST_16B
  * 	@arg UNICAST_64B
  * 	@arg BROADCAST_MODE
- * 
+ *
  * @param uint8_t linkEncryption defines if XBee encryption is enabled or not.
  * 	@arg ENABLED = 1
  * 	@arg DISABLED = 0
- * 
+ *
  * @param uint8_t AESEncryption defines if AES encryption is used or not.
  * 	@arg ENABLED = 1
  * 	@arg DISABLED = 0
@@ -172,27 +172,27 @@ uint16_t WaspFrame::getMaxSizeForXBee(	uint8_t protocol,
 /**
  * @brief This function sets the frame maximum size
  * @remarks This function MUST only be used when using an XBee module.
- * 
+ *
  * @param uint8_t protocol defines the procotol used
  * 	@arg XBEE_802_15_4
  * 	@arg ZIGBEE
  * 	@arg DIGIMESH
  * 	@arg XBEE_900
  * 	@arg XBEE_868
- * 
+ *
  * @param uint8_t addressing defines the addressing used
  * 	@arg UNICAST_16B
  * 	@arg UNICAST_64B
  * 	@arg BROADCAST_MODE
- * 
+ *
  * @param uint8_t linkEncryption defines if XBee encryption is enabled or not.
  * 	@arg ENABLED = 1
  * 	@arg DISABLED = 0
- * 
+ *
  * @param uint8_t AESEncryption defines if AES encryption is used or not.
  * 	@arg ENABLED = 1
  * 	@arg DISABLED = 0
- * 
+ *
  * @param uint8_t HwEncryption defines if AES hardware encryption is used or not.
  * 	@arg ENABLED = 1
  * 	@arg DISABLED = 0
@@ -312,7 +312,7 @@ uint16_t WaspFrame::getMaxSizeForXBee(	uint8_t protocol,
 	* |_____|____________|___________|___________|__________|___|_________________|
 	*/
 	uint8_t fixed_header_length;
-	
+
 	if (AESEncryption != DISABLED)
 	{
 		if (_boot_version >= 'G')
@@ -328,7 +328,7 @@ uint16_t WaspFrame::getMaxSizeForXBee(	uint8_t protocol,
 			maximumSize = ((maximumSize - fixed_header_length - strlen(_waspmoteID))/16)*16;
 		}
 	}
-	
+
 	/// AES Hardware enabled
 	if (HwEncryption != DISABLED)
 	{
@@ -344,7 +344,7 @@ uint16_t WaspFrame::getMaxSizeForXBee(	uint8_t protocol,
 			fixed_header_length = 10;
 			maximumSize = ((maximumSize - fixed_header_length - strlen(_waspmoteID))/16)*16;
 		}
-	}	
+	}
 
 	return maximumSize;
 }
@@ -441,14 +441,14 @@ uint16_t WaspFrame::getMaxSizeForWifi(	char* protocol,
 
 
 
-/** 
+/**
  * @brief This function creates a new ASCII frame using the input Waspmote ID
  * @param uint8_t mode: Type of frame to be created
  * 	@arg ASCII
  * 	@arg BINARY
  * @param char* moteID: string with the Waspmote ID to be used in Frame
- * 
- * @return void 
+ *
+ * @return void
  */
 void WaspFrame::createFrame(uint8_t mode, char* moteID)
 {
@@ -461,14 +461,14 @@ void WaspFrame::createFrame(uint8_t mode, char* moteID)
 
 
 
-/** 
+/**
  * @brief This function creates a new ASCII frame getting the mote ID from the EEPROM memory.
  * @param uint8_t mode: Type of frame to be created
  * 	@arg ASCII
  * 	@arg BINARY
- * 
- * @return void 
- */ 
+ *
+ * @return void
+ */
 void WaspFrame::createFrame(uint8_t mode)
 {
 	// local variables
@@ -477,7 +477,7 @@ void WaspFrame::createFrame(uint8_t mode)
 
 	// store mode: ASCII or BINARY
 	_mode = mode;
-	
+
 	// store default Frame type
 	_frameType = INFORMATION_FRAME_V15;
 
@@ -708,14 +708,14 @@ void WaspFrame::createFrame(uint8_t mode)
 
 /**
  * @brief Enable/disable software encryption from device to end-point to be selected
- * 
+ *
  * @param uint8_t flag: Type of encryption
  * 	@arg DISABLED - Encryption enabled as AES_ECB_FRAME_V15 (Directly to Meshlium)
  * 	@arg ENABLED - Encryption enabled as AES_ECB_END_TO_END_V15
  * 	@arg AES_ECB_END_TO_END_V15
  * 	@arg AES_ECB_FRAME_V15
  * 	@arg AES_LIBELIUM_CLOUD_SW_FRAME
- * 
+ *
  * @return void
  *
  */
@@ -727,19 +727,19 @@ void WaspFrame::encryptionToCloud(uint8_t flag)
 		case AES_ECB_FRAME_V15:
 			_encryptionToCloud = DISABLED;
 			break;
-			
+
 		case ENABLED:
 		case AES_ECB_END_TO_END_V15:
 			_encryptionToCloud = ENABLED;
 			break;
-			
+
 		case AES_LIBELIUM_CLOUD_SW_FRAME:
-			_encryptionToCloud = AES_LIBELIUM_CLOUD_SW_FRAME;			
+			_encryptionToCloud = AES_LIBELIUM_CLOUD_SW_FRAME;
 			break;
-			
+
 		default:
 			_encryptionToCloud = DISABLED;
-			break;			
+			break;
 	}
 }
 
@@ -750,9 +750,9 @@ void WaspFrame::encryptionToCloud(uint8_t flag)
 /**
  * @brief Create a encrypted frame from previous created frame
  * This function creates a new frame, encrypting the current contents of the
- * Waspmote Frame with the AES-key specified as input. The encrypted message 
+ * Waspmote Frame with the AES-key specified as input. The encrypted message
  * becomes the payload of the new encapsultad frame
- * 
+ *
  * The inner 'frame.buffer' is used for encapsulating the new Waspmote frame.
  *
  * The structure of the encrypted frames for Waspmote v15 is:
@@ -771,14 +771,14 @@ void WaspFrame::encryptionToCloud(uint8_t flag)
  * using the specifications of this function: AES key size qand pasword. ECB
  * mode and ZEROS padding are always used. The resulting encrypted frame is
  * stored in the same 'frame.buffer'
- * 
+ *
  * @param uint16_t keySize: specifies the AES key mode
  * 	@arg AES_128
  * 	@arg AES_192
  * 	@arg AES_256
  * @param char* password: specifies the AES key as a string (16, 24 or 32 chars)
- *  
- * @return 
+ *
+ * @return
  * 	@arg '0' if error
  * 	@arg '1' if OK
  */
@@ -825,9 +825,9 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 	|_____|____________|___________|__________|__________|___|_________________|
 	*/
 
-	/* Define the frame type depending on the key size. 
+	/* Define the frame type depending on the key size.
 	 * ECB mode is always used for Meshlium.
-	 * 
+	 *
 	 * Software-encrypted frame types:
 	 * 	AES_ECB_END_TO_END_V15
 	 * 	AES_ECB_FRAME_V15
@@ -856,7 +856,7 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 					frame_type = AES_LIBELIUM_CLOUD_SW_FRAME; // #102
 				}
 				break;
-			default:		
+			default:
 				return 0;
 		}
 	}
@@ -974,9 +974,9 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
 /**
  * @brief Create a encrypted frame from previous created frame
  * This function creates a new frame, encrypting the current contents of the
- * Waspmote Frame with the AES-key specified as input. The encrypted message 
+ * Waspmote Frame with the AES-key specified as input. The encrypted message
  * becomes the payload of the new encapsultad frame
- * 
+ *
  * The inner 'frame.buffer' is used for encapsulating the new Waspmote frame.
  *
  * The structure of the encrypted frames for Waspmote v15 is:
@@ -995,10 +995,10 @@ uint8_t WaspFrame::encryptFrame( uint16_t keySize, char* password )
  * using the specifications of this function: AES key size qand pasword. ECB
  * mode and ZEROS padding are always used. The resulting encrypted frame is
  * stored in the same 'frame.buffer'
- * 
+ *
  * @param uint8_t keyIndex: Defines the key where the aes key is stored
- *  
- * @return 
+ *
+ * @return
  * 	@arg '0' if error
  * 	@arg '1' if OK
  */
@@ -1172,9 +1172,9 @@ uint8_t WaspFrame::encryptFragment(uint16_t keySize, char* password)
 	|_____|____________|___________|__________|__________|___|_________________|
 	*/
 
-	/* Define the frame type depending on the key size. 
+	/* Define the frame type depending on the key size.
 	 * ECB mode is always used for Meshlium.
-	 * 
+	 *
 	 * Software-encrypted frame types:
 	 * 	AES_ECB_END_TO_END_V15
 	 * 	AES_ECB_FRAME_V15
@@ -1203,7 +1203,7 @@ uint8_t WaspFrame::encryptFragment(uint16_t keySize, char* password)
 					frame_type = AES_LIBELIUM_CLOUD_SW_FRAME; // #102
 				}
 				break;
-			default:		
+			default:
 				return 1;
 
 		}
@@ -1338,12 +1338,12 @@ uint8_t WaspFrame::encryptFragment(uint16_t keySize, char* password)
  * | <=> | Frame Type | Num Bytes | ID secret |  Wasp ID | # | Encrypted Fragment |
  * |_____|____________|___________|___________|__________|___|____________________|
  *
- * Where 'Encrypted Fragment' is the original 'frame.bufferFragment' which is 
+ * Where 'Encrypted Fragment' is the original 'frame.bufferFragment' which is
  * encrypted via hw
- * 
+ *
  * @param uint8_t keyIndex: Defines the key where the aes key is stored
- *  
- * @return 
+ *
+ * @return
  * 	@arg '0' if error
  * 	@arg '1' if OK
  */
@@ -1967,7 +1967,7 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long value)
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
@@ -2118,7 +2118,7 @@ int8_t WaspFrame::addSensor(uint8_t type, double value)
 		#endif
 		return 0;
 	}
-	
+
 	if (_boot_version >= 'G')
 	{
 		if (_frameType == INFORMATION_FRAME_AGR_XTR)
@@ -2172,7 +2172,7 @@ int8_t WaspFrame::addSensor(uint8_t type, double value, int N)
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		// convert from float to string
@@ -2317,8 +2317,8 @@ int8_t WaspFrame::addSensor(uint8_t type, char* str)
 			USB.println();
 		#endif
 		return 0;
-	}	
-	
+	}
+
 	// calculate the buffer length to be created
 	// depending on the input string to be copied to it
 	uint16_t string_length = strlen(str)+1;
@@ -2486,7 +2486,7 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1, double val2)
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
@@ -2679,7 +2679,7 @@ int8_t WaspFrame::addSensor(uint8_t type, unsigned long val1, unsigned long val2
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
@@ -2841,7 +2841,7 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		/// ASCII
@@ -3013,7 +3013,7 @@ int8_t WaspFrame::addSensor(uint8_t type, uint8_t val1, uint8_t val2, uint8_t va
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		/// ASCII
@@ -3206,7 +3206,7 @@ int8_t WaspFrame::addSensor(uint8_t type, int val1, int val2)
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
@@ -3363,7 +3363,7 @@ int8_t WaspFrame::addSensor(uint8_t type, int val1,int val2,int val3)
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
@@ -3528,7 +3528,7 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 		#endif
 		return 0;
 	}
-	
+
 	if(_mode == ASCII)
 	{
 		// get name of sensor from table
@@ -3704,6 +3704,187 @@ int8_t WaspFrame::addSensor(uint8_t type, double val1,double val2,double val3)
 	return length;
 }
 
+/*
+ *
+ *
+ *
+ *
+ *
+ */
+int8_t WaspFrame::addSensor(uint8_t type, uint16_t val[])
+{
+
+	uint8_t len;
+	if (type == SENSOR_PM_BIN){
+		len = 24;
+	}
+	else if (type == SENSOR_PM_BINL){
+		len = 16;
+	}
+	else if (type == SENSOR_PM_BINH){
+			len = 8;
+	}
+
+	if(_mode == ASCII)
+	{
+		// get name of sensor from table
+		char numDecimals;
+
+		if (_boot_version >= 'G')
+		{
+			if (_frameType == INFORMATION_FRAME_AGR_XTR)
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(AGR_XTR_DECIMAL_TABLE[type]));
+			}
+			else if (_frameType == INFORMATION_FRAME_WTR_XTR)
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(WTR_XTR_DECIMAL_TABLE[type]));
+			}
+			else
+			{
+				numDecimals = (uint8_t)pgm_read_word(&(FRAME_DECIMAL_TABLE[type]));
+			}
+		}
+		else
+		{
+			numDecimals = (uint8_t)pgm_read_word(&(DECIMAL_TABLE[type]));
+		}
+
+		char str[len][4];
+		// convert from uint16_t to string
+		for(int i=0; i<len; i++){
+			itoa( val[i], str[i], 10);
+		}
+
+
+		// get name of sensor from table
+		char name[20];
+
+		if (_boot_version >= 'G')
+		{
+            if (type == INFORMATION_FRAME_AGR_XTR)
+            {
+                strcpy_P(name, (char*)pgm_read_word(&(AGR_XTR_TABLE[type])));
+            }
+            else if (type == INFORMATION_FRAME_WTR_XTR)
+            {
+                strcpy_P(name, (char*)pgm_read_word(&(WTR_XTR_TABLE[type])));
+            }
+            else
+            {
+                strcpy_P(name, (char*)pgm_read_word(&(FRAME_SENSOR_TABLE[type])));
+            }
+		}
+		else
+		{
+			strcpy_P(name, (char*)pgm_read_word(&(SENSOR_TABLE[type])));
+		}
+
+		// // check if new sensor value fits in the frame or not
+		// // in the case the maximum length is reached, exit with error
+		// // if not, then add the new sensor length to the total length
+		// if(!checkLength( strlen(name) +
+		// 				 strlen(str1) + strlen(str2) + strlen(str3) +
+		// 				 strlen(";") + strlen(";") + strlen(":") +
+		// 				 strlen("#") 	))
+		// {
+		// 	return -1;
+		// }
+
+		// create index for each element to be inserted in the sensor field
+		// 'index_1' is needed for adding the sensor tag
+		// 'index_2' is needed for adding ':'
+		// 'index_3' is needed for adding sensor value in str1
+		// 'index_4' is needed for adding ';'
+		// 'index_5' is needed for adding sensor value in str2
+		// 'index_6' is needed for adding ';'
+		// 'index_7' is needed for adding sensor value in str3
+		// 'index_8' is needed for adding the separator '#'
+		// int index_1 = length-strlen(name)-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		// int index_2 = length-strlen(":")-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		// int index_3 = length-strlen(str1)-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		// int index_4 = length-strlen(";")-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		// int index_5 = length-strlen(str2)-strlen(";")-strlen(str3)-strlen("#");
+		// int index_6 = length-strlen(";")-strlen(str3)-strlen("#");
+		// int index_7 = length-strlen(str3)-strlen("#");
+		// int index_8 = length-strlen("#");
+
+		// add sensor tag
+		memcpy( &buffer[length], name, strlen(name));
+		length += strlen(name);
+
+		// add ':'
+		memcpy( &buffer[length],  ":", strlen(":"));
+		length += strlen(":");
+
+		// add input data
+		for(int i=0; i<len-1; i++){
+			memcpy( &buffer[length],  str[i], strlen(str[i]));
+			length += strlen(str[i]);
+
+			memcpy( &buffer[length],  ";", strlen(";"));
+			length += strlen(";");
+		}
+
+		memcpy( &buffer[length],  str[len-1], strlen(str[len-1]));
+		length += strlen(str[len-1]);
+
+		// add separator '#'
+		memcpy( &buffer[length],  "#", strlen("#"));
+		length += strlen("#");
+
+		// increment sensor fields counter
+		numFields++;
+
+		// set sensor fields counter
+		buffer[4]=numFields;
+	}
+	else
+	{
+		// check if the data input type corresponds to the sensor
+		if( checkFields(type, TYPE_INT, len) == -1 ) return -1;
+
+		// set data bytes (in this case, uint16_t is two bytes)
+		char valC[len][2] = {};
+		for(int i=0; i<len; i++){
+			memcpy(valC[i],&val[i],2);
+		}
+
+		// check if new sensor value fits 1+2*len
+		if(!checkLength(1+2*len))
+		{
+			return -1;
+		}
+
+		// concatenate sensor name to frame string
+		buffer[length-(1+2*len)] = (char)type;
+
+		// concatenate data to frame string
+		uint8_t j=0;
+		for(int i=2*len; i>0; i-=2){
+			buffer[length-i+1] = valC[j][1];
+			buffer[length-i] = valC[j][0];
+			j++;
+		}
+		buffer[length] = '\0';
+
+		// add contents to struct
+		if (numFields < max_fields)
+		{
+			field[numFields].flag = false;
+			field[numFields].start = length-(1+2*len);
+			field[numFields].size = 1+2*len;
+		}
+
+		// increment sensor fields counter
+		numFields++;
+		// update number of bytes field
+		buffer[4] = frame.length-5;
+
+	}
+
+	return length;
+}
 
 
 /*

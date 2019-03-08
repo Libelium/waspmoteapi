@@ -1,7 +1,7 @@
 /*! \file AgrXtrFrameconstants.h
     \brief Header file for Agriculture Xtreme Frame Constants
 
-    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
 
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		1.3
+    Version:		1.4
     Design:			David Gascón
     Implementation:	Javier Siscart, Víctor Boria
 
@@ -322,14 +322,14 @@ const char	agr_xtr_91[]  	PROGMEM = "ALT";
 const char	agr_xtr_92[]  	PROGMEM = "HDOP";
 const char	agr_xtr_93[]  	PROGMEM = "VDOP";
 const char	agr_xtr_94[]  	PROGMEM = "PDOP";
-const char	agr_xtr_95[]  	PROGMEM = "";
-const char	agr_xtr_96[]  	PROGMEM = "";
-const char	agr_xtr_97[]  	PROGMEM = "";
-const char	agr_xtr_98[]  	PROGMEM = "";
-const char	agr_xtr_99[]  	PROGMEM = "";
-const char	agr_xtr_100[]  	PROGMEM = "";
-const char	agr_xtr_101[]  	PROGMEM = "";
-const char	agr_xtr_102[]  	PROGMEM = "";
+const char	agr_xtr_95[]  	PROGMEM = "RAD";
+const char	agr_xtr_96[]  	PROGMEM = "SC1_RAD";
+const char	agr_xtr_97[]  	PROGMEM = "SC2_RAD";
+const char	agr_xtr_98[]  	PROGMEM = "ETC";
+const char	agr_xtr_99[]  	PROGMEM = "PTC";
+const char	agr_xtr_100[]  	PROGMEM = "WSP";
+const char	agr_xtr_101[]  	PROGMEM = "PSH";
+const char	agr_xtr_102[]  	PROGMEM = "NCN";
 const char	agr_xtr_103[]  	PROGMEM = "";
 const char	agr_xtr_104[]  	PROGMEM = "";
 const char	agr_xtr_105[]  	PROGMEM = "";
@@ -723,7 +723,6 @@ const char* const AGR_XTR_TABLE[] PROGMEM=
 	agr_xtr_225,
 	agr_xtr_226,
 	agr_xtr_227,
-	
 	agr_xtr_228,
 	agr_xtr_229,
 	agr_xtr_230,
@@ -872,13 +871,13 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 93
 	2,		// 94
 
-	0,		// 95
-	0,		// 96
-	0,		// 97
-	0,		// 98
-	0,		// 99
-	0,		// 100
-	0,		// 101
+	1,		// 95
+	1,		// 96
+	1,		// 97
+	2,		// 98
+	2,		// 99
+	2,		// 100
+	2,		// 101
 	0,		// 102
 	0,		// 103
 	0,		// 104
@@ -1433,10 +1432,10 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 95
 	0,		// 96
 	0,		// 97
-	0,		// 98
-	0,		// 99
-	0,		// 100
-	0,		// 101
+	1,		// 98
+	1,		// 99
+	1,		// 100
+	2,		// 101
 	0,		// 102
 	0,		// 103
 	0,		// 104

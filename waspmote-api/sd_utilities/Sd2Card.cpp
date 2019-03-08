@@ -1,6 +1,6 @@
 /* Arduino Sd2Card Library
  * Copyright (C) 2012 by William Greiman
- * Modified for Waspmote by Libelium, 2016
+ * Modified for Waspmote by Libelium, 2019
  *
  * This file is part of the Arduino Sd2Card Library
  *
@@ -18,7 +18,7 @@
  * along with the Arduino Sd2Card Library.  If not, see
  * <http://www.gnu.org/licenses/>.
  * 
- * Version:		3.0
+ * Version:		3.1
  * 
  */
 #include "Sd2Card.h"
@@ -266,6 +266,7 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 {
 	m_errorCode = m_type = 0;
 	m_chipSelectPin = chipSelectPin;
+	uint8_t response_ACMD41;
  
 	// 16-bit init start time allows over a minute
 	uint32_t t0 = millis();
@@ -311,6 +312,10 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 		if (cardCommand(CMD8, 0x1AA) == (R1_ILLEGAL_COMMAND | R1_IDLE_STATE)) 
 		{
 			type(SD_CARD_TYPE_SD1);
+			if (cardCommand(CMD58, 0)) {
+				error(SD_CARD_ERROR_CMD58);
+				goto fail;
+			}
 			break;
 		}
 		for (uint8_t i = 0; i < 4; i++) m_status = SPI.receive();
@@ -326,12 +331,16 @@ bool Sd2Card::begin(uint8_t chipSelectPin, uint8_t sckDivisor)
 		}
 		if(t0>millis()) t0 = millis();
 	}
-  
+	
 	// initialize card and send host supports SDHC if SD2
 	arg = type() == SD_CARD_TYPE_SD2 ? 0X40000000 : 0;
 
-	while (cardAcmd(ACMD41, arg) != R1_READY_STATE) 
+	cardCommand(CMD55, 0x0);
+	response_ACMD41=cardAcmd(ACMD41, arg);
+	while (response_ACMD41 != R1_READY_STATE) 
 	{
+		cardCommand(CMD55, 0x0);
+		response_ACMD41=cardAcmd(ACMD41, arg);
 		// check for timeout
 		if ((millis() - t0) > SD_INIT_TIMEOUT) 
 		{

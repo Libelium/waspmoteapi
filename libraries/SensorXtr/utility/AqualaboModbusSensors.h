@@ -2,7 +2,7 @@
 	\brief Library for managing the modbus sensors in Smart Water Xtreme.
 	This library is not compatible con Smart water version.
 
-	Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -18,13 +18,13 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:			3.0
+	Version:			3.1
 	Design:				David Gascón
 	Implementation:		Victor Boria
 */
 
 
-#ifndef ModbusSensor_h
+#ifndef AqualaboModbusSensor_h
 #define ModbusSensor_h
 
 /*****************************************************************************

@@ -1,28 +1,28 @@
 /*! \file WaspFrameConstants.h
     \brief Header file for Waspmote v12 Frame Constants
-    
+
     Copyright (C) 2016 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
+
     Version:		3.0
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
 */
-  
+
 
 #ifndef WaspFrameconstants_h
 #define WaspFrameconstants_h
@@ -127,7 +127,7 @@
 /*! \def SENSOR_CDG
     \brief Crack detection gauge measurement type
  */
-/*! \def SENSOR_CPG	
+/*! \def SENSOR_CPG
     \brief Crack propagation gauge measurement type
  */
 /*! \def SENSOR_LD
@@ -354,16 +354,16 @@
  /*! \def SENSOR_SOIL3
     \brief Agriculture Board watermark3
  */
- 
+
  /// DS18B20
  /*! \def SENSOR_TCC
     \brief DS18B20 temperature sensor
  */
- 
+
  /// P&S Ultrasound depending on socket voltage ref
  /*! \def SENSOR_US_3V3
     \brief WRA1 Ultrasound sensor powered at 3V3
- */ 
+ */
 /*! \def SENSOR_US_5V
     \brief WRA1 Ultrasound sensor powered at 5V
  */
@@ -372,70 +372,70 @@
 /// P&S Security sensors depending on socket (Security - Events board)
  /*! \def SENSOR_LUM_D
     \brief LDR sensor in socket D
- */  
+ */
 /*! \def SENSOR_LUM_E
     \brief LDR sensor in socket E
- */ 
+ */
  /*! \def SENSOR_LUM_F
     \brief LDR sensor in socket F
- */ 
+ */
  /*! \def SENSOR_LP_D
     \brief Liquid Presence sensor in socket D
- */ 
+ */
  /*! \def SENSOR_LP_E
     \brief Liquid Presence sensor in socket E
- */ 
+ */
  /*! \def SENSOR_LP_F
     \brief Liquid Presence sensor in socket F
- */  
+ */
  /*! \def SENSOR_LL_D
     \brief Liquid Level sensor in socketD
- */ 
+ */
  /*! \def SENSOR_LL_E
     \brief Liquid Level sensor in socketE
- */ 
+ */
  /*! \def SENSOR_LL_F
     \brief Liquid Level sensor in socketF
- */  
+ */
  /*! \def SENSOR_HALL_D
     \brief Hall Effect sensor in socket D
- */ 
+ */
  /*! \def SENSOR_HALL_E
     \brief Hall Effect sensor in socket E
- */ 
+ */
  /*! \def SENSOR_HALL_F
     \brief Hall Effect sensor in socket F
- */ 
- 
+ */
+
 /// P&S liquid flow sensor depending on socket (Smart Metering)
 /*! \def SENSOR_WF_C
     \brief Liquid Flow sensor in socket C
- */   
+ */
 /*! \def SENSOR_WF_E
     \brief Liquid Flow sensor in socket E
- */ 
-	
+ */
+
 /// Unix/Epoch timestamp
 /*! \def SENSOR_TST
     \brief Unix (aka Epoch) timestamp value
- */ 	
- 
+ */
+
 /// Turbidity sensor
 /*! \def SENSOR_TURB
     \brief Turbidity sensor
- */ 
- 
- 
+ */
+
+
 /// Version parameters
 /*! \def SENSOR_VAPI
     \brief API version
- */ 
+ */
 /*! \def SENSOR_VPROG
     \brief Program version
- */ 
+ */
 /*! \def SENSOR_VBOOT
     \brief Bootloader version
- */ 
+ */
 
 
 /// Gases PRO
@@ -551,7 +551,7 @@
     \brief pH (for Smart Water Ions) measurement type
  */
 
- 
+
 // Gases v20
 #define SENSOR_CO	 		0
 #define SENSOR_CO2 			1
@@ -569,8 +569,8 @@
 #define SENSOR_TFA			13
 #define SENSOR_HUMA			14
 #define SENSOR_PA			15
-	
-// Events v20	
+
+// Events v20
 #define SENSOR_PW  			16
 #define SENSOR_BEND 		17
 #define SENSOR_VBR  		18
@@ -580,20 +580,20 @@
 #define SENSOR_LUM  		22
 #define SENSOR_PIR  		23
 #define SENSOR_ST  			24
-	
-// Smart Cities		
+
+// Smart Cities
 #define SENSOR_MCP  		25
 #define SENSOR_CDG  		26
 #define SENSOR_CPG  		27
 #define SENSOR_LD  			28
 #define SENSOR_DUST			29
-#define SENSOR_US  			30	
-	
-// Smart parking	
+#define SENSOR_US  			30
+
+// Smart parking
 #define SENSOR_MF			31
 #define SENSOR_PS			32
-	
-// Agriculture	
+
+// Agriculture
 #define SENSOR_TCB			33
 #define SENSOR_TFB			34
 #define SENSOR_HUMB			35
@@ -602,23 +602,23 @@
 #define SENSOR_LW  			38
 #define SENSOR_PAR  		39
 #define SENSOR_UV  			40
-#define SENSOR_TD  			41	
+#define SENSOR_TD  			41
 #define SENSOR_SD  			42
 #define SENSOR_FD  			43
 #define SENSOR_ANE  		44
 #define SENSOR_WV  			45
 #define SENSOR_PLV  		46
-	
-// Radiation		
+
+// Radiation
 #define SENSOR_RAD  		47
-	
-// Smart metering	
+
+// Smart metering
 #define SENSOR_CU  			48
 #define SENSOR_WF  			49
 #define SENSOR_LC  			50
 #define SENSOR_DF  			51
-	
-// Additional	
+
+// Additional
 #define SENSOR_BAT  		52
 #define SENSOR_GPS  		53
 #define SENSOR_RSSI  		54
@@ -632,15 +632,15 @@
 #define SENSOR_IN_TEMP		62
 #define SENSOR_ACC			63
 #define SENSOR_MILLIS		64
-	
-// Special	
+
+// Special
 #define SENSOR_STR	 		65
-	
-// Meshlium	
+
+// Meshlium
 #define SENSOR_MBT	 		66
 #define SENSOR_MWIFI 		67
-	
-// RFID	
+
+// RFID
 #define SENSOR_UID			68
 #define SENSOR_RB	 		69
 
@@ -718,10 +718,10 @@
 // P&S liquid flow sensor depending on socket (Smart Metering)
 #define SENSOR_WF_C			121
 #define SENSOR_WF_E			122
-	
+
 // Unix/Epoch timestamp
 #define SENSOR_TST			123
-	
+
 // Turbidity sensor
 #define SENSOR_TURB			124
 
@@ -783,36 +783,39 @@
 #define SENSOR_ORP_B		170
 #define SENSOR_ORP_C		171
 
+#define SENSOR_OPCN3_BIN		172
+#define SENSOR_OPCN2_BIN		173
+
 
 
 
 /// Flash defines //////////////////////////////////////////////////////////////
 
 
-/******************************************************************************* 
+/*******************************************************************************
  * The following Flash strings, define the tags for all Waspmote sensors.
  * These TAGs are used in ASCII frames in order to indicate every sensor field
  * that has been included inside the frame.
- * 
+ *
  ******************************************************************************/
 
 // Gases
-const char	str_CO[] 	PROGMEM	= "CO";		// 0	
+const char	str_CO[] 	PROGMEM	= "CO";		// 0
 const char 	str_CO2[] 	PROGMEM	= "CO2";	// 1
-const char 	str_O2[] 	PROGMEM	= "O2";		// 2	
-const char 	str_CH4[] 	PROGMEM	= "CH4";	// 3	
-const char 	str_LPG[] 	PROGMEM	= "LPG";	// 4	
-const char 	str_NH3[] 	PROGMEM	= "NH3";	// 5	
-const char 	str_AP1[] 	PROGMEM	= "AP1";	// 6	
-const char 	str_AP2[] 	PROGMEM	= "AP2";	// 7	
-const char 	str_SV[] 	PROGMEM	= "SV";		// 8	
-const char 	str_NO2[] 	PROGMEM	= "NO2";	// 9	
-const char 	str_O3[] 	PROGMEM	= "O3";		// 10	
-const char 	str_VOC[] 	PROGMEM	= "VOC";	// 11	
-const char 	str_TCA[] 	PROGMEM	= "TCA";	// 12	
-const char 	str_TFA[] 	PROGMEM	= "TFA";	// 13	
-const char 	str_HUMA[] 	PROGMEM	= "HUMA";	// 14	
-const char 	str_PA[] 	PROGMEM	= "PA";		// 15	
+const char 	str_O2[] 	PROGMEM	= "O2";		// 2
+const char 	str_CH4[] 	PROGMEM	= "CH4";	// 3
+const char 	str_LPG[] 	PROGMEM	= "LPG";	// 4
+const char 	str_NH3[] 	PROGMEM	= "NH3";	// 5
+const char 	str_AP1[] 	PROGMEM	= "AP1";	// 6
+const char 	str_AP2[] 	PROGMEM	= "AP2";	// 7
+const char 	str_SV[] 	PROGMEM	= "SV";		// 8
+const char 	str_NO2[] 	PROGMEM	= "NO2";	// 9
+const char 	str_O3[] 	PROGMEM	= "O3";		// 10
+const char 	str_VOC[] 	PROGMEM	= "VOC";	// 11
+const char 	str_TCA[] 	PROGMEM	= "TCA";	// 12
+const char 	str_TFA[] 	PROGMEM	= "TFA";	// 13
+const char 	str_HUMA[] 	PROGMEM	= "HUMA";	// 14
+const char 	str_PA[] 	PROGMEM	= "PA";		// 15
 
 // Events
 const char	str_PW[] 	PROGMEM	= "PW";		// 16
@@ -1027,31 +1030,34 @@ const char	str_ORP_A[]		PROGMEM = "ORP_A";	//	169
 const char	str_ORP_B[]		PROGMEM = "ORP_B";	//	170
 const char	str_ORP_C[]		PROGMEM = "ORP_C";	//	171
 
-/******************************************************************************* 
+const char	str_OPCN3_bin[]		PROGMEM = "OPC_N3_BIN";	//	172
+const char	str_OPCN2_bin[]		PROGMEM = "OPC_N2_BIN";	//	173
+
+/*******************************************************************************
  * SENSOR_TABLE - Sensor label table
- * 
- * This table specifies the tag for each sensor. Every tag has been previously 
+ *
+ * This table specifies the tag for each sensor. Every tag has been previously
  * defined in Flash memory
  ******************************************************************************/
-const char* const SENSOR_TABLE[] PROGMEM= 	  
+const char* const SENSOR_TABLE[] PROGMEM=
 {
 	// Gases
-	str_CO,			// 0	
- 	str_CO2,		// 1	
- 	str_O2,			// 2	
- 	str_CH4,		// 3	
- 	str_LPG,		// 4	
- 	str_NH3,		// 5	
- 	str_AP1,		// 6	
- 	str_AP2,		// 7	
- 	str_SV,			// 8	
- 	str_NO2,		// 9	
- 	str_O3,			// 10	
- 	str_VOC,		// 11	
- 	str_TCA,		// 12	
- 	str_TFA,		// 13	
- 	str_HUMA,		// 14	
- 	str_PA,			// 15	
+	str_CO,			// 0
+ 	str_CO2,		// 1
+ 	str_O2,			// 2
+ 	str_CH4,		// 3
+ 	str_LPG,		// 4
+ 	str_NH3,		// 5
+ 	str_AP1,		// 6
+ 	str_AP2,		// 7
+ 	str_SV,			// 8
+ 	str_NO2,		// 9
+ 	str_O3,			// 10
+ 	str_VOC,		// 11
+ 	str_TCA,		// 12
+ 	str_TFA,		// 13
+ 	str_HUMA,		// 14
+ 	str_PA,			// 15
 
 	// Events
 	str_PW,			// 16
@@ -1124,9 +1130,9 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_MWIFI,		// 67
 
 	// RFID
-	str_UID,		// 68	
+	str_UID,		// 68
 	str_RB,			// 69
-	
+
 	// Smart Water
 	str_PH,			// 70
 	str_ORP,		// 71
@@ -1143,42 +1149,42 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_DIK,		// 82
 	str_DIMG2,		// 83
 	str_DINO3,		// 84
-	
+
 	//Smart Libelium
 	str_TX_PWR,		// 85
 	str_DM_ST,		// 86
 	str_DM_SP,		// 87
 	str_LUX,		// 88
-	
+
 	str_SPEED,		// 89
 	str_COURSE,		// 90
 	str_ALTITUDE,	// 91
 	str_HDOP,		// 92
 	str_VDOP,		// 93
 	str_PDOP,		// 94
-	
+
 	// Finite State Machine
 	str_FSM,		// 95
-	
+
 	// New Pluviometer values
 	str_PLV1,		// 96
 	str_PLV2,		// 97
 	str_PLV3,		// 98
-	
+
 	// P&S watermarks
 	str_SOIL_C,		// 99
 	str_SOIL_D,		// 100
 	str_SOIL_E,		// 101
 	str_SOIL_F,		// 102
-	
+
 	// Waspmote OEM watermarks
 	str_SOIL1,		// 103
 	str_SOIL2,		// 104
 	str_SOIL3,		// 105
-	
+
 	// DS18B20
 	str_TCC, 		// 106
-	
+
 	// P&S ultrasound sensors depending on voltage ref
 	str_US_3V3,		// 107
 	str_US_5V,		// 108
@@ -1195,23 +1201,23 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_LL_F,	// 117
 	str_HALL_D,	// 118
 	str_HALL_E,	// 119
-	str_HALL_F,	// 120	
-	
+	str_HALL_F,	// 120
+
 	// P&S liquid flow sensor depending on socket (Smart Metering)
 	str_WF_C,	// 121
 	str_WF_E,	// 122
-	
+
 	// Unix/Epoch timestamp
 	str_TST,	// 123
-	
+
 	// Turbidity sensor
 	str_TURB,	// 124
-	
+
 	// Version parameters
 	str_VAPI,	// 125
 	str_VPROG,	// 126
 	str_VBOOT,	// 127
-	
+
 	// Gases PRO Board
 	str_GP_CL2,		// 128
 	str_GP_CO,		// 129
@@ -1222,7 +1228,7 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_GP_HCN,		// 134
 	str_GP_NH3,		// 135
 	str_GP_NO,		// 136
-	str_GP_NO2,		// 137 
+	str_GP_NO2,		// 137
 	str_GP_O2,		// 138
 	str_GP_PH3,		// 139
 	str_GP_SO2,		// 140
@@ -1242,7 +1248,7 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_OPC_pm2_5,	// 152
 	str_OPC_pm10,	// 153
 	str_OPC_part,	// 154
-	
+
 	// Smart Water Ions
 	str_SWI_CA,	// 155
 	str_SWI_FL,	// 156
@@ -1255,7 +1261,7 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_SWI_PB,	// 163
 	str_SWI_AG,	// 164
 	str_SWI_PH,	// 165
-	
+
 	// P&S Smart Water sensors depending on socket (Smart Water)
 	str_PH_A,	//	166
 	str_PH_B,	//	167
@@ -1264,53 +1270,56 @@ const char* const SENSOR_TABLE[] PROGMEM=
 	str_ORP_B,	//	170
 	str_ORP_C,	//	171
 
+  str_OPCN3_bin, // 172
+  str_OPCN2_bin, // 173
+
 };
 
 
-/*******************************************************************************  
+/*******************************************************************************
  * SENSOR_TYPE_TABLE - Binary frames sensor types
- * 
+ *
  * This table specifies the type of sensor depending on the type of value the
  * user must put as input. These are the possibilities:
- *	
+ *
  * 	0: uint8_t
- *	1: int (the same as int16_t)  
- *	2: double 
- *	3: char* 
+ *	1: int (the same as int16_t)
+ *	2: double
+ *	3: char*
  *  4: unsigned long
  *  5: uint8_t*
  ******************************************************************************/
-const uint8_t SENSOR_TYPE_TABLE[] PROGMEM= 	  
-{   
+const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
+{
 	// Gases
-	2, // str_CO,		// 0	
+	2, // str_CO,		// 0
 	2, // str_CO2,		// 1
-	2, // str_O2,		// 2			
+	2, // str_O2,		// 2
 	2, // str_CH4,		// 3
-	2, // str_LPG,		// 4		
-	2, // str_NH3,		// 5	
-	2, // str_AP1,		// 6	
-	2, // str_AP2,		// 7	
-	2, // str_SV,		// 8		
-	2, // str_NO2,		// 9		
+	2, // str_LPG,		// 4
+	2, // str_NH3,		// 5
+	2, // str_AP1,		// 6
+	2, // str_AP2,		// 7
+	2, // str_SV,		// 8
+	2, // str_NO2,		// 9
 	2, // str_O3,		// 10
-	2, // str_VOC,		// 11	
-	2, // str_TCA,		// 12	
-	2, // str_TFA,		// 13	
+	2, // str_VOC,		// 11
+	2, // str_TCA,		// 12
+	2, // str_TFA,		// 13
 	2, // str_HUMA,		// 14
-	2, // str_PA,		// 15	
-	
+	2, // str_PA,		// 15
+
 	// Events
-	2, // str_PW,		// 16	
+	2, // str_PW,		// 16
 	2, // str_BEND,		// 17
 	0, // str_VBR,		// 18
-	0, // str_HALL,		// 19	
-	0, // str_LP,		// 20	
-	0, // str_LL,		// 21	
-	2, // str_LUM,		// 22	
-	0, // str_PIR,		// 23	
-	2, // str_ST,		// 24	
-	
+	0, // str_HALL,		// 19
+	0, // str_LP,		// 20
+	0, // str_LL,		// 21
+	2, // str_LUM,		// 22
+	0, // str_PIR,		// 23
+	2, // str_ST,		// 24
+
 	// Smart cities
 	0, // str_MCP,		// 25
 	0, // str_CDG,		// 26
@@ -1318,11 +1327,11 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_LD,		// 28
 	2, // str_DUST,		// 29
 	2, // str_US,		// 30
-	
+
 	// Smart parking
 	1, //str_MF,		// 31
 	0, //str_PS,		// 32
-	
+
 	// Agriculture
 	2, // str_TCB,		// 33
 	2, // str_TFB,		// 34
@@ -1330,24 +1339,24 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_SOILT,	// 36
 	2, // str_SOIL,		// 37
 	2, // str_LW,		// 38
-	2, // str_PAR,		// 39	
-	2, // str_UV,		// 40		
-	2, // str_TD,		// 41		
-	2, // str_SD,		// 42		
-	2, // str_FD,		// 43		
-	2, // str_ANE,		// 44	
-	0, // str_WV,		// 45	
+	2, // str_PAR,		// 39
+	2, // str_UV,		// 40
+	2, // str_TD,		// 41
+	2, // str_SD,		// 42
+	2, // str_FD,		// 43
+	2, // str_ANE,		// 44
+	0, // str_WV,		// 45
 	2, // str_PLV,		// 46
-	
+
 	// Radiation
 	2, // str_RAD,		// 47
-	
-	// Smart meetering	
+
+	// Smart meetering
 	2, // str_CU,		// 48
 	2, // str_WF,		// 49
 	2, // str_LC,		// 50
 	2, // str_DF,		// 51
-	
+
 	// Additional
 	0, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -1362,8 +1371,8 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_IN_TEMP,	// 62
 	1, // str_ACC,		// 63
 	4, // str_MILLIS,	// 64
-	
-	
+
+
 	// Special
 	3, // str_STR		// 65
 
@@ -1373,9 +1382,9 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 
 	// RFID
 	3,	//str_UID		// 68
-	3,	//str_RB		// 69	
-	
-	// Smart Water	
+	3,	//str_RB		// 69
+
+	// Smart Water
 	2, // str_PH,		// 70
 	2, // str_ORP,		// 71
 	2, // str_DO,		// 72
@@ -1390,15 +1399,15 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_DICU2,	// 81
 	2, // str_DIK,		// 82
 	2, // str_DIMG2,	// 83
-	2, // str_DINO3,	// 84	
-	
+	2, // str_DINO3,	// 84
+
 
 	//Smart Libelium
 	0,	//str_TX_PWR	// 85
 	0,	//str_DM_ST,	// 86
 	0,	//str_DM_SP,	// 87
 	4,	//str_LUX		// 88
-	
+
 	//GPS
 	2,	//str_SPEED		// 89
 	2,	//str_COURSE	// 90
@@ -1406,29 +1415,29 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2,	//str_HDOP		// 92
 	2,	//str_VDOP		// 93
 	2,	//str_PDOP		// 94
-	
+
 	// States Machine
 	0,	//str_FSM		// 95
-	
+
 	// New Pluviometer values
 	2, //str_PLV1		// 96
 	2, //str_PLV2		// 97
 	2, //str_PLV3		// 98
-	
+
 	// P&S watermarks
 	2, // str_SOIL_C,	// 99
 	2, // str_SOIL_D,	// 100
 	2, // str_SOIL_E,	// 101
 	2, // str_SOIL_F,	// 102
-	
+
 	// Waspmote OEM watermarks
 	2, // str_SOIL1,	// 103
 	2, // str_SOIL2,	// 104
 	2, // str_SOIL3,	// 105
-	
+
 	// DS18B20
 	2, // str_TCC,		// 106
-	
+
 	// P&S ultrasound sensor depending on voltage ref
 	2, // str_US_3V3,	// 107
 	2, // str_US_5V,	// 108
@@ -1437,31 +1446,31 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_LUM_D,	// 109
 	2, // str_LUM_E,	// 110
 	2, // str_LUM_F,	// 111
-	0, // str_LP_D,		// 112	
-	0, // str_LP_E,		// 113	
+	0, // str_LP_D,		// 112
+	0, // str_LP_E,		// 113
 	0, // str_LP_F,		// 114
-	0, // str_LL_D,		// 115	
+	0, // str_LL_D,		// 115
 	0, // str_LL_E,		// 116
-	0, // str_LL_F,		// 117	
+	0, // str_LL_F,		// 117
 	0, // str_HALL_D,	// 118
 	0, // str_HALL_E,	// 119
 	0, // str_HALL_F,	// 120
-	
-	// P&S liquid flow sensor depending on socket (Smart Metering)	
+
+	// P&S liquid flow sensor depending on socket (Smart Metering)
 	2, // str_WF_C,		// 121
 	2, // str_WF_E,		// 122
-	
+
 	// Unix/Epoch timestamp
 	4, // str_TST,		// 123
-	
+
 	// Turbidity sensor
 	2, // str_TURB,		// 124
-	
+
 	// Version parameters
 	0, // str_VAPI,		// 125
 	0, // str_VPROG,	// 126
-	0, // str_VBOOT,	// 127	
-	
+	0, // str_VBOOT,	// 127
+
 	// Gases PRO Board
 	2,	//str_GP_CL2,		// 128
 	2,	//str_GP_CO,		// 129
@@ -1492,7 +1501,7 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2,	//str_OPC_pm2_5	// 152
 	2,	//str_OPC_pm10	// 153
 	2,	//str_OPC_part	// 154
-	
+
 	// Smart Water Ions
 	2,	//str_SWI_CA,	// 155
 	2, 	//str_SWI_FL,	// 156
@@ -1505,7 +1514,7 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2,	//str_SWI_PB,	// 163
 	2,	//str_SWI_AG,	// 164
 	2,	//str_SWI_PH,	// 165
-	
+
 	// P&S Smart Water sensors depending on socket (Smart Water)
 	2, // str_PH_A,		// 166
 	2, // str_PH_B,		// 167
@@ -1513,21 +1522,24 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	2, // str_ORP_A,	// 169
 	2, // str_ORP_B,	// 170
 	2, // str_ORP_C,	// 171
-	
+
+  1, //str_OPC_bin //172
+  1, //str_OPC_bin //173
+
 };
 
 
-/*******************************************************************************  
+/*******************************************************************************
  * SENSOR_FIELD_TABLE - Sensor fields
- * 
- * This table specifies the number of fields per sensor. 
- * 
- * For example, a temperature sensor indicates the temperature in a single field. 
- * On the other hand, the GPS module indicates the position with two fields: 
+ *
+ * This table specifies the number of fields per sensor.
+ *
+ * For example, a temperature sensor indicates the temperature in a single field.
+ * On the other hand, the GPS module indicates the position with two fields:
  * latitude and longitude
  ******************************************************************************/
-const uint8_t SENSOR_FIELD_TABLE[] PROGMEM= 	  
-{   
+const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
+{
 	// Gases
 	1, // str_CO,		// 0
 	1, // str_CO2,		// 1
@@ -1538,25 +1550,25 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1, // str_AP1,		// 6
 	1, // str_AP2,		// 7
 	1, // str_SV,		// 8
-	1, // str_NO2,		// 9	
+	1, // str_NO2,		// 9
 	1, // str_O3,		// 10
 	1, // str_VOC,		// 11
 	1, // str_TCA,		// 12
-	1, // str_TFA,		// 13	
+	1, // str_TFA,		// 13
 	1, // str_HUMA,		// 14
 	1, // str_PA,		// 15
-	
+
 	// Events
 	1, // str_PW,		// 16
 	1, // str_BEND,		// 17
 	1, // str_VBR,		// 18
 	1, // str_HALL,		// 19
-	1, // str_LP,		// 20	
-	1, // str_LL,		// 21	
-	1, // str_LUM,		// 22	
-	1, // str_PIR,		// 23	
+	1, // str_LP,		// 20
+	1, // str_LL,		// 21
+	1, // str_LUM,		// 22
+	1, // str_PIR,		// 23
 	1, // str_ST,		// 24
-	
+
 	// Smart cities
 	1, // str_MCP,		// 25
 	1, // str_CDG,		// 26
@@ -1564,36 +1576,36 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1, // str_LD,		// 28
 	1, // str_DUST,		// 29
 	1, // str_US,		// 30
-	
+
 	// Smart parking
 	3, //str_MF,		// 31
 	1, //str_PS,		// 32
-	
+
 	// Agriculture
 	1, // str_TCB,		// 33
 	1, // str_TFB,		// 34
 	1, // str_HUMB,		// 35
 	1, // str_SOILT,	// 36
 	1, // str_SOIL,		// 37
-	1, // str_LW,		// 38	
+	1, // str_LW,		// 38
 	1, // str_PAR,		// 39
-	1, // str_UV,		// 40	
-	1, // str_TD,		// 41		
-	1, // str_SD,		// 42	
-	1, // str_FD,		// 43	
+	1, // str_UV,		// 40
+	1, // str_TD,		// 41
+	1, // str_SD,		// 42
+	1, // str_FD,		// 43
 	1, // str_ANE,		// 44
-	1, // str_WV,		// 45	
+	1, // str_WV,		// 45
 	1, // str_PLV,		// 46
-	
+
 	// Radiation
 	1, // str_RAD,		// 47
-	
+
 	// Smart meetering
 	1, // str_CU,		// 48
 	1, // str_WF,		// 49
 	1, // str_LC,		// 50
 	1, // str_DF,		// 51
-	
+
 	// Additional
 	1, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -1603,12 +1615,12 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1, // str_NID,		// 57
 	3, // str_DATE,		// 58
 	3, // str_TIME,		// 59
-	1, // str_GMT,		// 60	
+	1, // str_GMT,		// 60
 	1, // str_RAM,		// 61
 	1, // str_IN_TEMP,	// 62
 	3, // str_ACC,		// 63
-	1, // str_MILLIS,	// 64	
-	
+	1, // str_MILLIS,	// 64
+
 	// Special
 	1, // str_STR		// 65
 
@@ -1619,7 +1631,7 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	// RFID
 	1, //str_UID		// 68
 	1,  //str_RB		// 69
-	
+
 	// Smart Water
 	1, //str_PH,		// 70
 	1, //str_ORP,		// 71
@@ -1642,7 +1654,7 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	3,	//str_DM_ST,	// 86
 	3,	//str_DM_SP,	// 87
 	1,	//str_LUX		// 88
-	
+
 	//GPS
 	1,	//str_SPEED		// 89
 	1,	//str_COURSE	// 90
@@ -1650,29 +1662,29 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1,	//str_HDOP		// 92
 	1,	//str_VDOP		// 93
 	1,	//str_PDOP		// 94
-	
+
 	// States Machine
 	1,	//str_FSM		// 95
-	
+
 	// New Pluviometer values
 	1, //str_PLV1		// 96
 	1, //str_PLV2		// 97
 	1, //str_PLV3		// 98
-	
+
 	// P&S watermarks
 	1, // str_SOIL_C,	// 99
 	1, // str_SOIL_D,	// 100
 	1, // str_SOIL_E,	// 101
 	1, // str_SOIL_F,	// 102
-	
+
 	// Waspmote OEM watermarks
 	1, // str_SOIL1,	// 103
 	1, // str_SOIL2,	// 104
 	1, // str_SOIL3,	// 105
-	
+
 	// DS18B20
 	1, // str_TCC,		// 106
-	
+
 	// P&S ultrasound sensor depending on voltage ref
 	1, // str_US_3V3,	// 107
 	1, // str_US_5V,	// 108
@@ -1690,22 +1702,22 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1, // str_HALL_D,	// 118
 	1, // str_HALL_E,	// 119
 	1, // str_HALL_F,	// 120
-	
+
 	// P&S liquid flow sensor depending on socket (Smart Metering)
 	1, // str_WF_C,		// 121
 	1, // str_WF_E,		// 122
-	
+
 	// Unix/Epoch timestamp
 	1, // str_TST,		// 123
-	
+
 	// Turbidity sensor
 	1, // str_TURB,		// 124
-	
+
 	// Version parameters
 	1, // str_VAPI,		// 125
 	1, // str_VPROG,	// 126
 	1, // str_VBOOT,	// 127
-		
+
 	// Gases PRO Board
 	1,	//str_GP_CL2,		// 128
 	1,	//str_GP_CO,		// 129
@@ -1736,7 +1748,7 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1,	//str_OPC_pm2_5		// 152
 	1,	//str_OPC_pm10		// 153
 	2,	//str_OPC_part		// 154
-	
+
 	// Smart Water Ions
 	1,	//str_SWI_CA,	// 155
 	1, 	//str_SWI_FL,	// 156
@@ -1749,7 +1761,7 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1,	//str_SWI_PB,	// 163
 	1,	//str_SWI_AG,	// 164
 	1,	//str_SWI_PH,	// 165
-	
+
 	// P&S Smart Water sensors depending on socket (Smart Water)
 	1, // str_PH_A,		// 166
 	1, // str_PH_B,		// 167
@@ -1757,17 +1769,20 @@ const uint8_t SENSOR_FIELD_TABLE[] PROGMEM=
 	1, // str_ORP_A,	// 169
 	1, // str_ORP_B,	// 170
 	1, // str_ORP_C,	// 171
+
+  24, //str_OPC_bin, // 172
+  16, //str_OPC_bin, // 173
 };
 
 
 
-/******************************************************************************* 
+/*******************************************************************************
  * DECIMAL_TABLE - number of default decimals for each sensor for ASCII frames
- * 
+ *
  * This table specifies the number of decimals for each sensor for ASCII frames
  ******************************************************************************/
-const uint8_t DECIMAL_TABLE[] PROGMEM = 	  
-{   
+const uint8_t DECIMAL_TABLE[] PROGMEM =
+{
 	// Gases
 	3, // str_CO,		// 0
 	3, // str_CO2,		// 1
@@ -1777,27 +1792,27 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3, // str_NH3,		// 5
 	3, // str_AP1,		// 6
 	3, // str_AP2,		// 7
-	3, // str_SV,		// 8	
-	3, // str_NO2,		// 9	
+	3, // str_SV,		// 8
+	3, // str_NO2,		// 9
 	3, // str_O3,		// 10
 	3, // str_VOC,		// 11
 	2, // str_TCA,		// 12
-	2, // str_TFA,		// 13	
+	2, // str_TFA,		// 13
 	1, // str_HUMA,		// 14
 	2, // str_PA,		// 15
-	
+
 	// Events
-	3, // str_PW,		// 16	
+	3, // str_PW,		// 16
 	3, // str_BEND,		// 17
 	0, // str_VBR,		// 18
 
 	0, // str_HALL,		// 19
-	0, // str_LP,		// 20	
-	0, // str_LL,		// 21	
-	3, // str_LUM,		// 22	
-	0, // str_PIR,		// 23	
+	0, // str_LP,		// 20
+	0, // str_LL,		// 21
+	3, // str_LUM,		// 22
+	0, // str_PIR,		// 23
 	3, // str_ST,		// 24
-	
+
 	// Smart cities
 	0, // str_MCP,		// 25
 	0, // str_CDG,		// 26
@@ -1805,38 +1820,38 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3, // str_LD,		// 28
 	3, // str_DUST,		// 29
 	2, // str_US,		// 30
-	
+
 	// Smart parking
 	0, //str_MF,		// 31
 	0, //str_PS,		// 32
-	
+
 	// Agriculture
 	2, // str_TCB,		// 33
 	2, // str_TFB,		// 34
 	1, // str_HUMB,		// 35
 	2, // str_SOILT,	// 36
 	2, // str_SOIL,		// 37
-	3, // str_LW,		// 38	
+	3, // str_LW,		// 38
 	2, // str_PAR,		// 39
-	2, // str_UV,		// 40	
-	3, // str_TD,		// 41		
-	3, // str_SD,		// 42	
-	3, // str_FD,		// 43	
+	2, // str_UV,		// 40
+	3, // str_TD,		// 41
+	3, // str_SD,		// 42
+	3, // str_FD,		// 43
 	2, // str_ANE,		// 44
-	0, // str_WV,		// 45	
+	0, // str_WV,		// 45
 	2, // str_PLV,		// 46
-	
+
 	// Radiation
 	6, // str_RAD,		// 47
-	
+
 	// Smart meetering
 	2, // str_CU,		// 48
 	3, // str_WF,		// 49
 	3, // str_LC,		// 50
 	3, // str_DF,		// 51
-	
+
 	// Additional
-	0, // str_BAT,		// 52	
+	0, // str_BAT,		// 52
 	6, // str_GPS,		// 53
 	0, // str_RSSI,		// 54
 	0, // str_MAC,		// 55
@@ -1844,12 +1859,12 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	0, // str_NID,		// 57
 	0, // str_DATE,		// 58
 	0, // str_TIME,		// 59
-	0, // str_GMT,		// 60	
+	0, // str_GMT,		// 60
 	0, // str_RAM,		// 61
 	2, // str_IN_TEMP,	// 62
 	0, // str_ACC,		// 63
-	0, // str_MILLIS,	// 64	
-	
+	0, // str_MILLIS,	// 64
+
 	// Special
 	0, // str_STR		// 65
 
@@ -1860,7 +1875,7 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	// RFID
 	0, //str_UID		// 68
 	0, //str_RB			// 69
-	
+
 	// Smart Water
 	2, //str_PH,		// 70
 	3, //str_ORP,		// 71
@@ -1883,37 +1898,37 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	0,	//str_DM_ST,	// 86
 	0,	//str_DM_SP,	// 87
 	3,	//str_LUX		// 88
-	
+
 	//GPS
 	2,	//str_SPEED		// 89
 	2,	//str_COURSE	// 90
 	2,	//str_ALTITUDE	// 91
 	3,	//str_HDOP		// 92
 	3,	//str_VDOP		// 93
-	3,	//str_PDOP		// 94	
-	
+	3,	//str_PDOP		// 94
+
 	// States Machine
 	0,	//str_FSM		// 95
-	
+
 	// New Pluviometer values
 	2, //str_PLV1		// 96
 	2, //str_PLV2		// 97
-	2, //str_PLV3		// 98	
-	
+	2, //str_PLV3		// 98
+
 	// P&S watermarks
 	2, // str_SOIL_C,	// 99
 	2, // str_SOIL_D,	// 100
 	2, // str_SOIL_E,	// 101
 	2, // str_SOIL_F,	// 102
-	
+
 	// Waspmote OEM watermarks
 	2, // str_SOIL1,	// 103
 	2, // str_SOIL2,	// 104
 	2, // str_SOIL3,	// 105
-	
-	// DS18B20 
+
+	// DS18B20
 	2, // str_TCC,		// 106
-	
+
 	// P&S ultrasound sensor depending on voltage ref
 	2, // str_US_3V3,	// 107
 	2, // str_US_5V,	// 108
@@ -1931,22 +1946,22 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	0, // str_HALL_D,	// 118
 	0, // str_HALL_E,	// 119
 	0, // str_HALL_F,	// 120
-	
+
 	// P&S liquid flow sensor depending on socket (Smart Metering)
 	3, // str_WF_C,		// 121
 	3, // str_WF_E,		// 122
-	
+
 	// Unix/Epoch timestamp
 	0, // str_TST,		// 123
-	
+
 	// Turbidity sensor
 	1, // str_TURB,		// 124
-	
+
 	// Version parameters
 	0, // str_VAPI,		// 125
 	0, // str_VPROG,	// 126
 	0, // str_VBOOT,	// 127
-	
+
 	// Gases PRO Board
 	3,	//str_GP_CL2,		// 128
 	3,	//str_GP_CO,		// 129
@@ -1963,12 +1978,12 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3,	//str_GP_SO2,		// 140
 	3,	//str_GP_CH4,		// 141
 	3,	//str_GP_O3,		// 142
-	3,	//str_GP_CO2,		// 143	
+	3,	//str_GP_CO2,		// 143
 	3,	//str_GP_TC			// 144
 	2,	//str_GP_TF			// 145
 	2,	//str_GP_HUM		// 146
-	0,	//str_GP_PRES		// 147	
-	
+	0,	//str_GP_PRES		// 147
+
 	// OPC_N2
 	2,	//str_OPC_tc		// 148
 	2,	//str_OPC_tf		// 149
@@ -1977,7 +1992,7 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	4,	//str_OPC_pm2_5		// 152
 	4,	//str_OPC_pm10		// 153
 	0,	//str_OPC_part		// 154
-	
+
 	// Smart Water Ions
 	3,	//str_SWI_CA,	// 155
 	3,	//str_SWI_FL,	// 156
@@ -1990,7 +2005,7 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3,	//str_SWI_PB,	// 163
 	3,	//str_SWI_AG,	// 164
 	3,	//str_SWI_PH,	// 165
-	
+
 	// P&S Smart Water sensors depending on socket (Smart Water)
 	2, // str_PH_A,		// 166
 	2, // str_PH_B,		// 167
@@ -1998,6 +2013,9 @@ const uint8_t DECIMAL_TABLE[] PROGMEM =
 	3, // str_ORP_A,	// 169
 	3, // str_ORP_B,	// 170
 	3, // str_ORP_C,	// 171
+
+  0, //str_OPC_bin  //172
+  0, //str_OPC_bin  //173
 };
 
 #endif

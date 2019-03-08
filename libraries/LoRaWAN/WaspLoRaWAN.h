@@ -1,7 +1,7 @@
 /*! \file 	WaspLoRaWAN.h
     \brief 	Library for managing the LoRaWAN module
     
-    Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.7
+    Version:		3.8
     Design:		David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -127,12 +127,15 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t _maxPayload;
 		uint8_t _syncWord;
 		
+		uint8_t _OTAAError;
+		
 		// constructor
 		WaspLoRaWAN() 
 		{			
 			// assign class pointer to UART buffer
 			_buffer = class_buffer;
-			_bufferSize = RADIO_LORAWAN_UART_SIZE;	
+			_bufferSize = RADIO_LORAWAN_UART_SIZE;
+			_OTAAError=1;	
 		};
 		
 		// System functions

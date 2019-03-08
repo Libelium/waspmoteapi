@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.5
+ *  Version:		3.6
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -2261,11 +2261,11 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
     // power on the socket
     PWR.powerSocket(uart, HIGH);
 
-    if (_boot_version >= 'G')
-	{
-		// update SPI flag
-		SPI.isSocket0 = true;
-	}
+    //~ if (_boot_version >= 'G')
+	//~ {
+		//~ // update SPI flag
+		//~ SPI.isSocket0 = true;
+	//~ }
 
 	// update Waspmote Register
 	if(uart_used==SOCKET0)	WaspRegister |= REG_SOCKET0;
@@ -2321,11 +2321,11 @@ uint8_t WaspXBeeCore::OFF()
     // switch module OFF
 	PWR.powerSocket(uart, LOW);
 
-	if (_boot_version >= 'G')
-	{
-		// update SPI flag
-		SPI.isSocket0 = false;
-	}
+	//~ if (_boot_version >= 'G')
+	//~ {
+		//~ // update SPI flag
+		//~ SPI.isSocket0 = false;
+	//~ }
 
 	// update Waspmote Register
 	if(uart == SOCKET0)	WaspRegister &= ~(REG_SOCKET0);

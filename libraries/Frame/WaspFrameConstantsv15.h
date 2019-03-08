@@ -1,28 +1,28 @@
 /*! \file WaspFrameConstantsv15.h
     \brief Header file for Waspmote v15 Frame Constants
-    
+
     Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
+
     Version:		3.3
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz, Alejandro Gallego
 
 */
-  
+
 
 #ifndef WaspFrameconstantsv15_h
 #define WaspFrameconstantsv15_h
@@ -82,6 +82,9 @@
 #define SENSOR_GASES_PRO_PM2_5          71
 #define SENSOR_GASES_PRO_PM10           72
 #define SENSOR_GASES_PRO_PART           73
+#define SENSOR_GASES_PRO_PM_BIN   		  190
+#define SENSOR_GASES_PRO_PM_BINL	     	191
+#define SENSOR_GASES_PRO_PM_BINH	     	192
 #define SENSOR_GASES_PRO_TC             74
 #define SENSOR_GASES_PRO_TF             75
 #define SENSOR_GASES_PRO_HUM            76
@@ -135,6 +138,9 @@
 #define SENSOR_CITIES_PRO_PM2_5			71
 #define SENSOR_CITIES_PRO_PM10			72
 #define SENSOR_CITIES_PRO_PART			73
+#define SENSOR_CITIES_PRO_PM_BIN     190
+#define SENSOR_CITIES_PRO_PM_BINL     191
+#define SENSOR_CITIES_PRO_PM_BINH     192
 #define SENSOR_CITIES_PRO_TC			74
 #define SENSOR_CITIES_PRO_TF			75
 #define SENSOR_CITIES_PRO_HUM			76
@@ -255,7 +261,9 @@
 #define SENSOR_BME_PRES					77
 #define SENSOR_LUXES					78
 #define SENSOR_ULTRASOUND				79
-
+#define SENSOR_PM_BIN    190
+#define SENSOR_PM_BINL    191
+#define SENSOR_PM_BINH    192
 
 
 
@@ -264,61 +272,61 @@
 /// Flash defines //////////////////////////////////////////////////////////////
 
 
-/******************************************************************************* 
+/*******************************************************************************
  * The following Flash strings, define the tags for all Waspmote sensors.
  * These TAGs are used in ASCII frames in order to indicate every sensor field
  * that has been included inside the frame.
- * 
+ *
  ******************************************************************************/
 
 // Gases v30
-const char	str_frame_00[] 	PROGMEM	= "CO";		
+const char	str_frame_00[] 	PROGMEM	= "CO";
 const char 	str_frame_01[] 	PROGMEM	= "CO2";
-const char 	str_frame_02[] 	PROGMEM	= "O2";	
+const char 	str_frame_02[] 	PROGMEM	= "O2";
 const char 	str_frame_03[] 	PROGMEM	= "CH4";
-const char 	str_frame_04[] 	PROGMEM	= "O3";	
+const char 	str_frame_04[] 	PROGMEM	= "O3";
 const char 	str_frame_05[] 	PROGMEM	= "NH3";
 const char 	str_frame_06[] 	PROGMEM	= "NO2";
 const char 	str_frame_07[] 	PROGMEM	= "LPG";
 const char 	str_frame_08[] 	PROGMEM	= "AP1";
-const char 	str_frame_09[] 	PROGMEM	= "AP2";	
-const char 	str_frame_10[] 	PROGMEM	= "SV";	
+const char 	str_frame_09[] 	PROGMEM	= "AP2";
+const char 	str_frame_10[] 	PROGMEM	= "SV";
 const char 	str_frame_11[] 	PROGMEM	= "VOC";
 
-	
+
 // Gases PRO v30
-const char 	str_frame_12[] 	PROGMEM	= "NO";		
-const char 	str_frame_13[] 	PROGMEM	= "CL2";	
+const char 	str_frame_12[] 	PROGMEM	= "NO";
+const char 	str_frame_13[] 	PROGMEM	= "CL2";
 const char 	str_frame_14[] 	PROGMEM	= "ETO";
-const char 	str_frame_15[] 	PROGMEM	= "H2";	
-const char 	str_frame_16[] 	PROGMEM	= "H2S";	
-const char 	str_frame_17[] 	PROGMEM	= "HCL";	
-const char 	str_frame_18[] 	PROGMEM	= "HCN";		
-const char 	str_frame_19[] 	PROGMEM	= "PH3";		
+const char 	str_frame_15[] 	PROGMEM	= "H2";
+const char 	str_frame_16[] 	PROGMEM	= "H2S";
+const char 	str_frame_17[] 	PROGMEM	= "HCL";
+const char 	str_frame_18[] 	PROGMEM	= "HCN";
+const char 	str_frame_19[] 	PROGMEM	= "PH3";
 const char 	str_frame_20[] 	PROGMEM	= "SO2";
 
-	
-// Cities PRO v30	
-const char 	str_frame_21[] 	PROGMEM	= "NOISE";		
+
+// Cities PRO v30
+const char 	str_frame_21[] 	PROGMEM	= "NOISE";
 
 
 // Reserved
-const char 	str_frame_22[] 	PROGMEM	= "";	
-const char 	str_frame_23[] 	PROGMEM	= "";	
-const char 	str_frame_24[] 	PROGMEM	= "";	
-const char 	str_frame_25[] 	PROGMEM	= "";	
-const char 	str_frame_26[] 	PROGMEM	= "";	
-const char 	str_frame_27[] 	PROGMEM	= "";	
-const char 	str_frame_28[] 	PROGMEM	= "";	
+const char 	str_frame_22[] 	PROGMEM	= "";
+const char 	str_frame_23[] 	PROGMEM	= "";
+const char 	str_frame_24[] 	PROGMEM	= "";
+const char 	str_frame_25[] 	PROGMEM	= "";
+const char 	str_frame_26[] 	PROGMEM	= "";
+const char 	str_frame_27[] 	PROGMEM	= "";
+const char 	str_frame_28[] 	PROGMEM	= "";
 const char 	str_frame_29[] 	PROGMEM	= "";
 
 // Gases PRO v30 (P&S)
-const char 	str_frame_30[] 	PROGMEM	= "GP_A";	
-const char 	str_frame_31[] 	PROGMEM	= "GP_B";	
-const char 	str_frame_32[] 	PROGMEM	= "GP_C";	
+const char 	str_frame_30[] 	PROGMEM	= "GP_A";
+const char 	str_frame_31[] 	PROGMEM	= "GP_B";
+const char 	str_frame_32[] 	PROGMEM	= "GP_C";
 const char 	str_frame_33[] 	PROGMEM	= "";		//reserved
 const char 	str_frame_34[] 	PROGMEM	= "";		//reserved
-const char 	str_frame_35[] 	PROGMEM	= "GP_F";	
+const char 	str_frame_35[] 	PROGMEM	= "GP_F";
 const char 	str_frame_36[] 	PROGMEM	= "";		//reserved
 const char 	str_frame_37[] 	PROGMEM	= "";		//reserved
 const char 	str_frame_38[] 	PROGMEM	= "";		//reserved
@@ -341,34 +349,34 @@ const char 	str_frame_51[] 	PROGMEM	= "";		// reserved
 
 
 // Additional
-const char	str_frame_52[] 	PROGMEM	= "BAT";	
-const char	str_frame_53[] 	PROGMEM	= "GPS";	
-const char	str_frame_54[] 	PROGMEM	= "RSSI";	
-const char	str_frame_55[] 	PROGMEM	= "MAC";	
-const char	str_frame_56[] 	PROGMEM	= "NA";		
-const char	str_frame_57[] 	PROGMEM	= "NID";	
-const char	str_frame_58[] 	PROGMEM	= "DATE";	
-const char	str_frame_59[] 	PROGMEM	= "TIME";	
-const char	str_frame_60[] 	PROGMEM	= "GMT";	
-const char	str_frame_61[] 	PROGMEM	= "RAM";	
+const char	str_frame_52[] 	PROGMEM	= "BAT";
+const char	str_frame_53[] 	PROGMEM	= "GPS";
+const char	str_frame_54[] 	PROGMEM	= "RSSI";
+const char	str_frame_55[] 	PROGMEM	= "MAC";
+const char	str_frame_56[] 	PROGMEM	= "NA";
+const char	str_frame_57[] 	PROGMEM	= "NID";
+const char	str_frame_58[] 	PROGMEM	= "DATE";
+const char	str_frame_59[] 	PROGMEM	= "TIME";
+const char	str_frame_60[] 	PROGMEM	= "GMT";
+const char	str_frame_61[] 	PROGMEM	= "RAM";
 const char	str_frame_62[] 	PROGMEM	= "IN_TEMP"; // (deprecated for Waspv15)
 const char	str_frame_63[]	PROGMEM = "ACC";
-const char	str_frame_64[]  PROGMEM = "MILLIS"; 
-const char	str_frame_65[]  PROGMEM = "STR"; 
+const char	str_frame_64[]  PROGMEM = "MILLIS";
+const char	str_frame_65[]  PROGMEM = "STR";
 const char	str_frame_66[]  PROGMEM = ""; 		// reserved
 const char	str_frame_67[]  PROGMEM = ""; 		// reserved
-const char	str_frame_68[]  PROGMEM = "UID"; 
-const char	str_frame_69[]  PROGMEM = "RB"; 
-const char	str_frame_70[]  PROGMEM = "PM1"; 
-const char	str_frame_71[]  PROGMEM = "PM2_5"; 
-const char	str_frame_72[]  PROGMEM = "PM10"; 
-const char	str_frame_73[]  PROGMEM = "PART"; 
-const char	str_frame_74[]  PROGMEM = "TC"; 
-const char	str_frame_75[]  PROGMEM = "TF"; 
-const char	str_frame_76[]  PROGMEM = "HUM"; 
-const char	str_frame_77[]  PROGMEM = "PRES"; 
-const char	str_frame_78[]  PROGMEM = "LUX"; 
-const char	str_frame_79[]  PROGMEM = "US"; 
+const char	str_frame_68[]  PROGMEM = "UID";
+const char	str_frame_69[]  PROGMEM = "RB";
+const char	str_frame_70[]  PROGMEM = "PM1";
+const char	str_frame_71[]  PROGMEM = "PM2_5";
+const char	str_frame_72[]  PROGMEM = "PM10";
+const char	str_frame_73[]  PROGMEM = "PART";
+const char	str_frame_74[]  PROGMEM = "TC";
+const char	str_frame_75[]  PROGMEM = "TF";
+const char	str_frame_76[]  PROGMEM = "HUM";
+const char	str_frame_77[]  PROGMEM = "PRES";
+const char	str_frame_78[]  PROGMEM = "LUX";
+const char	str_frame_79[]  PROGMEM = "US";
 const char	str_frame_80[]  PROGMEM = ""; 		// reserved
 const char	str_frame_81[]  PROGMEM = "";       // reserved
 const char	str_frame_82[]  PROGMEM = "";       // reserved
@@ -378,12 +386,12 @@ const char	str_frame_85[]  PROGMEM = "";       // reserved
 const char	str_frame_86[]  PROGMEM = "";       // reserved
 const char	str_frame_87[]  PROGMEM = "";       // reserved
 const char	str_frame_88[]  PROGMEM = "";       // reserved
-const char	str_frame_89[]  PROGMEM = "SPEED_OG";      
-const char	str_frame_90[]  PROGMEM = "COURSE_OG";      
-const char	str_frame_91[]  PROGMEM = "ALT";      
-const char	str_frame_92[]  PROGMEM = "HDOP";      
-const char	str_frame_93[]  PROGMEM = "VDOP";      
-const char	str_frame_94[]  PROGMEM = "PDOP";      
+const char	str_frame_89[]  PROGMEM = "SPEED_OG";
+const char	str_frame_90[]  PROGMEM = "COURSE_OG";
+const char	str_frame_91[]  PROGMEM = "ALT";
+const char	str_frame_92[]  PROGMEM = "HDOP";
+const char	str_frame_93[]  PROGMEM = "VDOP";
+const char	str_frame_94[]  PROGMEM = "PDOP";
 const char	str_frame_95[]  PROGMEM = "";      	// reserved
 const char	str_frame_96[]  PROGMEM = "";      	// reserved
 const char	str_frame_97[]  PROGMEM = "";      	// reserved
@@ -392,123 +400,128 @@ const char	str_frame_99[]  PROGMEM = "";      	// reserved
 
 
 // Smart Water Ions v30
-const char	str_frame_100[]  PROGMEM = "SWICA";      
-const char	str_frame_101[]  PROGMEM = "SWIFL";      
-const char	str_frame_102[]  PROGMEM = "SWIFB";      
-const char	str_frame_103[]  PROGMEM = "SWINO3";      
-const char	str_frame_104[]  PROGMEM = "SWIBR";      
-const char	str_frame_105[]  PROGMEM = "SWICL";      
-const char	str_frame_106[]  PROGMEM = "SWICU";      
-const char	str_frame_107[]  PROGMEM = "SWIIO";      
-const char	str_frame_108[]  PROGMEM = "SWINH4";      
-const char	str_frame_109[]  PROGMEM = "SWIAG";      
-const char	str_frame_110[]  PROGMEM = "SWIPH";      
-const char	str_frame_111[]  PROGMEM = "SWILI";      
-const char	str_frame_112[]  PROGMEM = "SWIMG";      
-const char	str_frame_113[]  PROGMEM = "SWINO2";      
-const char	str_frame_114[]  PROGMEM = "SWICLO4";  
-const char	str_frame_115[]  PROGMEM = "SWIK";      
-const char	str_frame_116[]  PROGMEM = "SWINA";   
-const char	str_frame_117[]  PROGMEM = "SWI_A";     
-const char	str_frame_118[]  PROGMEM = "SWI_B"; 
-const char	str_frame_119[]  PROGMEM = "SWI_C";      	    
-const char	str_frame_120[]  PROGMEM = "SWI_D";   
-const char	str_frame_121[]  PROGMEM = "";      	// reserved       
-const char	str_frame_122[]  PROGMEM = "";      	// reserved 
+const char	str_frame_100[]  PROGMEM = "SWICA";
+const char	str_frame_101[]  PROGMEM = "SWIFL";
+const char	str_frame_102[]  PROGMEM = "SWIFB";
+const char	str_frame_103[]  PROGMEM = "SWINO3";
+const char	str_frame_104[]  PROGMEM = "SWIBR";
+const char	str_frame_105[]  PROGMEM = "SWICL";
+const char	str_frame_106[]  PROGMEM = "SWICU";
+const char	str_frame_107[]  PROGMEM = "SWIIO";
+const char	str_frame_108[]  PROGMEM = "SWINH4";
+const char	str_frame_109[]  PROGMEM = "SWIAG";
+const char	str_frame_110[]  PROGMEM = "SWIPH";
+const char	str_frame_111[]  PROGMEM = "SWILI";
+const char	str_frame_112[]  PROGMEM = "SWIMG";
+const char	str_frame_113[]  PROGMEM = "SWINO2";
+const char	str_frame_114[]  PROGMEM = "SWICLO4";
+const char	str_frame_115[]  PROGMEM = "SWIK";
+const char	str_frame_116[]  PROGMEM = "SWINA";
+const char	str_frame_117[]  PROGMEM = "SWI_A";
+const char	str_frame_118[]  PROGMEM = "SWI_B";
+const char	str_frame_119[]  PROGMEM = "SWI_C";
+const char	str_frame_120[]  PROGMEM = "SWI_D";
+const char	str_frame_121[]  PROGMEM = "";      	// reserved
+const char	str_frame_122[]  PROGMEM = "";      	// reserved
 
 
 // Additional
-const char	str_frame_123[]  PROGMEM = "TST";   
-const char	str_frame_124[]  PROGMEM = "";     		// reserved 
-const char	str_frame_125[]  PROGMEM = "VAPI";   
-const char	str_frame_126[]  PROGMEM = "VPROG";   
-const char	str_frame_127[]  PROGMEM = "VBOOT";   
-const char	str_frame_128[]  PROGMEM = "PS";     	
+const char	str_frame_123[]  PROGMEM = "TST";
+const char	str_frame_124[]  PROGMEM = "";     		// reserved
+const char	str_frame_125[]  PROGMEM = "VAPI";
+const char	str_frame_126[]  PROGMEM = "VPROG";
+const char	str_frame_127[]  PROGMEM = "VBOOT";
+const char	str_frame_128[]  PROGMEM = "PS";
 
-// Radiation 
-const char	str_frame_129[]  PROGMEM = "RAD";   
+// Radiation
+const char	str_frame_129[]  PROGMEM = "RAD";
 
- 
-// Smart Water v30 
-const char	str_frame_130[]  PROGMEM = "PH";   
-const char	str_frame_131[]  PROGMEM = "ORP";   
-const char	str_frame_132[]  PROGMEM = "DO";   
-const char	str_frame_133[]  PROGMEM = "COND";   
-const char	str_frame_134[]  PROGMEM = "WT";   
-const char	str_frame_135[]  PROGMEM = "TURB";   
-const char	str_frame_136[]  PROGMEM = "PH_A";   
-const char	str_frame_137[]  PROGMEM = "PH_E";   
-const char	str_frame_138[]  PROGMEM = "ORP_A";   
-const char	str_frame_139[]  PROGMEM = "ORP_E";  
-const char	str_frame_140[]  PROGMEM = "";      		// reserved 
-const char	str_frame_141[]  PROGMEM = "";      		// reserved 
-const char	str_frame_142[]  PROGMEM = "";      		// reserved 
-const char	str_frame_143[]  PROGMEM = "";      		// reserved 
-const char	str_frame_144[]  PROGMEM = "";      		// reserved 
-const char	str_frame_145[]  PROGMEM = "";      		// reserved 
-const char	str_frame_146[]  PROGMEM = "";      		// reserved 
-const char	str_frame_147[]  PROGMEM = "";      		// reserved 
-const char	str_frame_148[]  PROGMEM = "";      		// reserved 
-const char	str_frame_149[]  PROGMEM = "";      		// reserved 
+
+// Smart Water v30
+const char	str_frame_130[]  PROGMEM = "PH";
+const char	str_frame_131[]  PROGMEM = "ORP";
+const char	str_frame_132[]  PROGMEM = "DO";
+const char	str_frame_133[]  PROGMEM = "COND";
+const char	str_frame_134[]  PROGMEM = "WT";
+const char	str_frame_135[]  PROGMEM = "TURB";
+const char	str_frame_136[]  PROGMEM = "PH_A";
+const char	str_frame_137[]  PROGMEM = "PH_E";
+const char	str_frame_138[]  PROGMEM = "ORP_A";
+const char	str_frame_139[]  PROGMEM = "ORP_E";
+const char	str_frame_140[]  PROGMEM = "";      		// reserved
+const char	str_frame_141[]  PROGMEM = "";      		// reserved
+const char	str_frame_142[]  PROGMEM = "";      		// reserved
+const char	str_frame_143[]  PROGMEM = "";      		// reserved
+const char	str_frame_144[]  PROGMEM = "";      		// reserved
+const char	str_frame_145[]  PROGMEM = "";      		// reserved
+const char	str_frame_146[]  PROGMEM = "";      		// reserved
+const char	str_frame_147[]  PROGMEM = "";      		// reserved
+const char	str_frame_148[]  PROGMEM = "";      		// reserved
+const char	str_frame_149[]  PROGMEM = "";      		// reserved
 
 
 //  Smart Agriculture v30
-const char	str_frame_150[]  PROGMEM = "SOIL1";   
-const char	str_frame_151[]  PROGMEM = "SOIL2";   
-const char	str_frame_152[]  PROGMEM = "SOIL3";   
-const char	str_frame_153[]  PROGMEM = "SOILTC";   
-const char	str_frame_154[]  PROGMEM = "SOILTF";   
-const char	str_frame_155[]  PROGMEM = "LW";   
-const char	str_frame_156[]  PROGMEM = "ANE";   
-const char	str_frame_157[]  PROGMEM = "WV";   
-const char	str_frame_158[]  PROGMEM = "PLV1";   
-const char	str_frame_159[]  PROGMEM = "PLV2";   
-const char	str_frame_160[]  PROGMEM = "PLV3";   
-const char	str_frame_161[]  PROGMEM = "PAR";   
-const char	str_frame_162[]  PROGMEM = "UV";   
-const char	str_frame_163[]  PROGMEM = "TD";   
-const char	str_frame_164[]  PROGMEM = "SD";   
-const char	str_frame_165[]  PROGMEM = "FD";   
-const char	str_frame_166[]  PROGMEM = "SOIL_B";   
-const char	str_frame_167[]  PROGMEM = "SOIL_C";   
-const char	str_frame_168[]  PROGMEM = "SOIL_E";   
-const char	str_frame_169[]  PROGMEM = "";    			// reserved 
+const char	str_frame_150[]  PROGMEM = "SOIL1";
+const char	str_frame_151[]  PROGMEM = "SOIL2";
+const char	str_frame_152[]  PROGMEM = "SOIL3";
+const char	str_frame_153[]  PROGMEM = "SOILTC";
+const char	str_frame_154[]  PROGMEM = "SOILTF";
+const char	str_frame_155[]  PROGMEM = "LW";
+const char	str_frame_156[]  PROGMEM = "ANE";
+const char	str_frame_157[]  PROGMEM = "WV";
+const char	str_frame_158[]  PROGMEM = "PLV1";
+const char	str_frame_159[]  PROGMEM = "PLV2";
+const char	str_frame_160[]  PROGMEM = "PLV3";
+const char	str_frame_161[]  PROGMEM = "PAR";
+const char	str_frame_162[]  PROGMEM = "UV";
+const char	str_frame_163[]  PROGMEM = "TD";
+const char	str_frame_164[]  PROGMEM = "SD";
+const char	str_frame_165[]  PROGMEM = "FD";
+const char	str_frame_166[]  PROGMEM = "SOIL_B";
+const char	str_frame_167[]  PROGMEM = "SOIL_C";
+const char	str_frame_168[]  PROGMEM = "SOIL_E";
+const char	str_frame_169[]  PROGMEM = "";    			// reserved
 
 // Ambient Control
-const char	str_frame_170[]  PROGMEM = "TCB"; 
-const char	str_frame_171[]  PROGMEM = "HUMB"; 
-const char	str_frame_172[]  PROGMEM = "LUM"; 
-const char	str_frame_173[]  PROGMEM = ""; 
-const char	str_frame_174[]  PROGMEM = ""; 
+const char	str_frame_170[]  PROGMEM = "TCB";
+const char	str_frame_171[]  PROGMEM = "HUMB";
+const char	str_frame_172[]  PROGMEM = "LUM";
+const char	str_frame_173[]  PROGMEM = "";
+const char	str_frame_174[]  PROGMEM = "";
 
 // 4-20 mA
-const char	str_frame_175[]  PROGMEM = "CUR_A"; 
-const char	str_frame_176[]  PROGMEM = "CUR_B"; 
-const char	str_frame_177[]  PROGMEM = "CUR_C"; 
-const char	str_frame_178[]  PROGMEM = "CUR_D"; 
-const char	str_frame_179[]  PROGMEM = ""; 
+const char	str_frame_175[]  PROGMEM = "CUR_A";
+const char	str_frame_176[]  PROGMEM = "CUR_B";
+const char	str_frame_177[]  PROGMEM = "CUR_C";
+const char	str_frame_178[]  PROGMEM = "CUR_D";
+const char	str_frame_179[]  PROGMEM = "";
 
 // Industrial protocols: Modbus & CAN bus
-const char	str_frame_180[]  PROGMEM = "MB_COILS"; 
-const char	str_frame_181[]  PROGMEM = "MB_DI"; 
-const char	str_frame_182[]  PROGMEM = "MB_HR"; 
-const char	str_frame_183[]  PROGMEM = "MB_IR"; 
-const char	str_frame_184[]  PROGMEM = "CB_RPM"; 
-const char	str_frame_185[]  PROGMEM = "CB_VS"; 
-const char	str_frame_186[]  PROGMEM = "CB_FR"; 
-const char	str_frame_187[]  PROGMEM = "CB_FL"; 
-const char	str_frame_188[]  PROGMEM = "CB_TP"; 
-const char	str_frame_189[]  PROGMEM = "CB_FP"; 
+const char	str_frame_180[]  PROGMEM = "MB_COILS";
+const char	str_frame_181[]  PROGMEM = "MB_DI";
+const char	str_frame_182[]  PROGMEM = "MB_HR";
+const char	str_frame_183[]  PROGMEM = "MB_IR";
+const char	str_frame_184[]  PROGMEM = "CB_RPM";
+const char	str_frame_185[]  PROGMEM = "CB_VS";
+const char	str_frame_186[]  PROGMEM = "CB_FR";
+const char	str_frame_187[]  PROGMEM = "CB_FL";
+const char	str_frame_188[]  PROGMEM = "CB_TP";
+const char	str_frame_189[]  PROGMEM = "CB_FP";
+
+// OPC N3 sensor
+const char	str_frame_190[]  PROGMEM = "PM_BIN";
+const char	str_frame_191[]  PROGMEM = "PM_BINL";
+const char	str_frame_192[]  PROGMEM = "PM_BINH";
 
 
 
-/******************************************************************************* 
+/*******************************************************************************
  * SENSOR_TABLE - Sensor label table
- * 
- * This table specifies the tag for each sensor. Every tag has been previously 
+ *
+ * This table specifies the tag for each sensor. Every tag has been previously
  * defined in Flash memory
  ******************************************************************************/
-const char* const FRAME_SENSOR_TABLE[] PROGMEM= 	  
+const char* const FRAME_SENSOR_TABLE[] PROGMEM=
 {
 	// Gases v30
 	str_frame_00,
@@ -528,16 +541,16 @@ const char* const FRAME_SENSOR_TABLE[] PROGMEM=
  	str_frame_14,
  	str_frame_15,
  	str_frame_16,
- 	str_frame_17, 	
- 	str_frame_18, 
-	str_frame_19, 
-	str_frame_20, 
-	str_frame_21, 
-	str_frame_22, 
-	str_frame_23, 
-	str_frame_24, 
-	str_frame_25, 
-	str_frame_26, 
+ 	str_frame_17,
+ 	str_frame_18,
+	str_frame_19,
+	str_frame_20,
+	str_frame_21,
+	str_frame_22,
+	str_frame_23,
+	str_frame_24,
+	str_frame_25,
+	str_frame_26,
 	str_frame_27,
 	str_frame_28,
 	str_frame_29,
@@ -701,25 +714,28 @@ const char* const FRAME_SENSOR_TABLE[] PROGMEM=
 	str_frame_187,
 	str_frame_188,
 	str_frame_189,
-	
+  str_frame_190,
+	str_frame_191,
+	str_frame_192,
+
 };
-	
-	
-/*******************************************************************************  
+
+
+/*******************************************************************************
 * SENSOR_TYPE_TABLE - Binary frames sensor types
-* 
+*
 * This table specifies the type of sensor depending on the type of value the
 * user must put as input. These are the possibilities:
-*	
+*
 *	0: uint8_t
-*	1: int (the same as int16_t)  
-*	2: double 
-*	3: char* 
+*	1: int (the same as int16_t)
+*	2: double
+*	3: char*
 *  	4: uint32_t
 *  	5: uint8_t*
 ******************************************************************************/
-const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM= 	  
-{   
+const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
+{
 	// Gases v30
 	2,		// 0
 	2, 		// 1
@@ -733,8 +749,8 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2, 		// 9
 	2, 		// 10
 	2, 		// 11
-	
-		
+
+
 	//// Gases PRO v30
 	2, 		// 12
 	2, 		// 13
@@ -745,10 +761,10 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2, 		// 18
 	2, 		// 19
 	2, 		// 20
-	
+
 	//// Cities PRO v30
 	2, 		// 21
-	
+
 	//// reserved
 	0,		// 22
 	0,		// 23
@@ -758,7 +774,7 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	0,		// 27
 	0,		// 28
 	0,		// 29
-	
+
 	//// Gases PRO v30
 	2,		// 30
 	2,		// 31
@@ -766,14 +782,14 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 33
 	2,		// 34
 	2,		// 35
-		
+
 	//// reserved
 	0,		// 36
 	0,		// 37
 	0,		// 38
 	0,		// 39
-	
-	//// Events v30	
+
+	//// Events v30
 	2,		// 40
 	0,		// 41
 	0,		// 42
@@ -786,7 +802,7 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	0,		// 49
 	0,		// 50
 	0,		// 51
-	
+
 	// Additional
 	0, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -836,7 +852,7 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	0,		// 97
 	0,		// 98
 	0,		// 99
-	
+
 	//// Smart Water Ions
 	2,		// 100
 	2,		// 101
@@ -861,7 +877,7 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 120
 	0,		// 121
 	0,		// 122
-	
+
 	//// Additional
 	4,		// 123
 	0,		// 124
@@ -869,10 +885,10 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	0,		// 126
 	0,		// 127
 	0,		// 128
-	
+
 	//// Radiation
 	2,		// 129
-	
+
 	//// Smart Water
 	2,		// 130
 	2,		// 131
@@ -894,7 +910,7 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	0,		// 147
 	0,		// 148
 	0,		// 149
-	
+
 	//// Smart Agriculture
 	2,		// 150
 	2,		// 151
@@ -923,14 +939,14 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	2,		// 172
 	0,		// 173
 	0,		// 174
-	
+
 	//// 4-20 mA
 	2,		// 175
 	2,		// 176
 	2,		// 177
 	2,		// 178
 	0,		// 179
-	
+
 	//// Industrial protocols (ModBus & CAN bus)
 	1,		// 180
 	1,		// 181
@@ -942,22 +958,27 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	0,		// 187
 	0,		// 188
 	1,		// 189
-	
+
+  // OPC sensor
+  1,    // 190
+	1,    // 191
+	1,    // 192
+
 };
 
 
-	
-/*******************************************************************************  
+
+/*******************************************************************************
 * SENSOR_FIELD_TABLE - Sensor fields
-* 
-* This table specifies the number of fields per sensor. 
-* 
-* For example, a temperature sensor indicates the temperature in a single field. 
-* On the other hand, the GPS module indicates the position with two fields: 
+*
+* This table specifies the number of fields per sensor.
+*
+* For example, a temperature sensor indicates the temperature in a single field.
+* On the other hand, the GPS module indicates the position with two fields:
 * latitude and longitude
 ******************************************************************************/
-const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM= 	  
-{   
+const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
+{
 	//// Gases v30
 	1, 		// 0
 	1, 		// 1
@@ -971,7 +992,7 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1, 		// 9
 	1, 		// 10
 	1, 		// 11
-	
+
 	//// Gases PRO v30
 	1, 		// 12
 	1, 		// 13
@@ -982,10 +1003,10 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1, 		// 18
 	1, 		// 19
 	1, 		// 20
-	
+
 	//// Cities PRO v30
 	1, 		// 21
-	
+
 	//// reserved
 	1,		// 22
 	1,		// 23
@@ -995,22 +1016,22 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 27
 	1,		// 28
 	1,		// 29
-	
-	//// Gases PRO v30	
+
+	//// Gases PRO v30
 	1,		// 30
 	1,		// 31
 	1,		// 32
 	1,		// 33
 	1,		// 34
 	1,		// 35
-		
+
 	//// reserved
 	1,		// 36
 	1,		// 37
 	1,		// 38
 	1,		// 39
-	
-	//// Events v30	
+
+	//// Events v30
 	1,		// 40
 	1,		// 41
 	1,		// 42
@@ -1023,7 +1044,7 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 49
 	1,		// 50
 	1,		// 51
-	
+
 	//// Additional
 	1,		// 52
 	2,		// 53
@@ -1073,7 +1094,7 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 97
 	1,		// 98
 	1,		// 99
-	
+
 	//// Smart Water Ions
 	1,		// 100
 	1,		// 101
@@ -1098,7 +1119,7 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 120
 	1,		// 121
 	1,		// 122
-	
+
 	//// Additional
 	1,		// 123
 	1,		// 124
@@ -1106,10 +1127,10 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 126
 	1,		// 127
 	1,		// 128
-	
+
 	//// Radiation
 	1,		// 129
-	
+
 	//// Smart Water
 	1,		// 130
 	1,		// 131
@@ -1131,7 +1152,7 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 147
 	1,		// 148
 	1,		// 149
-	
+
 	//// Smart Agriculture
 	1,		// 150
 	1,		// 151
@@ -1153,21 +1174,21 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 167
 	1,		// 168
 	1,		// 169
-		
+
 	//// Ambient Control
 	1,		// 170
 	1,		// 171
 	1,		// 172
 	1,		// 173
 	1,		// 174
-	
+
 	//// 4-20 mA
 	1,		// 175
 	1,		// 176
 	1,		// 177
 	1,		// 178
 	1,		// 179
-	
+
 	//// Industrial protocols (ModBus & CAN bus)
 	2,		// 180
 	2,		// 181
@@ -1178,19 +1199,23 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 186
 	1,		// 187
 	1,		// 188
-	1,		// 189	
-	
+	1,		// 189
+
+  // OPC sensor
+	24,    // 190
+	16,    // 191
+	8,    // 192
 };
-	
-	
-	
-/******************************************************************************* 
+
+
+
+/*******************************************************************************
 * DECIMAL_TABLE - number of default decimals for each sensor for ASCII frames
-* 
+*
 * This table specifies the number of decimals for each sensor for ASCII frames
 ******************************************************************************/
-const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM = 	  
-{   
+const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
+{
 	// Gases
 	3, 		// 0
 	3, 		// 1
@@ -1204,7 +1229,7 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	3, 		// 9
 	3, 		// 10
 	3, 		// 11
-		
+
 	//// Gases PRO v30
 	3, 		// 12
 	3, 		// 13
@@ -1215,10 +1240,10 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	3, 		// 18
 	3, 		// 19
 	3, 		// 20
-	
+
 	//// Cities PRO v30
 	2, 		// 21
-	
+
 	//// reserved
 	0,	// 22
 	0,	// 23
@@ -1228,7 +1253,7 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	0,	// 27
 	0,	// 28
 	0,	// 29
-	
+
 	//// Gases PRO v30
 	3,		// 30
 	3,		// 31
@@ -1236,14 +1261,14 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	3,		// 33
 	3,		// 34
 	3,		// 35
-		
+
 	//// reserved
 	0,	// 36
 	0,	// 37
 	0,	// 38
 	0,	// 39
-	
-	//// Events v30	
+
+	//// Events v30
 	3,		// 40
 	0,		// 41
 	0,		// 42
@@ -1256,7 +1281,7 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	0,		// 49
 	0,		// 50
 	0,		// 51
-	
+
 	//// Additional
 	0, // str_BAT,		// 52
 	6, // str_GPS,		// 53
@@ -1306,7 +1331,7 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	0,		// 97
 	0,		// 98
 	0,		// 99
-	
+
 	//// Smart Water Ions
 	3,		// 100
 	3,		// 101
@@ -1331,7 +1356,7 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	3,		// 120
 	3,		// 121
 	3,		// 122
-	
+
 	//// Additional
 	0,		// 123
 	0,	// 124
@@ -1339,10 +1364,10 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	0,		// 126
 	0,		// 127
 	0,		// 128
-	
+
 	//// Radiation
 	6,		// 129
-	
+
 	//// Smart Water
 	2,		// 130
 	3,		// 131
@@ -1364,7 +1389,7 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	0,	// 147
 	0,	// 148
 	0,	// 149
-	
+
 	//// Smart Agriculture
 	2,		// 150
 	2,		// 151
@@ -1386,21 +1411,21 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	2,		// 167
 	2,		// 168
 	0,		// 169
-		
+
 	//// Ambient Control
 	2,		// 170
 	1,		// 171
 	3,		// 172
 	0,		// 173
 	0,		// 174
-	
+
 	//// 4-20 mA
 	3,		// 175
 	3,		// 176
 	3,		// 177
 	3,		// 178
 	0,		// 179
-	
+
 	//// Industrial protocols (ModBus & CAN bus)
 	0,		// 180
 	0,		// 181
@@ -1412,8 +1437,12 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	0,		// 187
 	0,		// 188
 	0,		// 189
-	
+
+  // OPC N3 sensor
+  0,    //190
+	0,    //191
+	0,    //192
+
 };
-	
+
 	#endif
-	

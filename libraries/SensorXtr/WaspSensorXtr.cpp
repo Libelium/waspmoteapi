@@ -1,7 +1,7 @@
 /*!	\file WaspSensorXtr.cpp
 	\brief Library for managing the Xtreme sensor boards
 
-	Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+	Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
 	http://www.libelium.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.1
+	Version:		3.2
 	Design:			David Gascón
 	Implementation: Victor Boria, Javier Siscart
 
@@ -1423,8 +1423,8 @@ uint8_t Apogee_SO411::read()
 		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
 											sensorSO411.sensorSerialNumber,
 											sensorSO411.calibratedOxygen,
-											sensorSO411.bodyTemperature,
 											sensorSO411.milliVolts,
+											sensorSO411.bodyTemperature,
 											parameter4_dummy);
 
 		if ((sensorSO411.calibratedOxygen != 0)
@@ -2062,6 +2062,7 @@ weatherStation::weatherStation()
 */
 void weatherStation::ON()
 {
+	/*
 	if (SensorXtr.redefinedSocket == 1)
 	{
 		char message[50];
@@ -2071,7 +2072,8 @@ void weatherStation::ON()
 		PRINTLN_XTR(message);
 		#endif
 	}
-
+	*/
+	
 	Utils.setMuxAux2();
 	beginSerial(19200, 1);
 	serialFlush(1);
@@ -10991,9 +10993,127 @@ bool AqualaboWaterXtr::find( uint8_t* buffer, uint16_t length, char* pattern)
 }
 
 
+/*	exampleModbusSensor Class constructor
+	Parameters: void
+	Return: void
+*/
+exampleModbusSensor::exampleModbusSensor(uint8_t _sensorAddr)
+{
+	// store sensor location
+	socket = XTR_SOCKET_E;
+	sensorAddr = _sensorAddr;
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t exampleModbusSensor::ON()
+{
+	SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+	//Enable RS-485 chip on (shared with 3v3 pin)
+	SensorXtr.set3v3(socket, SWITCH_ON);
+
+	return 1;
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void exampleModbusSensor::OFF()
+{
+
+	//Disable RS-485 chip on (shared with 3v3 pin)
+	SensorXtr.set3v3(socket, SWITCH_OFF);
+	
+	SensorXtr.OFF();
+}
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return void
+*/
+uint8_t exampleModbusSensor::read(uint16_t _registerAddr, uint8_t _numOfRegisters)
+{
+	initCommunication();
+	
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+	
+	while ((status !=0) && (retries < 5))
+	{
+		retries++;
+		
+		//Address 21, 2 registers
+		status =  modbusMasterSensor.readHoldingRegisters(_registerAddr, _numOfRegisters);
+		delay(100);
+	}
+	
+	uint8_t j = 0;
+	
+	if (status == 0)
+	{
+		if(_numOfRegisters == 1)
+		{
+			value = modbusMasterSensor.getResponseBuffer(1);
+		}
+		
+		if(_numOfRegisters > 1 )
+		{
+			conversion.uint16t[0] = modbusMasterSensor.getResponseBuffer(1);
+			conversion.uint16t[1] = modbusMasterSensor.getResponseBuffer(0);
+			value = conversion.uint32t;
+		}
+	}
+	else
+	{
+		#if DEBUG_XTR > 0
+			PRINTLN_XTR_MODBUS(F("Error reading example modbus value"));
+		#endif
+		
+		return 1;
+	}
+
+	return status;
+}
+
+/*!
+	Name:	initCommunication()
+	Description: Initializes the communication channel
+	Param : void
+	Returns: void
+*/
+void exampleModbusSensor::initCommunication()
+{
+	modbusMasterSensor = ModbusMaster(RS232_COM, sensorAddr);
+
+	// Modbus tipically uses 9600 bps speed communication
+	modbusMasterSensor.begin(9600, 1);
+
+	// set Auxiliar2 socket
+	Utils.setMuxAux2();
+	
+	clearBuffer();
+}
 
 
-
+//!*************************************************************
+//!	Name:	clearBuffer()
+//!	Description: Flushes the buffers.
+//!	Param : void
+//!	Returns: void
+//!*************************************************************
+void exampleModbusSensor::clearBuffer()
+{
+	// Clear Response Buffer
+	modbusMasterSensor.clearResponseBuffer();
+	modbusMasterSensor.clearTransmitBuffer();
+	delay(10);
+}
 
 
 // Preinstantiate Objects //////////////////////////////////////////////////////

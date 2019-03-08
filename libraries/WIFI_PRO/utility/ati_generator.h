@@ -1,31 +1,31 @@
 /*! \file ati_generator.h
     \brief Library for generating AT+I commands
-        
+
     Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
+
     Version:		3.1
     Design:			David Gascon
     Implementation:	Yuri Carmona
 
  */
- 
+
 /*! \def ati_generator
     \brief The library flag
-    
+
  */
 
 #ifndef ati_generator_h
@@ -50,11 +50,11 @@ static char I_OK[] 		= "I/OK";
 static char I_ERROR[] 	= "I/ERROR";
 static char I_ONLINE[] 	= "I/ONLINE";
 static char	AT[] 		= "AT+i\r";
-static char	AT_I[]		= "AT+i"; 		// at commands header 
+static char	AT_I[]		= "AT+i"; 		// at commands header
 static char AT_OK[]  	= "OK"; 		// OK response
-static char AT_OK2[]	= "I/("; 		// OK with contents 
+static char AT_OK2[]	= "I/("; 		// OK with contents
 static char AT_ERROR[]	= "ERROR"; 		// ERROR response
-static char AT_ONLINE[]	= "I/ONLINE"; 	// 
+static char AT_ONLINE[]	= "I/ONLINE"; 	//
 static char I_OK_EOL[] 	= "I/OK\r\n";
 static char OTA_ver_file[]	= "UPGRADE.TXT";	// Server's file
 static char NO_OTA[] = "NO_FILE";	// No file in server pattern indicator
@@ -135,10 +135,11 @@ const char str_wireach_62[] PROGMEM	= "DPSZ"; 			// 62
 const char str_wireach_63[] PROGMEM	= "---"; 			// 63
 const char str_wireach_64[] PROGMEM	= "RP1"; 			// 64
 const char str_wireach_65[] PROGMEM	= "SSL"; 			// 65
+const char str_wireach_66[] PROGMEM	= "MACA"; 			// 66
 
 
-const char* const table_WiReach[] PROGMEM= 	  
-{   
+const char* const table_WiReach[] PROGMEM=
+{
 	str_wireach_00,
 	str_wireach_01,
 	str_wireach_02,
@@ -205,6 +206,7 @@ const char* const table_WiReach[] PROGMEM=
 	str_wireach_63,
 	str_wireach_64,
 	str_wireach_65,
+  str_wireach_66,
 };
 
 
@@ -243,10 +245,11 @@ const char str_wireach_format_27[] PROGMEM	= "AT+iSNET?\r\n%s\r\n"; 		// 27
 const char str_wireach_format_28[] PROGMEM	= "AT+iDNS1?\r\n%s\r\n"; 		// 28
 const char str_wireach_format_29[] PROGMEM	= "AT+iDNS2?\r\n%s\r\n"; 		// 29
 const char str_wireach_format_30[] PROGMEM	= "AT+iWLSI?\r\n%s\r\n"; 		// 30
+const char str_wireach_format_31[] PROGMEM	= "AT+iMACA?\r\n%s\r\n"; 		// 31
 
 
-const char* const table_WIFI_FORMAT[] PROGMEM= 	  
-{   
+const char* const table_WIFI_FORMAT[] PROGMEM=
+{
 	str_wireach_format_00,
 	str_wireach_format_01,
 	str_wireach_format_02,
@@ -278,6 +281,7 @@ const char* const table_WIFI_FORMAT[] PROGMEM=
 	str_wireach_format_28,
 	str_wireach_format_29,
 	str_wireach_format_30,
+  str_wireach_format_31,
 };
 
 

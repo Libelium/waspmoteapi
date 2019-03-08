@@ -1,7 +1,7 @@
 /*
  *  Library for managing managing the LoRaWAN module
  * 
- *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		4.0
+ *  Version:		4.1
  *  Design:		David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -1770,57 +1770,67 @@ uint8_t WaspLoRaWAN::saveConfig()
  */
 uint8_t WaspLoRaWAN::joinABP()
 {
-	uint8_t status;
-	char ans1[15];
-	char ans2[15];
-	char ans3[15];
-	
-	memset(_command,0x00,sizeof(_command));
-	memset(ans1,0x00,sizeof(ans1));
-	memset(ans2,0x00,sizeof(ans2));
-	memset(ans3,0x00,sizeof(ans3));
-	
-	// create "mac join abp" command
-	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[7])));
-	// create "ok" answer
-	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
-	// create "invalid_param" answer
-	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
-	// create "keys_not_init" answer
-	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[17])));
-	
-	//send command and wait for ans
-	status = sendCommand(_command,ans1,ans2,ans3,500);
-
-	if (status == 1)
+	if(_OTAAError<=1)
 	{
-		memset(ans1,0x00,sizeof(ans1));
-		// create "accepted" answer
-		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[6])));
+		uint8_t status;
+		char ans1[15];
+		char ans2[15];
+		char ans3[15];
 		
-		//wait for response
-		if (waitFor(ans1,800) == 1)
+		memset(_command,0x00,sizeof(_command));
+		memset(ans1,0x00,sizeof(ans1));
+		memset(ans2,0x00,sizeof(ans2));
+		memset(ans3,0x00,sizeof(ans3));
+		
+		// create "mac join abp" command
+		sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[7])));
+		// create "ok" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+		// create "invalid_param" answer
+		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
+		// create "keys_not_init" answer
+		sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[17])));
+		
+		//send command and wait for ans
+		status = sendCommand(_command,ans1,ans2,ans3,500);
+
+		if (status == 1)
 		{
-			setUpCounter(_upCounter);
-			setDownCounter(_downCounter);
-			return LORAWAN_ANSWER_OK;
+			memset(ans1,0x00,sizeof(ans1));
+			// create "accepted" answer
+			sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[6])));
+			
+			//wait for response
+			if (waitFor(ans1,800) == 1)
+			{
+				setUpCounter(_upCounter);
+				setDownCounter(_downCounter);
+				return LORAWAN_ANSWER_OK;
+			}
+			else 
+			{
+				return LORAWAN_ANSWER_ERROR;
+			}
 		}
-		else 
+		else if (status == 2)
 		{
 			return LORAWAN_ANSWER_ERROR;
 		}
+		else if (status == 3)
+		{
+			return LORAWAN_INIT_ERROR;
+		}
+		else 
+		{
+			return LORAWAN_NO_ANSWER;
+		}
 	}
-	else if (status == 2)
-	{
-		return LORAWAN_ANSWER_ERROR;
-	}
-	else if (status == 3)
-	{
-		return LORAWAN_INIT_ERROR;
-	}
-	else 
-	{
-		return LORAWAN_NO_ANSWER;
+	else{
+		USB.println(F("--------------------------------------------------------------------"));
+		USB.println(F("---LoRaWAN: Conection not allowed. The OTAA previous attempt failed."));
+		USB.println(F("---LoRaWAN: Check OTAA parameters and restart the code."));
+		USB.println(F("--------------------------------------------------------------------"));
+		return LORAWAN_NOT_JOINED;
 	}
 }
 
@@ -1902,6 +1912,7 @@ uint8_t WaspLoRaWAN::joinOTAA()
 				status = saveConfig();
 				if (status == 0)
 				{
+					_OTAAError=0;
 					return LORAWAN_ANSWER_OK;
 				}
 				else 
@@ -1923,18 +1934,22 @@ uint8_t WaspLoRaWAN::joinOTAA()
 	
 	if (status == 1)
 	{
+		_OTAAError=2;
 		return LORAWAN_ANSWER_ERROR;
 	}
 	else if (status == 2)
 	{
+		_OTAAError=3;
 		return LORAWAN_ANSWER_ERROR;
 	}
 	else if (status == 3)
 	{
+		_OTAAError=4;
 		return LORAWAN_INIT_ERROR;
 	}
 	else 
 	{
+		_OTAAError=5;
 		return LORAWAN_NO_ANSWER;
 	}	
 }
