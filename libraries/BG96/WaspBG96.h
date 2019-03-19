@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascón
     Implementation:	P.Moreno
 
@@ -120,6 +120,9 @@
 #define eIDRX_ENABLED 1
 #define eIDRX_DISBLED 0
 #define BG96_eIDRX_value "0010"
+
+// Maximum packet size for FTP download
+#define BG96_MAX_DL_PAYLOAD 490
 
 
 
@@ -239,10 +242,8 @@ private:
 	//! This function configures the remote server and sends the request
 	/*!
 	\param	uint8_t method: selected HTTP method:	WaspBG96::HTTP_GET
-													WaspBG96::HTTP_HEAD
-													WaspBG96::HTTP_DELETE
 													WaspBG96::HTTP_POST
-													WaspBG96::HTTP_PUT
+													
 	\param	char* url: host name or IP address of the server
 	\param	uint16_t port: server port
 	\param	char* resource: parameter indicating the HTTP resource, object of the
@@ -293,16 +294,13 @@ public:
 	int _tempInterval;
 	int _rssi;
 	uint8_t _networkType;
-	uint8_t _incomingType;
-	int _smsIndex;
+	uint8_t _incomingType;	
 	int _socketIndex;
 	int _httpCode;
 	uint16_t _socketerror;
 	uint32_t _filesize;
-	char _smsStatus[12];
-	char _smsNumber[20];
-	char _smsDate[9];
-	char _smsTime[12];
+	uint8_t _ftp_status;
+	uint16_t _ftp_protocol_error;	
 	char _ftpWorkingDirectory[20];
 	SocketInfo_t socketInfo[6];
 	SocketStatus_t socketStatus[6];
@@ -480,8 +478,6 @@ public:
 			4 unknown
 	*/
 	uint8_t checkConnection(uint8_t time);
-	uint8_t checkConnectionEPS(uint8_t time);
-
 	
 	
 		/*! GPRS CONNECTION STRUCTURE
@@ -736,38 +732,6 @@ public:
 					
 	/*!
 	\brief	This function performs a HTTP request
-	\param	uint8_t method: selected HTTP method:	BG96::HTTP_GET													
-													BG96::HTTP_POST
-	\param	char* url: host name or IP address of the server
-	\param	uint16_t port: server port
-	\param	char* resource: parameter indicating the HTTP resource, object of the request
-	\return	0 if OK
-  			1 SSL context error
-  			2 SSL version error
-  			3 SSL ciphersuite error
-  			4 SSL seclevel error
-  			6 SSL cacert error
-  			10 if OK
-  			11 if error setting context id
-  			12 if error sending url
-  			13 if error sending POST 
-  			14 if wrong method has been selected * 
- 			20 if OK
-  			21 if timeout waiting HTTP GET response
-  			22 if timeout waiting HTTP POST response
-  			23 if error waiting response
-  			24 if error reading the response
-  			25,26 if error reading the response
-  			27 error waiting response function
-	*/
-	uint8_t https(uint8_t method,
-					char* url,
-					uint16_t port,
-					char* resource);
-
-					
-	/*!
-	\brief	This function performs a HTTP request
 	\param	uint8_t method: selected HTTP method:	WaspBG96::HTTP_GET													
 													WaspBG96::HTTP_POST													
 													WaspBG96::HTTP_POST_FRAME
@@ -794,42 +758,6 @@ public:
 					uint16_t port,
 					char* resource,
 					char* data);
-					
-	/*!
-	\brief	This function performs a HTTP request
-	\param	uint8_t method: selected HTTP method:	WaspBG96::HTTP_GET													
-													WaspBG96::HTTP_POST
-													WaspBG96::HTTP_POST_FRAME
-	\param	char* url: host name or IP address of the server
-	\param	uint16_t port: server port
-	\param	char* resource: parameter indicating the HTTP resource, object of the request
-	\param	char* POST_PUT_data: data to send in POST/PUT method
-	\param	uint16_t POST_PUT_length: data length to send in POST/PUT method
-	\return	0 if OK
-  			1 SSL context error
-  			2 SSL version error
-  			3 SSL ciphersuite error
-  			4 SSL seclevel error
-  			6 SSL cacert error
-  			10 if OK
-  			11 if error setting context id
-  			12 if error sending url
-  			13 if error sending POST 
-  			14 if wrong method has been selected * 
- 			20 if OK
-  			21 if timeout waiting HTTP GET response
-  			22 if timeout waiting HTTP POST response
-  			23 if error waiting response
-  			24 if error reading the response
-  			25,26 if error reading the response
-  			27 error waiting response function
-	*/
-	uint8_t https(uint8_t method,
-					char* url,
-					uint16_t port,
-					char* resource,
-					char* data);
-
 
 	/*!
 	\brief	This function performs a HTTP request to send data to Meshlium. It
@@ -856,16 +784,203 @@ public:
 								uint8_t* data,
 								uint16_t length);
 								
+								
+	/*!
+	\brief	This function configures FTP parameters and opens the connection
+	\param	char* server: address of FTP server
+	\param	uint16_t port: port of FTP server
+	\param	char* username: authentication user identification string for FTP
+	\param	char* password: authentication password for FTP	
+	\Return:0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error opening the FTP connection
+ * 			7,8 if error reporting status connection
+ * 			9 if operation status is not 0
+	*/	
+	uint8_t ftpOpenSession(	char* server,
+							uint16_t port,
+							char* username,
+							char* password);
+		
+	/*!
+	\brief	This function configures FTP parameters and opens the connection
+	\param	char* server: address of FTP server
+	\param	uint16_t port: port of FTP server
+	\param	char* username: authentication user identification string for FTP
+	\param	char* password: authentication password for FTP
+	\param	uint8_t mode: FTP session mode 
+			\arg WaspBG96::FTP_ACTIVE
+			\arg WaspBG96::FTP_PASSIVE
+	\return	0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error opening the FTP connection
+ * 			7,8 if error reporting status connection
+ * 			9 if operation status is not 0
+	*/						
+	uint8_t ftpOpenSession(	char* server,
+							uint16_t port,
+							char* username,
+							char* password,
+							uint8_t mode);
+							
+							/*!
+	\brief	This function configures FTPS parameters and opens the connection
+	\param	char* server: address of FTP server
+	\param	uint16_t port: port of FTP server
+	\param	char* username: authentication user identification string for FTP
+	\param	char* password: authentication password for FTP	
+	* Return:	0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error setting ssltype
+ * 			7 if error setting sslctxid
+ * 			8 if error setting ciphersuite
+ * 			9 if error setting seclevel
+ * 			10 if error setting sslversion
+ * 			11 if error opening the FTP connection
+ * 			12,13 if error reporting status connection
+ * 			14 if operation status is not 0
+	*/	
+	uint8_t ftpsOpenSession(	char* server,
+							uint16_t port,
+							char* username,
+							char* password);
+		
+	/*!
+	\brief	This function configures FTPS parameters and opens the connection
+	\param	char* server: address of FTP server
+	\param	uint16_t port: port of FTP server
+	\param	char* username: authentication user identification string for FTP
+	\param	char* password: authentication password for FTP
+	\param	uint8_t mode: FTP session mode 
+			\arg WaspBG96::FTP_ACTIVE
+			\arg WaspBG96::FTP_PASSIVE
+	* Return:	0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error setting ssltype
+ * 			7 if error setting sslctxid
+ * 			8 if error setting ciphersuite
+ * 			9 if error setting seclevel
+ * 			10 if error setting sslversion
+ * 			11 if error opening the FTP connection
+ * 			12,13 if error reporting status connection
+ * 			14 if operation status is not 0
+	*/						
+	uint8_t ftpsOpenSession(	char* server,
+							uint16_t port,
+							char* username,
+							char* password,
+							uint8_t mode);
+							
+	/*!
+	\brief	This function closes the FTP connection
+	\return	0 if OK; 1 if error
+	 		1 if error
+  			2, 3 if error waiting response
+  			4 if operation status is not 0
+	*/	
+	uint8_t ftpCloseSession();
 	
 	/*!
-	\brief	This function sen AT command to the module.
-	\param	char* ATcommand: command to the module "AT_command"/r
-	param	char* ATresponse: The module response.
-	\param	uint16_t timeout: server port	
-	\return	0 if OK and 1 if NOK
-	*/
-	uint8_t sendATcommand(char* ATcommand, char* ATanswer, uint16_t timeout);	
+	\brief  This function deletes a file in the FTP server
+	\param 	ftp_file: file to delete in FTP session
+	\return	0 if OK; 1 if error
+	*/	
+	uint8_t ftpDelete(char* ftp_file);
 	
+	/*!
+	\brief 	This function reads the size of a file in a FTP server
+	\param	char* FTP_file: file
+	\return	'0' if OK, '1' if error
+	*/
+	uint8_t ftpFileSize( char* ftp_file);
+	
+	/*!
+	\brief  This function requests the current working directory in FTP server
+	\return	0 if OK; 'x' if error
+	*/	
+	uint8_t ftpGetWorkingDirectory();
+	
+	/*!
+	\brief  This function changes the working directory of the FTP session
+	\param 	dirname: destiny directory in FTP server
+	\return	0 if OK; 'x' if error
+	*/	
+	uint8_t ftpChangeWorkingDirectory(char* dirname);
+	
+	/*!
+	\brief  This function create a new directory of the FTP session
+	\param 	dirpath: destiny directory in FTP server
+	\return	0 if OK; 'x' if error
+	*/	
+	uint8_t ftpCreateDirectory(char* dirpath);
+	
+	/*!
+	\brief  This function delete a new directory of the FTP session
+	\param 	dirpath: destiny directory in FTP server
+	\return	0 if OK; 'x' if error
+	*/	
+	uint8_t ftpDeleteDirectory(char* dirpath);
+	
+	/*!
+	\brief 	This function uses PUT to send a file to a FTP server
+	\param	char* ftp_file: destiny file
+	\param	char* sd_file: origin file
+	\return	0 if OK
+			1 if no SD present
+			2 if file does not exist
+			3 if error opening the file
+			4 if error setting the pointer of the file
+			5 if error getting the file size
+			6 if error opening the PUT connection
+			7 if error exiting from the data mode
+			8,9, 10 if error sending data or getting response
+  			11 if error checking file size and file size uploaded
+	*/
+	uint8_t ftpUpload( char* ftp_file, char* sd_file);
+	
+	/*!
+	\brief 	This function uses GET to read a file from a FTP server
+	\param	char* SD_file: destiny file
+	\param	char* FTP_file: origin file
+	\return	0 if OK
+			1 if server file size is zero	
+			2 if error reading the file size
+			3 if SD not present
+			4 if error creating the file in SD
+			5 if error opening the file
+			6 if error setting the pointer of the file
+			7 if error opening the GET connection
+			8 if the module returns error code after requesting data
+			9 if error getting packet size
+			10 if error in packet size mismatch
+			11 if error writing SD error
+			12 if no more retries getting data 
+			13 if file size mismatch			
+	*/
+	uint8_t ftpDownload( char* sd_file,  char* ftp_file);
+	
+	/*!
+	\brief  This function check FTP session status
+	\return	0 if OK; 'x' if error
+	*/	
+	uint8_t ftpServerStatus();
+		
 	/*!
 	\brief	This function configures and opens a socket
 	\param	uint8_t socketId: number of the socket Id

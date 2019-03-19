@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.2
+	Version:		3.3
 	Design:			David Gascón
 	Implementation: Victor Boria, Javier Siscart
 
@@ -470,6 +470,40 @@ struct sensorSF421Vector
 	char sensorSerialNumber[14];
 };
 
+/*!
+ * \struct sensorSF421Vector
+ * \brief Struct to store data of the SF421 sensor
+ */
+
+struct DatasolMETVector
+{
+	//! Variable: stores measured radiation in W/m2
+	uint16_t radiation;
+	
+	//! Variable: stores measured semi-cell 1 radiation in W/m2
+	uint16_t semicell1Radiation;
+	
+	//! Variable: stores measured semi-cell 2 radiation in W/m2
+	uint16_t semicell2Radiation;
+
+	//! Variable: stores measured envirnoment temperature in degrees Celsius
+	float environmentTemperature;
+	
+	//! Variable: stores measured solar panel temperature in degrees Celsius
+	float panelTemperature;
+	
+	//! Variable: stores measured wind speed in m/s
+	float windSpeed;
+	
+	//! Variable: stores necessary cleaning notice
+	bool necessaryCleaningNotice;
+	
+	//! Variable: stores Peak Sun Hours (PSH)
+	float peakSunHours;
+
+	//Sensor serial number variable
+	char sensorSerialNumber[11];
+};
 
 
 /*******************************************************************************
@@ -1006,6 +1040,41 @@ class Apogee_SP510
 
 	private:
 		uint8_t socket;
+};
+
+
+/*!
+ * \class Datasol_MET
+ * \brief class for ATERSA Datasol MET sensor
+ */
+class DatasolMET
+{
+	public:
+		// constructor
+		DatasolMET();
+		
+		DatasolMETVector sensorDatasolMET;
+
+		void ON();
+		void OFF();
+		uint8_t read();
+		uint8_t readSerialNumber();
+		
+		// For Mdobus management
+		ModbusMaster datasolMetModbus;
+		
+	private:
+		uint8_t sensorAddr; //!< Sensor address
+		uint8_t socket;
+		void initCommunication();
+		void clearBuffer();
+		
+		union
+		{
+			uint16_t uint16t[2];
+			uint32_t uint32t;
+		}
+		conversion;
 };
 
 

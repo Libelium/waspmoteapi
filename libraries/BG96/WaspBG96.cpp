@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.0
+ *  Version:		3.1
  *  Design:			David Gascón
  *  Implementation:	P.Moreno
  */
@@ -104,7 +104,9 @@ uint8_t WaspBG96::getErrorCode()
  * after executing TCP/IP commands. At the  * point this function is called, 
  * the UART is supposed to have received: "ERROR: <err>\r\n" 
  *
- * @return	'0' if ok; '1' if error
+ * @return	0 if ok 
+ * 			1 if error
+ * 			99 Error getting error code info 
  */
 uint8_t WaspBG96::getTCPErrorCode()
 {
@@ -112,7 +114,7 @@ uint8_t WaspBG96::getTCPErrorCode()
 	char command_buffer[20];	
 
 	// AT+QIGETERROR\r
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_AT[5])));
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[5])));
 	#if DEBUGAT > 0 
 		USB.println(command_buffer); 
 	#endif
@@ -124,18 +126,14 @@ uint8_t WaspBG96::getTCPErrorCode()
 	
 	if (answer == 1)
 		{
-			return 99;
+			return 0;
 		}
 	else 
 		{
 			PRINT_BG96(F("Error getting error code info! "));
-			return 100;
+			return 99;
 		}
 }
-
-
-
-
 
 /* Function: 	This function checks connection status and connect to data service
  * Parameters:	time: max allowed time in seconds to connect
@@ -510,9 +508,9 @@ uint8_t WaspBG96::nbiotConnection(char* apn, char* nbiotband, char* network, uin
 		USB.println(_buffer, _length);	
 		
 		//Checking parameter values.
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_AT[72])));
-		sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 1000);
-		//USB.println(answer, DEC);
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_AT[72])));		
+		answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 1000);
+		USB.println(answer, DEC);
 		USB.println(_buffer, _length);
 	#endif
 	
@@ -617,7 +615,7 @@ uint8_t WaspBG96::httpRequest(uint8_t method,
 							uint16_t length)
 {
 	uint8_t answer;
-	char command_buffer[500];
+	char command_buffer[100];
 	char aux[3];
 	char datapacket[500];
 	
@@ -625,8 +623,8 @@ uint8_t WaspBG96::httpRequest(uint8_t method,
 	memset( datapacket, '\0', sizeof(datapacket) );
 	
 	//Construct new url using host:port.
-	char urlport[50];
-	snprintf(urlport, 50, "%s:%u", url, port);
+	char urlport[100];
+	snprintf(urlport, 100, "%s:%u", url, port);
 	
 	// Step1: Configure HTTP parameters: contextid
 	// Generate: AT+QHTTPCFG=“contextid”, 1
@@ -1419,21 +1417,7 @@ uint8_t WaspBG96::OFF()
 	char command_buffer[20];
 
 	// "AT+CPOWD=1\r"
-	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_AT[44])));
-
-	// send command
-	//answer = sendCommand(command_buffer, sBG96_OK, 2000);
-
-	// Software Shut Down
-	/*
-	while ((counter > 0) && (status == 0))
-	{
-		status = sendCommand(command_buffer, sBG96_OK, 2000);
-		
-		waitFor(sBG96_PWDOWN, sBG96_ERROR_CODE, sBG96_ERROR, 10000);
-		counter--;
-	}*/
-	
+	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_AT[44])));	
 	status = sendCommand(command_buffer, sBG96_OK, 2000);
 		
 	answer = waitFor(sBG96_PWDOWN, sBG96_ERROR_CODE, sBG96_ERROR, 10000);
@@ -1454,7 +1438,8 @@ uint8_t WaspBG96::OFF()
 	_uart = SOCKET1;	
 	closeUART();
 
-	// Switch OFF.	
+	// Switch OFF.
+	pinMode(GPRS_PW,OUTPUT);
 	digitalWrite(GPRS_PW,LOW);	
 	
 	return 0;
@@ -1563,35 +1548,6 @@ uint8_t WaspBG96::checkPIN()
 	return 254;
 }
 
-/* Function: This function send one AT command to the module and get the answer.
- * Return:
- * 		0 for OK and 1 for NOK. 
- */
-uint8_t WaspBG96::sendATcommand(char* ATcommand, char* ATanswer, uint16_t timeout)
-{
-	char command_buffer[50];
-	char command_answer[20];
-	uint8_t answer;
-	USB.print(F("Manual AT: "));
-	USB.println(ATcommand);
-	// command: AT command\r
-	snprintf(command_buffer, sizeof(command_buffer), "%s\r", ATcommand);
-
-	answer = sendCommand(command_buffer, ATanswer, sBG96_ERROR, timeout);
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-		}
-		return 255;
-	}
-
-	return 0;
-}
-
-
-
 /* Function: 	This function checks connection status
  * Parameters:	time: max allowed time in seconds to connect
  * Return:	0 If the module is connected to the network
@@ -1668,117 +1624,6 @@ uint8_t WaspBG96::checkConnection(uint8_t time)
 
 	return 0;
 
-}
-
-
-/* Function: 	This function checks EPS Network Registratio Status
- * Parameters:	time: max allowed time in seconds to connect
- * Return:	0 if OK
-
- */
-uint8_t WaspBG96::checkConnectionEPS(uint8_t time)
-{
-	uint8_t answer;
-	uint8_t status;
-	uint32_t previous;
-	char command_buffer[40];
-	char command_answer[20];
-
-	// init variables
-	status = 0;
-	answer = 0;
-	previous = millis();
-
-	//// 1. Generate command
-	// "AT+CEREG?\r"
-	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_AT[41])));
-
-	//// 2. Generate answer
-	// "+CEREG: 0,"
-	strcpy_P(command_answer, (char*)pgm_read_word(&(table_AT[42])));
-
-	//// 3. Iterate until status is correct
-	while ((status != 1) && (status != 5))
-	{
-		// Sends the command and waits for the answer. The status options in
-		// "+CEREG: 0,<status>" response are:
-		//	0 - not registered, MT is not currently searching an operator to register to.
-		//	1 - registered, home network.
-		//	2 - not registered, but MT is currently trying to attach or searching an operator to register to.
-		//	3 - registration denied.
-		//	4 - unknown (e.g. out of E-UTRAN coverage).
-		//	5 - registered, roaming.
-		//	6 - registered for "SMS only", home network (not applicable)
-		//	7 - registered for "SMS only", roaming (not applicable).
-		//	8 - attached for emergency bearer services only (See NOTE 2).
-		//	9 - registered for "CSFB not preferred", home network (not applicable).
-		//	10 - registered for "CSFB not preferred", roaming (not applicable).
-
-		answer = sendCommand(command_buffer, command_answer, sBG96_ERROR_CODE, 2000);
-
-		if (answer == 1)
-		{
-			// get whole response
-			status = waitFor(sBG96_OK, 500);
-
-			if (status == 1)
-			{
-				parseUint8(&status, "\r\n OK");
-				#if DEBUG_BG96 > 1
-					PRINT_BG96(F("----> status:"));
-					USB.println(status,DEC);
-				#endif
-			}
-		}
-
-		// check status from response
-		if ((status == 1) || (status == 5))
-		{
-			#if DEBUG_BG96 > 1
-				PRINT_BG96(F("Break condition\n"));
-				PRINT_BG96(F("status:"));
-				USB.println(status,DEC);
-			#endif
-			break;
-		}
-		else if (status == 2)
-		{
-			// continue waiting for correct response
-			#if DEBUG_BG96 > 0
-				PRINT_BG96(F("Continue waiting for correct response\n"));
-			#endif
-		}
-
-		delay(1000);
-
-		// Condition to avoid an overflow (DO NOT REMOVE)
-		if (millis() < previous) previous = millis();
-
-		// check timeout error
-		if ((millis() - previous) > ((uint32_t)time * 1000))
-		{
-			return status;
-		}
-	}
-
-	// check bad responses
-	if ((status != 1) &&
-		(status != 5) &&
-		(status != 6) &&
-		(status != 7) &&
-		(status != 8) &&
-		(status != 9) &&
-		(status != 10))
-	{
-		if (status == 0)
-		{
-			return status + 1;
-		}
-
-		return status;
-	}
-
-	return 0;
 }
 
 /*
@@ -2861,27 +2706,6 @@ uint8_t WaspBG96::http(uint8_t method,
 				NULL);
 }
 
-/* Function: 	This function performs a HTTP request
- * Parameters:
- * 		method: selected HTTP method:	WaspBG96::HTTP_GET
- * 										WaspBG96::HTTP_POST * 										
- *		url: host name or IP address of the server
- *		port: server port
- *		resource: parameter indicating the HTTP resource, object of the	request
- * Return:	'0' if OK
- * 			'x' if error. See http()
- */
-uint8_t WaspBG96::https(uint8_t method,
-						char* url,
-						uint16_t port,
-						char* resource)
-{
-	return https(method,
-				url,
-				port,
-				resource,
-				NULL);
-}
 
 
 /* Function: 	This function performs a HTTP request
@@ -2930,221 +2754,6 @@ uint8_t WaspBG96::http(uint8_t method,
 	{
 		return answer+20;	// 20 to 29 error codes
 	}
-
-	return 0;
-}
-
-/* Function: 	This function performs a HTTP request
- * Parameters:
- * 		method: selected HTTP method:	WaspBG96::HTTP_GET
- * 										WaspBG96::HTTP_HEAD
- * 										WaspBG96::HTTP_DELETE
- * 										WaspBG96::HTTP_POST
- * 										WaspBG96::HTTP_PUT
- * 										WaspBG96::HTTP_POST_FRAME
- *		url: host name or IP address of the server
- *		port: server port
- *		resource: parameter indicating the HTTP resource, object of the	request
- *		data: data to send in HTTP method
- *
- * Return:	0 if OK
- * 			1 SSL context error
- * 			2 SSL version error
- * 			3 SSL ciphersuite error
- * 			4 SSL seclevel error
- * 			6 SSL cacert error
- * 			10 if OK
- * 			11 if error setting context id
- * 			12 if error sending url
- * 			13 if error sending POST 
- * 			14 if wrong method has been selected * 
- *			20 if OK
- * 			21 if timeout waiting HTTP GET response
- * 			22 if timeout waiting HTTP POST response
- * 			23 if error waiting response
- * 			24 if error reading the response
- * 			25, 26 if error reading the response
- * 			27 error waiting response function
-
- */
-uint8_t WaspBG96::https(uint8_t method,
-						char* url,
-						uint16_t port,
-						char* resource,
-						char* data)
-{
-	uint8_t answer;
-	int16_t http_data;
-	char command_buffer[200];
-	
-	//// 1. Data connection must be activated.
-	
-	//// 2. Setting SSL configuration
-	// "AT+QHTTPCFG=\"sslctxid\",1\r"
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[13])));
-
-	// send command
-	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 5000);
-	#if DEBUG_BG96 == 2
-		USB.print(F("Answer value: "));
-		USB.println(answer, DEC);
-		USB.println(_buffer, _length);	
-	#endif
-	
-	// check answer
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-
-			#if DEBUG_BG96 > 0
-				printErrorCode();
-			#endif
-		}
-		else if ( answer == 4 )
-		{
-			getTCPErrorCode();
-		}
-
-		return 1;
-	}
-	
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[0])), 1, 1);
-
-	// send command
-	// "AT+QSSLCFG=\"sslversion\",%u,%u\r"
-	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 5000);
-	#if DEBUG_BG96 == 2
-		USB.print(F("Answer value: "));
-		USB.println(answer, DEC);
-		USB.println(_buffer, _length);	
-	#endif
-	
-	// check answer
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-
-			#if DEBUG_BG96 > 0
-				printErrorCode();
-			#endif
-		}
-		else if ( answer == 4 )
-		{
-			getTCPErrorCode();
-		}
-
-		return 2;
-	}
-	
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[1])), 1, "0X0005");
-	
-	// send command
-	// "AT+QSSLCFG=\"ciphersuite\",%u,%s\r"
-	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 5000);
-	#if DEBUG_BG96 == 2
-		USB.print(F("Answer value: "));
-		USB.println(answer, DEC);
-		USB.println(_buffer, _length);	
-	#endif
-	
-	// check answer
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-
-			#if DEBUG_BG96 > 0
-				printErrorCode();
-			#endif
-		}
-		else if ( answer == 4 )
-		{
-			getTCPErrorCode();
-		}
-
-		return 3;
-	}
-	
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[2])), 1, 1);
-	
-	// send command
-	// "AT+QSSLCFG=\"seclevel\",%u,%u\r"
-	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 5000);
-	#if DEBUG_BG96 == 2
-		USB.print(F("Answer value: "));
-		USB.println(answer, DEC);
-		USB.println(_buffer, _length);	
-	#endif
-	
-	// check answer
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-
-			#if DEBUG_BG96 > 0
-				printErrorCode();
-			#endif
-		}
-		else if ( answer == 4 )
-		{
-			getTCPErrorCode();
-		}
-
-		return 4;
-	}
-	
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[3])), 1, "ca.pem");
-	
-	// send command
-	// "AT+QSSLCFG=\"cacert\",%u,\"%s\"\r"
-	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 5000);
-	#if DEBUG_BG96 == 2
-		USB.print(F("Answer value: "));
-		USB.println(answer, DEC);
-		USB.println(_buffer, _length);	
-	#endif
-	
-	// check answer
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-
-			#if DEBUG_BG96 > 0
-				printErrorCode();
-			#endif
-		}
-		else if ( answer == 4 )
-		{
-			getTCPErrorCode();
-		}
-
-		return 5;
-	}
-
-	// 2. Configure parameters	and send the request
-	answer = httpRequest(method, url, port, resource, data);
-	if (answer != 0)
-	{
-		USB.println(answer, DEC);
-		return answer+10;	// 16 to 19 error codes
-	}
-
-	// 3. Wait for the response	
-	answer = httpWaitResponse(method, BG96_HTTP_TIMEOUT);
-	if (answer != 0)
-	{
-		return answer+20;	// 20 to 27 error codes
-	}
-	
 
 	return 0;
 }
@@ -3387,7 +2996,7 @@ uint8_t WaspBG96::openSocketSSL(uint8_t socketId,
 	//// 1. Data connection must be activated.
 	
 	//// 2. Setting SSL configuration
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[0])), 1, 1);
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[0])), 1, 4);
 
 	// send command
 	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 5000);
@@ -3416,7 +3025,7 @@ uint8_t WaspBG96::openSocketSSL(uint8_t socketId,
 		return 1;
 	}
 	
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[1])), 1, "0X0005");
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[1])), 1, "0XFFFF");
 	
 	// send command
 	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 5000);
@@ -3801,7 +3410,8 @@ uint8_t WaspBG96::send(uint8_t socketId,
 					uint16_t data_length)
 {
 	uint8_t answer;
-	char command_buffer[500];
+	char command_buffer[100];
+	char command_answer[20];
 
 	//// 1. Check socket status
 	answer = getSocketStatus(socketId);
@@ -3853,10 +3463,9 @@ uint8_t WaspBG96::send(uint8_t socketId,
 			getTCPErrorCode();
 		}
 	
-	snprintf(command_buffer, 500, "%s", data);
-	
-	// send command		
-	answer = sendCommand(command_buffer, "SEND OK", sBG96_ERROR_CODE, sBG96_ERROR, 5000);	
+	// send command
+	sprintf_P(command_answer, (char*)pgm_read_word(&(table_IP[6])));
+	answer = sendCommand((char*) data, command_answer, sBG96_ERROR_CODE, sBG96_ERROR, 5000);	
 	#if DEBUG_BG96 == 2
 		USB.print(F("Answer value: "));
 		USB.println(answer, DEC);
@@ -3865,7 +3474,7 @@ uint8_t WaspBG96::send(uint8_t socketId,
 		{
 			getTCPErrorCode();
 		}
-		
+	
 	
 	//Recive Data from remote	
 	waitFor("+QIURC: \"recv\"", sBG96_ERROR_CODE, sBG96_ERROR, 10000);
@@ -3954,7 +3563,7 @@ uint8_t WaspBG96::sendSSL(uint8_t socketId,
 						uint16_t data_length)
 {
 	uint8_t answer;
-	char command_buffer[500];
+	char command_buffer[100];
 	char answer_buffer[20];
 
 	//// 1. Check socket status
@@ -3998,9 +3607,10 @@ uint8_t WaspBG96::sendSSL(uint8_t socketId,
 			getTCPErrorCode();
 		}
 	
-	snprintf(command_buffer, sizeof(command_buffer), "%s", data);
-	// send command		
-	answer = sendCommand(command_buffer, "SEND OK", sBG96_ERROR_CODE, sBG96_ERROR, 5000);	
+	
+	// send command
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_IP[6])));
+	answer = sendCommand((char*) data, answer_buffer, sBG96_ERROR_CODE, sBG96_ERROR, 5000);	
 
 	#if DEBUG_BG96 == 2
 		USB.print(F("Answer value: "));
@@ -4182,6 +3792,2246 @@ uint8_t WaspBG96::receiveSSL(uint8_t socketId, uint32_t timeout)
 	return 0;
 }
 
+/* Function: 	This function configures FTP parameters and opens the connection
+ * Parameters:	server: address of FTP server
+ *				port: port of FTP server
+ *				username: authentication user identification string for FTP
+ *				password: authentication password for FTP
+  * Return:	0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error opening the FTP connection
+ * 			7,8 if error reporting status connection
+ * 			9 if operation status is not 0
+ */
+uint8_t WaspBG96::ftpOpenSession(	char* server,
+								uint16_t port,
+								char* username,
+								char* password)
+{	
+	return ftpOpenSession(server, port, username, password, WaspBG96::FTP_PASSIVE);
+}
+
+
+/* Function: 	This function configures FTP parameters and opens the connection
+ * Parameters:	server: address of FTP server
+ *				port: port of FTP server
+ *				username: authentication user identification string for FTP
+ *				password: authentication password for FTP
+ * Return:	0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error opening the FTP connection
+ * 			7,8 if error reporting status connection
+ * 			9 if operation status is not 0
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpOpenSession(	char* server,
+								uint16_t port,
+								char* username,
+								char* password,
+								uint8_t mode)
+{	
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[50];
+	char* pointer;
+	
+	//// Configure PDP context
+	// "AT+QFTPCFG=\"contextid\",1\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[0])));
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 1;
+	}
+	
+	//// Configure user account
+	// "AT+QFTPCFG=\"account\",\"<username>\",\"<password>\"\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[1])), username, password);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 2;
+	}
+	
+	//// Set file type as binary
+	// "AT+QFTPCFG=\"filetype\",%u\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[2])), 1);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 3;
+	}
+	
+	//// Set transfer mode 
+	// "AT+QFTPCFG=\"transmode\",<mode>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[3])), mode);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 4;
+	}
+	
+	//// Set response timeout
+	// "AT+QFTPCFG=\"rsptimeout\",<timeout>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[4])), BG96_FTP_TIMEOUT);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 5;
+	}
+	
+	//// Loging to FTP server
+	// "AT+QFTPOPEN=\"<server>\",<port>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[5])), server, port);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 6;
+	}
+		
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[6])));
+	//Waitting for command response.
+	answer = waitFor(answer_buffer, (25000));
+		if (answer == 0)
+		{
+			return 7;
+		}		
+	
+	// 2. Read the whole response: +QFTPOPEN: <err>,<protocol_error>\r
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 8;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				USB.print(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				USB.print(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode != 0){
+		return 9;
+	}
+	
+	return 0;
+	
+}
+
+/* Function: 	This function configures FTPS parameters and opens the connection
+ * Parameters:	server: address of FTP server
+ *				port: port of FTP server
+ *				username: authentication user identification string for FTP
+ *				password: authentication password for FTP
+ * Return:	0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error setting ssltype
+ * 			7 if error setting sslctxid
+ * 			8 if error setting ciphersuite
+ * 			9 if error setting seclevel
+ * 			10 if error setting sslversion
+ * 			11 if error opening the FTP connection
+ * 			12,13 if error reporting status connection
+ * 			14 if operation status is not 0
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpsOpenSession(	char* server,
+								uint16_t port,
+								char* username,
+								char* password)
+{	
+	return ftpsOpenSession(server, port, username, password, WaspBG96::FTP_PASSIVE);
+}
+
+
+/* Function: 	This function configures FTPS parameters and opens the connection
+ * Parameters:	server: address of FTP server
+ *				port: port of FTP server
+ *				username: authentication user identification string for FTP
+ *				password: authentication password for FTP
+ * Return:	0 if OK
+ * 			1 if error setting PDP context
+ * 			2 if error setting username&password
+ * 			3 if error setting file type
+ * 			4 if error setting transfer mode
+ * 			5 if error setting timeout
+ * 			6 if error setting ssltype
+ * 			7 if error setting sslctxid
+ * 			8 if error setting ciphersuite
+ * 			9 if error setting seclevel
+ * 			10 if error setting sslversion
+ * 			11 if error opening the FTP connection
+ * 			12,13 if error reporting status connection
+ * 			14 if operation status is not 0
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpsOpenSession(	char* server,
+								uint16_t port,
+								char* username,
+								char* password,
+								uint8_t mode)
+{	
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[50];
+	char* pointer;
+	
+	//// Configure PDP context
+	// "AT+QFTPCFG=\"contextid\",1\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[0])));
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 1;
+	}
+	
+	//// Configure user account
+	// "AT+QFTPCFG=\"account\",\"<username>\",\"<password>\"\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[1])), username, password);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 2;
+	}
+	
+	//// Set file type as binary
+	// "AT+QFTPCFG=\"filetype\",%u\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[2])), 1);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 3;
+	}
+	
+	//// Set transfer mode 
+	// "AT+QFTPCFG=\"transmode\",<mode>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[3])), mode);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 4;
+	}
+	
+	//// Set response timeout
+	// "AT+QFTPCFG=\"rsptimeout\",<timeout>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[4])), BG96_FTP_TIMEOUT);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 5;
+	}
+	
+	//// Set ssl type
+	// "AT+QFTPCFG=\"ssltype\",%u"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[28])), 1);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 6;
+	}
+	
+	//// Set ssl contextid
+	// "AT+QFTPCFG=\"sslctxid\",%u"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[29])), 1);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 7;
+	}
+	
+	//// Set ciphersuit
+	// "AT+QSSLCFG=\"ciphersuite\",%u,%s\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[1])), 1, "0xFFFF");
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 8;
+	}
+	
+	//// Set seclevel
+	// "AT+QFTPCFG=\"rsptimeout\",<timeout>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[2])), 1, 0);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 9;
+	}
+	
+	//// Set ssl version
+	// "AT+QSSLCFG=\"sslversion\",%u,%u\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[0])), 1, 4);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 10;
+	}
+	
+	//// Loging to FTP server
+	// "AT+QFTPOPEN=\"<server>\",<port>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[5])), server, port);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 11;
+	}
+		
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[6])));
+	//Waitting for command response.
+	answer = waitFor(answer_buffer, (25000));
+		if (answer == 0)
+		{
+			return 12;
+		}		
+	
+	// 2. Read the whole response: +QFTPOPEN: <err>,<protocol_error>\r
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 13;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				USB.print(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				USB.print(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode != 0){
+		return 14;
+	}
+	
+	return 0;
+	
+}
+
+/* Function: 	This function closes the FTP connection
+ * Return:	0 if OK
+ * 			1 if error
+ * 			2, 3 if error waiting response
+ * 			4 if operation status is not 0
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpCloseSession()
+{	
+	char command_buffer[50];
+	char answer_buffer[50];
+	uint8_t answer;
+	char* pointer;
+
+	#if DEBUG_BG96 > 1
+		PRINT_BG96(F("Closing FTP session\n"));
+	#endif
+	
+	//// Log out from FTP(s) server
+	// "AT+QFTPCLOSE\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[7])));
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+	
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 1;
+	}	
+	
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[8])));
+	//Waitting for command response.
+	answer = waitFor(answer_buffer, (15000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPCLOSE: <err>,<protocol_error>\r
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				USB.print(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				USB.print(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode != 0){
+		return 4;
+	}
+	
+	return 0;
+}
+
+/* Function: 	This function uses DELETE to delete a file to in the current 
+ * 				working directory of the FTP server
+ * Parameters:	ftp_file: file to delete in FTP session
+ * Return:	0 if OK
+ * 			1 if error deleting file
+ * 			2,3 if error waiting response
+ * 			4 if some error occured
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpDelete(char* ftp_file)
+{		
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[30];
+	char* pointer;	
+	
+	// "AT+QFTPDEL=\"%s\"\r"
+	memset(command_buffer, 0x00, sizeof(command_buffer));
+	sprintf_P(command_buffer,(char*)pgm_read_word(&(table_FTP[9])),ftp_file);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 15000);
+
+	if (answer != 1)
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error deleting file\n")); 
+		#endif
+		
+		if (answer == 2)
+		{
+			getErrorCode();
+			#if DEBUG_BG96 > 0
+				printErrorCode();
+			#endif
+		}
+		return 1;
+	}
+	
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[10])));
+	//Waitting for command response.
+	// +QFTPDEL: <err>,<protocol_error>
+	answer = waitFor(answer_buffer, (25000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPDEL: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("FTP Error: "));
+					USB.println(_errorCode);
+				#endif
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("FTP protocol Error: "));
+					USB.println(_ftp_protocol_error);
+				#endif
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode == 0){
+		return 0;
+	}
+	
+	if ((_errorCode == 627) && (_ftp_protocol_error == 550)){
+		#if DEBUG_BG96 > 0
+			USB.println(F("Nothing to be deleted!"));
+		#endif
+		return 10;
+	}
+	
+	if (_errorCode != 0){
+		return 4;
+	}
+}
+
+/* Function: 	This function reads the size of a file in a FTP server
+ * Parameters:	ftp_file: file
+ * Return:	0 if "ok"
+ *			1 if error getting file size
+ * 			2,3 if error waiting response
+ * 			4 if some error occured
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpFileSize( char* ftp_file)
+{
+	
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[30];
+	char* pointer;
+	
+	// init variable
+	_filesize = 0;
+	
+	// "AT+QFTPSIZE=\"%s\"\r"
+	memset(command_buffer, 0x00, sizeof(command_buffer));
+	sprintf_P(command_buffer,(char*)pgm_read_word(&(table_FTP[11])),ftp_file);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 15000);
+
+	if (answer != 1)
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error getting filesize\n")); 
+		#endif
+		
+		if (answer == 2)
+		{
+			getErrorCode();
+			#if DEBUG_BG96 > 0
+				printErrorCode();
+			#endif
+		}
+		return 1;
+	}
+	
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[14])));
+	//Waitting for command response.
+	// +QFTPSIZE: <err>,<protocol_error>
+	answer = waitFor(answer_buffer, (15000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPSIZE: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				USB.print(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if ((_ftp_protocol_error != 0) && (_errorCode != 0)){
+				USB.print(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode == 0){
+		_filesize = _ftp_protocol_error;
+		#if DEBUG_BG96 > 0
+			USB.print(F("FTP file size: "));
+			USB.println(_ftp_protocol_error);
+		#endif
+		return 0;
+	}
+	else if (_errorCode != 0){
+		return 4;
+	}
+
+	return 0;
+}
+
+/* Function: 	This function requests the current working directory in FTP server
+ * 
+ * Return:	0 if OK
+ * 			1 if error getting current directory
+ * 			2,3 if error waiting response
+ * 			4 if some error occured
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpGetWorkingDirectory()
+{		
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[30];
+	char* pointer;
+	
+	// AT+QFTPPWD\r
+	memset(command_buffer, 0x00, sizeof(command_buffer));
+	strcpy_P(command_buffer,(char*)pgm_read_word(&(table_FTP[12])));
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 15000);
+
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[13])));
+	//Waitting for command response.
+	// +QFTPSIZE: <err>,<protocol_error>
+	answer = waitFor(answer_buffer, (15000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPPWD: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				PRINT_BG96(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			if (_errorCode == 0){
+				strncpy(_ftpWorkingDirectory, pointer, sizeof(_ftpWorkingDirectory));
+			}
+			else
+			{
+				_ftp_protocol_error = atoi(pointer);
+				if (_ftp_protocol_error != 0){
+					PRINT_BG96(F("FTP protocol Error: "));
+					USB.println(_ftp_protocol_error);
+				}
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode == 0){
+		_filesize = _ftp_protocol_error;
+		return 0;
+	}
+	else if (_errorCode != 0){
+		return 4;
+	}
+
+	return 0;
+}
+
+
+/* Function: 	This function changes the working directory of the FTP session
+ * Parameters:	dirname: destiny directory in FTP server
+ * Return:	0 if OK
+ * 			1 if error changing directory
+ * 			2,3 if error waiting response
+ * 			4 if some error occured
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpChangeWorkingDirectory(char* dirname)
+{
+	
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[30];
+	char* pointer;		
+	
+	// "AT+QFTPCWD=\"%s\"\r"
+	memset(command_buffer, 0x00, sizeof(command_buffer));
+	sprintf_P(command_buffer,(char*)pgm_read_word(&(table_FTP[15])), dirname);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 15000);
+
+	#if DEBUG_BG96 > 0
+		PRINT_BG96(F("_buffer:")); 
+		USB.println((char*)_buffer);
+	#endif
+
+	if (answer != 1)
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error changing Working Directory\n")); 
+		#endif
+		
+		if (answer == 2)
+		{
+			getErrorCode();
+			#if DEBUG_BG96 > 0
+				printErrorCode();
+			#endif
+		}
+		return 1;
+	}
+	
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[16])));
+	//Waitting for command response.
+	// +QFTPCWD: <err>,<protocol_error>
+	answer = waitFor(answer_buffer, (15000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPCWD: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				PRINT_BG96(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				PRINT_BG96(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode != 0){
+		return 4;
+	}
+	
+	// update attribute if OK
+	memset(_ftpWorkingDirectory, 0x00, sizeof(_ftpWorkingDirectory));
+	strncpy(_ftpWorkingDirectory, "/", 1);
+	strncat(_ftpWorkingDirectory, dirname, sizeof(_ftpWorkingDirectory)-2);
+
+	return 0;
+}
+
+/* Function: 	This function create a new directory of the FTP session
+ * Parameters:	dirpath: name of directory in FTP server
+ * Return:	0 if OK
+ * 			1 if error creating file
+ * 			2,3 if error waiting response
+ * 			4 if some error occured
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpCreateDirectory(char* dirpath)
+{
+	
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[30];
+	char* pointer;		
+	
+	// "AT+QFTPMKDIR=\"%s\"\r"
+	memset(command_buffer, 0x00, sizeof(command_buffer));
+	sprintf_P(command_buffer,(char*)pgm_read_word(&(table_FTP[22])), dirpath);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 15000);
+
+	#if DEBUG_BG96 > 0
+		PRINT_BG96(F("_buffer:")); 
+		USB.println((char*)_buffer);
+	#endif
+
+	if (answer != 1)
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error changing Working Directory\n")); 
+		#endif
+		
+		if (answer == 2)
+		{
+			getErrorCode();
+			#if DEBUG_BG96 > 0
+				printErrorCode();
+			#endif
+		}
+		return 1;
+	}
+	
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[23])));
+	//Waitting for command response.
+	// +QFTPMKDIR: <err>,<protocol_error>
+	answer = waitFor(answer_buffer, (15000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPMKDIR: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("FTP Error: "));
+					USB.println(_errorCode);
+				#endif
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("FTP protocol Error: "));
+					USB.println(_ftp_protocol_error);
+				#endif
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if ((_errorCode == 627) && (_ftp_protocol_error == 550)){
+		#if DEBUG_BG96 > 0
+			USB.println(F("Nothing to be created!"));
+		#endif
+		return 10;
+	}
+	
+	if (_errorCode != 0){
+		return 4;
+	}
+
+	return 0;
+}
+
+/* Function: 	This function delete a new directory of the FTP session
+ * Parameters:	dirpath: name of directory in FTP server
+ * Return:	0 if OK
+ * 			1 if error change directory
+ * 			2,3 if error waiting response
+ * 			4 if some error occured
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpDeleteDirectory(char* dirpath)
+{
+	
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[30];
+	char* pointer;		
+	
+	// "AT+QFTPRMDIR=\"%s\"\r"
+	memset(command_buffer, 0x00, sizeof(command_buffer));
+	sprintf_P(command_buffer,(char*)pgm_read_word(&(table_FTP[24])), dirpath);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 15000);
+
+	#if DEBUG_BG96 > 0
+		PRINT_BG96(F("_buffer:")); 
+		USB.println((char*)_buffer);
+	#endif
+
+	if (answer != 1)
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error changing Working Directory\n")); 
+		#endif
+		
+		if (answer == 2)
+		{
+			getErrorCode();
+			#if DEBUG_BG96 > 0
+				printErrorCode();
+			#endif
+		}
+		return 1;
+	}
+	
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[25])));
+	//Waitting for command response.
+	// +QFTPRMDIR: <err>,<protocol_error>
+	answer = waitFor(answer_buffer, (15000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPRMDIR: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				PRINT_BG96(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				PRINT_BG96(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if ((_errorCode == 627) && (_ftp_protocol_error == 550)){
+		#if DEBUG_BG96 > 0
+			USB.println(F("Nothing to be deleted!"));
+		#endif
+		return 10;
+	}
+	
+	if (_errorCode != 0){
+		return 4;
+	}
+
+	return 0;
+}
+
+/* Function: 	This function uses PUT to send a file to a FTP server
+ * Parameters:	ftp_file: destiny file
+ *				sd_file: origin file
+ * Return:	0 if OK
+ * 			1 if no SD present
+ * 			2 if file does not exist
+ * 			3 if error opening the file
+ * 			4 if error setting the pointer of the file
+ * 			5 if error getting the file size
+ * 			6 if error opening the PUT connection
+ * 			7 if error exiting from the data mode
+ * 			8,9, 10 if error sending data or getting response
+ * 			11 if error checking file size and file size uploaded
+ * 			99 null pinter
+ */
+uint8_t WaspBG96::ftpUpload( char* ftp_file, char* sd_file)
+{
+	
+	uint8_t answer;
+	char command_answer[20];
+	char command_buffer[512];
+	int32_t file_size = 0;
+	int nBytes = 0;
+	uint8_t error_counter = 5;
+	char* pointer;
+	
+	//// 1. Delete file in FTP server if exists
+	ftpDelete(ftp_file);
+	
+	// define file variable
+	SdFile file;	
+	
+	// get current state of SD card power supply
+	bool sd_state = SPI.isSD;
+	
+	// switch SD card ON
+	SD.ON();
+	
+	// go to Root directory
+	SD.goRoot();
+	
+	// check if the card is there or not
+	if (!SD.isSD())
+	{	
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error: SD not present\n"));
+		#endif 
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}
+		return 1;
+	}
+	
+	// Delete file in the case it exists
+	if (!SD.isFile(sd_file))
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error: file does not exist\n"));
+		#endif
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}
+		return 2;		
+	}
+	
+	// search file in current working directory and open it 
+	// exit if error and modify the general flag with FILE_OPEN_ERROR
+	if (!SD.openFile((char*)sd_file, &file, O_RDONLY))
+	{
+		// SD error		
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error: opening file\n"));
+		#endif	
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}
+		return 3;
+	}
+
+	// set pointer to the beginning of the file
+	if (!file.seekSet(0))	
+	{
+		// SD error		
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error: setting initial offset in file\n"));
+		#endif	
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}	
+		return 4;
+	}
+		
+	// get file size	
+	file_size = SD.getFileSize(sd_file);
+	if (file_size < 0)
+	{	
+		// Return the SD to the original state
+		if (sd_state == 0)
+		{
+			SD.OFF();
+		}
+		
+		return 5;		
+	}
+		
+	// mandatory delay so the module works ok
+	delay(1000);
+	
+	// 5. Open the PUT connection
+	// "AT+QFTPPUT=\"<ftp_file>\",\"COM:\",0\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[17])), ftp_file);
+	
+	// send command	
+	answer = sendCommand(command_buffer, "CONNECT", sBG96_ERROR_CODE, 15000);
+	if (answer != 1)
+	{			
+		// Close file
+		file.close();
+		
+		// Return the SD to the original state
+		if (sd_state == 0)
+		{
+			SD.OFF();
+		}
+		
+		return 6;
+	}
+	
+	#if DEBUG_BG96 > 0
+		PRINT_BG96(F("File size: "));
+		USB.println(file_size, DEC);	
+		PRINT_BG96(F("error_counter: "));
+		USB.println(error_counter, DEC);
+	#endif
+	
+	// 6. Send data to the server
+	while ((file_size > 0) && (error_counter > 0))
+	{
+		// 6a. Read data from SD
+		nBytes = file.read(command_buffer, 500);
+		
+		// 6b. Send the data if no errors
+		if (nBytes == -1)
+		{
+			// SD error		
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error reading the file\n")); 
+			#endif
+			error_counter--;
+		}
+		else
+		{
+			for (int i = 0; i < nBytes; i++)
+			{
+				printByte(command_buffer[i], 1);
+			}
+			
+			file_size -= nBytes; 
+		}
+		
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Remains: "));
+			USB.print(file_size);
+			USB.println(F(" bytes"));
+		#endif
+	}
+	
+	file_size = SD.getFileSize(sd_file);
+	delay(100);
+	// 7. Close file
+	file.close();
+	
+	// 8. Return the SD to the original state
+	if (sd_state == 0)
+	{
+		SD.OFF();
+	}
+	
+	// 9. Exit from data mode
+	delay(1000);
+	
+	// "+++"
+	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_FTP[19])));	
+	
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, 15000);
+	if (answer != 1)
+	{
+		return 7;
+	}
+	
+	if (error_counter == 0)
+	{ 
+		return 8;
+	}
+	
+	sprintf_P(command_answer, (char*)pgm_read_word(&(table_FTP[18])));
+	//Waitting for command response.
+	// ++QFTPPUT: <err>,<protocol_error>
+	answer = waitFor(command_answer, (15000));
+		if (answer == 0)
+		{
+			return 9;
+		}		
+	
+	// 2. Read the whole response: +QFTPDEL: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 10;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				USB.print(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if ((_ftp_protocol_error != 0) && (_errorCode != 0)){
+				USB.print(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	#if DEBUG_BG96 > 0
+			USB.print(F("File Size: "));
+			USB.println(file_size);
+			USB.print(F("Size uploaded: "));
+			USB.println(_ftp_protocol_error);
+	#endif
+	
+	if (_errorCode == 0){
+		
+		if (_ftp_protocol_error == file_size){
+			return 0;
+		}
+	}
+	
+	if (_errorCode != 0){
+		return 11;
+	}
+	
+}
+
+/* Function: 	This function download a file from a FTP server
+ * Parameters:	sd_file: destiny file
+ *				ftp_file: origin file
+ * Return:	0 if OK
+ * 			1 if file size is 0
+ * 			2 if error getting remote ftp file size
+ * 			3 if SD is not present
+ * 			4 if SD file is not created
+ * 			5 if error opening SD file
+ * 			6 if error settind SD file pointer
+ * 			7 if error downloading the FTP file
+ * 			8 if error waiting status response
+ * 			9 if error waiting status response
+ * 			10 if error reading UFS file size
+ * 			11 if error opening UFS file
+ * 			12 if error setting UFS file pointer
+ * 			13 if error reading UFS file
+ * 			14 if error in packet size mismatch
+ * 			15 if error writting SD
+ * 			16 if error closing UFS file
+ * 			17 if error deleting UFS file 
+ * 			18 error counter
+ *  		19 if File size mismatch error
+ * 			99 null pinter
+ * 
+ */
+uint8_t WaspBG96::ftpDownload( char* sd_file, char* ftp_file)
+{	
+	uint8_t error;
+	uint8_t answer;
+	char command_buffer[100];
+	char command_answer[50];	
+	bool sd_state;
+	uint32_t server_filesize = 0;
+	uint32_t sd_filesize = 0;
+	uint32_t startpos = 0;
+	uint32_t packet_size = BG96_MAX_DL_PAYLOAD;
+	int nBytes = 0;
+	uint8_t error_counter = 5;
+	int data_available;
+	uint32_t prev;
+	char* pointer;	
+	char delimiters[20];
+	uint8_t filehandle;
+	uint32_t filesize;
+	
+	// init error code variable
+	_errorCode = 0;
+	
+	delay(2000);
+	
+	/// 1. Get filesize in FTP server
+	error = ftpFileSize(ftp_file);
+    
+    
+	if (error == 0)
+	{
+		server_filesize = _filesize;	
+		
+		if (server_filesize == 0)
+		{
+			USB.println();
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Server file size is zero\n")); 
+			#endif
+			return 1;
+		}
+		
+		
+		if (server_filesize < BG96_MAX_DL_PAYLOAD)
+		{
+			packet_size = server_filesize;
+		}
+	}
+	else
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error retrieving file size\n")); 
+		#endif
+		return 2;
+	}
+	
+	/// 2. Prepare SD card for downloading	
+	// define file variable
+	SdFile file;
+	
+	// get current state of SD card power supply
+	sd_state = SPI.isSD;
+	
+	// switch SD card ON
+	SD.ON();
+	
+	// go to Root directory
+	SD.goRoot();
+	
+	// check if the card is there or not
+	if (!SD.isSD())
+	{	
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("SD not present\n"));  
+		#endif 
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}		
+		return 3;
+	}
+	
+	// Delete file in the case it exists
+	if (SD.isFile(sd_file) == 1)
+	{
+		#if DEBUG_BG96 > 1
+			PRINT_BG96(F("delete file\n")); 
+		#endif
+		SD.del(sd_file);
+	}
+	
+	// Creates a file in that folder
+	if (!SD.create(sd_file))
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("file not created\n"));  
+		#endif 
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}
+		
+		return 4;
+	}
+
+	// search file in current directory and open it in write mode
+	if (!SD.openFile(sd_file, &file, O_READ | O_WRITE | O_SYNC))
+	{	
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("error opening file\n")); 
+		#endif
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}
+		
+		return 5;
+	}
+        
+    // select correct SPI slave for the rest of the function
+	SPI.setSPISlave(SD_SELECT);
+
+	// jump over zero 'offset'
+	if (!file.seekSet(0))
+	{	
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("setting file offset\n"));  
+		#endif
+		file.close();
+		if (sd_state == false)
+		{
+			SD.OFF();			
+		}		
+	
+		return 6;
+	}
+	
+	
+	/// 3. Download the file and store in the UFS module.
+	
+	// "AT+QFTPGET=\"%s\",\"%s\"\r"
+	memset(command_buffer,0x00,sizeof(command_buffer));
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FTP[20])),ftp_file, ftp_file);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, BG96_FTP_TIMEOUT*1000);
+
+	if (answer != 1)
+	{	
+		if (answer == 2)
+		{
+			getErrorCode();
+		}		
+
+		// Close file
+		file.close();
+		
+		// Return the SD to the original state
+		if (sd_state == 0)
+		{
+			SD.OFF();
+		}
+		
+		return 7;
+	}
+	
+	sprintf_P(command_answer, (char*)pgm_read_word(&(table_FTP[21])));
+	
+	//Waitting for command response.
+	// +QFTPGET: <err>,<protocol_error>
+	answer = waitFor(command_answer, (60000));
+		if (answer != 1)
+	{	
+		if (answer == 2)
+		{
+			getErrorCode();
+		}		
+
+		// Close file
+		file.close();
+		
+		// Return the SD to the original state
+		if (sd_state == 0)
+		{
+			SD.OFF();
+		}
+		
+		return 8;
+	}	
+	
+	// 2. Read the whole response: +QFTPGET: <err>,<protocol_error>
+	answer = waitFor("\r", 5000);
+	if (answer != 1)
+	{	
+		if (answer == 2)
+		{
+			getErrorCode();
+		}		
+
+		// Close file
+		file.close();
+		
+		// Return the SD to the original state
+		if (sd_state == 0)
+		{
+			SD.OFF();
+		}
+		
+		return 9;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				USB.print(F("FTP Error: "));
+				USB.println(_errorCode);
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_protocol_error = atoi(pointer);
+			if ((_ftp_protocol_error != 0) && (_errorCode != 0)){
+				USB.print(F("FTP protocol Error: "));
+				USB.println(_ftp_protocol_error);
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	#if DEBUG_BG96 > 0
+			USB.print(F("Operation result: "));
+			USB.println(_errorCode);
+			USB.print(F("Transfer length: "));
+			USB.println(_ftp_protocol_error);
+			USB.print(F("File length: "));
+			USB.println(server_filesize);
+	#endif
+	
+	//Open the file to be readed	
+	//Known the file size to be readed
+	// "AT+QFLST=\"%s\"\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FILE[6])), ftp_file);
+
+	// send data file and verify if the file is created ok
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+	//USB.println(_buffer, _length);
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 10;
+	}	
+	
+	// "+QFLST: ,\r\n"
+	strcpy_P(delimiters, (char*)pgm_read_word(&(table_FILE[12])));
+	pointer = strstr((char*)_buffer, delimiters);
+	
+	// find first value skipping delimiters
+	pointer = strtok(pointer, delimiters);
+	// Skip file name parameter
+	pointer = strtok((char*)_buffer, ",");	
+	pointer = strtok (NULL, " ,\r\n");
+	
+	//Getting file size
+	#if DEBUG_BG96 > 0
+		USB.print(F("File UFS size: "));
+		USB.println(pointer);
+	#endif
+	filesize = atoi(pointer);
+	
+	
+	//Open the file to be readed
+	//"AT+QFOPEN=\"%s\"\r"
+	// "+QFUPL: %d"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FILE[3])), ftp_file);
+
+	// send data file and verify if the file is created ok
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 11;
+	}
+	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, _length);
+	#endif
+	
+	strcpy_P(delimiters, (char*)pgm_read_word(&(table_FILE[9])));
+	pointer = strstr((char*)_buffer, delimiters);
+	
+	// find first value skipping delimiters
+	pointer = strtok(pointer, "+QFOPEN: \r\n");
+	filehandle = atoi(pointer);
+	#if DEBUG_BG96 > 0
+		USB.println(pointer);
+	#endif
+	
+	/// 4. Download data
+	while ((server_filesize > 0) && (error_counter > 0))
+	{
+		if (server_filesize > BG96_MAX_DL_PAYLOAD)
+		{
+			packet_size = BG96_MAX_DL_PAYLOAD;
+		}
+		else
+		{
+			packet_size = server_filesize;
+		}
+		
+		//// 6b Request data
+		// Set the file pointer.		
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FILE[11])), filehandle, startpos, 0);
+	
+		// send command
+		answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+	
+		// check response
+		if (answer != 1)
+		{	
+			if (answer == 2)
+			{
+				getErrorCode();
+			}		
+	
+			// Close file
+			file.close();
+			
+			// Return the SD to the original state
+			if (sd_state == 0)
+			{
+				SD.OFF();
+			}
+			
+			return 12;
+		}
+				
+		//Read the file		
+		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FILE[4])), filehandle, packet_size);
+		
+		memset( command_answer, '\0', sizeof(command_answer));		
+		snprintf(command_answer, sizeof(command_answer), "CONNECT %u", packet_size);
+		// send command
+		answer = sendCommand(command_buffer, command_answer, sBG96_ERROR_CODE, sBG96_ERROR);
+		
+		if (answer == 2)
+		{
+			getErrorCode();
+			#if DEBUG_BG96 > 0
+				printErrorCode();
+			#endif		
+			setDelay(DEF_COMMAND_DELAY);
+			return 13;
+		}
+		else if (answer != 1)
+		{	
+			error_counter--;
+			// Error could be that no data in the buffer, wait one second
+			delay(1000);
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error getting data\n"));
+			#endif
+		}
+		else
+		{	
+			//// 6c Read the number of bytes of the packet
+			waitFor("\r\nOK", 10000);
+			
+			#if DEBUG_BG96 > 0
+				USB.print(F("Buffer: "));
+				USB.println(_buffer, _length);
+			#endif
+			
+			nBytes = _length-6;
+
+			if (nBytes != packet_size)
+			{
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("Error in packet size mismatch\n"));
+					PRINT_BG96(F("Buffer size: ")); USB.println(nBytes, DEC);
+				#endif
+				file.close();
+				
+				if (sd_state == false)
+				{
+					SD.OFF();
+				}
+				setDelay(DEF_COMMAND_DELAY);
+				return 14;
+			}
+		
+			// Write the data into the SD			
+			if (file.write(_buffer, nBytes) != (int)nBytes)
+			{				
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("Writing SD error"));
+				#endif
+				file.close();
+				
+				if (sd_state == false)
+				{
+					SD.OFF();
+				}
+				setDelay(DEF_COMMAND_DELAY);
+				return 15;    
+			}
+
+			// decrement filesize
+			server_filesize -= nBytes;
+			startpos += nBytes;
+			
+			#if DEBUG_BG96 > 1
+				PRINT_BG96(F("Remaining server_filesize: "));
+				USB.println(server_filesize);
+			#endif		
+		}
+	}
+	
+	// Close the UFS file.
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FILE[5])), filehandle);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 16;
+	}
+	
+	// delete UFS file.
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FILE[7])), ftp_file);
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 17;
+	}
+	
+	// Close file
+	file.close();
+	
+	// check error counter
+	if (error_counter == 0)
+	{ 
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error counter=0\n"));
+		#endif
+		return 18;
+	}	
+	
+	// save the actual server file size
+	server_filesize = _filesize;
+	
+	// update file size in SD card
+	sd_filesize = SD.getFileSize(sd_file);
+	
+	// check size mismatch
+	if (sd_filesize != server_filesize)
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("File size mismatch\n"));
+			PRINT_BG96(F("sd_filesize:"));
+			USB.println(sd_filesize);
+			PRINT_BG96(F("server_filesize:"));
+			USB.println(server_filesize);
+		#endif
+		setDelay(DEF_COMMAND_DELAY);
+		return 19;
+	}
+	
+	#if DEBUG_BG96 > 1
+		PRINT_BG96(F("DOWNLOAD OK\n"));
+		PRINT_BG96(F("sd_filesize:"));
+		USB.println(sd_filesize,DEC);
+		PRINT_BG96(F("server_filesize:"));
+		USB.println(server_filesize,DEC);
+	#endif
+	
+	// 8. Return the SD to the original state
+	if (sd_state == false)
+	{
+		SD.OFF();
+	}
+	
+	setDelay(DEF_COMMAND_DELAY);
+	
+	
+	return 0;
+}
+
+/* Function: 	This function check FTP session status	
+ * Return:	'0' if OK
+ * 			'x' otherwise
+ * 
+ * FTP_Server_Status: 0 Opening an FTP(S) server
+					  1 The FTP(S) server is open and idle
+					  2 Transferring data with FTP(S) server
+					  3 Closing the FTP(S) server
+					  4 The FTP(S) server is closed
+					  99 null pinter
+ */
+uint8_t WaspBG96::ftpServerStatus()
+{
+	
+	uint8_t answer;
+	char command_buffer[100];
+	char answer_buffer[30];
+	char* pointer;		
+	
+	// "AT+QFTPSTAT\r"
+	memset(command_buffer, 0x00, sizeof(command_buffer));
+	sprintf_P(command_buffer,(char*)pgm_read_word(&(table_FTP[26])));
+
+	// send command
+	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 15000);
+
+	#if DEBUG_BG96 > 0
+		PRINT_BG96(F("_buffer:")); 
+		USB.println((char*)_buffer);
+	#endif
+
+	if (answer != 1)
+	{
+		#if DEBUG_BG96 > 0
+			PRINT_BG96(F("Error changing Working Directory\n")); 
+		#endif
+		
+		if (answer == 2)
+		{
+			getErrorCode();
+			#if DEBUG_BG96 > 0
+				printErrorCode();
+			#endif
+		}
+		return 1;
+	}
+	
+	sprintf_P(answer_buffer, (char*)pgm_read_word(&(table_FTP[27])));
+	//Waitting for command response.
+	// +QFTPSTAT: <err>,<ftp_status>
+	answer = waitFor(answer_buffer, (15000));
+		if (answer == 0)
+		{
+			return 2;
+		}		
+	
+	// 2. Read the whole response: +QFTPSTAT: <err>,<ftp_status>
+	answer = waitFor("\r", 5000);
+	if (answer == 0)
+	{
+		return 3;
+	}
+	
+	// find first value skipping delimiters	
+	#if DEBUG_BG96 > 0
+		USB.println(_buffer, DEC);
+	#endif
+	pointer = strtok((char*)_buffer, ",");
+	
+	// iterate through response
+	for (int i = 0; i < 2; i++)
+	{
+		if (pointer == NULL)
+		{
+			#if DEBUG_BG96 > 0
+				PRINT_BG96(F("Error: null pointer2\n"));
+				USB.println(pointer);
+			#endif
+			return 99;
+		}
+		#if DEBUG_BG96 > 0
+			USB.println(pointer);
+		#endif
+		
+		if (i == 0)
+		{
+			_errorCode = atoi(pointer);
+			if (_errorCode != 0){
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("FTP Error: "));
+					USB.println(_errorCode);
+				#endif
+			} 
+		}		
+		if (i == 1)
+		{
+			_ftp_status = atoi(pointer);
+			if (_ftp_protocol_error != 0){
+				#if DEBUG_BG96 > 0
+					PRINT_BG96(F("FTP protocol Error: "));
+					USB.println(_ftp_status);
+				#endif
+			} 
+		}
+		pointer = strtok (NULL, " ,\r\n");
+	}
+	
+	if (_errorCode != 0){
+		return 4;
+	}
+
+	return 0;
+}
+
 
 
 /* Function: 	This function allows to store, delete and read security data
@@ -4316,23 +6166,6 @@ uint8_t WaspBG96::manageSSL(	uint8_t socketId,
 			//return 2;
 		}
 		
-		/*
-		// delete certificate file.
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_FILE[7])), "*");
-
-		// send command
-		answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
-
-		// check response
-		if (answer != 1)
-		{
-			if (answer == 2)
-			{
-				getErrorCode();
-			}
-			return -2;
-		}
-		* */
 		return 0;
 	}
 	
@@ -4453,8 +6286,9 @@ uint8_t WaspBG96::manageSSL(	uint8_t socketId,
 			#if DEBUG_BG96 > 0	
 				USB.println(_buffer, _length);
 			#endif
-			return 0;
+			
 		}
+		return 0;
 	}
 	
 	//Steps to delete the certificate
@@ -5374,17 +7208,6 @@ uint8_t WaspBG96::scanOperators()
 		}
 		return 1;
 	}
-	/*
-	// parse response: "+COPS: 0,0,"<answer>",7"\r\n
-	pointer = strtok((char*)_buffer, "\"");
-
-	if (pointer == NULL)
-	{
-		return 2;
-	}
-
-	strcpy(answer_storage, (char*) strtok(NULL, "\""));
-	*/
 
 	return 0;
 }
@@ -5536,15 +7359,17 @@ uint8_t WaspBG96::getPing(char*  host)
 
 
 /* Configure Address of DNS Server
- *
- *
+ * Parameters:	char* pridnsaddr: The primary DNS server address
+ * 				char* secdnsaddr: The secondary DNS server address
+ * 				
+ * @return '0' if OK; '1' if error
  */
 uint8_t WaspBG96::setDNSServer(char*  pridnsaddr, char* secdnsaddr)
 {
 	uint8_t answer;
-	char command_buffer[30];
+	char command_buffer[60];
 		
-	// AT+QIDNSCFG=<contextID=1>,<pri dnsaddr>[,<secdnsaddr>]
+	// AT+QIDNSCFG=<contextID=1>,<pridnsaddr>[,<secdnsaddr>]
 	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_AT[10])), pridnsaddr, secdnsaddr);	 
 	// send command
 	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR, 2000);

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.0
+    Version:		3.1
     Design:			David Gascon
     Implementation:	Pablo Moreno
 
@@ -191,6 +191,7 @@ const char* const table_AT[] PROGMEM =
 	BG96_string_68,
 	BG96_string_69,
 	BG96_string_70,
+	BG96_string_71,
 	BG96_string_72,
 };
 
@@ -294,6 +295,7 @@ const char BG96_IP_SOCKET_02[]	PROGMEM = "AT+QISEND=%u,%d\r";									//2
 const char BG96_IP_SOCKET_03[]	PROGMEM = "AT+QIRD=%u,%d\r";									//3
 const char BG96_IP_SOCKET_04[]	PROGMEM = "AT+QICLOSE=%u\r";									//4
 const char BG96_IP_SOCKET_05[]	PROGMEM = "AT+QIGETERROR\r";									//5
+const char BG96_IP_SOCKET_06[]	PROGMEM = "SEND OK";									//6
 
 
 const char* const table_IP[] PROGMEM =
@@ -304,6 +306,7 @@ const char* const table_IP[] PROGMEM =
 	BG96_IP_SOCKET_03,
 	BG96_IP_SOCKET_04,
 	BG96_IP_SOCKET_05,
+	BG96_IP_SOCKET_06,
 };
 
 
@@ -369,7 +372,7 @@ const char* const table_GPS[] PROGMEM =
 
 /// table_SSL  /////////////////////////////////////////////////////////////////
 
-const unsigned long BG96_SSL_TIMEOUT = 60000;		// Timeout for SMS functions in miliseconds
+const unsigned long BG96_SSL_TIMEOUT = 60000;		// Timeout for SSL functions in miliseconds
 
 const char BG96_SSL_00[]	PROGMEM = "AT+QSSLCFG=\"sslversion\",%u,%u\r";						//0
 const char BG96_SSL_01[]	PROGMEM = "AT+QSSLCFG=\"ciphersuite\",%u,%s\r";		//1
@@ -412,20 +415,20 @@ const char* const table_SSL[] PROGMEM =
 
 /// table_FILE  /////////////////////////////////////////////////////////////////
 
-const unsigned long BG96_FILE_TIMEOUT = 60000;		// Timeout for SMS functions in miliseconds
+const unsigned long BG96_FILE_TIMEOUT = 60000;		// Timeout for file functions in miliseconds
 
 const char BG96_FILE_00[]	PROGMEM = "AT+QFUPL=\"%s\",%u,%u\r";						//0
 const char BG96_FILE_01[]	PROGMEM = "AT+QFLDS=\"UFS\"\r";									//1
 const char BG96_FILE_02[]	PROGMEM = "AT+QFLST=\"*\"\r";									//2
 const char BG96_FILE_03[]	PROGMEM = "AT+QFOPEN=\"%s\"\r";								//3
-const char BG96_FILE_04[]	PROGMEM = "AT+QFREAD=%u,%d\r";										//4
+const char BG96_FILE_04[]	PROGMEM = "AT+QFREAD=%u,%u\r";										//4
 const char BG96_FILE_05[]	PROGMEM = "AT+QFCLOSE=%u\r";									//5
 const char BG96_FILE_06[]	PROGMEM = "AT+QFLST=\"%s\"\r";										//6 
 const char BG96_FILE_07[]	PROGMEM = "AT+QFDEL=\"%s\"\r";								//7
 const char BG96_FILE_08[]	PROGMEM = "+QFUPL: %d";											//8
 const char BG96_FILE_09[]	PROGMEM = "+QFOPEN: ";											//9
-const char BG96_FILE_10[]	PROGMEM = "+QISEND: \r\n";										//10 AT+QFSEEK=<filehandle>,<offset>[,<position>]
-const char BG96_FILE_11[]	PROGMEM = "AT+QFSEEK=%u,%d,%u\r";										//11
+const char BG96_FILE_10[]	PROGMEM = "+QISEND: \r\n";										//10 
+const char BG96_FILE_11[]	PROGMEM = "AT+QFSEEK=%u,%ld,%u\r";										//11
 const char BG96_FILE_12[]	PROGMEM = "+QFLST: ,\r\n";										//12
 
 
@@ -445,6 +448,78 @@ const char* const table_FILE[] PROGMEM =
 	BG96_FILE_10,
 	BG96_FILE_11,
 	BG96_FILE_12,
+
+};
+
+/// table_FTP  /////////////////////////////////////////////////////////////////
+
+const unsigned BG96_FTP_TIMEOUT = 60;		// Timeout for FTP functions in seconds
+
+const char BG96_FTP_00[]	PROGMEM = "AT+QFTPCFG=\"contextid\",1\r";						//0
+const char BG96_FTP_01[]	PROGMEM = "AT+QFTPCFG=\"account\",\"%s\",\"%s\"\r";									//1
+const char BG96_FTP_02[]	PROGMEM = "AT+QFTPCFG=\"filetype\",%u\r";									//2
+const char BG96_FTP_03[]	PROGMEM = "AT+QFTPCFG=\"transmode\",%u\r";								//3
+const char BG96_FTP_04[]	PROGMEM = "AT+QFTPCFG=\"rsptimeout\",%u\r";										//4
+const char BG96_FTP_05[]	PROGMEM = "AT+QFTPOPEN=\"%s\",%u\r";									//5
+const char BG96_FTP_06[]	PROGMEM = "+QFTPOPEN: ";										//6 
+const char BG96_FTP_07[]	PROGMEM = "AT+QFTPCLOSE\r";								//7
+const char BG96_FTP_08[]	PROGMEM = "+QFTPCLOSE: ";											//8
+const char BG96_FTP_09[]	PROGMEM = "AT+QFTPDEL=\"%s\"\r";											//9
+const char BG96_FTP_10[]	PROGMEM = "+QFTPDEL: ";										//10 
+const char BG96_FTP_11[]	PROGMEM = "AT+QFTPSIZE=\"%s\"\r";										//11
+const char BG96_FTP_12[]	PROGMEM = "AT+QFTPPWD\r";										//12
+const char BG96_FTP_13[]	PROGMEM = "+QFTPPWD: ";										//13
+const char BG96_FTP_14[]	PROGMEM = "+QFTPSIZE: ";										//14  
+const char BG96_FTP_15[]	PROGMEM = "AT+QFTPCWD=\"%s\"\r";										//15
+const char BG96_FTP_16[]	PROGMEM = "+QFTPCWD: ";										//16  
+const char BG96_FTP_17[]	PROGMEM = "AT+QFTPPUT=\"%s\",\"COM:\",0\r";										//17
+const char BG96_FTP_18[]	PROGMEM = "+QFTPPUT: ";										//18
+const char BG96_FTP_19[]	PROGMEM = "+++";										//19
+const char BG96_FTP_20[]	PROGMEM = "AT+QFTPGET=\"%s\",\"%s\"\r";										//20
+const char BG96_FTP_21[]	PROGMEM = "+QFTPGET: ";										//21
+const char BG96_FTP_22[]	PROGMEM = "AT+QFTPMKDIR=\"%s\"\r";										//22
+const char BG96_FTP_23[]	PROGMEM = "+QFTPMKDIR: ";										//23
+const char BG96_FTP_24[]	PROGMEM = "AT+QFTPRMDIR=\"%s\"\r";										//24
+const char BG96_FTP_25[]	PROGMEM = "+QFTPRMDIR: ";										//25
+const char BG96_FTP_26[]	PROGMEM = "AT+QFTPSTAT\r";										//26
+const char BG96_FTP_27[]	PROGMEM = "+QFTPSTAT: ";										//27
+const char BG96_FTP_28[]	PROGMEM = "AT+QFTPCFG=\"ssltype\",%u\r";										//28
+const char BG96_FTP_29[]	PROGMEM = "AT+QFTPCFG=\"sslctxid\",%u\r";										//29
+
+
+
+const char* const table_FTP[] PROGMEM =
+{
+	BG96_FTP_00,
+	BG96_FTP_01,
+	BG96_FTP_02,
+	BG96_FTP_03,
+	BG96_FTP_04,
+	BG96_FTP_05,
+	BG96_FTP_06,
+	BG96_FTP_07,
+	BG96_FTP_08,
+	BG96_FTP_09,
+	BG96_FTP_10,
+	BG96_FTP_11,
+	BG96_FTP_12,
+	BG96_FTP_13,
+	BG96_FTP_14,
+	BG96_FTP_15,
+	BG96_FTP_16,
+	BG96_FTP_17,
+	BG96_FTP_18,
+	BG96_FTP_19,
+	BG96_FTP_20,
+	BG96_FTP_21,
+	BG96_FTP_22,
+	BG96_FTP_23,
+	BG96_FTP_24,
+	BG96_FTP_25,
+	BG96_FTP_26,
+	BG96_FTP_27,
+	BG96_FTP_28,
+	BG96_FTP_29,
 
 };
 

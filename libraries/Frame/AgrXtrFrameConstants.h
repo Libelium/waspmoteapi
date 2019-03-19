@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		1.4
+    Version:		1.5
     Design:			David Gascón
     Implementation:	Javier Siscart, Víctor Boria
 
@@ -86,6 +86,16 @@
 #define AGRX_CANBUS_FL					49
 #define AGRX_CANBUS_TP					50
 #define AGRX_CANBUS_FP					51
+
+#define AGRX_DATASOL_RAD				95
+#define AGRX_DATASOL_SC1_RAD			96
+#define AGRX_DATASOL_SC2_RAD			97
+#define AGRX_DATASOL_ETC				98
+#define AGRX_DATASOL_PTC				99
+#define AGRX_DATASOL_WSP				100
+#define AGRX_DATASOL_PSH				101
+#define AGRX_DATASOL_NCN				102
+
 
 // Now some index are reserved for additional fields, already defined
 #define AGRX_SO411_CO_A					134

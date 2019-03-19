@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.2
+	Version:		3.3
 	Design:			David Gascón
 	Implementation: Victor Boria, Javier Siscart
 
@@ -3713,7 +3713,8 @@ void bme::OFF()
 float bme::getTemperature()
 {
 	float value = 0;
-
+	delay(100);
+	
 	value = BME.getTemperature(BME280_OVERSAMP_1X, 0);
 
 #if DEBUG_XTR>0
@@ -3734,7 +3735,8 @@ float bme::getTemperature()
 float bme::getHumidity()
 {
 	float value = 0;
-
+	delay(100);
+	
 	// read the humidity from the BME280 Sensor
 	value = BME.getHumidity(BME280_OVERSAMP_1X);
 #if DEBUG_XTR>0
@@ -3755,7 +3757,8 @@ float bme::getHumidity()
 float bme::getPressure()
 {
 	float value = 0;
-
+	delay(100);
+	
 	// read the pressure from the BME280 Sensor
 	value = BME.getPressure(BME280_OVERSAMP_1X, 0);
 #if DEBUG_XTR>0
@@ -10991,6 +10994,210 @@ bool AqualaboWaterXtr::find( uint8_t* buffer, uint16_t length, char* pattern)
 
 	return false;
 }
+
+
+//******************************************************************************
+// ATERSA Datasol MET Sensor Class functions
+//******************************************************************************
+
+/*!
+	\brief DatasolMET Class constructor
+	\param
+*/
+DatasolMET::DatasolMET()
+{
+	// store sensor location
+	socket = XTR_SOCKET_E;
+	
+	sensorAddr = 1;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+}
+
+void DatasolMET::initCommunication()
+{
+	datasolMetModbus = ModbusMaster(RS232_COM, sensorAddr);
+
+	// The sensor uses 38400 bps speed communication
+	datasolMetModbus.begin(38400, 1);
+	
+	// set Auxiliar2 socket
+	Utils.setMuxAux2();
+	
+	clearBuffer();
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return void
+*/
+void DatasolMET::ON()
+{
+	/*
+	if (SensorXtr.redefinedSocket == 1)
+	{
+		char message[50];
+		#ifndef MANUFACTURER_TEST
+		//"WARNING: Redefinition of sensor socket detected"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
+		PRINTLN_XTR(message);
+		#endif
+	}
+	*/
+	
+	SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+	//Enable RS-485 chip on (shared with 3v3 pin)
+	SensorXtr.set3v3(socket, SWITCH_ON);
+	
+	delay(500);
+	SensorXtr.set12v(socket, SWITCH_ON);
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void DatasolMET::OFF()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	//Disable RS-485 chip on (shared with 3v3 pin)
+	SensorXtr.set3v3(socket, SWITCH_OFF);
+	SensorXtr.OFF();
+}
+
+
+
+/*!
+	\brief Reads the weather Station sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t DatasolMET::read()
+{
+	// Initialize variables
+	sensorDatasolMET.radiation = 0;
+	sensorDatasolMET.semicell1Radiation = 0;
+	sensorDatasolMET.semicell2Radiation = 0;
+	sensorDatasolMET.environmentTemperature = 0;
+	sensorDatasolMET.panelTemperature = 0;
+	sensorDatasolMET.windSpeed = 0;
+	sensorDatasolMET.necessaryCleaningNotice = 0;
+	sensorDatasolMET.peakSunHours = 0;
+	
+	uint8_t response = 0;
+	bool validMeasure = 0;
+	
+	initCommunication();
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+	
+	while ((status !=0) && (retries < 10))
+	{
+		//Read 12 registers with the 12 measures (each register is 2 bytes)
+		status = datasolMetModbus.readHoldingRegisters(0x0060, 12);
+		retries++;
+		delay(500);
+	}
+
+	if (status == 0)
+	{
+		sensorDatasolMET.radiation = datasolMetModbus.getResponseBuffer(0);
+		sensorDatasolMET.semicell1Radiation = datasolMetModbus.getResponseBuffer(1);
+		sensorDatasolMET.semicell2Radiation = datasolMetModbus.getResponseBuffer(2);
+		sensorDatasolMET.windSpeed = (float)(datasolMetModbus.getResponseBuffer(3)/10.0);
+		sensorDatasolMET.environmentTemperature = (float)(datasolMetModbus.getResponseBuffer(10)/10.0);
+		sensorDatasolMET.panelTemperature = (float)(datasolMetModbus.getResponseBuffer(11)/10.0);
+	}
+	else
+	{
+		// If no response from the slave, print an error message.
+		#if DEBUG_XTR > 0
+			PRINTLN_XTR(F("Communication error reading parameters"));
+		#endif
+	}
+	
+	
+	//HSP
+	status = 0xFF;
+	retries = 0;
+	
+	while ((status !=0) && (retries < 10))
+	{
+		status = datasolMetModbus.readHoldingRegisters(0x0080, 2);
+		retries++;
+		delay(500);
+	}
+
+	if (status == 0)
+	{
+		conversion.uint16t[0] = datasolMetModbus.getResponseBuffer(1);
+		conversion.uint16t[1] = datasolMetModbus.getResponseBuffer(0);
+		sensorDatasolMET.peakSunHours = (float)(conversion.uint32t/100.0);
+	}
+	else
+	{
+		// If no response from the slave, print an error message.
+		#if DEBUG_XTR > 0
+			PRINTLN_XTR(F("Communication error reading parameters"));
+		#endif
+	}
+	
+	
+	//necessaryCleaningNotice
+	status = 0xFF;
+	retries = 0;
+	
+	while ((status !=0) && (retries < 10))
+	{
+		status = datasolMetModbus.readHoldingRegisters(0x0040, 1);
+		retries++;
+		delay(500);
+	}
+
+	if (status == 0)
+	{
+		sensorDatasolMET.necessaryCleaningNotice = (bool)(datasolMetModbus.getResponseBuffer(0) & 0x0001);
+	}
+	else
+	{
+		// If no response from the slave, print an error message.
+		#if DEBUG_XTR > 0
+			PRINTLN_XTR(F("Communication error reading parameters"));
+		#endif
+	}
+	
+	
+	if ((sensorDatasolMET.radiation != 0)
+	|| (sensorDatasolMET.semicell1Radiation != 0)
+	|| (sensorDatasolMET.semicell2Radiation != 0)
+	|| (sensorDatasolMET.environmentTemperature != 0)
+	|| (sensorDatasolMET.panelTemperature != 0)
+	|| (sensorDatasolMET.windSpeed  != 0))
+	{
+		validMeasure = 1;
+	}
+
+	return validMeasure;
+}
+
+void DatasolMET::clearBuffer()
+{
+	// Clear Response Buffer
+	datasolMetModbus.clearResponseBuffer();
+	datasolMetModbus.clearTransmitBuffer();
+	delay(10);
+}
+
 
 
 /*	exampleModbusSensor Class constructor

@@ -261,7 +261,7 @@ uint8_t  WaspUART::sendCommand(	char* command,
 				#if DEBUG_UART > 1
 					PRINT_UART(F("buffer:"));
 					USB.println((char*)_buffer);
-				#endif					
+				#endif	
 			}
 		}
 			
