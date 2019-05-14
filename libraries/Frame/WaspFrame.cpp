@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.6
+ *  Version:		3.7
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
  */
@@ -298,6 +298,75 @@ uint16_t WaspFrame::getMaxSizeForXBee(	uint8_t protocol,
 							break;
 	}
 
+	/// AES enabled
+	/* The encrypted frames for Waspmote v15 is (header = bytes):
+	*  _____________________________________________________________
+	* |     |            |           |           |                  |
+	* | <=> | Frame Type | Num Bytes | ID secret |  Encrypted Frame |
+	* |_____|____________|___________|___________|__________________|
+	*
+	* The encrypted frames for Waspmote v12 is:
+	*  ___________________________________________________________________________
+	* |     |            |           |           |          |   |                 |
+	* | <=> | Frame Type | Num Bytes | ID secret |  Wasp ID | # | Encrypted Frame |
+	* |_____|____________|___________|___________|__________|___|_________________|
+	*/
+	uint8_t fixed_header_length;
+
+	if (AESEncryption != DISABLED)
+	{
+		if (_boot_version >= 'G')
+		{
+			// v15
+			fixed_header_length = 13;
+			maximumSize = ((maximumSize - fixed_header_length)/16)*16;
+		}
+		else
+		{
+			// v12
+			fixed_header_length = 10;
+			maximumSize = ((maximumSize - fixed_header_length - strlen(_waspmoteID))/16)*16;
+		}
+	}
+
+	/// AES Hardware enabled
+	if (HwEncryption != DISABLED)
+	{
+		if (_boot_version >= 'G')
+		{
+			// v15
+			fixed_header_length = 13;
+			maximumSize = ((maximumSize - fixed_header_length)/16)*16;
+		}
+		else
+		{
+			// v12
+			fixed_header_length = 10;
+			maximumSize = ((maximumSize - fixed_header_length - strlen(_waspmoteID))/16)*16;
+		}
+	}
+
+	return maximumSize;
+}
+
+/**
+ * @brief This function sets the frame maximum size
+ *
+ * @param uint16_t maximumSize defines the
+ *
+ * @param uint8_t AESEncryption defines if AES encryption is used or not.
+ * 	@arg ENABLED = 1
+ * 	@arg DISABLED = 0
+ *
+ * @param uint8_t HwEncryption defines if AES hardware encryption is used or not.
+ * 	@arg ENABLED = 1
+ * 	@arg DISABLED = 0
+ *
+ */
+uint16_t WaspFrame::getMaxSizeFor4G(uint16_t maximumSize,
+										uint8_t AESEncryption,
+										uint8_t HwEncryption)
+{
 	/// AES enabled
 	/* The encrypted frames for Waspmote v15 is (header = bytes):
 	*  _____________________________________________________________

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		4.1
+ *  Version:		4.2
  *  Design:		David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -677,7 +677,7 @@ uint8_t WaspLoRaWAN::check()
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[20])));
 	// create "invalid_param" answer
 	sprintf_P(ans3,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
-	
+
 	//send command and wait for ans
 	status = sendCommand(_command,ans1,ans2,ans3,1000);
 	
@@ -689,15 +689,15 @@ uint8_t WaspLoRaWAN::check()
 	if (status == 2)
 	{
 		_version = RN2903_MODULE;
-		
+
 		// create "India" answer
 		memset(ans1,0x00,sizeof(ans1));
 		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[21])));
 		// create "ASIA-PAC / LATAM" answer
 		memset(ans2,0x00,sizeof(ans2));
 		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[23])));
-		
-		status = waitFor(ans1,ans2);
+
+		status = waitFor(ans1,ans2,100);
 		
 		if(status == 1)
 		{

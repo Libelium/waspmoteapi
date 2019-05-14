@@ -50,7 +50,7 @@ nbiotGetPSMValues		KEYWORD2
 nbiotPSMWakeUp		KEYWORD2
 nbiotSetPSM		KEYWORD2
 nbiotSettingPSM		KEYWORD2
-nbiotSleepMode		KEYWORD2	
+nbiotSleepMode		KEYWORD2
 scanOperators		KEYWORD2
 sendATcommand		KEYWORD2
 sendFrameToMeshlium		KEYWORD2
@@ -61,7 +61,14 @@ settingeIDRX		KEYWORD2
 syncLocalTimeNTP	KEYWORD2
 getNMEA				KEYWORD2
 ftpsOpenSession		KEYWORD2
-
+mqttOpenSession		KEYWORD2
+mqttSessionStatus		KEYWORD2
+mqttPublish		KEYWORD2
+mqttSubscribe		KEYWORD2
+mqttCloseSession		KEYWORD2
+mqttWaittingData		KEYWORD2
+mqttUnsubscribe   KEYWORD2
+mqttSslConfig   KEYWORD2
 
 # attributes ####
 _temp	KEYWORD2
@@ -81,6 +88,7 @@ _date	KEYWORD2
 _numSatellites	KEYWORD2
 _hdop	KEYWORD2
 _ftpWorkingDirectory	KEYWORD2
+_mqtt_status KEYWORD2
 id	KEYWORD2
 localIp	KEYWORD2
 localPort	KEYWORD2
@@ -95,7 +103,8 @@ _speedOG	KEYWORD2
 _courseOG	KEYWORD2
 getNMEAString	KEYWORD2
 gpsSetQualityOfService	KEYWORD2
-gprsContextActivation	KEYWORD2
+gprsContextActivation 	KEYWORD2
+mqttSslConfig  KEYWORD2
 
 
 # Constants ####
@@ -109,9 +118,11 @@ BG96_INCOMING_IP	LITERAL1
 SSL_ACTION_DELETE	LITERAL1
 SSL_ACTION_STORE	LITERAL1
 SSL_ACTION_READ	LITERAL1
-SSL_TYPE_CERT	LITERAL1
+SSL_TYPE_CLIENT_CERT	LITERAL1
 SSL_TYPE_CA_CERT	LITERAL1
-SSL_TYPE_RSA	LITERAL1
+SSL_TYPE_CLIENT_KEY	LITERAL1
+SSL_CA_CERT	LITERAL1
+SSL_SERVER_CLIENT_AUTH	LITERAL1
 FTP_ACTIVE	LITERAL1
 FTP_PASSIVE	LITERAL1
 STATUS_CLOSED	LITERAL1

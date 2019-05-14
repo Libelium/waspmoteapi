@@ -1128,7 +1128,7 @@ uint8_t WaspRTC::setAlarm1(const char* time, uint8_t offset, uint8_t mode)
 	{
 		PRINT_RTC(F("Incorrect input parameters\n"));
 		
-		#if DEBUG_WASP4G > 0
+		#if DEBUG_RTC > 0
 		PRINT_RTC(F("day_alarm1:"));
 		USB.println(day_alarm1, DEC);
 		PRINT_RTC(F("hour_alarm1:"));
@@ -1278,7 +1278,7 @@ uint8_t WaspRTC::setAlarm1(uint8_t day_date,
 	{
 		PRINT_RTC(F("Incorrect input parameters\n"));
 		
-		#if DEBUG_WASP4G > 0
+		#if DEBUG_RTC > 0
 		PRINT_RTC(F("day_alarm1:"));
 		USB.println(day_alarm1, DEC);
 		PRINT_RTC(F("hour_alarm1:"));
@@ -1525,7 +1525,7 @@ uint8_t WaspRTC::setAlarm2(const char* time, uint8_t offset, uint8_t mode)
 	{
 		PRINT_RTC(F("Incorrect input parameters\n"));
 		
-		#if DEBUG_WASP4G > 0
+		#if DEBUG_RTC > 0
 		PRINT_RTC(F("day_alarm2:"));
 		USB.println(day_alarm2, DEC);
 		PRINT_RTC(F("hour_alarm2:"));
@@ -1654,7 +1654,7 @@ uint8_t WaspRTC::setAlarm2(uint8_t day_date,
 	{
 		PRINT_RTC(F("Incorrect input parameters\n"));
 		
-		#if DEBUG_WASP4G > 0
+		#if DEBUG_RTC > 0
 		PRINT_RTC(F("day_alarm2:"));
 		USB.println(day_alarm2, DEC);
 		PRINT_RTC(F("hour_alarm2:"));

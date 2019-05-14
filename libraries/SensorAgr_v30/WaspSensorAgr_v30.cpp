@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.8
+ *  Version:		3.9
  *  Design:			David Gascón
  *  Implementation:	Carlos Bello
  */
@@ -755,6 +755,19 @@ float dendrometerClass::readDendrometer(void)
 	// read response
 	I2C.read(I2C_ADDRESS_AGR_DENDROMETER, data_dendro, 3);
 	
+	// read again to avoid first time reading error
+	uint8_t times = 0;
+	while ((data_dendro[0] == 0xC0) && (times < 5))
+	{
+      times++;
+      // send command
+    	I2C.write(I2C_ADDRESS_AGR_DENDROMETER, dendro_channel, B01010101);
+    	// wait for response
+    	delay(300);
+      I2C.read(I2C_ADDRESS_AGR_DENDROMETER, data_dendro, 3);
+      delay(300);
+	}
+	
 	//Turn off sensor supply
 	digitalWrite(DEN_PT1000_ON,LOW);
 	
@@ -766,10 +779,17 @@ float dendrometerClass::readDendrometer(void)
 	USB.println(value_dendro);
 	#endif
 	#if DEBUG_AGR==2
-	PRINT_AGR(F("readDendrometer value without conversion:"));
+  PRINT_AGR(F("raw value :"));
+  USB.printHex(data_dendro[0]);
+  USB.printHex(data_dendro[1]);
+  USB.printHex(data_dendro[2]);
+  USB.println();
+  PRINT_AGR(F("readDendrometer value without conversion:"));
 	USB.println(value_dendro);
 	PRINT_AGR(F("readDendrometer value conversion:"));
-	USB.println(value_dendro = conversion(data_dendro,0));
+  USB.println(value_dendro = conversion(data_dendro,_dendro));
+  USB.print("retries:");
+  USB.println(times, DEC);
 	#endif
 	return value_dendro = conversion(data_dendro,_dendro);
 }
@@ -812,17 +832,7 @@ void dendrometerClass::setReference(void)
   	// Switch OFF I2C
   	digitalWrite(I2C_PIN_OE, LOW);
   	
-	#if DEBUG_AGR==1
-	PRINT_AGR(F("readDendrometer value without conversion:"));
-	USB.println(value_dendro);		
-	#endif
-	#if DEBUG_AGR==2
-	PRINT_AGR(F("readDendrometer value without conversion:"));
-	USB.println(value_dendro);
-	PRINT_AGR(F("readDendrometer value conversion:"));
-	USB.println(value_dendro = conversion(data_dendro,0));	
-	#endif	
-
+	
 	_reference = conversion(data_dendro,_dendro);
 
 	return;

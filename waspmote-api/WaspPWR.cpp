@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.5
+ *  Version:		3.6
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, David Cuartielles, Yuri Carmona
  */
@@ -526,6 +526,7 @@ void WaspPWR::deepSleep(const char* time2wake,
 	||	( second_aux != RTC.second_alarm1 ) )
 	{
 		RTC.disableAlarm1();
+		sleep_disable();
 		RTC.OFF();
 		I2C.recover();
 		USB.println(F("[PWR] deepSleep RTC error"));

@@ -1,7 +1,7 @@
 /*! \file Wasp4G.cpp
  *  \brief Library for managing Telit LE910
  *
- *  Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
+ *  Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
  *  http://www.libelium.com
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.9
+ *  Version:		4.0
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -140,8 +140,49 @@ uint8_t Wasp4G::checkDataConnection(uint8_t time)
 		return 0;
 	}
 
+	//// 2. Define PDP Context
+	// AT+CGDCONT=1,"IP","<APN>"\r
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[29])), _apn);
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 12;
+	}
 
-	//// 2. Check Network Registration Report
+
+	//// 3. Set Authentication User ID
+	// AT#USERID="<login>"\r
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[5])), _apn_login);
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 13;
+	}
+
+
+	//// 4. Set Authentication Password
+	// AT#PASSW="<pass>"\r
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[6])), _apn_password);
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 14;
+	}
+
+
+	//// 5. Check Network Registration Report
 	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[0])));	//AT+CREG?\r
 	strcpy_P(answer1, (char*)pgm_read_word(&(table_4G[1])));	//+CREG: 0,
 	do{
@@ -213,48 +254,6 @@ uint8_t Wasp4G::checkDataConnection(uint8_t time)
 	if (((answer != 1) && (answer != 5)) || ((millis() - previous) > max_time))
 	{
 		return answer + 6;
-	}
-
-
-	//// 4. Define PDP Context
-	// AT+CGDCONT=1,"IP","<APN>"\r
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[29])), _apn);
-	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-		}
-		return 12;
-	}
-
-
-	//// 5. Set Authentication User ID
-	// AT#USERID="<login>"\r
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[5])), _apn_login);
-	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-		}
-		return 13;
-	}
-
-
-	//// 6. Set Authentication Password
-	// AT#PASSW="<pass>"\r
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_4G[6])), _apn_password);
-	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
-	if (answer != 1)
-	{
-		if (answer == 2)
-		{
-			getErrorCode();
-		}
-		return 14;
 	}
 
 
@@ -1143,7 +1142,22 @@ uint8_t Wasp4G::ON()
 	delay(500);
 	digitalWrite(GPRS_PW, HIGH);
 	delay(10000);
+	
+	if ( answer == 0) delay(10000);
+	else
+	{
+		if (read_DS2413() == 0)
+		{
+			// Turn on module with DS2413
+			answer = on_DS2413();
+			
+			if (answer == 0)
+			{
+				return 1;
+			}
+		}
 
+	}
 
 	// Check communication with the module sending a basic AT command
 	counter = 15;
@@ -3847,6 +3861,7 @@ uint8_t Wasp4G::openSocketSSL(	uint8_t socketId,
 		#endif
 		return answer;	// 1 to 15 error codes
 	}
+	
 
 
 	//// 3. Check socket status
@@ -6340,6 +6355,7 @@ int8_t Wasp4G::getInfo(uint8_t info_req)
 			memset(_buffer, 0x00 ,_bufferSize);
 			_length = strlen(aux);
 			strncpy((char*)_buffer, aux, strlen(aux));
+			
 			return 0;
 		}
 		return 1;
@@ -7320,6 +7336,213 @@ void Wasp4G::printErrorCode()
 	printErrorCode(_errorCode);
 }
 
+/* This function checks if the module features a DS2413 chip
+ *
+ * @returns: 0 if there is no chip
+ * 			 1 if there is a DS2413
+ */
+uint8_t Wasp4G::check_DS2413()
+{
+	uint8_t status;
+	
+	oneWire.reset_search();
+	delay(250);
+	status = oneWire.search(DS2413_address);
+	
+	if (status == 0)
+	{
+		DS2413_present = 0;
+	}
+	else
+	{
+		DS2413_present = 1;
+		delay(6000);
+		write_DS2413(0x01);
+	}
+	
+	return DS2413_present;
+}
+
+
+/* This function checks if the module features a DS2413 chip
+ *
+ * @returns: 0 if there is no chip
+ * 			 1 if there is a DS2413
+ */
+uint8_t Wasp4G::on_DS2413()
+{
+	uint8_t retries = 0;
+	uint8_t status = 0;
+	
+	if (read_DS2413())
+	{
+		return 1;
+	}
+	
+	do
+	{		
+		// Send reset pulse
+		write_DS2413(DS2413_RESET);
+		delay(10);
+		
+		// Turn on the module
+		write_DS2413(DS2413_INVERT_PIO);
+		
+		delay(6000);
+		// Send reset pulse
+		write_DS2413(DS2413_RESET);
+		
+		uint8_t state = 0;  
+		
+		uint32_t previous = millis();
+		while((millis() - previous < 1000) && status == 0)
+		{
+			status = read_DS2413();
+			delay(200);
+			if (previous > millis()) previous = millis();
+		}
+		
+		retries ++;
+
+	} while (status!=1 && retries<5);
+	
+	if (status != 1)
+	{
+		// error
+		return 0; 
+	}
+	else
+	{
+		// ok
+		return 1;
+	}
+}
+
+
+/* This function checks if the module features a DS2413 chip
+ *
+ * @returns: 0 if error
+ * 			 1 if OK (turned off)
+ */
+uint8_t Wasp4G::off_DS2413()
+{
+	uint8_t retries = 0;
+	uint8_t status = 0;
+	
+	if (!read_DS2413())
+	{
+		return 1;
+	}
+
+	do
+	{		
+		// Send reset pulse
+		write_DS2413(DS2413_RESET);
+		delay(10);
+		
+		// Turn on the module
+		write_DS2413(DS2413_INVERT_PIO);
+		
+		delay(5200);
+		// Send reset pulse
+		write_DS2413(DS2413_RESET);
+		
+		uint8_t state = 0;  
+		
+		uint32_t previous = millis();
+		while((millis() - previous < 16000) && status == 1)
+		{
+			status = read_DS2413();
+			delay(200);
+			if (previous > millis()) previous = millis();
+		}
+		
+		retries ++;
+
+	} while (status!=0 && retries<5);
+	
+	if (status != 0)
+	{
+		// error
+		return 0; 
+	}
+	else
+	{
+		// ok
+		return 1;
+	}
+}
+
+
+/* This function reads the DS2413 chip pin related to the 4G power monitoring pin
+ *
+ * @returns: status of the pin
+ */
+uint8_t Wasp4G::read_DS2413()
+{
+	bool ok = false;
+	uint8_t status;
+	
+	oneWire.reset();
+	oneWire.select(DS2413_address);
+	oneWire.write(DS2413_ACCESS_READ);
+	
+	status = oneWire.read(); 
+
+	//////////////////////
+	// Get register status
+	//////////////////////
+	// Compare nibbles
+	ok = (!status & 0x0F) == (status >> 4);
+	// Clear inverted values
+	status &= 0x0F;
+	
+	oneWire.reset();
+	
+	if (status)
+	{
+		if (status == -1)
+		{
+			return -1;
+		}
+		else
+		{
+			return status & 0x01;
+		}
+	}
+}
+
+
+/* This function writes the DS2413 chip
+ *
+ * @returns: x error
+ */
+uint8_t Wasp4G::write_DS2413(uint8_t data)
+{
+	uint8_t status = 0;
+	
+	// Turn on module
+	data |= 0xFC;
+	  
+	// Start communication with DS2413 and write status of module
+	oneWire.reset();
+	oneWire.select(DS2413_address);
+	oneWire.write(DS2413_ACCESS_WRITE);
+	oneWire.write(data);
+	// Invert data and resend  
+	oneWire.write(~data);
+	 
+	status = oneWire.read();
+	
+	if (status == DS2413_ACK_SUCCESS)
+	{
+		// Read the status byte
+		oneWire.read();
+	}
+	oneWire.reset();
+	
+	return (status == DS2413_ACK_SUCCESS ? true : false);
+}
 
 
 #if DEBUG_WASP4G > 0

@@ -1,5 +1,5 @@
 /* Arduino SdFat Library
- * Copyright (C) 2012 by William Greiman
+ * Copyright (C) 2019 by William Greiman
  * Modified for Waspmote by Libelium, 2016
  *
  * This file is part of the Arduino SdFat Library
@@ -18,7 +18,7 @@
  * along with the Arduino SdFat Library.  If not, see
  * <http://www.gnu.org/licenses/>.
  * 
- * Version:		3.0
+ * Version:		3.1
  * 
  */
 /**
@@ -64,7 +64,7 @@
  *
  * Set USE_SD_CRC to 2 to used a larger faster table driven CRC-CCITT function.
  */
-#define USE_SD_CRC 0
+#define USE_SD_CRC 1
 //------------------------------------------------------------------------------
 /**
  * To use multiple SD cards set USE_MULTIPLE_CARDS nonzero.

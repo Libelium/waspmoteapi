@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.1
+    Version:		3.2
     Design:			David Gascón
     Implementation:	P.Moreno
 
@@ -151,15 +151,15 @@ struct SocketStatus_t
 	uint16_t localPort;	// local port
 	char remoteIp[16];	// remote IP address
 	uint16_t remotePort;// remote port
-	
+
 };
 
 
 //! Structure to define the status to be stored for all sockets
 struct SocketStatusSSL_t
 {
-	uint8_t id;			// from 1 to 6	
-	uint8_t state;		// actual state of the socket	
+	uint8_t id;			// from 1 to 6
+	uint8_t state;		// actual state of the socket
 	uint16_t localPort;	// local port
 	char remoteIp[16];	// remote IP address
 	uint16_t remotePort;// remote port
@@ -190,17 +190,17 @@ private:
 
 	//!	Attribute for HTTP POST content type
 	char _contentType[80];
-	
+
 	//!	Attribute for PeriodicTAU - PSM parameter
 	char _PeriodicTAU[9];
 
 	//!	Attribute for ActiveTimer - PSM parameter
 	char _ActiveTimer[9];
-	
+
 	//!	Attribute for eDRX value - eDRX parameter
 	char _eIDRX_value[5];
 	bool _eIDRX_status;
-	
+
 	uint8_t addressDS[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	/*! This function parses the error copde returned by the module. At the
@@ -214,17 +214,17 @@ private:
 	 *
 	 * @return '0' ok; '1' error
 	 */
-	uint8_t getErrorCode();  
-	
-	/*! Function: This function parses the error copde returned by the module 
-	 * after executing TCP/IP commands. At the  * point this function is called, 
-	 * the UART is supposed to have received: "ERROR: <err>\r\n" 
+	uint8_t getErrorCode();
+
+	/*! Function: This function parses the error copde returned by the module
+	 * after executing TCP/IP commands. At the  * point this function is called,
+	 * the UART is supposed to have received: "ERROR: <err>\r\n"
 	 *
 	 * @return '0' ok; '1' error
 	 */
-	uint8_t getTCPErrorCode();  
-	
-	
+	uint8_t getTCPErrorCode();
+
+
 
 	//! This function waits the URC code and reads the data availble
 	/*!
@@ -237,13 +237,13 @@ private:
  * 			5,6 if error reading the response
  * 			7 error waiting response function
 	*/
-	uint8_t httpWaitResponse(uint8_t method, uint32_t wait_timeout);	
+	uint8_t httpWaitResponse(uint8_t method, uint32_t wait_timeout);
 
 	//! This function configures the remote server and sends the request
 	/*!
 	\param	uint8_t method: selected HTTP method:	WaspBG96::HTTP_GET
 													WaspBG96::HTTP_POST
-													
+
 	\param	char* url: host name or IP address of the server
 	\param	uint16_t port: server port
 	\param	char* resource: parameter indicating the HTTP resource, object of the
@@ -253,7 +253,7 @@ private:
 	\param	0 if OK
   			1 if error setting context id
   			2 if error sending url
-  			3 if error sending POST 
+  			3 if error sending POST
   			4 if wrong method has been selected
 	*/
 	uint8_t httpRequest(uint8_t method,
@@ -278,8 +278,8 @@ private:
 				3 if error reading the HTTP data
 				4 if error reading the HTTP data
 	*/
-	uint8_t httpWaitResponse(uint32_t wait_timeout);	
- 
+	uint8_t httpWaitResponse(uint32_t wait_timeout);
+
 	bool write(uint8_t state);
 	void printBytes(uint8_t* addr, uint8_t count) ;
 
@@ -294,14 +294,16 @@ public:
 	int _tempInterval;
 	int _rssi;
 	uint8_t _networkType;
-	uint8_t _incomingType;	
+	uint8_t _incomingType;
 	int _socketIndex;
 	int _httpCode;
 	uint16_t _socketerror;
 	uint32_t _filesize;
 	uint8_t _ftp_status;
-	uint16_t _ftp_protocol_error;	
+	uint16_t _ftp_protocol_error;
 	char _ftpWorkingDirectory[20];
+	uint8_t _mqtt_status;
+	uint8_t _mqtt_msgID;
 	SocketInfo_t socketInfo[6];
 	SocketStatus_t socketStatus[6];
 	SocketStatusSSL_t socketStatusSSL[4];
@@ -329,7 +331,7 @@ public:
 		STATUS_INCOMING			= 5,
 		STATUS_OPENING			= 6,
 	};
-	
+
 	//! GNSS Mode Enumeration
 	enum GPSModeEnum
 	{
@@ -337,7 +339,7 @@ public:
 		GPS_MS_BASED		= 1,
 		GPS_AUTONOMOUS		= 3,
 	};
-	
+
 	//! GNSS Nmea Type Enumeration
 	enum GNSSnmeaType
 	{
@@ -358,12 +360,12 @@ public:
 		INFO_IMEI 				= 4,
 		INFO_IMSI 				= 5,
 		INFO_ICCID 				= 6,
-		INFO_CSQ 				= 7, 
-		INFO_QNWINFO			= 8,  
+		INFO_CSQ 				= 7,
+		INFO_QNWINFO			= 8,
 		INFO_QCSQ				= 9,
 		INFO_QSPN				= 10,
 	};
-	
+
 	//! HTTP method Enumeration
 	enum HttpMethodEnumeration
 	{
@@ -385,16 +387,21 @@ public:
 		SSL_ACTION_DELETE	= 0,
 		SSL_ACTION_STORE	= 1,
 		SSL_ACTION_READ		= 2,
-	//	SSL_EMAIL_DISABLED	= 0,
-	//	SSL_EMAIL_ENABLES	= 1,
 	};
 
 	//! Security data types
 	enum SecurityDataTypesEnumeration
 	{
-		SSL_TYPE_CERT		= 0,
+		SSL_TYPE_CLIENT_CERT		= 0,
 		SSL_TYPE_CA_CERT	= 1,
-		SSL_TYPE_RSA		= 2,
+		SSL_TYPE_CLIENT_KEY		= 2,
+	};
+
+	//! SSL authentication mode
+	enum SslAuthentication
+	{
+		SSL_CA_CERT	= 1,
+		SSL_SERVER_CLIENT_AUTH	= 2,
 	};
 
 	//! FTP Session mode (Active or Passive)
@@ -478,8 +485,8 @@ public:
 			4 unknown
 	*/
 	uint8_t checkConnection(uint8_t time);
-	
-	
+
+
 		/*! GPRS CONNECTION STRUCTURE
 	\brief	This function checks connection status and connect to data service
 	\param	uint8_t time: max allowed time in seconds to connect
@@ -498,7 +505,7 @@ public:
 			15 if error activating GPRS connection
 	*/
 	uint8_t gprsConnection(char* apn, char* gprsband, char* network, uint8_t operator_type);
-	
+
 	/*!
 	\brief	This function checks connection status and connect to data service
 	\param	uint8_t time: max allowed time in seconds to connect
@@ -515,10 +522,10 @@ public:
 			13 if error setting login
 			14 if error setting password
 			15 if error activating GPRS connection
-	*/	
-	
+	*/
+
 	uint8_t checkDataConnection(uint8_t time);
-	
+
 	/*! NB-IOT CONNECTION STRUCTURE
 	\brief	This function checks connection status and connect to data service
 	\param	char apn
@@ -593,40 +600,40 @@ public:
 	\return 0 If the module is connected to data service
 	*/
 	uint8_t nbiotprefermode(uint8_t mode);
-	
+
 	/*! SETUP NB-IOT PSM setting parameters
   * AT+CPSMS=...
 	\brief	This function set the PSM parameters
-	\param	
+	\param
 	\return 0 If the module is connected to data service
 	*/
 	uint8_t nbiotSettingPSM(char* PeriodicTAU, char* ActiveTimer);
-	
+
 	/*! SETUP NB-IOT PSM setting parameters
     \AT+CPSMS=...
 	\brief	This function set the PSM parameters
-	\param	
+	\param
 	\return 0 If the module is connected to data service
 	*/
 	uint8_t nbiotSetPSM(bool mode, bool wait);
 
 	/*! SETUP NB-IOT getting PSM values
     \AT+QPSMS?
-	\brief	This function get the PSM values	
+	\brief	This function get the PSM values
 	\return 0 If parameters are readed.
 	*/
 	uint8_t nbiotGetPSMValues();
-	
+
 	/*! NB-IOT PSM Wake UP
     \Pulse on PWRKEY pin.
-	\brief	This function wake up the module from PSM mode.	
+	\brief	This function wake up the module from PSM mode.
 	\return 0 If the module wake up and 1 if the module not wake up..
 	*/
 	uint8_t nbiotPSMWakeUp();
-	
+
 	/*! NB-IOT send UDP packet
-	* 
-	\param	uint8_t 
+	*
+	\param	uint8_t
 	\return 0 If the band selected is ok
 
 	*/
@@ -655,39 +662,39 @@ public:
 			1 if error checking socket status
 	*/
 	uint8_t contextActivation(uint8_t mode, uint8_t retries);
-	
+
 	/*!
 	\brief	Configure Address of DNS Server
 	\param	char* pridnsaddr: The primary DNS server address
 			char* secdnsaddr: The secondary DNS server address
 				Format: xxx.xxx.xxx.xxx
 	\return 0 if OK
-			1 if error 
+			1 if error
 	*/
 	uint8_t setDNSServer(char*  pridnsaddr, char* secdnsaddr);
-	
+
 	/*!
 	\brief	Ping a Remote Server
-	\param	char* host: The primary DNS server address			
+	\param	char* host: The primary DNS server address
 				Format: xxx.xxx.xxx.xxx or hostname (DNS server must be configured)
 	\return 0 if OK
-			1 if error 
+			1 if error
 	*/
-	uint8_t getPing(char*  host);  
-	
+	uint8_t getPing(char*  host);
+
 	/*!
 	\brief	Synchronize Local Time with NTP Server
-	\param	char* host: The address of NTP server.	
-				  port: The port of NTP server. The range is 1-65535.					
+	\param	char* host: The address of NTP server.
+				  port: The port of NTP server. The range is 1-65535.
 	\return 0 if OK
-			1 if error 
+			1 if error
 	*/
-	uint8_t syncLocalTimeNTP(char* host, uint16_t port );	
+	uint8_t syncLocalTimeNTP(char* host, uint16_t port );
 
 
-/*! NB-IOT sleep mode 
-	* 
-	\param	uint8_t 
+/*! NB-IOT sleep mode
+	*
+	\param	uint8_t
 	\return 0 If the band selected is ok
 
 	/* This function manages the sleep mode
@@ -695,15 +702,15 @@ public:
 	 * Return:	0 if 'OK', '1' if error
 	*/
 	uint8_t nbiotSleepMode(uint8_t mode);
-	
+
 	/*! SETUP NB-IOT eDRX mode
     * AT+...
 	\brief	This function set the eDRX parameters
-	\param	
+	\param
 	\return 0 If the module is connected to data service
 	*/
 	uint8_t settingeIDRX(uint8_t _eIDRX_status, uint8_t ActType,char* _eIDRX_value);
-					
+
 	/*!
 	\brief	This function performs a HTTP request
 	\param	uint8_t method: selected HTTP method:	WaspBG96::HTTP_GET
@@ -715,8 +722,8 @@ public:
 	\return	10 if OK
  * 			11 if error setting context id
  * 			12 if error sending url
- * 			13 if error sending POST 
- * 			14 if wrong method has been selected * 
+ * 			13 if error sending POST
+ * 			14 if wrong method has been selected *
  *			20 if OK
  * 			21 if timeout waiting HTTP GET response
  * 			22 if timeout waiting HTTP POST response
@@ -729,11 +736,11 @@ public:
 					char* url,
 					uint16_t port,
 					char* resource);
-					
+
 	/*!
 	\brief	This function performs a HTTP request
-	\param	uint8_t method: selected HTTP method:	WaspBG96::HTTP_GET													
-													WaspBG96::HTTP_POST													
+	\param	uint8_t method: selected HTTP method:	WaspBG96::HTTP_GET
+													WaspBG96::HTTP_POST
 													WaspBG96::HTTP_POST_FRAME
 	\param	char* url: host name or IP address of the server
 	\param	uint16_t port: server port
@@ -743,8 +750,8 @@ public:
 	\return	10 if OK
  * 			11 if error setting context id
  * 			12 if error sending url
- * 			13 if error sending POST 
- * 			14 if wrong method has been selected * 
+ * 			13 if error sending POST
+ * 			14 if wrong method has been selected *
  *			20 if OK
  * 			21 if timeout waiting HTTP GET response
  * 			22 if timeout waiting HTTP POST response
@@ -769,8 +776,8 @@ public:
 	\return	10 if OK
   			11 if error setting context id
   			12 if error sending url
-  			13 if error sending POST 
-  			14 if wrong method has been selected * 
+  			13 if error sending POST
+  			14 if wrong method has been selected *
  			20 if OK
   			21 if timeout waiting HTTP GET response
   			22 if timeout waiting HTTP POST response
@@ -783,14 +790,14 @@ public:
 								uint16_t port,
 								uint8_t* data,
 								uint16_t length);
-								
-								
+
+
 	/*!
 	\brief	This function configures FTP parameters and opens the connection
 	\param	char* server: address of FTP server
 	\param	uint16_t port: port of FTP server
 	\param	char* username: authentication user identification string for FTP
-	\param	char* password: authentication password for FTP	
+	\param	char* password: authentication password for FTP
 	\Return:0 if OK
  * 			1 if error setting PDP context
  * 			2 if error setting username&password
@@ -800,19 +807,19 @@ public:
  * 			6 if error opening the FTP connection
  * 			7,8 if error reporting status connection
  * 			9 if operation status is not 0
-	*/	
+	*/
 	uint8_t ftpOpenSession(	char* server,
 							uint16_t port,
 							char* username,
 							char* password);
-		
+
 	/*!
 	\brief	This function configures FTP parameters and opens the connection
 	\param	char* server: address of FTP server
 	\param	uint16_t port: port of FTP server
 	\param	char* username: authentication user identification string for FTP
 	\param	char* password: authentication password for FTP
-	\param	uint8_t mode: FTP session mode 
+	\param	uint8_t mode: FTP session mode
 			\arg WaspBG96::FTP_ACTIVE
 			\arg WaspBG96::FTP_PASSIVE
 	\return	0 if OK
@@ -824,19 +831,19 @@ public:
  * 			6 if error opening the FTP connection
  * 			7,8 if error reporting status connection
  * 			9 if operation status is not 0
-	*/						
+	*/
 	uint8_t ftpOpenSession(	char* server,
 							uint16_t port,
 							char* username,
 							char* password,
 							uint8_t mode);
-							
+
 							/*!
 	\brief	This function configures FTPS parameters and opens the connection
 	\param	char* server: address of FTP server
 	\param	uint16_t port: port of FTP server
 	\param	char* username: authentication user identification string for FTP
-	\param	char* password: authentication password for FTP	
+	\param	char* password: authentication password for FTP
 	* Return:	0 if OK
  * 			1 if error setting PDP context
  * 			2 if error setting username&password
@@ -851,19 +858,19 @@ public:
  * 			11 if error opening the FTP connection
  * 			12,13 if error reporting status connection
  * 			14 if operation status is not 0
-	*/	
+	*/
 	uint8_t ftpsOpenSession(	char* server,
 							uint16_t port,
 							char* username,
 							char* password);
-		
+
 	/*!
 	\brief	This function configures FTPS parameters and opens the connection
 	\param	char* server: address of FTP server
 	\param	uint16_t port: port of FTP server
 	\param	char* username: authentication user identification string for FTP
 	\param	char* password: authentication password for FTP
-	\param	uint8_t mode: FTP session mode 
+	\param	uint8_t mode: FTP session mode
 			\arg WaspBG96::FTP_ACTIVE
 			\arg WaspBG96::FTP_PASSIVE
 	* Return:	0 if OK
@@ -880,63 +887,63 @@ public:
  * 			11 if error opening the FTP connection
  * 			12,13 if error reporting status connection
  * 			14 if operation status is not 0
-	*/						
+	*/
 	uint8_t ftpsOpenSession(	char* server,
 							uint16_t port,
 							char* username,
 							char* password,
 							uint8_t mode);
-							
+
 	/*!
 	\brief	This function closes the FTP connection
 	\return	0 if OK; 1 if error
 	 		1 if error
   			2, 3 if error waiting response
   			4 if operation status is not 0
-	*/	
+	*/
 	uint8_t ftpCloseSession();
-	
+
 	/*!
 	\brief  This function deletes a file in the FTP server
 	\param 	ftp_file: file to delete in FTP session
 	\return	0 if OK; 1 if error
-	*/	
+	*/
 	uint8_t ftpDelete(char* ftp_file);
-	
+
 	/*!
 	\brief 	This function reads the size of a file in a FTP server
 	\param	char* FTP_file: file
 	\return	'0' if OK, '1' if error
 	*/
 	uint8_t ftpFileSize( char* ftp_file);
-	
+
 	/*!
 	\brief  This function requests the current working directory in FTP server
 	\return	0 if OK; 'x' if error
-	*/	
+	*/
 	uint8_t ftpGetWorkingDirectory();
-	
+
 	/*!
 	\brief  This function changes the working directory of the FTP session
 	\param 	dirname: destiny directory in FTP server
 	\return	0 if OK; 'x' if error
-	*/	
+	*/
 	uint8_t ftpChangeWorkingDirectory(char* dirname);
-	
+
 	/*!
 	\brief  This function create a new directory of the FTP session
 	\param 	dirpath: destiny directory in FTP server
 	\return	0 if OK; 'x' if error
-	*/	
+	*/
 	uint8_t ftpCreateDirectory(char* dirpath);
-	
+
 	/*!
 	\brief  This function delete a new directory of the FTP session
 	\param 	dirpath: destiny directory in FTP server
 	\return	0 if OK; 'x' if error
-	*/	
+	*/
 	uint8_t ftpDeleteDirectory(char* dirpath);
-	
+
 	/*!
 	\brief 	This function uses PUT to send a file to a FTP server
 	\param	char* ftp_file: destiny file
@@ -953,13 +960,13 @@ public:
   			11 if error checking file size and file size uploaded
 	*/
 	uint8_t ftpUpload( char* ftp_file, char* sd_file);
-	
+
 	/*!
 	\brief 	This function uses GET to read a file from a FTP server
 	\param	char* SD_file: destiny file
 	\param	char* FTP_file: origin file
 	\return	0 if OK
-			1 if server file size is zero	
+			1 if server file size is zero
 			2 if error reading the file size
 			3 if SD not present
 			4 if error creating the file in SD
@@ -970,17 +977,17 @@ public:
 			9 if error getting packet size
 			10 if error in packet size mismatch
 			11 if error writing SD error
-			12 if no more retries getting data 
-			13 if file size mismatch			
+			12 if no more retries getting data
+			13 if file size mismatch
 	*/
 	uint8_t ftpDownload( char* sd_file,  char* ftp_file);
-	
+
 	/*!
 	\brief  This function check FTP session status
 	\return	0 if OK; 'x' if error
-	*/	
+	*/
 	uint8_t ftpServerStatus();
-		
+
 	/*!
 	\brief	This function configures and opens a socket
 	\param	uint8_t socketId: number of the socket Id
@@ -1060,7 +1067,7 @@ public:
 	/*!
 	\brief	This function configures and opens a socket SSL
 	\param	uint8_t socketId: number of the socket Id
-	\param	char* remote_IP: address of the remote host 
+	\param	char* remote_IP: address of the remote host
 	\param	uint16_t remote_port: remote host port to contact
 	\return	0 if OK
 			1 SSL version error
@@ -1104,7 +1111,7 @@ public:
 	\return	0 if OK; 1 if error
 	*/
 	uint8_t getSocketStatus(uint8_t socketId);
-	
+
 	uint8_t getSocketStatusSSL(uint8_t socketId);
 
 	/*!
@@ -1248,6 +1255,172 @@ public:
 						uint8_t dataType,
 						char *data);
 
+	/*!
+	\brief	This function configures MQTT parameters and opens the connection
+	\param	char* server: address of MQTT server
+	\param	uint16_t port: port of MQTT server
+	\param	uint8_t clientID: the client identifier
+	\return	0 if OK
+  			1 if error open network for MQTT client
+  			2 if error network for MQTT client ocurried
+  			3 if error connecting a Client to MQTT Server
+  			4 if error client to MQTT Server command execution
+  			5 if error client to MQTT Server connection status
+ 			90, 91 if error ocurried waiting the response - MQTT open network.
+  			92, 93 if error ocurried waiting the response - Connect a Client to MQTT Server.
+  			99 null pinter
+	*/
+	uint8_t mqttOpenSession(char* server,
+							uint16_t port,
+							char* clientID);
+
+	/*!
+	\brief	This function configures MQTT parameters and opens the connection
+	\param	char* server: address of MQTT server
+	\param	uint16_t port: port of MQTT server
+	\param	char* username: authentication user identification string for MQTT
+	\param	char* password: authentication password for MQTT
+	\param	uint8_t clientID: the client identifier
+	\return	0 if OK
+  			1 if error open network for MQTT client
+  			2 if error network for MQTT client ocurried
+  			3 if error connecting a Client to MQTT Server
+  			4 if error client to MQTT Server command execution
+  			5 if error client to MQTT Server connection status
+ 				90, 91 if error ocurried waiting the response - MQTT open network.
+  			92, 93 if error ocurried waiting the response - Connect a Client to MQTT Server.
+  			99 null pinter
+	*/
+	uint8_t mqttOpenSession(char* server,
+							uint16_t port,
+							char* clientID,
+							char* username,
+							char* password);
+
+	/*!
+	\brief	This function configures MQTT with SSL parameters and opens the connection
+	\param	uint8_t ssl_auth: The authentication mode
+  									WaspBG96::SSL_CA_CERT: Manage server authentication
+  									WaspBG96::SSL_SERVER_CLIENT_AUTH: Manage server and client authentication if requested by the remote server
+	\param uint8_t socketId: Secure Socket Identifier (should be 2)
+	\return	0 if OK
+    			1 if error configuring MQTT session into SSL
+    			2 if error setting seclevel
+    			3 if error setting sslversion
+    			4 if error setting ciphersuit
+    			5 if error setting ignore local time
+  				90 error setting the certificates
+  				91 error setting CA certificate
+  				92 error setting client certificate
+  				93 error setting user key certificate
+    			99 null pinter
+	*/
+	uint8_t mqttSslConfig(uint8_t ssl_auth, uint8_t socketId);
+
+
+
+	/*!
+	\brief	This function publish in a topic a MQTT message
+	\param	uint16_t msgID: Message identifier of packet. The range is 0-65535. Should be 0 when qos=0.
+	\param	uint8_t qos: The QoS level at which the client wants to publish the messages
+  					0 At most once
+  					1 At least once
+ 					2 Exactly once
+	\param	bool retain: Whether or not the server will retain the message after it has been delivered to the
+ 					 0 The server will not retain the message after it has been delivered to the
+ 					   current subscribers
+ 					 1 The server will retain the message after it has been delivered to the current
+ 					   subscribers
+	\param	char* topic: Topic that needs to be published
+	\param	char* data: Message to be published
+	\return	0 if OK
+  				1 if error publising a message
+  				2 if error publising a message and waitting OK
+  				3, 4 if error waitting status report
+  				5 if status <result> parameter is not 0
+  				99 null pinter
+	*/
+	uint8_t mqttPublish(uint16_t msgID,
+						uint8_t qos,
+						bool retain,
+						char* topic,
+						char* data);
+
+	/*!
+	\brief	This function get the status connection to MQTT server
+	\return	0 if OK
+  				1 if error setting MQTT status
+  				2 if error waitting response
+  				99 null pinter
+	*/
+	uint8_t mqttSessionStatus();
+
+	/*!
+	\brief	The function is used to subscribe one topic
+  \param	char* topic: Topic that the client wants to unsubscribe from
+  \param	uint8_t qos: The QoS level at which the client wants to publish the messages.
+	\return	0 if OK
+    			1 if error unsubscribe from Topic
+    			2, 3 if error waitting response
+  				4 if failed to send packet
+    			99 null pinter
+	*/
+	uint8_t mqttSubscribe(char* topic, uint8_t qos);
+
+	/*!
+	\brief	The function is used to subscribe one topic
+	\param  uint16_t msgID: Message identifier of packet. The range is 1-65535
+  \param	char* topic: Topic that the client wants to unsubscribe from
+  \param	uint8_t qos: The QoS level at which the client wants to publish the messages.
+	\return	0 if OK
+    			1 if error unsubscribe from Topic
+    			2,3 if error waitting response
+  				4 if failed to send packet
+    			99 null pinter
+	*/
+	uint8_t mqttSubscribe(uint16_t msgID, char* topic, uint8_t qos);
+
+	/*!
+	\brief	The function is used to unsubscribe from one topic
+  \param char* topic: Topic that the client wants to unsubscribe from
+	\return	0 if OK
+  				1 if error unsubscribe from Topic
+  				2, 3 if error waitting response
+  				99 null pinter
+	*/
+	uint8_t mqttUnsubscribe(char* topic);
+
+	/*!
+	\brief	The function is used to unsubscribe from one topic
+	\param uint16_t msgID: Message identifier of packet. The range is 1-65535
+  \param char* topic: Topic that the client wants to unsubscribe from
+	\return	0 if OK
+  * 			1 if error unsubscribe from Topic
+  * 			2, 3 if error waitting response
+  * 			99 null pinter
+	*/
+	uint8_t mqttUnsubscribe(uint16_t msgID, char* topic);
+
+	/*!
+	\brief	The function is used to wait a data from a topic subscription
+	\param uint16_t waitingtime: Wait time to get the data
+	\return	0 if OK
+  * 			1 if error ocurried waitting data
+  * 			2 if error waitting response
+  * 			99 null pinter
+	*/
+	uint8_t mqttWaittingData(uint16_t waitingtime);
+
+	/*!
+	\brief	This function close the connection to MQTT server
+	\return	0 if OK
+ 					1 if error closing a MQTT connection
+ 					2, 3 if error ocurried waitting a response
+ 					4 if error ocurriend closing connection
+ 					99 null pinter
+ */
+	uint8_t mqttCloseSession();
+
 	//! Latitude
 	char _latitude[11];
 
@@ -1299,11 +1472,11 @@ public:
 			16 if error in GPS Start Location Service Request
 			17 if error checking data connection
 			18 if incorrect GPS mode
-	 */	
+	 */
 	uint8_t gpsStart();
-	
+
 	uint8_t gpsNmeatype(uint8_t nmeatype, uint8_t nmeatype_value);
-	
+
 	//! It gets the NMEA string
 	uint8_t getNMEA(uint8_t nmea);
 
@@ -1321,7 +1494,7 @@ public:
 		'4' if GPS status is fixed in 3D mode
 	 */
 	int8_t checkGPS();
-	
+
 
 	//! It converts from the NMEA message and indicator to degrees
 	float convert2Degrees(char* input, char indicator);
@@ -1414,7 +1587,7 @@ public:
 	\return void
 	 */
 	void set_APN( char* apn, char* login, char* password);
-	
+
 	/*!
 	\brief 	This function sets the eIDRX parameters
 	\param 	 uint8_t status: 0: eIDRX disabled and 1: eIDRX enabled
@@ -1425,7 +1598,7 @@ public:
     /*!
 	\brief 	This function sets the eIDRX parameters
 	\\param 	 uint8_t status: 0: eIDRX disabled and 1: eIDRX enabled
-	\param 		 char* eIDRX_time: time parameter  (binary)	
+	\param 		 char* eIDRX_time: time parameter  (binary)
 	\return void
 	 */
 	void set_eIDRX( uint8_t status, char* eIDRX_time);

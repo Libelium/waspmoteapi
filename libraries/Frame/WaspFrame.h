@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.7
+    Version:		3.8
     Design:			David Gascón
     Implementation:	Yuri Carmona, Javier Siscart, Joaquín Ruiz
 
@@ -230,6 +230,10 @@ public:
 								uint8_t linkEncryption,
 								uint8_t AESEncryption,
 								uint8_t HwEncryption);
+
+  uint16_t getMaxSizeFor4G(uint16_t maximumSize,
+                uint8_t AESEncryption,
+                uint8_t HwEncryption);
 
 
 	//! Function : calculates the frame maximum size for WiFi PRO module

@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.1
+ *  Version:		3.2
  *  Design:			David Gascón
  *  Implementation:	David Cuartielles, Alberto Bielsa, Yuri Carmona
  */
@@ -49,7 +49,7 @@
 #include "WaspXBeeCore.h"
 #include "MemoryFree.h"
 #include "WaspEEPROM.h"
-
+#include "WaspOneWire.h"
 
 // I2C library
 #include "WaspI2C.h"

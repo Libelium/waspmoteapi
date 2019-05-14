@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.3
+    Version:		3.4
     Design:			David Gascón
     Implementation:	A. Gállego, Y. Carmona
 
@@ -92,6 +92,16 @@ static char LE910_OTA_FILE[] = "UPGRADE.TXT";
 // Maximum packet size for FTP download
 #define LE910_MAX_DL_PAYLOAD 490
 
+// DS2413 constants
+#define DS2413_ONEWIRE_PIN  GPRS_PIN
+
+#define DS2413_RESET    	0x01
+#define DS2413_INVERT_PIO   0x03
+#define DS2413_FAMILY_ID    0x3A
+#define DS2413_ACCESS_READ  0xF5
+#define DS2413_ACCESS_WRITE 0x5A
+#define DS2413_ACK_SUCCESS  0xAA
+#define DS2413_ACK_ERROR    0xFF
 
 
 //! Structure to define the info to be stored for all sockets
@@ -150,6 +160,13 @@ private:
 	//!	Attribute for HTTP POST content type
 	char _contentType[80];
 	
+	//! Array to store DS2413 address
+	uint8_t DS2413_address[8] = {0,0,0,0,0,0,0,0};
+	
+	uint8_t DS2413_present = 0;
+	
+	uint8_t module_version = 0;
+
 	/*! This function parses the error copde returned by the module. At the
 	 * point this function is called, the UART is supposed to have received: 
 	 * "+CME ERROR: <err>\r\n" and the first part of the response has been 
@@ -206,7 +223,19 @@ private:
 	*/
 	uint8_t httpWaitResponse(uint32_t wait_timeout);
 	
-
+	uint8_t check_DS2413();
+	
+	uint8_t write_DS2413(uint8_t byte);
+	
+	uint8_t read_DS2413();
+	
+	uint8_t on_DS2413();
+	
+	uint8_t off_DS2413();
+	
+	uint8_t getModelVersion();
+	
+	WaspOneWire oneWire = WaspOneWire(DS2413_ONEWIRE_PIN);
 	
 
 public:
