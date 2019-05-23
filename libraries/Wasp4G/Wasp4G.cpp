@@ -1141,7 +1141,9 @@ uint8_t Wasp4G::ON()
 	digitalWrite(GPRS_PW, LOW);
 	delay(500);
 	digitalWrite(GPRS_PW, HIGH);
-	delay(10000);
+	delay(10);
+
+	answer = check_DS2413();
 	
 	if ( answer == 0) delay(10000);
 	else
@@ -1221,8 +1223,11 @@ uint8_t Wasp4G::ON()
 
 	// setup NETWORK_UTRAN
 	answer = setWirelessNetwork(Wasp4G::NETWORK_3GPP);
-
-	return 0;
+		
+	// get module version
+	module_version = getModelVersion();
+	
+	return 0;	
 }
 
 /* Function: 	This function powers off the LE910 module
@@ -1233,17 +1238,29 @@ void Wasp4G::OFF()
 	uint8_t status = 0;
 	uint8_t counter = 3;
 	char command_buffer[20];
-
-	//"AT#SHDN\r"
-	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[44])));
-
-	// Software Shut Down
-	while ((counter > 0) && (status == 0))
+	
+	if (DS2413_present == 0)
 	{
-		status = sendCommand(command_buffer, LE910_OK, 2000);
-		counter--;
+		//"AT#SHDN\r"
+		strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[44])));	
+		
+		// Software Shut Down	
+		while ((counter > 0) && (status == 0))
+		{
+			status = sendCommand(command_buffer, LE910_OK, 2000);
+			counter--;		
+		}
 	}
-
+	else
+	{
+		// Turn off module with DS2413
+		status = off_DS2413();
+		if (status != 1)
+		{
+			// error turning off
+		}
+	}
+	
 	// close UART0
 	closeUART();
 
@@ -6359,8 +6376,35 @@ int8_t Wasp4G::getInfo(uint8_t info_req)
 			return 0;
 		}
 		return 1;
-	}
-	return 1;
+	}	
+	return 1;		
+}
+
+/* Function: 	This function gets model ID from the module
+ * Return:	0 if error; 1 if V1; 2 if V2
+*/
+uint8_t Wasp4G::getModelVersion()
+{
+	uint8_t answer;
+	char command_buffer[50];
+	
+	// clear command_buffer
+	memset(command_buffer,0x00,sizeof(command_buffer));
+	
+	// Model identification
+	// "AT#CGMM\r"
+	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[14])));
+	
+	// send command
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR, 2000);
+
+	// check answer
+	if (answer == 1)
+	{
+		if (strstr((char*)_buffer,"V2") == NULL) return 1;
+		else return 2;
+	}	
+	return 0;		
 }
 
 
