@@ -652,12 +652,15 @@ uint8_t WaspSDI12::readMeasures(char *sensorSearchedName, uint8_t sensorSearched
 	#endif
 
 	// If every value have been measured, return 1.
-	if (counter != numberFields)
+	// (counter == numberFields + 1) explication:
+	// Some sensors include a '+' simbol at the end of the SDI12 string
+	// "+25.582+7.1277-2.2480-8.3837+"
+	if ((counter == numberFields) || (counter == numberFields + 1))
 	{
-		return 0;
+		return 1;
 	}
 	else
 	{
-		return 1;
+		return 0;
 	}
 }

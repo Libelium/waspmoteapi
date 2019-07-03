@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.6
+ *  Version:		3.7
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -3747,6 +3747,8 @@ uint8_t WaspXBeeCore::gen_send(const char* data)
 	USB.println();
 	#endif
 
+	serialFlush(uart);
+
    	// switch MUX in case SOCKET1 is used
 	if( uart==SOCKET1 )
 	{
@@ -3928,7 +3930,13 @@ int8_t WaspXBeeCore::parse_message(uint8_t* frame)
     if( frame[5]==0x44 && frame[6]==0x42 )
     {
 		interval=500;
-	}
+    }
+	
+    // Check if a WR is performed
+    if( frame[5]==0x57 && frame[6]==0x52 )
+    {
+		interval=150;
+    }
 
     // get execution time instant
     uint8_t timeout1=0;
