@@ -5893,17 +5893,20 @@ uint8_t WaspLoRaWAN::wakeUp()
 
 	memset(ans1,0x00,sizeof(ans1));
 	
+	setBaudrate(9600);
 	beginUART();
   	
 	// create "ok" answer
 	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
 	
 	printByte(0x00,_uart);
+	closeUART();
+	setBaudrate(57600);
+	beginUART();
 	printByte(0x55,_uart);
 
 	delay(500);
 	
-	sleep(100);
 	status = waitFor(ans1,500);
 	
 	if (status == 1)
