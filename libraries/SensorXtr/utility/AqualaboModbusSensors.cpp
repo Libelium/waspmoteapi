@@ -618,7 +618,7 @@ uint8_t aqualaboModbusSensorsClass::enableCompensation(uint8_t temperature, uint
 
 	uint16_t config_reg;
 	uint16_t new_config_reg;
-	uint16_t config_reg_bit_mask;
+	uint16_t config_reg_bit_mask = 0x0000;
 
 	if (temperature)
 	{
@@ -669,7 +669,7 @@ uint8_t aqualaboModbusSensorsClass::enableCompensation(uint8_t temperature, uint
 
 		if( new_config_reg != config_reg )
 		{
-			USB.printf("Writing new config %04x\n", config_reg);
+			USB.printf("Writing new config %04x\n", new_config_reg);
 			status = sensor.writeSingleRegister(MEAS_TYPE_CONFIG_REG, new_config_reg);
 			delay(100);
 		}

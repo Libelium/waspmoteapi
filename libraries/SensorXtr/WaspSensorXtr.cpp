@@ -4912,7 +4912,7 @@ uint8_t Aqualabo_OPTOD::enableCompensation(uint8_t temperature, uint8_t atm_pres
 */
 uint8_t Aqualabo_OPTOD::enableTemperatureCompensation(uint8_t enable)
 {
-	return enableCompensation(1, atmPressureCompensation, salinityCompensation);
+	return enableCompensation(enable, atmPressureCompensation, salinityCompensation);
 }
 
 /* enableAtmPressureCompensation enables measurement atmospheric pressure compensation
@@ -4924,7 +4924,7 @@ uint8_t Aqualabo_OPTOD::enableTemperatureCompensation(uint8_t enable)
 */
 uint8_t Aqualabo_OPTOD::enableAtmPressureCompensation(uint8_t enable)
 {
-	return enableCompensation(temperatureCompensation, 1, salinityCompensation);
+	return enableCompensation(temperatureCompensation, enable, salinityCompensation);
 }
 
 /* enableSalinityCompensation enables measurement salinity compensation
@@ -4936,7 +4936,7 @@ uint8_t Aqualabo_OPTOD::enableAtmPressureCompensation(uint8_t enable)
 */
 uint8_t Aqualabo_OPTOD::enableSalinityCompensation(uint8_t enable)
 {
-	return enableCompensation(temperatureCompensation, atmPressureCompensation, 1);
+	return enableCompensation(temperatureCompensation, atmPressureCompensation, enable);
 }
 /* setAtmPressureCompValue - sets an atmospheric pressure value to be used in measurement
 	compensation instead of the default.
