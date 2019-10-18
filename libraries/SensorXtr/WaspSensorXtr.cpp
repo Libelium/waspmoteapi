@@ -4695,6 +4695,7 @@ Aqualabo_OPTOD::Aqualabo_OPTOD(uint8_t _socket)
 	{
 		bitSet(SensorXtr.socketRegister, socket);
 	}
+
 }
 
 /*!
@@ -4704,6 +4705,7 @@ Aqualabo_OPTOD::Aqualabo_OPTOD(uint8_t _socket)
 */
 uint8_t Aqualabo_OPTOD::ON()
 {
+	uint8_t compEnableFlags;
 	char message[70];
 
 	if (SensorXtr.redefinedSocket == 1)
@@ -4746,6 +4748,15 @@ uint8_t Aqualabo_OPTOD::ON()
 		SensorXtr.set12v(socket, SWITCH_ON);
 		//neccessary delay after powering the sensor
 		delay(1000);
+	}
+
+	if (temperatureCompensation == 0x80)
+	{
+		// On very first power on
+		compEnableFlags = aqualaboModbusSensors.readEnableCompensationFlags();
+		temperatureCompensation = compEnableFlags & 0x01;
+		atmPressureCompensation = compEnableFlags & 0x02;
+		salinityCompensation = compEnableFlags & 0x04;
 	}
 
 #if DEBUG_XTR == 2
@@ -4862,6 +4873,112 @@ uint8_t Aqualabo_OPTOD::readSerialNumber()
 		return read();
 	}
 }
+
+/* enableCompensation enables measurement compensation internal to the probe. This setting
+	is stored in OPTOD's FLASH memory and thus persistent. Compensation for atmospheric
+	pressure and salinity will use default values of 1013hPa and 0ppt respectively, unless
+	set at sensor boot to different values with setAtmPressureCompValue and
+	setSalinityCompValue.
+
+	parameters: temperature - 1 to enable temperature compensation, 0 to disable
+				atm_pressure - 1 to enable atmospheric pressure compensation, 0 to disable
+				salinity - 1 to enable salinity compensation, 0 to disable
+
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_OPTOD::enableCompensation(uint8_t temperature, uint8_t atm_pressure, uint8_t salinity)
+{
+	uint8_t status;
+	status = aqualaboModbusSensors.enableCompensation(temperature, atm_pressure, salinity);
+
+	temperatureCompensation = temperature;
+	atmPressureCompensation = atm_pressure;
+	salinityCompensation = salinity;
+
+	if (status == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+/* enableTemperatureCompensation enables measurement temperature compensation internal to
+	the probe. This setting	is stored in OPTOD's FLASH memory and thus persistent.
+	parameters: enable - 1 to enable temperature compensation, 0 to disable
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_OPTOD::enableTemperatureCompensation(uint8_t enable)
+{
+	return enableCompensation(1, atmPressureCompensation, salinityCompensation);
+}
+
+/* enableAtmPressureCompensation enables measurement atmospheric pressure compensation
+	internal to	the probe. This setting	is stored in OPTOD's FLASH memory and thus
+	persistent. A default value of 1013hPa is used unless otherwise specified by
+	setAtmPressureCompValue (not persistent).
+	parameters: enable - 1 to enable atmospheric pressure compensation, 0 to disable
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_OPTOD::enableAtmPressureCompensation(uint8_t enable)
+{
+	return enableCompensation(temperatureCompensation, 1, salinityCompensation);
+}
+
+/* enableSalinityCompensation enables measurement salinity compensation
+	internal to	the probe. This setting	is stored in OPTOD's FLASH memory and thus
+	persistent. A default value of 0ppt is used unless otherwise specified by
+	setSalinityCompValue (not persistent).
+	parameters: enable - 1 to enable salinity compensation, 0 to disable
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_OPTOD::enableSalinityCompensation(uint8_t enable)
+{
+	return enableCompensation(temperatureCompensation, atmPressureCompensation, 1);
+}
+/* setAtmPressureCompValue - sets an atmospheric pressure value to be used in measurement
+	compensation instead of the default.
+	parameters: value - a value to be used (in hPa)
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_OPTOD::setAtmPressureCompValue(float value)
+{
+	uint8_t status;
+
+	status = aqualaboModbusSensors.setCompValue(1, value);
+
+	if (status == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+/* setSalinityCompValue - sets an salinity value to be used in measurement compensation
+	instead of the default.
+	parameters: value - a value to be used (in ppt)
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_OPTOD::setSalinityCompValue(float value)
+{
+	uint8_t status;
+
+	status = aqualaboModbusSensors.setCompValue(2, value);
+
+	if (status == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 
 
 

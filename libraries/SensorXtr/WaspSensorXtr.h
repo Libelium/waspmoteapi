@@ -1133,10 +1133,20 @@ class Aqualabo_OPTOD: public AqualaboWaterXtr
 		uint8_t read();
 		uint8_t readSerialNumber();
 		void calibrationProcess(uint8_t parameter);
+		uint8_t enableTemperatureCompensation(uint8_t enable);
+		uint8_t enableAtmPressureCompensation(uint8_t enable);
+		uint8_t enableSalinityCompensation(uint8_t enable);
+		uint8_t setAtmPressureCompValue(float value);
+		uint8_t setSalinityCompValue(float value);
 		
 	private:
 		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
 		uint8_t socket;
+		uint8_t temperatureCompensation = 0x80;
+		uint8_t atmPressureCompensation = 0x80;
+		uint8_t salinityCompensation = 0x80;
+
+		uint8_t enableCompensation(uint8_t temperature, uint8_t atm_pressure, uint8_t salinity);
 };
 
 

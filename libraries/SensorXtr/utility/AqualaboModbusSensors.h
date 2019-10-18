@@ -72,6 +72,13 @@
 #define NEW_MEAS_REG		0x01
 #define TEMP_COEF_LIST_REG	0x014C
 #define RESTORE_CALIB_REG	0x0002
+#define COMP_VAL_1_REG			0x005F
+#define COMP_VAL_2_REG			0x0061
+#define MEAS_TYPE_CONFIG_REG	0x00A6
+
+#define MEAS_TYPE_COMP_TEMP_BIT		0x0010
+#define MEAS_TYPE_COMP_VAL_1_BIT	0x0020
+#define MEAS_TYPE_COMP_VAL_2_BIT	0x0040
 
 
 //NTU sensor standard calibration registers
@@ -187,6 +194,9 @@ class aqualaboModbusSensorsClass
 		uint16_t readAverage();
 		uint8_t writeParamConfig(uint8_t paramNumber, uint8_t range);
 		uint16_t readParamConfig(uint8_t paramNumber);
+		uint8_t readEnableCompensationFlags(void);
+		uint8_t enableCompensation(uint8_t temperature, uint8_t comp_val_1, uint8_t comp_val_2);
+		uint8_t setCompValue(uint8_t comp_value_n, float value);
 		
 		// Sensor calibration functions
 		uint8_t calibrate(uint8_t sensor, uint8_t parameter, uint8_t step, float value);

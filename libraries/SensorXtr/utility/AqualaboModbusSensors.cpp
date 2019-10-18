@@ -560,6 +560,183 @@ uint16_t aqualaboModbusSensorsClass::readParamConfig(uint8_t paramNumber)
 }
 
 //!*************************************************************
+//!	Name:	compensationEnabled
+//!	Description: Reads the status of register used to enable
+// 				 measurement compensation.
+//!	Param : void
+//!	Returns: uint8_t bitwise flags for compensation enabled for:
+// [set when error][n/a][n/a][n/a][n/a][comp_val_2][comp_val_1][temperature]
+//!***********************************************************
+uint8_t aqualaboModbusSensorsClass::readEnableCompensationFlags(void)
+{
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+	uint8_t retval = 0x00;
+	uint8_t config_reg;
+
+	initCommunication();
+
+	while ((status !=0) && (retries < 10))
+	{
+		//Read 1 register
+		status = sensor.readHoldingRegisters(MEAS_TYPE_CONFIG_REG, 1);
+		delay(100);
+		retries++;
+	}
+
+	if (status == 0)
+	{
+		config_reg = sensor.getResponseBuffer(0);
+		retval |= (config_reg & 0x0070) >> 4;
+	}
+	else
+	{
+		#if DEBUG_XTR_MODBUS > 0
+			PRINTLN_XTR_MODBUS(F("Error reading meas config reg"));
+		#endif
+		retval |= 0x80;
+	}
+	return retval;
+}
+
+//!*************************************************************
+//!	Name:	enableCompensation
+//!	Description: Enable measurement compensation internal to the
+// probe. This setting is stored in probe's FLASH memory and thus
+// persistent. Compensation for value 1 and 2 will use values
+// default to a probe, unless set with setCompValue1. Temperature
+// compensation value is read automatically by the probe.
+//!	Param : temperature - non-0 enable temperature compensation, 0 to disable
+//			comp_val_1 - non-0 enable compensation, 0 to disable
+//			comp_val_2 - non-0 enable compensation, 0 to disable
+//!	Returns: uint8_t "0" if no error, "1" if error
+//!***********************************************************
+uint8_t aqualaboModbusSensorsClass::enableCompensation(uint8_t temperature, uint8_t comp_val_1, uint8_t comp_val_2)
+{
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+
+	uint16_t config_reg;
+	uint16_t new_config_reg;
+	uint16_t config_reg_bit_mask;
+
+	if (temperature)
+	{
+		config_reg_bit_mask |= MEAS_TYPE_COMP_TEMP_BIT;
+	}
+	if (comp_val_1)
+	{
+		config_reg_bit_mask |= MEAS_TYPE_COMP_VAL_1_BIT;
+	}
+	if (comp_val_2)
+	{
+		config_reg_bit_mask |= MEAS_TYPE_COMP_VAL_2_BIT;
+	}
+
+	initCommunication();
+
+	while ((status !=0) && (retries < 10))
+	{
+		//Read 1 register
+		status = sensor.readHoldingRegisters(MEAS_TYPE_CONFIG_REG, 1);
+		delay(100);
+		retries++;
+	}
+
+	if (status == 0)
+	{
+		config_reg = sensor.getResponseBuffer(0);
+	}
+	else
+	{
+		#if DEBUG_XTR_MODBUS > 0
+			PRINTLN_XTR_MODBUS(F("Error reading meas config reg"));
+		#endif
+		return 1;
+	}
+
+	// USB.printf("Ext param compensation is %s... while we need %s...",
+	//            (config_reg & OPTOD_REGISTER_CONFIG_COMPENSATION_BIT_MASK) == OPTOD_REGISTER_CONFIG_COMPENSATION_BIT_MASK ? "ENABLED" : "DISABLED",
+	//            enabled ? "ENABLED" : "DISABLED");
+
+	status = 0xFF;
+
+	while ((status !=0) && (retries < 5))
+	{
+		new_config_reg = config_reg;
+		new_config_reg &= ~(MEAS_TYPE_COMP_TEMP_BIT | MEAS_TYPE_COMP_VAL_1_BIT | MEAS_TYPE_COMP_VAL_2_BIT);
+		new_config_reg |= config_reg_bit_mask;
+
+		if( new_config_reg != config_reg )
+		{
+			USB.printf("Writing new config %04x\n", config_reg);
+			status = sensor.writeSingleRegister(MEAS_TYPE_CONFIG_REG, new_config_reg);
+			delay(100);
+		}
+		else
+		{
+			// nothing needs to change
+			status = 0;
+		}
+		retries++;
+	}
+
+
+
+	// Check that the address has been well written
+	if (status == 0)
+	{
+		#if DEBUG_XTR_MODBUS > 0
+			PRINT_XTR_MODBUS(F("Meas compensation status:\n\ttemp: "));
+			USB.printf("\n\ttemp: %u\n\tcomp_val_1: %u\n\tcomp_val_2: %u\n", temperature, comp_val_1, comp_val_2);
+		#endif
+		return 0;
+	}
+	else
+	{
+		#if DEBUG_XTR_MODBUS > 0
+			PRINTLN_XTR_MODBUS(F("Compensation setting failed"));
+		#endif
+		USB.println(" FAILED");
+		return 1;
+	}
+}
+
+//!*************************************************************
+//!	Name:	setCompValue()
+//!	Description: sets a compensation value to be used in measurement
+//	compensation instead of the probe default.
+//!	Param : comp_value_n index to compensation value
+//			value to be used
+//!	Returns: uint8_t "0" if no error, "1" if error
+//!*************************************************************
+uint8_t aqualaboModbusSensorsClass::setCompValue(uint8_t comp_value_n, float value)
+{
+	uint8_t status;
+	if ( comp_value_n == 1 )
+	{
+		status = writeCalibrationStandard(COMP_VAL_1_REG, value);
+	}
+	else if ( comp_value_n == 2 )
+	{
+		status = writeCalibrationStandard(COMP_VAL_2_REG, value);
+	}
+	else
+	{
+		return 1;
+	}
+
+	if (status == 0)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+//!*************************************************************
 //!	Name:	writeCalibrationStandard()
 //!	Description: Configure the acalibration standart
 //!	Param : address and value
