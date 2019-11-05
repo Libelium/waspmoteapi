@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		4.0
+ *  Version:		4.1
  *  Design:			David Gascón
  *  Implementation:	A. Gállego, Y. Carmona
  */
@@ -1144,7 +1144,7 @@ uint8_t Wasp4G::ON()
 	delay(10);
 
 	answer = check_DS2413();
-	
+
 	if ( answer == 0) delay(10000);
 	else
 	{
@@ -1152,7 +1152,7 @@ uint8_t Wasp4G::ON()
 		{
 			// Turn on module with DS2413
 			answer = on_DS2413();
-			
+
 			if (answer == 0)
 			{
 				return 1;
@@ -1223,11 +1223,11 @@ uint8_t Wasp4G::ON()
 
 	// setup NETWORK_UTRAN
 	answer = setWirelessNetwork(Wasp4G::NETWORK_3GPP);
-		
+
 	// get module version
 	module_version = getModelVersion();
-	
-	return 0;	
+
+	return 0;
 }
 
 /* Function: 	This function powers off the LE910 module
@@ -1238,17 +1238,17 @@ void Wasp4G::OFF()
 	uint8_t status = 0;
 	uint8_t counter = 3;
 	char command_buffer[20];
-	
+
 	if (DS2413_present == 0)
 	{
 		//"AT#SHDN\r"
-		strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[44])));	
-		
-		// Software Shut Down	
+		strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[44])));
+
+		// Software Shut Down
 		while ((counter > 0) && (status == 0))
 		{
 			status = sendCommand(command_buffer, LE910_OK, 2000);
-			counter--;		
+			counter--;
 		}
 	}
 	else
@@ -1260,7 +1260,7 @@ void Wasp4G::OFF()
 			// error turning off
 		}
 	}
-	
+
 	// close UART0
 	closeUART();
 
@@ -3878,7 +3878,7 @@ uint8_t Wasp4G::openSocketSSL(	uint8_t socketId,
 		#endif
 		return answer;	// 1 to 15 error codes
 	}
-	
+
 
 
 	//// 3. Check socket status
@@ -6372,12 +6372,12 @@ int8_t Wasp4G::getInfo(uint8_t info_req)
 			memset(_buffer, 0x00 ,_bufferSize);
 			_length = strlen(aux);
 			strncpy((char*)_buffer, aux, strlen(aux));
-			
+
 			return 0;
 		}
 		return 1;
-	}	
-	return 1;		
+	}
+	return 1;
 }
 
 /* Function: 	This function gets model ID from the module
@@ -6387,14 +6387,14 @@ uint8_t Wasp4G::getModelVersion()
 {
 	uint8_t answer;
 	char command_buffer[50];
-	
+
 	// clear command_buffer
 	memset(command_buffer,0x00,sizeof(command_buffer));
-	
+
 	// Model identification
 	// "AT#CGMM\r"
 	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_4G[14])));
-	
+
 	// send command
 	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR, 2000);
 
@@ -6403,8 +6403,8 @@ uint8_t Wasp4G::getModelVersion()
 	{
 		if (strstr((char*)_buffer,"V2") == NULL) return 1;
 		else return 2;
-	}	
-	return 0;		
+	}
+	return 0;
 }
 
 
@@ -6620,6 +6620,8 @@ uint8_t Wasp4G::setTimeFrom4G()
 
 		// set Time & Date
 		RTC.setTime( year, month, day, (uint8_t)RTC.dow((int)year, (int)month, (int)day), hour, minute, second);
+
+		RTC.setGMT(timezone/4);
 
 		#if DEBUG_WASP4G > 0
 			USB.print(F("RTC time after: "));
@@ -7388,11 +7390,11 @@ void Wasp4G::printErrorCode()
 uint8_t Wasp4G::check_DS2413()
 {
 	uint8_t status;
-	
+
 	oneWire.reset_search();
 	delay(250);
 	status = oneWire.search(DS2413_address);
-	
+
 	if (status == 0)
 	{
 		DS2413_present = 0;
@@ -7403,7 +7405,7 @@ uint8_t Wasp4G::check_DS2413()
 		delay(6000);
 		write_DS2413(0x01);
 	}
-	
+
 	return DS2413_present;
 }
 
@@ -7417,27 +7419,27 @@ uint8_t Wasp4G::on_DS2413()
 {
 	uint8_t retries = 0;
 	uint8_t status = 0;
-	
+
 	if (read_DS2413())
 	{
 		return 1;
 	}
-	
+
 	do
-	{		
+	{
 		// Send reset pulse
 		write_DS2413(DS2413_RESET);
 		delay(10);
-		
+
 		// Turn on the module
 		write_DS2413(DS2413_INVERT_PIO);
-		
+
 		delay(6000);
 		// Send reset pulse
 		write_DS2413(DS2413_RESET);
-		
-		uint8_t state = 0;  
-		
+
+		uint8_t state = 0;
+
 		uint32_t previous = millis();
 		while((millis() - previous < 1000) && status == 0)
 		{
@@ -7445,15 +7447,15 @@ uint8_t Wasp4G::on_DS2413()
 			delay(200);
 			if (previous > millis()) previous = millis();
 		}
-		
+
 		retries ++;
 
 	} while (status!=1 && retries<5);
-	
+
 	if (status != 1)
 	{
 		// error
-		return 0; 
+		return 0;
 	}
 	else
 	{
@@ -7472,27 +7474,27 @@ uint8_t Wasp4G::off_DS2413()
 {
 	uint8_t retries = 0;
 	uint8_t status = 0;
-	
+
 	if (!read_DS2413())
 	{
 		return 1;
 	}
 
 	do
-	{		
+	{
 		// Send reset pulse
 		write_DS2413(DS2413_RESET);
 		delay(10);
-		
+
 		// Turn on the module
 		write_DS2413(DS2413_INVERT_PIO);
-		
+
 		delay(5200);
 		// Send reset pulse
 		write_DS2413(DS2413_RESET);
-		
-		uint8_t state = 0;  
-		
+
+		uint8_t state = 0;
+
 		uint32_t previous = millis();
 		while((millis() - previous < 16000) && status == 1)
 		{
@@ -7500,15 +7502,15 @@ uint8_t Wasp4G::off_DS2413()
 			delay(200);
 			if (previous > millis()) previous = millis();
 		}
-		
+
 		retries ++;
 
 	} while (status!=0 && retries<5);
-	
+
 	if (status != 0)
 	{
 		// error
-		return 0; 
+		return 0;
 	}
 	else
 	{
@@ -7526,12 +7528,12 @@ uint8_t Wasp4G::read_DS2413()
 {
 	bool ok = false;
 	uint8_t status;
-	
+
 	oneWire.reset();
 	oneWire.select(DS2413_address);
 	oneWire.write(DS2413_ACCESS_READ);
-	
-	status = oneWire.read(); 
+
+	status = oneWire.read();
 
 	//////////////////////
 	// Get register status
@@ -7540,9 +7542,9 @@ uint8_t Wasp4G::read_DS2413()
 	ok = (!status & 0x0F) == (status >> 4);
 	// Clear inverted values
 	status &= 0x0F;
-	
+
 	oneWire.reset();
-	
+
 	if (status)
 	{
 		if (status == -1)
@@ -7564,27 +7566,27 @@ uint8_t Wasp4G::read_DS2413()
 uint8_t Wasp4G::write_DS2413(uint8_t data)
 {
 	uint8_t status = 0;
-	
+
 	// Turn on module
 	data |= 0xFC;
-	  
+
 	// Start communication with DS2413 and write status of module
 	oneWire.reset();
 	oneWire.select(DS2413_address);
 	oneWire.write(DS2413_ACCESS_WRITE);
 	oneWire.write(data);
-	// Invert data and resend  
+	// Invert data and resend
 	oneWire.write(~data);
-	 
+
 	status = oneWire.read();
-	
+
 	if (status == DS2413_ACK_SUCCESS)
 	{
 		// Read the status byte
 		oneWire.read();
 	}
 	oneWire.reset();
-	
+
 	return (status == DS2413_ACK_SUCCESS ? true : false);
 }
 

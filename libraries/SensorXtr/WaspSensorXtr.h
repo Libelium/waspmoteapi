@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.3
+	Version:		3.5
 	Design:			David Gascón
 	Implementation: Victor Boria, Javier Siscart
 
@@ -130,6 +130,20 @@
 #define WS_GMX550			12
 #define WS_GMX551			13
 #define WS_GMX600			14
+
+//Parameters
+#define PARAMETER_1 	1
+#define PARAMETER_2 	2
+#define PARAMETER_3		3
+#define PARAMETER_4		4
+#define TEMPERATURE		5
+
+
+#define COMPENSATES_1		1
+#define COMPENSATES_2		2
+#define COMPENSATES_3		3
+#define COMPENSATES_TEMP	5
+
 
 // Supported sensors with Xtreme boards
 #define _5TE				1
@@ -1113,6 +1127,17 @@ class AqualaboWaterXtr
 		boolean getDate(char* input, uint8_t inputLength, int numBytes);
 		void serialClean();
 		bool find( uint8_t* buffer, uint16_t length, char* pattern);
+		
+		//Parameter compensation with external values
+		uint8_t enableCompensation(uint8_t compensatedParam, uint8_t extParamWithWhichCompensate, uint8_t enablingState);
+		uint8_t setCompensationValue(uint8_t extParamWithWhichCompensate, float value);
+		
+	protected:
+		//Parameter compensation with external values
+		uint8_t compensationTemp = 0x80;
+		uint8_t compensation1 = 0x80;
+		uint8_t compensation2 = 0x80;
+		uint8_t saveCompensationValue(uint8_t paramNumber, uint8_t _compensationTemp, uint8_t _compensation1, uint8_t _compensation2);
 };
 
 

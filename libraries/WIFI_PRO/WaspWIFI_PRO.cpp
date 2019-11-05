@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.4
+ *  Version:		3.5
  *  Design:			David Gascón
  *  Implementation:	Yuri Carmona
  */
@@ -4845,46 +4845,7 @@ uint8_t WaspWIFI_PRO::setUDP(	char* host,
  */
 uint8_t WaspWIFI_PRO::send(uint16_t handle, char* data)
 {
-	char cmd_name[20];
-	char param1[20];
-	char param2[20];
-	uint8_t status;
-
-	// convert to string
-	utoa(handle, param1, 10);
-	utoa(strlen(data), param2, 10);
-
-	// "SSND%"
-	strcpy_P( cmd_name, (char*)pgm_read_word(&(table_WiReach[29])));
-
-	// generate "AT+iSSND%:<hn>,<sz>\r"
-	GEN_ATCOMMAND2(cmd_name, param1, param2);
-
-	// add data stream at the end to generate
-	// the final command: "AT+iSSND%:<hn>,<sz>:<stream>"
-	_command[strlen(_command)-1] = ':';
-	strcat(_command, data);
-
-	// send command
-	status = sendCommand(_command, I_OK, AT_ERROR, 15000);
-
-	if (status == 1)
-	{
-		// ok
-		return 0;
-	}
-	else if (status == 2)
-	{
-		getErrorCode();
-		return 1;
-	}
-	else
-	{
-		// timeout error
-		_errorCode = ERROR_CODE_0000;
-		return 1;
-	}
-
+	return send(handle, (uint8_t*) data, strlen(data));
 }
 
 
@@ -4906,8 +4867,7 @@ uint8_t WaspWIFI_PRO::send(uint16_t handle, uint8_t* data, uint16_t length)
 	char param1[20];
 	char param2[20];
 	uint8_t status;
-	uint8_t cmd[512];
-
+	
 	// convert to string
 	utoa(handle, param1, 10 );
 	utoa(length, param2, 10 );
@@ -4918,26 +4878,13 @@ uint8_t WaspWIFI_PRO::send(uint16_t handle, uint8_t* data, uint16_t length)
 	// generate "AT+iSSND%:<hn>,<sz>\r"
 	GEN_ATCOMMAND2(cmd_name, param1, param2);
 
-	// add data stream at the end to generate
 	// the final command: "AT+iSSND%:<hn>,<sz>:<stream>"
 	_command[strlen(_command)-1] = ':';
-
-	uint16_t total_length = strlen(_command)+length;
-
-	// check if invalid data length
-	if (total_length > sizeof(cmd))
-	{
-		_errorCode = ERROR_CODE_0031;
-		return 1;
-	}
-
-	// copy actual _command contents
-	memcpy(cmd, _command, strlen(_command));
-	// copy stream of data
-	memcpy(&cmd[strlen(_command)], data, length);
-
+	setDelay(0);
 	// send command
-	sendCommand(cmd, total_length);
+	sendCommand((uint8_t*)_command, strlen(_command));
+	sendCommand(data,length);
+	setDelay(100);
 	// wait for responses
 	status = waitFor( I_OK, AT_ERROR, 15000);
 

@@ -17,7 +17,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.	If not, see <http://www.gnu.org/licenses/>.
 
-	Version:		3.4
+	Version:		3.5
 	Design:			David Gascón
 	Implementation: Victor Boria, Javier Siscart
 
@@ -54,9 +54,9 @@ const char string_16[] PROGMEM = "%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %
 const char string_17[] PROGMEM = "%c %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX301 frame format
 const char string_18[] PROGMEM = "%c %s %s %s %d %s %s %s %s %s %c %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX400 frame format
 const char string_19[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX500 frame format
-const char string_20[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX501 frame format
+const char string_20[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX501 frame format
 const char string_21[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %d %s %s %s %d %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX531 GMX541 GMX551 frame format
-const char string_22[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX550 frame format
+const char string_22[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX550 frame format
 const char string_23[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX600 frame format
 const char string_24[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX200 + GPS frame format
 const char string_25[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX240 + GPS frame format
@@ -2129,7 +2129,7 @@ void weatherStation::ON()
 
 	#if SIMULATE_WEATHER_STATION > 0
 	//Snippet for simulating a weather station connected
-	strcpy(buffer, "GMX240");
+	strcpy(buffer, "GMX550");
 	#endif
 
 	if (strstr(buffer, "GMX100") != NULL)
@@ -2612,6 +2612,12 @@ uint8_t weatherStation::read()
 				}
 				else
 				{
+					//if ',,' situation occurs, avoid with a zero -> ',0,'
+					if(buffer_ws_raw[i-1] == ' ')
+					{
+						buffer_ws_raw[i] = '0';
+						i++;
+					}
 					buffer_ws_raw[i] = ' ';
 				}
 				i++;
@@ -2636,22 +2642,26 @@ uint8_t weatherStation::read()
 	#if SIMULATE_WEATHER_STATION > 0
 	//Snippet for simulating a weather station connected
 	//GMX240 example frame
-	strcpy(buffer_ws_raw, "Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000");
+	//strcpy(buffer_ws_raw, "Q 044 000.02 013 145 001.45 145 015.15 131 0000 00000.080 000.080 Y 010 +52 +33 +1 2018-06-11T10:59:20.6 +12.0 0000");
 
 	//GMX100 example frame
 	//strcpy(buffer_ws_raw, "Q 00000.080 000.080 Y +26 -56 +1 2018-06-12T16:31:11.1 +12.0 00000");
 
 	//GMX101 example frame
 	//strcpy(buffer_ws_raw, "Q 0001 01.20 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +32 -17 +1 2017-01-20T11:46:01.3 +05.0 0000");
-	
+
 	//GMX501 example frame
 	//strcpy(buffer_ws_raw, "Q 043 000.00 235 000 000.00 000 000.00 000 0100 0976.5 0976.5 0976.5 030 +024.4 +005.7 06.71 192 0001 00.00 1.1 +014.2 05:28 12:03 18:37 151:+40 19:11 19:53 20:37 +30 -58 +1 2019-04-05T10:38:31.2 +11.9 0000");
-	
-	//GMX531, GMX541, GMX551 example frame
+
+	//GMX531, GMX551 example frame
 	//strcpy(buffer_ws_raw, "Q 264 000.05 052 000 000.00 000 000.00 000 0100 00000.000 000.000 N 148 1001.4 1001.4 1001.4 047 +025.2 +013.4 11.18 0006 00.00  +026 1.2 +017.9 06:49 11:47 16:46 153:+26 17:16 17:49 18:22 +03 -82 +1 2018-11-13T10:06:56.5 +11.8 0000");
 	
+	//GMX541
+	//strcpy(buffer_ws_raw, "Q 264 000.05 052 000 000.00 000 000.00 000 0100 00000.000 000.000 N 148 1001.4 1001.4 1001.4 047 +025.2 +013.4 11.18 0006 00.00 0 0 1.2 +017.9 06:49 11:47 16:46 153:+26 17:16 17:49 18:22 +03 -82 +1 2018-11-13T10:06:56.5 +11.8 0000");
 	
-	
+	//GMX550
+	strcpy(buffer_ws_raw, "Q 118 000.00 351 000 000.00 000 000.00 000 0100 0992.0 0992.0 0992.0 041 +023.7 +009.9 08.94 00000.000 000.000 N 233 0 0 1.2 +015.6 06:37 11:44 16:50 142:+19 17:25 18:03 18:42 +00 +00 -1 2019-10-24T09:21:46.9 +11.8 0000");
+
 	#endif
 
 
@@ -2690,7 +2700,7 @@ uint8_t weatherStation::read()
 		strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_xtr[13])));
 		sscanf (buffer_ws_raw, buffer_table,
 						&node_letter_local,
-						gmx.solarRadiation,
+						&gmx.solarRadiation,
 						sunshineHours_local,
 						gmx.sunriseTime,
 						gmx.solarNoonTime,
@@ -2922,7 +2932,7 @@ uint8_t weatherStation::read()
 						temperature_local,
 						dewpoint_local,
 						absoluteHumidity_local,
-						gmx.solarRadiation,
+						&gmx.solarRadiation,
 						sunshineHours_local,
 						airDensity_local,
 						wetBulbTemperature_local,
@@ -3091,7 +3101,7 @@ uint8_t weatherStation::read()
 		{
 			//Frame is like:
 			//Q 043 000.00 235 000 000.00 000 000.00 000 0100 0976.5 0976.5 0976.5 030 +024.4 +005.7 06.71 192 0001 00.00 1.1 +014.2 05:28 12:03 18:37 151:+40 19:11 19:53 20:37 +30 -58 +1 2019-04-05T10:38:31.2 +11.9 0000
-			
+
 			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
 			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_xtr[20])));
 			sscanf (buffer_ws_raw, buffer_table,
@@ -3113,7 +3123,7 @@ uint8_t weatherStation::read()
 							dewpoint_local,
 							absoluteHumidity_local,
 							&gmx.compass,
-							gmx.solarRadiation,
+							&gmx.solarRadiation,
 							sunshineHours_local,
 							airDensity_local,
 							wetBulbTemperature_local,
@@ -3162,7 +3172,7 @@ uint8_t weatherStation::read()
 							dewpoint_local,
 							absoluteHumidity_local,
 							&gmx.compass,
-							gmx.solarRadiation,
+							&gmx.solarRadiation,
 							sunshineHours_local,
 							airDensity_local,
 							wetBulbTemperature_local,
@@ -3223,10 +3233,10 @@ uint8_t weatherStation::read()
 							temperature_local,
 							dewpoint_local,
 							absoluteHumidity_local,
-							gmx.solarRadiation,
+							&gmx.solarRadiation,
 							sunshineHours_local,
 							windChill_local,
-							gmx.heatIndex,
+							&gmx.heatIndex,
 							airDensity_local,
 							wetBulbTemperature_local,
 							gmx.sunriseTime,
@@ -3277,10 +3287,10 @@ uint8_t weatherStation::read()
 							precipIntensity_local,
 							&precipStatus_local,
 							&gmx.compass,
-							gmx.solarRadiation,
+							&gmx.solarRadiation,
 							sunshineHours_local,
 							windChill_local,
-							gmx.heatIndex,
+							&gmx.heatIndex,
 							airDensity_local,
 							wetBulbTemperature_local,
 							gmx.sunriseTime,
@@ -3342,7 +3352,7 @@ uint8_t weatherStation::read()
 							&precipStatus_local,
 							&gmx.compass,
 							windChill_local,
-							gmx.heatIndex,
+							&gmx.heatIndex,
 							airDensity_local,
 							wetBulbTemperature_local,
 							gmx.sunriseTime,
@@ -3394,7 +3404,7 @@ uint8_t weatherStation::read()
 							&precipStatus_local,
 							&gmx.compass,
 							windChill_local,
-							gmx.heatIndex,
+							&gmx.heatIndex,
 							airDensity_local,
 							wetBulbTemperature_local,
 							gmx.sunriseTime,
@@ -3453,7 +3463,7 @@ uint8_t weatherStation::read()
 							absoluteHumidity_local,
 							&gmx.compass,
 							windChill_local,
-							gmx.heatIndex,
+							&gmx.heatIndex,
 							airDensity_local,
 							wetBulbTemperature_local,
 							gmx.sunriseTime,
@@ -3502,7 +3512,7 @@ uint8_t weatherStation::read()
 							absoluteHumidity_local,
 							&gmx.compass,
 							windChill_local,
-							gmx.heatIndex,
+							&gmx.heatIndex,
 							airDensity_local,
 							wetBulbTemperature_local,
 							gmx.sunriseTime,
@@ -4567,7 +4577,7 @@ uint8_t Apogee_SP510::ON()
 	SensorXtr.ON(REG_3V3);
 
 	//Turn on the heater
-	SensorXtr.set12v(socket, SWITCH_ON);
+	//SensorXtr.set12v(socket, SWITCH_ON);
 
 	// necessary for POR of the ADC
 	delay(10);
@@ -4625,6 +4635,13 @@ float Apogee_SP510::read(void)
 		radiationVoltage = ltc.readADC(ADC_CH2);
 	}
 
+	radiationVoltage-=0.046;
+
+	if (radiationVoltage<0){
+		radiationVoltage = 0;
+	}
+
+
 	//Disable SPI isolator for using the ADC
 	digitalWrite(SPI_ISO_EN, LOW);
 
@@ -4636,7 +4653,7 @@ float Apogee_SP510::read(void)
 #endif
 
 	// Conversion from voltage into W*m-2
-	radiation = radiationVoltage * 17.543;
+	radiation = radiationVoltage * 1000 * 17.543;
 
 	// check value of the sensor in mm
 #if DEBUG_XTR == 1
@@ -4704,6 +4721,7 @@ Aqualabo_OPTOD::Aqualabo_OPTOD(uint8_t _socket)
 */
 uint8_t Aqualabo_OPTOD::ON()
 {
+	uint8_t compEnableFlags;
 	char message[70];
 
 	if (SensorXtr.redefinedSocket == 1)
@@ -4735,6 +4753,19 @@ uint8_t Aqualabo_OPTOD::ON()
 
 		//Set modbus address and modbus waiting time acording to sensor
 		aqualaboModbusSensors.setParametersBySensor(OPTOD);
+
+		if (compensationTemp == 0x80)
+		{
+			// On very first power on
+			compEnableFlags = aqualaboModbusSensors.readEnableCompensationFlags(PARAMETER_1);
+			compensationTemp = compEnableFlags & 0x01;
+			compensation1 = (compEnableFlags & 0x02)  >> 1;
+			compensation2 = (compEnableFlags & 0x04) >> 2;
+			#if DEBUG_XTR > 0
+			USB.print(F("Compensation flag initial status:"));
+			USB.printf("\n\ttemp: %u\n\tcomp_1: %u\n\tcomp_2: %u\n", compensationTemp, compensation1, compensation2);
+			#endif
+		}
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -4862,6 +4893,8 @@ uint8_t Aqualabo_OPTOD::readSerialNumber()
 		return read();
 	}
 }
+
+
 
 
 
@@ -10998,6 +11031,92 @@ bool AqualaboWaterXtr::find( uint8_t* buffer, uint16_t length, char* pattern)
 	}
 
 	return false;
+}
+
+
+/* enableCompensation enables internal measurement compensation internal to
+	the probe. This setting	is stored in OPTOD's FLASH memory and thus persistent.
+	parameters: compensatedParam is the compensated parameter
+	 			extParamWithWhichCompensate is the external parameter with which to compensate
+				enable - 1 to enable temperature compensation, 0 to disable
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t AqualaboWaterXtr::enableCompensation(uint8_t compensatedParam, uint8_t extParamWithWhichCompensate, uint8_t enablingState)
+{
+	switch (extParamWithWhichCompensate)
+	{
+		case COMPENSATES_TEMP:
+			return saveCompensationValue(compensatedParam, enablingState, compensation1, compensation2);
+		break;
+		
+		case COMPENSATES_1:
+			return saveCompensationValue(compensatedParam,compensationTemp, enablingState, compensation2);
+		break;
+		
+		case COMPENSATES_2:
+			return saveCompensationValue(compensatedParam, compensationTemp, compensation1, enablingState);
+		break;
+			
+		case COMPENSATES_3:
+			return 0;
+		break;
+		
+		default:
+			return 0;
+		break;
+	}
+}
+
+/* enableCompensation enables measurement compensation internal to the probe. This setting
+	is stored in OPTOD's FLASH memory and thus persistent. Compensation for atmospheric
+	pressure and salinity will use default values of 1013hPa and 0ppt respectively, unless
+	set at sensor boot to different values with setAtmPressureCompValue and
+	setSalinityCompValue.
+
+	parameters: temperature - 1 to enable temperature compensation, 0 to disable
+				atm_pressure - 1 to enable atmospheric pressure compensation, 0 to disable
+				salinity - 1 to enable salinity compensation, 0 to disable
+
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t AqualaboWaterXtr::saveCompensationValue(uint8_t paramNumber, uint8_t _compensationTemp, uint8_t _compensation1, uint8_t _compensation2)
+{
+	uint8_t status;
+	status = aqualaboModbusSensors.enableCompensation(paramNumber,_compensationTemp, _compensation1, _compensation2);
+
+	compensationTemp = _compensationTemp;
+	compensation1 = _compensation1;
+	compensation2 = _compensation2;
+
+	if (status == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+/* setCompensationValue - sets a compensation value to be used in measurement
+	compensation instead of the default.
+	parameters: value - a value to be used 
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t AqualaboWaterXtr::setCompensationValue(uint8_t extParamWithWhichCompensate, float value)
+{
+	uint8_t status;
+	
+	status = aqualaboModbusSensors.setCompValue(extParamWithWhichCompensate, value);
+
+	if (status == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 

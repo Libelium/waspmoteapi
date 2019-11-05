@@ -1,7 +1,7 @@
 /*! \file WaspUtils.h
     \brief Library containing useful general functions
     
-    Copyright (C) 2017 Libelium Comunicaciones Distribuidas S.L.
+    Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
  
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
   
-    Version:		3.2
+    Version:		3.3
     Design:			David Gascon
     Implementation:	Alberto Bielsa, David Cuartielles
 
@@ -79,6 +79,7 @@
 #define EEPROM_PROG_VERSION 		225
 #define EEPROM_PROG_VERSION_BACKUP 	226
 #define EEPROM_SERIALID_START 		227
+//#define GMX_POWERING_MODE_ADDR  236	// only For PCS conf
 #define EEPROM_START 				1024
 
 

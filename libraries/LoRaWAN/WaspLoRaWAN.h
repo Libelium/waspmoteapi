@@ -1,23 +1,23 @@
 /*! \file 	WaspLoRaWAN.h
     \brief 	Library for managing the LoRaWAN module
-    
+
     Copyright (C) 2019 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-    Version:		3.8
+
+    Version:		3.9
     Design:		David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -52,15 +52,25 @@ enum AnswerTypesLoRaWAN
 	LORAWAN_VERSION_ERROR = 8
 };
 
-/*! @enum ModuleTypersLoRaWAN
+/*! @enum ModuleTypesLoRaWAN
  * API module types
  */
-enum ModuleTypersLoRaWAN
+enum ModuleTypesLoRaWAN
 {
 	RN2483_MODULE = 1,		//	EU
 	RN2903_MODULE = 2,		//	US or AU
 	RN2903_IN_MODULE = 3,	//	IN
 	RN2903_AS_MODULE = 4,	//	AS
+	ABZ_MODULE = 5,	//	JP/KR
+};
+
+/*! @enum ABZModuleBands
+ * API ABZ bands
+ */
+enum ABZModuleBands
+{
+	BAND_JP923 = 0,	//	JP/KR
+	BAND_KR920 = 6,	//	KR
 };
 
 /******************************************************************************
@@ -72,12 +82,12 @@ class WaspLoRaWAN : public WaspUART
 	private:
 		#define RADIO_LORAWAN_UART_SIZE 300
 		uint8_t class_buffer[RADIO_LORAWAN_UART_SIZE];
-	
+
 		char _command[250];
-    	
+
 	// public methods //////////////////////////
     public:
-    
+
 		bool _adr;
 		bool _ar;
 		char _eui[17];
@@ -126,33 +136,49 @@ class WaspLoRaWAN : public WaspUART
 		uint32_t _macStatus;
 		uint8_t _maxPayload;
 		uint8_t _syncWord;
-		
+		int8_t _radioRSSI;
+
 		uint8_t _OTAAError;
-		
+
+
+		uint8_t _dFormat;
+		uint8_t _bandABZ;
+
 		// constructor
-		WaspLoRaWAN() 
-		{			
+		WaspLoRaWAN()
+		{
 			// assign class pointer to UART buffer
 			_buffer = class_buffer;
 			_bufferSize = RADIO_LORAWAN_UART_SIZE;
-			_OTAAError=1;	
+			_OTAAError=1;
+			_bandABZ = 0;
+			_upCounter = 0;
+			_downCounter = 0;
+
+			// initialize _drrMin and _drrMax
+			for (uint8_t i=0;i<72;i++)
+			{
+				_drrMin[i] = 0;
+				_drrMax[i] = 5;
+			}
 		};
-		
+
 		// System functions
-		uint8_t ON(uint8_t socket);	
+		uint8_t ON(uint8_t socket);
 		uint8_t OFF(uint8_t socket);
-		uint8_t reset();				
-		uint8_t factoryReset();		
-		uint8_t getEUI();		
-		uint8_t getAddr();		
+		uint8_t reset();
+		uint8_t factoryReset();
+		uint8_t getEUI();
+		uint8_t getAddr();
 		uint8_t getSupplyPower();
 		uint8_t check();
-		
-		
-		// LoRaWAN functions				
+
+
+		// LoRaWAN functions
 		uint8_t resetMacConfig(char* band);
 		uint8_t setDeviceEUI();
 		uint8_t setDeviceEUI(char* eui);
+		uint8_t setEUI(char* eui);
 		uint8_t getDeviceEUI();
 		uint8_t setDeviceAddr();
 		uint8_t setDeviceAddr(char* addr);
@@ -190,7 +216,7 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getMargin();
 		uint8_t getGatewayNumber();
 		uint8_t setUpCounter(uint32_t counter);
-		uint8_t getUpCounter();		
+		uint8_t getUpCounter();
 		uint8_t setDownCounter(uint32_t counter);
 		uint8_t getDownCounter();
 		uint8_t setRX2Parameters(uint8_t datarate, uint32_t frequency);
@@ -230,6 +256,7 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getRadioWDT();
 		uint8_t setRadioBW(uint16_t bandwidth);
 		uint8_t getRadioBW();
+		uint8_t getRadioRSSI();
 		uint8_t setLinkCheck(uint16_t counter);
 		void convertString(char* string2convert, char* outputString);
 		void convertString(uint8_t* string2convert, char* outputString);
@@ -243,20 +270,26 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t getRX1Delay();
 		uint8_t getRX2Delay();
 		uint8_t getRX2Parameters(char* band);
+		uint8_t getRX2Parameters();
 		uint8_t getMaxPayload();
 		void showFirmwareVersion();
 		uint8_t setBatteryLevel();
 		uint8_t setBatteryLevel(uint8_t bat);
 		void showChannelStatus();
 		void showChannelStatus(uint8_t channel);
-		
-	private:		
+
+		// ABZ murata module functions
+		uint8_t setDataFormat(uint8_t format);
+		uint8_t getDataFormat();
+		uint8_t setBand(uint8_t band);
+
+	private:
 		// Utils
 		uint32_t parseValue(uint8_t base);
-		uint32_t parseIntValue();		
+		uint32_t parseIntValue();
 		float parseFloatValue();
-		
-		
+
+
 };
 
 extern WaspLoRaWAN LoRaWAN;

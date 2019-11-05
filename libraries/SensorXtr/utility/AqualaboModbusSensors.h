@@ -18,7 +18,7 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-	Version:			3.1
+	Version:			3.2
 	Design:				David Gascón
 	Implementation:		Victor Boria
 */
@@ -56,22 +56,32 @@
 
 
 // Some sensor Registers
-#define ADDRESS_REG			0xA3
-#define WAITING_TIME_REG	0xA4
-#define MEASUREMENTS_REG	0x53
-#define RESET_REG			0x02
-#define COMP_TEMP_REG		0x5D
-#define TEMP_MEAS_STATUS	0x64
-#define OPER_NAME_REG		0x027E
-#define DATE_TEMP_REG		0x0286
-#define SERIAL_NUMBER_REG	0x0D10
-#define TEMP_TYPE_CON		0xA5
-#define TURB_TYPE_CON		0xA6
-#define AVRG_PARA_REG		0xAA
-#define TURB_MEAS_STATUS	0x65
-#define NEW_MEAS_REG		0x01
-#define TEMP_COEF_LIST_REG	0x014C
-#define RESTORE_CALIB_REG	0x0002
+#define ADDRESS_REG					0xA3
+#define WAITING_TIME_REG			0xA4
+#define MEASUREMENTS_REG			0x53
+#define RESET_REG					0x02
+#define TEMP_MEAS_STATUS			0x64
+#define OPER_NAME_REG				0x027E
+#define DATE_TEMP_REG				0x0286
+#define SERIAL_NUMBER_REG			0x0D10
+#define TEMP_TYPE_CON				0xA5
+#define TURB_TYPE_CON				0xA6
+#define AVRG_PARA_REG				0xAA
+#define TURB_MEAS_STATUS			0x65
+#define NEW_MEAS_REG				0x01
+#define TEMP_COEF_LIST_REG			0x014C
+#define RESTORE_CALIB_REG			0x02
+#define COMP_TEMP_REG				0x5D
+#define COMP_VAL_1_REG				0x5F
+#define COMP_VAL_2_REG				0x61
+#define PARAM1_MEAS_TYPE_CONFIG_REG	0xA6
+#define PARAM2_MEAS_TYPE_CONFIG_REG	0xA7
+#define PARAM3_MEAS_TYPE_CONFIG_REG	0xA8
+#define PARAM4_MEAS_TYPE_CONFIG_REG	0xA9
+
+#define MEAS_TYPE_COMP_TEMP_BIT		0x10
+#define MEAS_TYPE_COMP_VAL_1_BIT	0x20
+#define MEAS_TYPE_COMP_VAL_2_BIT	0x40
 
 
 //NTU sensor standard calibration registers
@@ -93,11 +103,41 @@
 #define RETURN_AVG_TO_1_AND_STOP_ELECTRONIC_ZERO	2
 
 //Parameters
-#define TEMPERATURE		1
-#define PARAMETER_1 	2
-#define PARAMETER_2 	3
-#define PARAMETER_3		4
-#define PARAMETER_4		5
+#define PARAMETER_1 	1
+#define PARAMETER_2 	2
+#define PARAMETER_3		3
+#define PARAMETER_4		4
+#define TEMPERATURE		5
+
+#define COMPENSATES_1		1
+#define COMPENSATES_2		2
+#define COMPENSATES_3		3
+#define COMPENSATES_TEMP	5
+
+//OPTOD COMPENSATION
+#define COMPENSATE_OXYGEN		1 //LIKE PARAMETER_1
+#define EXTERNAL_ATM_PRESSURE	1 //LIKE COMPENSATES_1
+#define EXTERNAL_SALINITY		2 //LIKE COMPENSATES_2
+#define EXTERNAL_TEMP			5 //LIKE COMPENSATES_TEMP
+
+//PHEHT COMPENSATION
+#define COMPENSATE_PH			1 		//LIKE PARAMETER_1
+
+//NTU COMPENSATION
+#define COMPENSATE_TURBIDITY	1 //LIKE PARAMETER_1
+
+//CTZN COMPENSATION
+#define COMPENSATE_CONDUCTIVITY	1 //LIKE PARAMETER_1
+#define EXTERNAL_ALPHA			1 //LIKE COMPENSATES_1
+
+
+#define PH				2
+#define REDOX			3
+#define CONDUCTIVITY	2
+#define NTU_TURBIDITY	2
+#define SLUDGE_BLANKET	2
+#define FAU_TURBIDITY	4
+
 
 #define OXYGEN			2
 #define PH				2
@@ -187,6 +227,9 @@ class aqualaboModbusSensorsClass
 		uint16_t readAverage();
 		uint8_t writeParamConfig(uint8_t paramNumber, uint8_t range);
 		uint16_t readParamConfig(uint8_t paramNumber);
+		uint8_t readEnableCompensationFlags(uint8_t paramNumber);
+		uint8_t enableCompensation(uint8_t paramNumber, uint8_t temperature, uint8_t comp_val_1, uint8_t comp_val_2);
+		uint8_t setCompValue(uint8_t compensationNumber, float value);
 		
 		// Sensor calibration functions
 		uint8_t calibrate(uint8_t sensor, uint8_t parameter, uint8_t step, float value);
