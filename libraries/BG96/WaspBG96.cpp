@@ -424,6 +424,7 @@ uint8_t WaspBG96::lteM1Connection(char* apn, char* ltem1tband, char* network, ui
 		return 6;
 	}
 
+
 	return 0;
 }
 
@@ -547,6 +548,7 @@ uint8_t WaspBG96::nbiotConnection(char* apn, char* nbiotband, char* network, uin
 		return 6;
 	}
 
+
 	// 6.Connecting to network.
 	// AT+COPS
 	answer = setOperator(network, 9, operator_type);
@@ -554,6 +556,7 @@ uint8_t WaspBG96::nbiotConnection(char* apn, char* nbiotband, char* network, uin
 	{
 		return 7;
 	}
+
 
 	return 0;
 }
@@ -1752,6 +1755,7 @@ uint8_t WaspBG96::gprsConnection(char* apn, char* gprsband, char* network, uint8
 	//When CFUN=1, waitting a little bit.
 	delay(5000);
 
+
 	// 6.Connecting to network.
 	// AT+COPS
 	answer = setOperator(network, 0, operator_type);
@@ -2075,7 +2079,7 @@ uint8_t WaspBG96::setOperator(char* operatornumber, uint8_t Act, uint8_t operato
 	uint8_t answer;
 	char command_buffer[30];
 
-	if (operatornumber == 0)
+	if (strcmp(operatornumber, "0") == 0)
 	{
 		// "AT+COPS=0\r"
 		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_AT[52])));
@@ -6451,7 +6455,7 @@ uint8_t WaspBG96::mqttOpenSession(char* server,
 			if (_mqtt_status != 0){
 				PRINT_BG96(F("MQTT error: "));
 				USB.println(_mqtt_status);
-				return  2;
+				return 2;
 			}
 		}
 		pointer = strtok (NULL, " ,\r\n");
@@ -6683,7 +6687,7 @@ uint8_t WaspBG96::mqttSslConfig(uint8_t ssl_auth, uint8_t socketId)
 
 	// SSL authentication version
 	// "AT+QSSLCFG=\"sslversion\",%u,%u\r"
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[1])), socketId, 4);
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[0])), socketId, 4);
 	// send command
 	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
 
@@ -6715,7 +6719,7 @@ uint8_t WaspBG96::mqttSslConfig(uint8_t ssl_auth, uint8_t socketId)
 
 	// Ignore the time of authentication
 	// "AT+QSSLCFG=\"ignorelocaltime\",%u\r"
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[1])), 1);
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_SSL[19])), 1);
 	// send command
 	answer = sendCommand(command_buffer, sBG96_OK, sBG96_ERROR_CODE, sBG96_ERROR);
 
@@ -8272,7 +8276,7 @@ uint8_t WaspBG96::scanOperators()
 	char command_buffer[50];
 	char* pointer;
 
-	USB.println(F("This operation could take a time..."));
+	USB.println(F("This operation could take some minutes..."));
 	// AT+COPS?\r
 	strcpy_P(command_buffer, (char*)pgm_read_word(&(table_AT[58])));
 

@@ -92,7 +92,8 @@ class WaspSDI12
 		int read();
 		void readCommandAnswer(uint8_t length, unsigned long timeout);
 		void setState(uint8_t status);
-		
+		uint8_t isSensor(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
+						char *sensorSerialNumber);
 		
 	private:
 		uint8_t dataPin;				// digital pin for SDI12
@@ -107,8 +108,7 @@ class WaspSDI12
 		void wakeSensors();
 		void writeChar(uint8_t out);
 		void receiveChar();
-		uint8_t isSensor(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
-						char *sensorSerialNumber);
+		
 	 	uint8_t startSensor();
 
 };

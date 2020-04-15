@@ -65,6 +65,18 @@
 #define WTRX_OPTOD_OP_D					30
 #define WTRX_OPTOD_OP_E					31
 
+// Eureka Manta
+#define WTRX_MANTA_PH_F					32
+#define WTRX_MANTA_ORP_F				33
+#define WTRX_MANTA_DEPTH_F				34
+#define WTRX_MANTA_COND_F				35
+#define WTRX_MANTA_CHL_F				36
+#define WTRX_MANTA_NH4_F				37
+#define WTRX_MANTA_NO3_F				38
+#define WTRX_MANTA_CL_F					39
+#define WTRX_MANTA_HDO_F				40
+#define WTRX_MANTA_TC_F					41
+
 
 // Industrial protocols (ModBus & CAN bus)
 #define WTRX_MODBUS_COILS				42
@@ -174,6 +186,14 @@
 #define WTRX_MES5_TF_C					226
 #define WTRX_MES5_TF_D					227
 #define WTRX_MES5_TF_E					228
+#define WTRX_C21_DIS_A					229
+#define WTRX_C21_DIS_B					230
+#define WTRX_C21_DIS_C					231
+#define WTRX_C21_DIS_D					232
+#define WTRX_C21_TC7_A					233
+#define WTRX_C21_TC7_B					234
+#define WTRX_C21_TC7_C					235
+#define WTRX_C21_TC7_D					236
 
 
 /// Flash defines //////////////////////////////////////////////////////////////
@@ -217,29 +237,29 @@ const char 	wtr_xtr_28[] 	PROGMEM	= "OP_B";
 const char 	wtr_xtr_29[] 	PROGMEM	= "OP_C";
 const char 	wtr_xtr_30[] 	PROGMEM	= "OP_D";
 const char 	wtr_xtr_31[] 	PROGMEM	= "OP_E";
-const char 	wtr_xtr_32[] 	PROGMEM	= "";
-const char 	wtr_xtr_33[] 	PROGMEM	= "";
-const char 	wtr_xtr_34[] 	PROGMEM	= "";
-const char 	wtr_xtr_35[] 	PROGMEM	= "";
-const char 	wtr_xtr_36[] 	PROGMEM	= "";
-const char 	wtr_xtr_37[] 	PROGMEM	= "";
-const char 	wtr_xtr_38[] 	PROGMEM	= "";
-const char 	wtr_xtr_39[] 	PROGMEM	= "";
-const char 	wtr_xtr_40[] 	PROGMEM	= "";
-const char 	wtr_xtr_41[] 	PROGMEM	= "";
+const char 	wtr_xtr_32[] 	PROGMEM	= "EM_PH";
+const char 	wtr_xtr_33[] 	PROGMEM	= "EM_ORP";
+const char 	wtr_xtr_34[] 	PROGMEM	= "EM_DEPTH";
+const char 	wtr_xtr_35[] 	PROGMEM	= "EM_COND";
+const char 	wtr_xtr_36[] 	PROGMEM	= "EM_CHL";
+const char 	wtr_xtr_37[] 	PROGMEM	= "EM_NH4";
+const char 	wtr_xtr_38[] 	PROGMEM	= "EM_NO3";
+const char 	wtr_xtr_39[] 	PROGMEM	= "EM_CL";
+const char 	wtr_xtr_40[] 	PROGMEM	= "EM_HDO";
+const char 	wtr_xtr_41[] 	PROGMEM	= "EM_TC";
 
 
 // Industrial protocols: Modbus & CAN bus
-const char	wtr_xtr_42[]  PROGMEM = "MB_COILS"; 
-const char	wtr_xtr_43[]  PROGMEM = "MB_DI"; 
-const char	wtr_xtr_44[]  PROGMEM = "MB_HR"; 
-const char	wtr_xtr_45[]  PROGMEM = "MB_IR"; 
-const char	wtr_xtr_46[]  PROGMEM = "CB_RPM"; 
-const char	wtr_xtr_47[]  PROGMEM = "CB_VS"; 
-const char	wtr_xtr_48[]  PROGMEM = "CB_FR"; 
-const char	wtr_xtr_49[]  PROGMEM = "CB_FL"; 
-const char	wtr_xtr_50[]  PROGMEM = "CB_TP"; 
-const char	wtr_xtr_51[]  PROGMEM = "CB_FP"; 
+const char	wtr_xtr_42[]  PROGMEM = "MB_COILS";
+const char	wtr_xtr_43[]  PROGMEM = "MB_DI";
+const char	wtr_xtr_44[]  PROGMEM = "MB_HR";
+const char	wtr_xtr_45[]  PROGMEM = "MB_IR";
+const char	wtr_xtr_46[]  PROGMEM = "CB_RPM";
+const char	wtr_xtr_47[]  PROGMEM = "CB_VS";
+const char	wtr_xtr_48[]  PROGMEM = "CB_FR";
+const char	wtr_xtr_49[]  PROGMEM = "CB_FL";
+const char	wtr_xtr_50[]  PROGMEM = "CB_TP";
+const char	wtr_xtr_51[]  PROGMEM = "CB_FP";
 
 
 // Additional
@@ -421,6 +441,14 @@ const char	wtr_xtr_225[]  	PROGMEM = "TFA_B";
 const char	wtr_xtr_226[]  	PROGMEM = "TFA_C";
 const char	wtr_xtr_227[]  	PROGMEM = "TFA_D";
 const char	wtr_xtr_228[]  	PROGMEM = "TFA_E";
+const char	wtr_xtr_229[]  	PROGMEM = "DIS_A";
+const char	wtr_xtr_230[]  	PROGMEM = "DIS_B";
+const char	wtr_xtr_231[]  	PROGMEM = "DIS_C";
+const char	wtr_xtr_232[]  	PROGMEM = "DIS_D";
+const char	wtr_xtr_233[]  	PROGMEM = "TC7_A";
+const char	wtr_xtr_234[]  	PROGMEM = "TC7_B";
+const char	wtr_xtr_235[]  	PROGMEM = "TC7_C";
+const char	wtr_xtr_236[]  	PROGMEM = "TC7_D";
 
 
 /*******************************************************************************
@@ -659,7 +687,15 @@ const char* const WTR_XTR_TABLE[] PROGMEM=
 	wtr_xtr_225,
 	wtr_xtr_226,
 	wtr_xtr_227,
-	wtr_xtr_228
+	wtr_xtr_228,
+	wtr_xtr_229,
+	wtr_xtr_230,
+	wtr_xtr_231,
+	wtr_xtr_232,
+	wtr_xtr_233,
+	wtr_xtr_234,
+	wtr_xtr_235,
+	wtr_xtr_236
 };
 
 
@@ -710,16 +746,16 @@ const uint8_t WTR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 29
 	2,		// 30
 	2,		// 31
-	0,		// 32
-	0,		// 33
-	0,		// 34
-	0,		// 35
-	0,		// 36
-	0,		// 37
-	0,		// 38
-	0,		// 39
-	0,		// 40
-	0,		// 41
+	2,		// 32
+	2,		// 33
+	2,		// 34
+	2,		// 35
+	2,		// 36
+	2,		// 37
+	2,		// 38
+	2,		// 39
+	2,		// 40
+	2,		// 41
 
 	//// Industrial protocols (ModBus & CAN bus)
 	1,		// 42
@@ -819,7 +855,7 @@ const uint8_t WTR_XTR_TYPE_TABLE[] PROGMEM=
 	0,		// 131
 	0,		// 132
 	0,		// 133
-	
+
 	2,		// 134
 	2,		// 135
 	2,		// 136
@@ -914,7 +950,15 @@ const uint8_t WTR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 225
 	2,		// 226
 	2,		// 227
-	2		// 228
+	2,		// 228
+	2,		// 229
+	2,		// 230
+	2,		// 231
+	2,		// 232
+	2,		// 233
+	2,		// 234
+	2,		// 235
+	2		// 236
 };
 
 
@@ -983,7 +1027,7 @@ const uint8_t WTR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 48
 	1,		// 49
 	1,		// 50
-	1,		// 51	
+	1,		// 51
 
 	1, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -1071,7 +1115,7 @@ const uint8_t WTR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 131
 	1,		// 132
 	1,		// 133
-	
+
 	1,		// 134
 	1,		// 135
 	1,		// 136
@@ -1166,7 +1210,15 @@ const uint8_t WTR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 225
 	1,		// 226
 	1,		// 227
-	1		// 228
+	1,		// 228
+	1,		// 229
+	1,		// 230
+	1,		// 231
+	1,		// 232
+	1,		// 233
+	1,		// 234
+	1,		// 235
+	1		// 236
 };
 
 
@@ -1210,16 +1262,16 @@ const uint8_t WTR_XTR_DECIMAL_TABLE[] PROGMEM =
 	2,		// 29
 	2,		// 30
 	2,		// 31
-	0,		// 32
-	0,		// 33
-	0,		// 34
-	0,		// 35
-	0,		// 36
-	0,		// 37
-	0,		// 38
-	0,		// 39
-	0,		// 40
-	0,		// 41
+	2,		// 32
+	2,		// 33
+	2,		// 34
+	2,		// 35
+	2,		// 36
+	2,		// 37
+	2,		// 38
+	2,		// 39
+	2,		// 40
+	2,		// 41
 
 	//// Industrial protocols (ModBus & CAN bus)
 	0,		// 42
@@ -1319,7 +1371,7 @@ const uint8_t WTR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 131
 	0,		// 132
 	0,		// 133
-	
+
 	2,		// 134
 	2,		// 135
 	2,		// 136
@@ -1414,7 +1466,15 @@ const uint8_t WTR_XTR_DECIMAL_TABLE[] PROGMEM =
 	2,		// 225
 	2,		// 226
 	2,		// 227
-	2		// 228
+	2,		// 228
+	3,		// 229
+	3,		// 230
+	3,		// 231
+	3,		// 232
+	1,		// 233
+	1,		// 234
+	1,		// 235
+	1		// 236
 
 };
 

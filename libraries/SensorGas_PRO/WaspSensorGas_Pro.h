@@ -617,6 +617,9 @@ public:
 	uint8_t disableCommSockets();
 
 	void zeroPointSet();
+	
+	//Used for exporting sensor type to sketch code 
+	uint8_t sensorType;
 
 };
 #endif

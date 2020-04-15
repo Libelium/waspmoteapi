@@ -65,7 +65,7 @@ const char string_27[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %
 const char string_28[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX531 GMX541 GMX551 + GPS frame format
 const char string_29[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX550 + GPS frame format
 const char string_30[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX600 + GPS frame format
-
+const char string_31[] PROGMEM = "%s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //Eureka example frame format
 
 const char* const table_xtr[] PROGMEM =
 {
@@ -99,8 +99,8 @@ const char* const table_xtr[] PROGMEM =
 	string_27,
 	string_28,
 	string_29,
-	string_30
-
+	string_30,
+	string_31
 };
 
 
@@ -2655,10 +2655,10 @@ uint8_t weatherStation::read()
 
 	//GMX531, GMX551 example frame
 	//strcpy(buffer_ws_raw, "Q 264 000.05 052 000 000.00 000 000.00 000 0100 00000.000 000.000 N 148 1001.4 1001.4 1001.4 047 +025.2 +013.4 11.18 0006 00.00  +026 1.2 +017.9 06:49 11:47 16:46 153:+26 17:16 17:49 18:22 +03 -82 +1 2018-11-13T10:06:56.5 +11.8 0000");
-	
+
 	//GMX541
 	//strcpy(buffer_ws_raw, "Q 264 000.05 052 000 000.00 000 000.00 000 0100 00000.000 000.000 N 148 1001.4 1001.4 1001.4 047 +025.2 +013.4 11.18 0006 00.00 0 0 1.2 +017.9 06:49 11:47 16:46 153:+26 17:16 17:49 18:22 +03 -82 +1 2018-11-13T10:06:56.5 +11.8 0000");
-	
+
 	//GMX550
 	strcpy(buffer_ws_raw, "Q 118 000.00 351 000 000.00 000 000.00 000 0100 0992.0 0992.0 0992.0 041 +023.7 +009.9 08.94 00000.000 000.000 N 233 0 0 1.2 +015.6 06:37 11:44 16:50 142:+19 17:25 18:03 18:42 +00 +00 -1 2019-10-24T09:21:46.9 +11.8 0000");
 
@@ -4376,6 +4376,161 @@ float Apogee_SU100::read(void)
 
 
 //******************************************************************************
+// SU-202 Sensor Class functions
+//******************************************************************************
+
+/*!
+	\brief SU202 Class constructor
+	\param socket selected socket for sensor
+*/
+
+Apogee_SU202::Apogee_SU202(uint8_t _socket)
+{
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Apogee_SU202::ON()
+{
+	char message[70];
+
+	if (SensorXtr.redefinedSocket == 1)
+	{
+		#ifndef MANUFACTURER_TEST
+		//"WARNING: Redefinition of sensor socket detected"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
+		PRINTLN_XTR(message);
+		#endif
+	}
+
+	if ((socket == XTR_SOCKET_A)
+			|| (socket == XTR_SOCKET_D))
+	{
+		//"WARNING - The following sensor can not work in the defined socket:"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[7])));
+		PRINT_XTR(message);
+		USB.println(F("SU202"));
+
+		return 0;
+	}
+
+	SensorXtr.ON(REG_3V3);
+
+	// necessary for POR of the ADC
+	delay(10);
+  
+  SensorXtr.set12v(socket, SWITCH_ON);
+  delay(300);
+
+	return 1;
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void Apogee_SU202::OFF()
+{
+  SensorXtr.set12v(socket, SWITCH_OFF);
+	SensorXtr.OFF();
+}
+
+
+
+/*!
+	\brief reads the SU202 sensor and converts its value into umol·m-2·s-1
+	\param void
+	\return 0 if invalid data. Measure otherwise
+*/
+
+float Apogee_SU202::read(void)
+{
+	// object to manage ADC
+	LTC ltc;
+
+	//Enable SPI isolator for using the ADC
+	digitalWrite(SPI_ISO_EN, HIGH);
+
+	// ADC setup
+	ltc.begin();
+
+	if (socket == XTR_SOCKET_B)
+	{
+		ltc.readADC(ADC_CH3);
+		radiationVoltage = ltc.readADC(ADC_CH3);
+	}
+	if (socket == XTR_SOCKET_C)
+	{
+		ltc.readADC(ADC_CH5);
+		radiationVoltage = ltc.readADC(ADC_CH5);
+	}
+	if (socket == XTR_SOCKET_E)
+	{
+		ltc.readADC(ADC_CH4);
+		radiationVoltage = ltc.readADC(ADC_CH4);
+	}
+	if (socket == XTR_SOCKET_F)
+	{
+		ltc.readADC(ADC_CH2);
+		radiationVoltage = ltc.readADC(ADC_CH2);
+	}
+
+	//Disable SPI isolator for using the ADC
+	digitalWrite(SPI_ISO_EN, LOW);
+
+	// check value of the sensor in volts
+#if DEBUG_XTR == 2
+	PRINT_XTR(F("radiation (V): "));
+	USB.printFloat(radiationVoltage, 5);
+	USB.println();
+#endif
+
+  // Note: the sensor is factory calibrated without
+  // 25 mV per W m -2  or 8.33 mV per μmol m−2 s−1
+
+	// Conversion from voltage into umol·m-2·s-1
+	radiation = (radiationVoltage / 8.33) * 1000;
+  
+  // Note: if the user wants W m -2, the conversion factor should be adjusted
+
+#if DEBUG_XTR == 1
+	PRINT_XTR(F("radiation (umol*m-2*s-1): "));
+	USB.printFloat(radiation, 5);
+	USB.println();
+#endif
+
+	// No way to check if sensor missing.
+	if (radiation <= 0)
+	{
+		// measure out of range
+		return 0;
+	}
+	else
+	{
+		return radiation;
+	}
+
+}
+
+
+//******************************************************************************
 // SQ-110 Sensor Class functions
 //******************************************************************************
 
@@ -4687,6 +4842,657 @@ void Apogee_SP510::heater(uint8_t state)
 }
 
 
+//******************************************************************************
+// VegaPuls C21 Sensor Class functions
+//******************************************************************************
+
+
+/*!
+	\brief VegaPuls_C21 Class constructor
+	\param socket selected socket for sensor
+*/
+VegaPuls_C21::VegaPuls_C21(uint8_t _socket)
+{
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::ON()
+{
+	char message[70];
+
+	if (SensorXtr.redefinedSocket == 1)
+	{
+		#ifndef MANUFACTURER_TEST
+		//"WARNING: Redefinition of sensor socket detected"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
+		PRINTLN_XTR(message);
+		#endif
+	}
+
+	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
+	{
+		//"WARNING - The following sensor can not work in the defined socket:"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[7])));
+		PRINT_XTR(message);
+		USB.println(F("VegaPuls C21"));
+
+		return 0;
+	}
+
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+
+	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+	SensorXtr.set12v(socket, SWITCH_ON);
+
+	//neccessary delay after powering the sensor
+	delay(3000);
+
+#if DEBUG_XTR == 2
+	strcpy_P(message, (char*)pgm_read_word(&(table_xtr[10])));
+	PRINT_XTR(message);
+	USB.println(socket, DEC);
+#endif
+
+	return 1;
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void VegaPuls_C21::OFF()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	SensorXtr.OFF();
+}
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::read()
+{
+	SensorXtr.setMux(socket, ENABLED);
+
+	// Initialize variables
+	VegaPulsC21.stage = 0;
+	VegaPulsC21.distance = 0;
+	VegaPulsC21.temperature = 0;
+	VegaPulsC21.status = 0;
+
+	uint8_t response = 0;
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											VegaPulsC21.sensorSerialNumber,
+											VegaPulsC21.stage,
+											VegaPulsC21.distance,
+											VegaPulsC21.temperature,
+											VegaPulsC21.status);
+
+		if ((VegaPulsC21.stage != 0)
+		|| (VegaPulsC21.distance != 0)
+		|| (VegaPulsC21.status != 0))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	SensorXtr.setMux(socket, DISABLED);
+	return response;
+}
+
+
+/*!
+	\brief Writes the stage configuration of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::writeStageReference(char* _stageReference)
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[14];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXWSR+%s!", sdi12Sensor.address, _stageReference);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+
+/*!
+	\brief Reads the stage configuration of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::readStageReference()
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[7];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXRSR!", sdi12Sensor.address);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	//necessary delay
+	delay(30);
+
+	/*
+	[SDI12] [TX]0XRSR!
+	[SDI12] [RX]0+15.000
+	*/
+
+	char measures[20];
+	// clear measures array
+	memset(measures, 0x00, sizeof(measures));
+	uint8_t i = 0;
+
+	// store the reading in measures buffer
+	if (sdi12Sensor.available() > 2)
+	{
+		//skip address because it is not possible to connect more than one SDI-12 sensor at the same time
+		sdi12Sensor.read();
+
+		while (sdi12Sensor.available() && (i < 20))
+		{
+			measures[i] = sdi12Sensor.read();
+			if (measures[i] == NULL) break;
+			i++;
+		}
+	}
+	sdi12Sensor.setState(DISABLED);
+
+	// Convert string to float values
+	VegaPulsC21.stageReference = atof(measures);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+
+/*!
+	\brief Writes the power operation mode of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::writePowerOperationMode(uint8_t _pom)
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[14];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXWPOM+%d!", sdi12Sensor.address, _pom);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+
+/*!
+	\brief Reads the stage configuration of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::readPowerOperationMode()
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[8];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXRPOM!", sdi12Sensor.address);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	//necessary delay
+	delay(30);
+
+	/*
+	[SDI12] [TX]0XRSR!
+	[SDI12] [RX]0+15.000
+	*/
+
+	char measures[20];
+	// clear measures array
+	memset(measures, 0x00, sizeof(measures));
+	uint8_t i = 0;
+
+	// store the reading in measures buffer
+	if (sdi12Sensor.available() > 2)
+	{
+		//skip address because it is not possible to connect more than one SDI-12 sensor at the same time
+		sdi12Sensor.read();
+
+		while (sdi12Sensor.available() && (i < 20))
+		{
+			measures[i] = sdi12Sensor.read();
+			if (measures[i] == NULL) break;
+			i++;
+		}
+	}
+	sdi12Sensor.setState(DISABLED);
+
+	// Convert string to uint8_t value
+	VegaPulsC21.powerOperationMode = atoi(measures);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+/*!
+	\brief Writes the distance unit of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::writeDistanceUnit(uint8_t _distanceUnit)
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[14];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXWDU+%d!", sdi12Sensor.address, _distanceUnit);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+
+/*!
+	\brief Reads the distance unit of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::readDistanceUnit()
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[8];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXRDU!", sdi12Sensor.address);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	//necessary delay
+	delay(30);
+
+	/*
+	[SDI12] [TX]0XRSR!
+	[SDI12] [RX]0+15.000
+	*/
+
+	char measures[20];
+	// clear measures array
+	memset(measures, 0x00, sizeof(measures));
+	uint8_t i = 0;
+
+	// store the reading in measures buffer
+	if (sdi12Sensor.available() > 2)
+	{
+		//skip address because it is not possible to connect more than one SDI-12 sensor at the same time
+		sdi12Sensor.read();
+
+		while (sdi12Sensor.available() && (i < 20))
+		{
+			measures[i] = sdi12Sensor.read();
+			if (measures[i] == NULL) break;
+			i++;
+		}
+	}
+	sdi12Sensor.setState(DISABLED);
+
+	// Convert string to uint8_t value
+	VegaPulsC21.distanceUnit = atoi(measures);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+/*!
+	\brief Writes the temperature unit of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::writeTemperatureUnit(uint8_t _temperatureUnit)
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[14];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXRDU+%d!", sdi12Sensor.address, _temperatureUnit);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+
+/*!
+	\brief Reads the temperature unit of the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::readTemperatureUnit()
+{
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	SensorXtr.setMux(socket, ENABLED);
+
+	//Check if sensor is present, and take address number
+	char sensorNameStr[6];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "PSC21", 5);
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//check if correct SDI12 sensor connected
+		if (sdi12Sensor.isSensor(sensorNameStr, strlen(sensorNameStr), VegaPulsC21.sensorSerialNumber))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	if(validMeasure == 0)
+	{
+		return 0;
+	}
+
+	char command_sent[8];
+	memset(command_sent, 0x00, sizeof(command_sent));
+	snprintf(command_sent, sizeof(command_sent), "%cXRDU!", sdi12Sensor.address);
+
+	sdi12Sensor.sendCommand(command_sent, strlen(command_sent));
+	sdi12Sensor.readCommandAnswer(10, LISTEN_TIME);
+
+	//necessary delay
+	delay(30);
+
+	/*
+	[SDI12] [TX]0XRSR!
+	[SDI12] [RX]0+15.000
+	*/
+
+	char measures[20];
+	// clear measures array
+	memset(measures, 0x00, sizeof(measures));
+	uint8_t i = 0;
+
+	// store the reading in measures buffer
+	if (sdi12Sensor.available() > 2)
+	{
+		//skip address because it is not possible to connect more than one SDI-12 sensor at the same time
+		sdi12Sensor.read();
+
+		while (sdi12Sensor.available() && (i < 20))
+		{
+			measures[i] = sdi12Sensor.read();
+			if (measures[i] == NULL) break;
+			i++;
+		}
+	}
+	sdi12Sensor.setState(DISABLED);
+
+	// Convert string to uint8_t value
+	VegaPulsC21.temperatureUnit = atoi(measures);
+
+	SensorXtr.setMux(socket, DISABLED);
+	return 1;
+}
+
+
+/*!
+	\brief Reads the sensor serial number
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t VegaPuls_C21::readSerialNumber()
+{
+	return read();
+}
 
 
 /*******************************************************************************
@@ -11048,24 +11854,676 @@ uint8_t AqualaboWaterXtr::enableCompensation(uint8_t compensatedParam, uint8_t e
 		case COMPENSATES_TEMP:
 			return saveCompensationValue(compensatedParam, enablingState, compensation1, compensation2);
 		break;
-		
+
 		case COMPENSATES_1:
 			return saveCompensationValue(compensatedParam,compensationTemp, enablingState, compensation2);
 		break;
-		
+
 		case COMPENSATES_2:
 			return saveCompensationValue(compensatedParam, compensationTemp, compensation1, enablingState);
 		break;
-			
+
 		case COMPENSATES_3:
 			return 0;
 		break;
-		
+
 		default:
 			return 0;
 		break;
 	}
 }
+
+//******************************************************************************
+// EUREKA Sensor Class Functions
+//******************************************************************************
+
+/*!
+	\brief Eureka Class constructor
+	\param
+*/
+Eureka_Manta::Eureka_Manta()
+{
+	socket = XTR_SOCKET_F;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+
+}
+
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return return 1 if ok, 0 if something fails
+*/
+uint8_t Eureka_Manta::ON()
+{
+	//MAX3232 needs both 3v3 and 5v
+	SensorXtr.ON();
+
+	//neccessary delay after powering the sensor
+	delay(300);
+
+	//rs232 config
+	Utils.setMuxAux1();
+	beginSerial(19200, 1);
+	// parity none
+	cbi(UCSR1C, UPM11);
+	cbi(UCSR1C, UPM10);
+	// 1 stop bit
+	cbi(UCSR1C, USBS1);
+	serialFlush(1);
+	delay(100);
+
+	SensorXtr.set12v(socket, SWITCH_ON);
+
+	bool exitWhile = 0;
+	unsigned long previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 10000) && exitWhile == 0)
+	{
+		if (serialAvailable(1) > 0)
+		{
+			char buffer_temp = serialRead(1);
+			#if DEBUG_XTR > 1
+				USB.print(buffer_temp);
+			#endif
+			// wait for '>'
+			if (buffer_temp == '>')
+			{
+				exitWhile = 1;
+			}
+		}
+
+		//avoid millis overflow problem
+		if ( millis() < previous ) previous = millis();
+	}
+
+	return exitWhile;
+
+}
+
+
+/*!
+	\brief Configure parameters to read
+	\param void
+	\return void
+*/
+void Eureka_Manta::configureSensor()
+{
+	//rs232 config
+	Utils.setMuxAux1();
+	beginSerial(19200, 1);
+	// parity none
+	cbi(UCSR1C, UPM11);
+	cbi(UCSR1C, UPM10);
+	// 1 stop bit
+	cbi(UCSR1C, USBS1);
+	serialFlush(1);
+	delay(100);
+
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+
+	//Send command to configure default settings
+	printString("p -def\r", 1);
+	delay(100);
+	#if DEBUG_XTR > 1
+		PRINT_XTR(F("EUREKA TX:"));
+		USB.println(F("p -def"));
+	#endif
+
+	bool exitWhile = 0;
+	unsigned long previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 10000) && exitWhile == 0)
+	{
+		if (serialAvailable(1) > 0)
+		{
+			int buffer_temp = serialRead(1);
+			#if DEBUG_XTR > 1
+				USB.print((char)buffer_temp);
+			#endif
+			// wait for '>'
+			if (buffer_temp == '>')
+			{
+				#if DEBUG_XTR > 0
+					PRINTLN_XTR("> found");
+				#endif
+				exitWhile = 1;
+			}
+		}
+
+		//avoid millis overflow problem
+		if ( millis() < previous ) previous = millis();
+	}
+
+}
+
+/*!
+	\brief save settings
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Eureka_Manta::saveConfig()
+{
+	//rs232 config
+	Utils.setMuxAux1();
+	beginSerial(19200, 1);
+	// parity none
+	cbi(UCSR1C, UPM11);
+	cbi(UCSR1C, UPM10);
+	// 1 stop bit
+	cbi(UCSR1C, USBS1);
+	serialFlush(1);
+	delay(100);
+
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+
+	//Send command to save settings
+	printString("wconfig\r", 1);
+	delay(100);
+	#if DEBUG_XTR > 1
+	PRINT_XTR(F("EUREKA TX:"));
+	USB.println(F("wconfig"));
+	#endif
+
+	bool exitWhile = 0;
+	unsigned long previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 10000) && exitWhile == 0)
+	{
+		if (serialAvailable(1) > 0)
+		{
+			char buffer_temp = serialRead(1);
+			#if DEBUG_XTR > 1
+			USB.print(buffer_temp);
+			#endif
+			// wait for '>'
+			if (buffer_temp == '>')
+			{
+				#if DEBUG_XTR > 0
+				PRINTLN_XTR("> found");
+				#endif
+				exitWhile = 1;
+			}
+		}
+
+		//avoid millis overflow problem
+		if ( millis() < previous ) previous = millis();
+	}
+	return exitWhile;
+}
+
+/*!
+	\brief Set barometric pressure. Units: mm Hg
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Eureka_Manta::getBarometricPressure()
+{
+	//rs232 config
+	Utils.setMuxAux1();
+	beginSerial(19200, 1);
+	// parity none
+	cbi(UCSR1C, UPM11);
+	cbi(UCSR1C, UPM10);
+	// 1 stop bit
+	cbi(UCSR1C, USBS1);
+	serialFlush(1);
+	delay(100);
+
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+
+	//Send command to set pressuse
+	printString("bp\r", 1);
+	delay(100);
+	#if DEBUG_XTR > 1
+	PRINT_XTR(F("EUREKA TX:"));
+	USB.println(F("bp"));
+	#endif
+
+	const uint8_t BUFFER_SIZE = 20;
+	char buffer_eureka_raw[BUFFER_SIZE];
+	memset(buffer_eureka_raw, 0x00, sizeof(buffer_eureka_raw));
+	uint16_t _lengthEureka = 0;
+
+	// index counter
+	uint16_t i = 0;
+
+	bool exitWhile = 0;
+	unsigned long previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 10000) && exitWhile == 0)
+	{
+
+		if( serialAvailable(1) )
+		{
+			if ( i < (sizeof(buffer_eureka_raw)-1) )
+			{
+				buffer_eureka_raw[i++] = serialRead(1);
+				_lengthEureka++;
+			}
+		}
+
+		if (buffer_eureka_raw[i-1] == '\r')
+		{
+			#if DEBUG_XTR > 0
+			PRINTLN_XTR(" \r found");
+			#endif
+
+			exitWhile = 1;
+		}
+
+		//avoid millis overflow problem
+		if ( millis() < previous ) previous = millis();
+	}
+
+	#if DEBUG_XTR > 0
+	PRINT_XTR("Buffer: ");
+	USB.println((char*)buffer_eureka_raw);
+	#endif
+
+	if(exitWhile)
+	{
+		char* pch = strtok( (char*)buffer_eureka_raw, "=");
+
+		pch = strtok(NULL, "="); //bp
+
+		if (pch != NULL)
+		{
+			memset(sensorEureka.pressure,0x00, sizeof(sensorEureka.pressure));
+			strncpy(sensorEureka.pressure, pch, sizeof(sensorEureka.pressure)-1);
+
+			#if DEBUG_XTR > 0
+			PRINT_XTR(F("Pressure: "));
+			USB.println(sensorEureka.pressure);
+			#endif
+
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+/*!
+	\brief Get barometric pressure
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Eureka_Manta::setBarometricPressure(float pressure)
+{
+	char pressure_local[10];
+	dtostrf( pressure, 1, 1, pressure_local);
+
+
+	//rs232 config
+	Utils.setMuxAux1();
+	beginSerial(19200, 1);
+	// parity none
+	cbi(UCSR1C, UPM11);
+	cbi(UCSR1C, UPM10);
+	// 1 stop bit
+	cbi(UCSR1C, USBS1);
+	serialFlush(1);
+	delay(100);
+
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+
+	//Send command to set pressure
+	printString("bp ", 1);
+	printString(pressure_local, 1);
+	printString("\r", 1);
+	delay(100);
+
+	#if DEBUG_XTR > 1
+	PRINT_XTR(F("EUREKA TX:"));
+	USB.print(F("bp "));
+	USB.println(pressure_local);
+	#endif
+
+	bool exitWhile = 0;
+	unsigned long previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 10000) && exitWhile == 0)
+	{
+		if (serialAvailable(1) > 0)
+		{
+			char buffer_temp = serialRead(1);
+			#if DEBUG_XTR > 1
+			USB.print(buffer_temp);
+			#endif
+			// wait for '>'
+			if (buffer_temp == '>')
+			{
+				#if DEBUG_XTR > 0
+				PRINTLN_XTR("> found");
+				#endif
+				exitWhile = 1;
+			}
+		}
+
+		//avoid millis overflow problem
+		if ( millis() < previous ) previous = millis();
+	}
+	return exitWhile;
+}
+
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void Eureka_Manta::OFF()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	SensorXtr.OFF();
+}
+
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Eureka_Manta::read()
+{
+	// Initialize vector variables
+	sensorEureka.ph = 0;
+	sensorEureka.orp = 0;
+	sensorEureka.depth = 0;
+	sensorEureka.spCond = 0;
+	sensorEureka.chl = 0;
+	sensorEureka.nh4 = 0;
+	sensorEureka.no3 = 0;
+	sensorEureka.cl = 0;
+	sensorEureka.hdo = 0;
+	sensorEureka.temperature = 0;
+	strcpy(sensorEureka.ME_date, "0");
+	strcpy(sensorEureka.ME_time, "0");
+
+	// Create and initialize local variables
+	char first_character_local[2];
+	char ident_local[10];
+	char zero_value_local[5];
+	char ph_local[10];
+	char orp_local[10];
+	char depth_local[10];
+	char spCond_local[10];
+	char chl_local[10];
+	char nh4_local[10];
+	char no3_local[10];
+	char cl_local[10];
+	char hdo_local[10];
+	char temperature_local[10];
+
+	strcpy(first_character_local, "0");
+	strcpy(ident_local, "0");
+	strcpy(zero_value_local, "0");
+	strcpy(ph_local, "0");
+	strcpy(orp_local, "0");
+	strcpy(depth_local, "0");
+	strcpy(spCond_local, "0");
+	strcpy(chl_local, "0");
+	strcpy(nh4_local, "0");
+	strcpy(no3_local, "0");
+	strcpy(cl_local, "0");
+	strcpy(hdo_local, "0");
+	strcpy(temperature_local, "0");
+
+	//rs232 config
+	Utils.setMuxAux1();
+	beginSerial(19200, 1);
+	// parity none
+	cbi(UCSR1C, UPM11);
+	cbi(UCSR1C, UPM10);
+	// 1 stop bit
+	cbi(UCSR1C, USBS1);
+	serialFlush(1);
+	delay(100);
+
+	bool exitWhile = 0;
+	bool dataFrameFound = 0;
+	bool dataFrameParsed = 0;
+	uint16_t i = 0;
+
+	const uint16_t BUFFER_SIZE = 200;
+	char buffer_eureka_raw[BUFFER_SIZE];
+	memset(buffer_eureka_raw, 0x00, sizeof(buffer_eureka_raw));
+
+	char buffer_table[100];
+	memset(buffer_table, 0x00, sizeof(buffer_table));
+
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+
+	//Send command to configure default settings
+	printString("read\r", 1);
+	delay(100);
+	#if DEBUG_XTR > 1
+	PRINT_XTR(F("EUREKA TX:"));
+	USB.println(F("read"));
+	#endif
+
+	unsigned long previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 20000) && (exitWhile == 0) && (dataFrameFound == 0))
+	{
+
+		if (serialAvailable(1) > 0)
+		{
+			//Avoid storing 0x00 in our buffer string or 0x02 STX (Start of Text)
+			char buffer_temp = serialRead(1);
+			#if DEBUG_XTR > 1
+				USB.print((char)buffer_temp);
+			#endif
+			//Change ',' for ' ' (whitespace character) for better parsing
+			if (buffer_temp != ',')
+			{
+				buffer_eureka_raw[i] = buffer_temp;
+			}
+			else
+			{
+				//if ',,' situation occurs, avoid with a zero -> ',0,'
+				if(buffer_eureka_raw[i-1] == ' ')
+				{
+					buffer_eureka_raw[i] = '0';
+					i++;
+				}
+				buffer_eureka_raw[i] = ' ';
+			}
+			i++;
+			// \r found
+			if ((buffer_eureka_raw[i - 1] == '\r'))
+			{
+				#if DEBUG_XTR > 0
+					PRINTLN_XTR("Character CR found");
+				#endif
+				buffer_eureka_raw[i - 1] = 0x00;
+				dataFrameFound = 1;
+			}
+
+			if (i - 1 == BUFFER_SIZE)
+			{
+				#if DEBUG_XTR > 0
+					PRINTLN_XTR("Eureka full buffer");
+				#endif
+				exitWhile = 1;
+			}
+		}
+
+		//avoid millis overflow problem after approximately 50 days
+		if ( millis() < previous ) previous = millis();
+	}
+
+	#if DEBUG_XTR > 1
+	PRINT_XTR(F("EUREKA RX:"));
+	USB.println(buffer_eureka_raw);
+	#endif
+
+	if (dataFrameFound)
+	{
+		//#DATA: DATE,TIME,0.0,Temp_deg_C,pH_units,ORP_mV,Depth_m,SpCond_uS/cm,Chl_ug/l,NH4_mg/L-N,NO3_mg/L-N,Cl_mg/L,HDO_mg/l␍␊
+		//#DATA: 03/13/20,02:22:34,0.0,23.97,7.00,0.1,-48.63,0.0,0.04,0.0,0.0,0.0,0.00␍␊
+		strcpy((char*)buffer_table, (char*)"%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s");
+		#if DEBUG_XTR > 1
+		PRINTLN_XTR(buffer_table);
+		#endif
+
+		sscanf (buffer_eureka_raw, buffer_table,
+						first_character_local,
+						ident_local,
+						sensorEureka.ME_date,
+						sensorEureka.ME_time,
+						zero_value_local,
+						temperature_local,
+						ph_local,
+						orp_local,
+						depth_local,
+						spCond_local,
+						chl_local,
+						nh4_local,
+						no3_local,
+						cl_local,
+						hdo_local);
+		dataFrameParsed = 1;
+	}
+
+	if (dataFrameParsed)
+	{
+		sensorEureka.ph = atof (ph_local);
+		sensorEureka.orp = atof (orp_local);
+		sensorEureka.depth = atof (depth_local);
+		sensorEureka.spCond = atof (spCond_local);
+		sensorEureka.chl = atof (chl_local);
+		sensorEureka.nh4 = atof (nh4_local);
+		sensorEureka.no3 = atof (no3_local);
+		sensorEureka.cl = atof (cl_local);
+		sensorEureka.hdo = atof (hdo_local);
+		sensorEureka.temperature = atof (temperature_local);
+
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+
+/*!
+	\brief Enters commands to Eureka Manta
+	\param str
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Eureka_Manta::sendCommand(char* str)
+{
+	const uint16_t BUFFER_SIZE = 200;
+	char buffer_eureka_raw[BUFFER_SIZE];
+	memset(buffer_eureka_raw, 0x00, sizeof(buffer_eureka_raw));
+
+	bool exitWhile = 0;
+	bool dataFrameFound = 0;
+	uint16_t i = 0;
+
+
+	//Configure UART
+	Utils.setMuxAux1();
+	beginSerial(19200, 1);
+	serialFlush(1);
+	delay(5);
+
+	//Clean serial buffer
+	while (serialAvailable(1) > 0)
+	{
+		serialRead(1);
+	}
+
+	printString(str, 1);
+	printString("\r", 1);
+	delay(20);
+
+	USB.print(F("EM TX:"));
+	USB.println(str);
+	USB.print(F("EM RX:"));
+
+	unsigned long previous = millis();
+
+	//Capture buffer
+	while (((millis() - previous) < 8000) && (dataFrameFound == 0) && (exitWhile == 0))
+	{
+		if (serialAvailable(1) > 0)
+		{
+			char buffer_temp = serialRead(1);
+
+			buffer_eureka_raw[i] = buffer_temp;
+			//USB.print(buffer_temp);
+
+			if (buffer_temp != ',')
+			{
+				buffer_eureka_raw[i] = buffer_temp;
+			}
+			else
+			{
+				buffer_eureka_raw[i] = ' ';
+			}
+
+			if (i - 1 == BUFFER_SIZE)
+			{
+				#if DEBUG_XTR > 0
+				USB.println("Eureka send command full buffer");
+				#endif
+				exitWhile = 1;
+			}
+			if(buffer_eureka_raw[i] == '>')
+			{
+				dataFrameFound = 1;
+				USB.println();
+				return 1;
+			}
+			i++;
+		}
+
+		//avoid millis overflow problem after approximately 50 days
+		if ( millis() < previous ) previous = millis();
+	}
+
+	return 0;
+}
+
 
 /* enableCompensation enables measurement compensation internal to the probe. This setting
 	is stored in OPTOD's FLASH memory and thus persistent. Compensation for atmospheric
@@ -11076,7 +12534,6 @@ uint8_t AqualaboWaterXtr::enableCompensation(uint8_t compensatedParam, uint8_t e
 	parameters: temperature - 1 to enable temperature compensation, 0 to disable
 				atm_pressure - 1 to enable atmospheric pressure compensation, 0 to disable
 				salinity - 1 to enable salinity compensation, 0 to disable
-
 	return: 1 if ok, 0 if something fails
 */
 uint8_t AqualaboWaterXtr::saveCompensationValue(uint8_t paramNumber, uint8_t _compensationTemp, uint8_t _compensation1, uint8_t _compensation2)
@@ -11100,13 +12557,13 @@ uint8_t AqualaboWaterXtr::saveCompensationValue(uint8_t paramNumber, uint8_t _co
 
 /* setCompensationValue - sets a compensation value to be used in measurement
 	compensation instead of the default.
-	parameters: value - a value to be used 
+	parameters: value - a value to be used
 	return: 1 if ok, 0 if something fails
 */
 uint8_t AqualaboWaterXtr::setCompensationValue(uint8_t extParamWithWhichCompensate, float value)
 {
 	uint8_t status;
-	
+
 	status = aqualaboModbusSensors.setCompValue(extParamWithWhichCompensate, value);
 
 	if (status == 0)
@@ -11320,6 +12777,291 @@ void DatasolMET::clearBuffer()
 	datasolMetModbus.clearResponseBuffer();
 	datasolMetModbus.clearTransmitBuffer();
 	delay(10);
+}
+
+//******************************************************************************
+//TEROS12 Sensor Class functions
+//******************************************************************************
+
+/*!
+	\brief TEROS12 Class constructor
+	\param socket selected socket for sensor
+*/
+Meter_TEROS12::Meter_TEROS12(uint8_t _socket)
+{
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Meter_TEROS12::ON()
+{
+	char message[70];
+
+	if (SensorXtr.redefinedSocket == 1)
+	{
+		#ifndef MANUFACTURER_TEST
+		//"WARNING: Redefinition of sensor socket detected"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
+		PRINTLN_XTR(message);
+		#endif
+	}
+
+	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
+	{
+		//"WARNING - The following sensor can not work in the defined socket:"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[7])));
+		PRINT_XTR(message);
+		USB.println(F("TEROS12"));
+
+		return 0;
+	}
+
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
+	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+	SensorXtr.set12v(socket, SWITCH_ON);
+
+	//neccessary delay after powering the sensor
+	delay(300);
+
+#if DEBUG_XTR == 2
+	//"socket (!): "
+	strcpy_P(message, (char*)pgm_read_word(&(table_xtr[10])));
+	PRINT_XTR(message);
+	USB.println(socket, DEC);
+#endif
+
+	return 1;
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void Meter_TEROS12::OFF()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	SensorXtr.OFF();
+
+}
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Meter_TEROS12::read()
+{
+	SensorXtr.setMux(socket, ENABLED);
+
+	// Initialize variables
+	sensorTEROS12.calibratedCountsVWC = 0;
+	sensorTEROS12.electricalConductivity = 0;
+	sensorTEROS12.temperature = 0;
+	float parameter4_dummy = -1000;
+
+	uint8_t response = 0;
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	char sensorNameStr[6]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "TER12", 5);
+	
+	while ((validMeasure == 0) && (retries < 3))
+	{
+
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorTEROS12.sensorSerialNumber,
+											sensorTEROS12.calibratedCountsVWC,
+											sensorTEROS12.temperature,
+											sensorTEROS12.electricalConductivity,
+											parameter4_dummy);
+
+		if ((sensorTEROS12.calibratedCountsVWC != 0)
+		|| (sensorTEROS12.temperature != 0)
+		|| (sensorTEROS12.electricalConductivity != 0))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	SensorXtr.setMux(socket, DISABLED);
+	return response;
+}
+
+/*!
+	\brief Reads the sensor serial number
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Meter_TEROS12::readSerialNumber()
+{
+	return read();
+}
+
+//******************************************************************************
+//TEROS11 Sensor Class functions
+//******************************************************************************
+
+/*!
+	\brief TEROS11 Class constructor
+	\param socket selected socket for sensor
+*/
+Meter_TEROS11::Meter_TEROS11(uint8_t _socket)
+{
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Meter_TEROS11::ON()
+{
+	char message[70];
+
+	if (SensorXtr.redefinedSocket == 1)
+	{
+		#ifndef MANUFACTURER_TEST
+		//"WARNING: Redefinition of sensor socket detected"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
+		PRINTLN_XTR(message);
+		#endif
+	}
+
+	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
+	{
+		//"WARNING - The following sensor can not work in the defined socket:"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[7])));
+		PRINT_XTR(message);
+		USB.println(F("TEROS11"));
+
+		return 0;
+	}
+
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+	
+	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+	SensorXtr.set12v(socket, SWITCH_ON);
+
+	//neccessary delay after powering the sensor
+	delay(300);
+
+#if DEBUG_XTR == 2
+	//"socket (!): "
+	strcpy_P(message, (char*)pgm_read_word(&(table_xtr[10])));
+	PRINT_XTR(message);
+	USB.println(socket, DEC);
+#endif
+
+	return 1;
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void Meter_TEROS11::OFF()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	SensorXtr.OFF();
+
+}
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Meter_TEROS11::read()
+{
+	SensorXtr.setMux(socket, ENABLED);
+
+	// Initialize variables
+	sensorTEROS11.calibratedCountsVWC = 0;
+	sensorTEROS11.temperature = 0;
+  float parameter3_dummy = -1000;
+	float parameter4_dummy = -1000;
+
+	uint8_t response = 0;
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	char sensorNameStr[6]; 
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "TER11", 5);
+	
+	while ((validMeasure == 0) && (retries < 3))
+	{
+
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorTEROS11.sensorSerialNumber,
+											sensorTEROS11.calibratedCountsVWC,
+											sensorTEROS11.temperature,
+											parameter3_dummy,
+											parameter4_dummy);
+
+		if ((sensorTEROS11.calibratedCountsVWC != 0)
+		|| (sensorTEROS11.temperature != 0))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+	SensorXtr.setMux(socket, DISABLED);
+	return response;
+}
+
+/*!
+	\brief Reads the sensor serial number
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Meter_TEROS11::readSerialNumber()
+{
+	return read();
 }
 
 

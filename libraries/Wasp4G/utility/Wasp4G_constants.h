@@ -1,22 +1,22 @@
 /*! \file	Wasp4G_contants.h
     \brief 	Header file with constant definitions and flash strings
-        
+
     Copyright (C) 2018 Libelium Comunicaciones Distribuidas S.L.
     http://www.libelium.com
- 
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 2.1 of the License, or
     (at your option) any later version.
-   
+
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-  
+
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
+
     Version:		3.4
     Design:			David Gascon
     Implementation:	Alejandro Gállego
@@ -88,7 +88,7 @@ const char LE910_string_42[]	PROGMEM = "+CEREG: 0,";						//42
 const char LE910_string_43[]	PROGMEM = "AT+WS46?\r";						//43
 const char LE910_string_44[]	PROGMEM = "AT#SHDN\r";						//44
 
-const char* const table_4G[] PROGMEM = 
+const char* const table_4G[] PROGMEM =
 {
 	LE910_string_00,
 	LE910_string_01,
@@ -163,7 +163,7 @@ const char LE910_PIN_17[]	PROGMEM = "+CPIN:";			//17
 const char LE910_PIN_18[]	PROGMEM = "AT+CPIN=\"%s\"\r";	//18
 const char LE910_PIN_19[]	PROGMEM = "AT+CPIN=\"%s\",\"%s\"\r";	//19
 
-const char* const table_PIN[] PROGMEM = 
+const char* const table_PIN[] PROGMEM =
 {
 	LE910_PIN_00,
 	LE910_PIN_01,
@@ -201,7 +201,7 @@ const char LE910_SMS_05[]	PROGMEM = "AT+CMGD=%u\r";						//5
 const char LE910_SMS_06[]	PROGMEM = "AT+CMGD=%u,%u\r";					//6
 const char LE910_SMS_07[]	PROGMEM = "AT+CSMP=17,167,0,0\r";				//7
 
-const char* const table_SMS[] PROGMEM = 
+const char* const table_SMS[] PROGMEM =
 {
 	LE910_SMS_00,
 	LE910_SMS_01,
@@ -232,7 +232,7 @@ const char LE910_HTTP_08[]	PROGMEM = "text/plain";							//8
 const char LE910_HTTP_09[]	PROGMEM = "application/octet-stream";			//9
 const char LE910_HTTP_10[]	PROGMEM = "multipart/form-data";				//10
 
-const char* const table_HTTP[] PROGMEM = 
+const char* const table_HTTP[] PROGMEM =
 {
 	LE910_HTTP_00,
 	LE910_HTTP_01,
@@ -259,7 +259,7 @@ const char LE910_FTP_01[]	PROGMEM = "AT#FTPCLOSE\r";					// 1
 const char LE910_FTP_02[]	PROGMEM = "AT#FTPPUT=\"%s\",0\r";			// 2
 const char LE910_FTP_03[]	PROGMEM = "AT#FTPGETPKT=\"%s\"\r";			// 3
 const char LE910_FTP_04[]	PROGMEM = "AT#FTPTYPE=0\r";					// 4
-const char LE910_FTP_05[]	PROGMEM = "AT#FTPFSIZE=\"%s\"\r";			// 5 
+const char LE910_FTP_05[]	PROGMEM = "AT#FTPFSIZE=\"%s\"\r";			// 5
 const char LE910_FTP_06[]	PROGMEM = "AT#FTPRECV=%u\r";				// 6
 const char LE910_FTP_07[]	PROGMEM = "#FTPMSG";						// 7
 const char LE910_FTP_08[]	PROGMEM = "AT#FTPGETPKT?\r";				// 8
@@ -273,7 +273,7 @@ const char LE910_FTP_15[]	PROGMEM = "AT#FTPPWD\r";					// 15
 const char LE910_FTP_16[]	PROGMEM = "AT#FTPLIST\r";					// 16
 const char LE910_FTP_17[]	PROGMEM = "AT#FTPCWD=\"%s\"\r";				// 17
 
-const char* const table_FTP[] PROGMEM = 
+const char* const table_FTP[] PROGMEM =
 {
 	LE910_FTP_00,
 	LE910_FTP_01,
@@ -338,8 +338,9 @@ const char LE910_IP_SOCKET_31[]	PROGMEM = "AT#SS\r";						//31
 const char LE910_IP_SOCKET_32[]	PROGMEM = "#SS: %u,";						//32
 const char LE910_IP_SOCKET_33[]	PROGMEM = "AT#SSLEN=%u,%u\r";				//33
 const char LE910_IP_SOCKET_34[]	PROGMEM = "AT#SSLSECCFG=%u,%u,%u\r";		//34
+const char LE910_IP_SOCKET_35[]	PROGMEM = "AT#SSLSECCFG2=%u,%u\r";			//35
 
-const char* const table_IP[] PROGMEM = 
+const char* const table_IP[] PROGMEM =
 {
 	LE910_IP_SOCKET_00,
 	LE910_IP_SOCKET_01,
@@ -354,7 +355,7 @@ const char* const table_IP[] PROGMEM =
 	LE910_IP_SOCKET_10,
 	LE910_IP_SOCKET_11,
 	LE910_IP_SOCKET_12,
-	LE910_IP_SOCKET_13,	
+	LE910_IP_SOCKET_13,
 	LE910_IP_SOCKET_14,
 	LE910_IP_SOCKET_15,
 	LE910_IP_SOCKET_16,
@@ -376,6 +377,7 @@ const char* const table_IP[] PROGMEM =
 	LE910_IP_SOCKET_32,
 	LE910_IP_SOCKET_33,
 	LE910_IP_SOCKET_34,
+	LE910_IP_SOCKET_35,
 };
 
 
@@ -411,35 +413,35 @@ const char LE910_GPS_24[]	PROGMEM = "AT$LCSLK=1,1\r";						//24
 const char LE910_GPS_25[]	PROGMEM = "AT$GPSGLO=1\r";						//25
 const char LE910_GPS_26[]	PROGMEM = "AT#AGPSSND\r";						//26
 
-const char* const table_GPS[] PROGMEM = 
+const char* const table_GPS[] PROGMEM =
 {
-	LE910_GPS_00,	
-	LE910_GPS_01,	
-	LE910_GPS_02,	
-	LE910_GPS_03,	
-	LE910_GPS_04,	
-	LE910_GPS_05,	
-	LE910_GPS_06,	
-	LE910_GPS_07,	
-	LE910_GPS_08,	
-	LE910_GPS_09,	
-	LE910_GPS_10,	
-	LE910_GPS_11,	
-	LE910_GPS_12,	
-	LE910_GPS_13,	
-	LE910_GPS_14,	
-	LE910_GPS_15,	
-	LE910_GPS_16,	
-	LE910_GPS_17,	
-	LE910_GPS_18,	
-	LE910_GPS_19,	
-	LE910_GPS_20,	
-	LE910_GPS_21,	
-	LE910_GPS_22,	
-	LE910_GPS_23,	
-	LE910_GPS_24,	
-	LE910_GPS_25,	
-	LE910_GPS_26,	
+	LE910_GPS_00,
+	LE910_GPS_01,
+	LE910_GPS_02,
+	LE910_GPS_03,
+	LE910_GPS_04,
+	LE910_GPS_05,
+	LE910_GPS_06,
+	LE910_GPS_07,
+	LE910_GPS_08,
+	LE910_GPS_09,
+	LE910_GPS_10,
+	LE910_GPS_11,
+	LE910_GPS_12,
+	LE910_GPS_13,
+	LE910_GPS_14,
+	LE910_GPS_15,
+	LE910_GPS_16,
+	LE910_GPS_17,
+	LE910_GPS_18,
+	LE910_GPS_19,
+	LE910_GPS_20,
+	LE910_GPS_21,
+	LE910_GPS_22,
+	LE910_GPS_23,
+	LE910_GPS_24,
+	LE910_GPS_25,
+	LE910_GPS_26,
 };
 
 
@@ -454,7 +456,7 @@ const char LE910_OTA_03[]	PROGMEM = "PATH:";			//3
 const char LE910_OTA_04[]	PROGMEM = "SIZE:";			//4
 const char LE910_OTA_05[]	PROGMEM = "VERSION:";		//5
 
-const char* const table_OTA_LE910[] PROGMEM = 
+const char* const table_OTA_LE910[] PROGMEM =
 {
 	LE910_OTA_00,
 	LE910_OTA_01,
@@ -480,7 +482,7 @@ const char LE910_EMAIL_09[]	PROGMEM = "AT#ERST\r";						//9
 const char LE910_EMAIL_10[]	PROGMEM = "AT#ESAV\r";						//10
 
 
-const char* const table_EMAIL_LE910[] PROGMEM = 
+const char* const table_EMAIL_LE910[] PROGMEM =
 {
 	LE910_EMAIL_00,
 	LE910_EMAIL_01,

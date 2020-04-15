@@ -536,7 +536,7 @@ uint8_t WaspSDI12::readMeasures(char *sensorSearchedName, uint8_t sensorSearched
 	}
 
 	// now wait timeToNextMeasure till data is ready + aditional delay
-	delay(timeToNextMeasure*1000);
+	delay((timeToNextMeasure*1000) + 10);
 	
 	// send data command aD0!. Build command with address
 	strcpy_P(aux, (char*)pgm_read_word(&(table_sdi12[2])));

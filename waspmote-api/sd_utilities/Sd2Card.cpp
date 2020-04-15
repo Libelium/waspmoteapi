@@ -129,7 +129,7 @@ uint8_t Sd2Card::cardCommand(uint8_t cmd, uint32_t arg) {
 
 #if USE_SD_CRC
   // form message
-  uint8_t d[6] = {cmd | 0X40, pa[3], pa[2], pa[1], pa[0]};
+  uint8_t d[6] = {(uint8_t)(cmd | 0X40), pa[3], pa[2], pa[1], pa[0]};
 
   // add crc
   d[5] = CRC7(d, 5);

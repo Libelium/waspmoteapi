@@ -3880,7 +3880,6 @@ uint8_t Wasp4G::openSocketSSL(	uint8_t socketId,
 	}
 
 
-
 	//// 3. Check socket status
 	answer = getSocketStatusSSL(socketId);
 
@@ -4808,6 +4807,17 @@ uint8_t Wasp4G::receiveSSL(uint8_t socketId, uint32_t timeout)
  * 					1 – CA certificate
  * 					2 – RSA Private key
  * 				data: string with the security data
+ * 				cipherSuite:
+ * 					0 – Chiper Suite is chosen by remote Server [default]
+ * 					1 – TLS_RSA_WITH_RC4_128_MD5
+ * 					2 – TLS_RSA_WITH_RC4_128_SHA
+ * 					3 – TLS_RSA_WITH_AES_128_CBC_SHA
+ * 					4 – TLS_RSA_WITH_NULL_SHA
+ * 					5 – TLS_RSA_WITH_AES_256_CBC_SHA
+ * 				authMode:
+ * 					0 – SSL Verify None[default]
+ * 					1 – Manage server authentication
+ * 					2 – Manage server and client authentication if requested by the remote server
  *
  * Return:		0 if OK; 'x' if error
  */
@@ -4815,7 +4825,7 @@ uint8_t Wasp4G::manageSSL(	uint8_t socketId,
 							uint8_t action,
 							uint8_t dataType)
 {
-	return manageSSL(socketId, action, dataType, NULL);
+	return manageSSL(socketId, action, dataType, NULL, Wasp4G::CHOSEN_BY_REMOTE_SERVER, Wasp4G::MANAGE_SERVER_AUTH);
 }
 
 
@@ -4833,6 +4843,17 @@ uint8_t Wasp4G::manageSSL(	uint8_t socketId,
  * 					1 – CA certificate
  * 					2 – RSA Private key
  * 				data: string with the security data
+ * 				cipherSuite:
+ * 					0 – Chiper Suite is chosen by remote Server [default]
+ * 					1 – TLS_RSA_WITH_RC4_128_MD5
+ * 					2 – TLS_RSA_WITH_RC4_128_SHA
+ * 					3 – TLS_RSA_WITH_AES_128_CBC_SHA
+ * 					4 – TLS_RSA_WITH_NULL_SHA
+ * 					5 – TLS_RSA_WITH_AES_256_CBC_SHA
+ * 				authMode:
+ * 					0 – SSL Verify None[default]
+ * 					1 – Manage server authentication
+ * 					2 – Manage server and client authentication if requested by the remote server
  *
  * Return:		0 if OK; 'x' if error
  */
@@ -4840,6 +4861,45 @@ uint8_t Wasp4G::manageSSL(	uint8_t socketId,
 							uint8_t action,
 							uint8_t dataType,
 							char *data)
+{
+	return manageSSL(socketId, action, dataType, data, Wasp4G::CHOSEN_BY_REMOTE_SERVER, Wasp4G::MANAGE_SERVER_AUTH);
+}
+
+
+/* Function: 	This function allows to store, delete and read security data
+ * 				(Certificate, CAcertificate, private key) into the non-volatile
+ * 				memory of the module
+ *
+ * Parameters:	socketId: Secure Socket Identifier (must be 1)
+ * 				action: Action to do:
+ * 					0 – Delete data from NVM
+ * 					1 – Store data into NVM
+ * 					2 – Read data from NVM
+ * 				dataType:
+ * 					0 – Certificate
+ * 					1 – CA certificate
+ * 					2 – RSA Private key
+ * 				data: string with the security data
+ * 				cipherSuite:
+ * 					0 – Chiper Suite is chosen by remote Server [default]
+ * 					1 – TLS_RSA_WITH_RC4_128_MD5
+ * 					2 – TLS_RSA_WITH_RC4_128_SHA
+ * 					3 – TLS_RSA_WITH_AES_128_CBC_SHA
+ * 					4 – TLS_RSA_WITH_NULL_SHA
+ * 					5 – TLS_RSA_WITH_AES_256_CBC_SHA
+ * 				authMode:
+ * 					0 – SSL Verify None[default]
+ * 					1 – Manage server authentication
+ * 					2 – Manage server and client authentication if requested by the remote server
+ *
+ * Return:		0 if OK; 'x' if error
+ */
+uint8_t Wasp4G::manageSSL(	uint8_t socketId,
+							uint8_t action,
+							uint8_t dataType,
+							char *data,
+							uint8_t cipherSuite,
+							uint8_t authMode)
 {
 	uint8_t answer;
 	char command_buffer[50];
@@ -4871,7 +4931,7 @@ uint8_t Wasp4G::manageSSL(	uint8_t socketId,
 
 	//// 2. Configure security parameters of a SSL socket
 	// "AT#SSLSECCFG=1,0,1\r"
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[34])), socketId+1, 0, 1);
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[34])), socketId+1, cipherSuite, authMode);
 
 	// send command
 	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
@@ -4987,6 +5047,49 @@ uint8_t Wasp4G::manageSSL(	uint8_t socketId,
 
 	return 5;
 }
+
+/* Function: 	This function allows to configure the SSL/TLS protocol version
+ *				NO SUPPORTED BY TELIT V1 MODULES
+ *
+ * Parameters:	socketId: Secure Socket Identifier (must be 1)
+ * 				version: SSL/TLS protocol version
+ * 					0 – Protocol version SSLv3
+ * 					1 – protocol version TLSv1.0
+ * 					2 – protocol version TLSv1.1
+ * 					3 – protocol version TLSv1.2
+ *
+ * Return:		0 if OK; 1 if error
+ */
+uint8_t Wasp4G::setSSLprotocol(	uint8_t socketId,
+								uint8_t version)
+{
+	uint8_t answer;
+	char command_buffer[50];
+
+	// clear buffers
+	memset(command_buffer,0x00,sizeof(command_buffer));
+
+	////  Configure security parameters of a SSL socket
+	// "AT#SSLSECCFG2=<socketId>,<SSL/TLS version>\r"
+	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[35])), socketId+1, version);
+
+	// send command
+	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+
+	// check response
+	if (answer != 1)
+	{
+		if (answer == 2)
+		{
+			getErrorCode();
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+
 
 
 

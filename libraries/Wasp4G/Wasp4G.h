@@ -387,6 +387,37 @@ public:
 		FTP_PASSIVE		= 1,
 	};
 
+	//! Cipher Suites
+	enum CipherSuite
+	{
+		CHOSEN_BY_REMOTE_SERVER			= 0,
+		TLS_RSA_WITH_RC4_128_MD5		= 1,
+		TLS_RSA_WITH_RC4_128_SHA		= 2,
+		TLS_RSA_WITH_AES_128_CBC_SHA	= 3,
+		TLS_RSA_WITH_NULL_SHA 			= 4,
+		TLS_RSA_WITH_AES_256_CBC_SHA	= 5,
+		
+		V1_TLS_RSA_WITH_AES_256_CBC_SHA	= 3,
+	};
+
+
+	//! Autentification mode
+	enum AuthMode
+	{
+		SSL_VERIFY_NONE					= 0,
+		MANAGE_SERVER_AUTH				= 1,
+		MANAGE_SERVER_AND_CLIENT_AUTH	= 2,
+	};
+
+	//! SSL/TLS protocol version
+	enum SSLprotocolVersion
+	{
+		SSL_v3		= 0,
+		TLS_v1_0	= 1,
+		TLS_v1_1	= 2,
+		TLS_v1_2	= 3,
+	};
+
 
 	//! class constructor
     /*!
@@ -1285,6 +1316,18 @@ public:
 						1 – CA certificate
 						2 – RSA Private key
 	\param 	data: string with the security data
+	\param	cipherSuite:
+	 					0 – Chiper Suite is chosen by remote Server [default]
+	 					1 – TLS_RSA_WITH_RC4_128_MD5
+	 					2 – TLS_RSA_WITH_RC4_128_SHA
+	 					3 – TLS_RSA_WITH_AES_128_CBC_SHA
+	 					4 – TLS_RSA_WITH_NULL_SHA
+						5 – TLS_RSA_WITH_AES_256_CBC_SHA
+	\param	authMode:
+						0 – SSL Verify None[default]
+ 						1 – Manage server authentication
+ 						2 – Manage server and client authentication if requested by the remote server
+
 	\return	0 if OK
 			1 if error setting security data
 			2 if error waiting module confirmation
@@ -1300,6 +1343,24 @@ public:
 						uint8_t action,
 						uint8_t dataType,
 						char *data);
+
+	uint8_t manageSSL(	uint8_t socketId,
+						uint8_t action,
+						uint8_t dataType,
+						char *data,
+						uint8_t cipherSuite,
+						uint8_t authMode);
+
+
+	/*!
+	\brief	This function allows to configure the SSL/TLS protocol version
+			NO SUPPORTED BY TELIT V1 MODULES
+	\param	uint8_t socketId: Secure Socket Identifier (must be 1)
+	\param	uint8_t version: SSL/TLS protocol version
+	\return	'0' if ok; 1 if error
+	*/
+	uint8_t setSSLprotocol(	uint8_t socketId, uint8_t version);
+
 
 	//! Latitude
 	char _latitude[11];

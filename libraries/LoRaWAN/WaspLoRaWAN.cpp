@@ -175,6 +175,9 @@
 
  const char command_141[]	PROGMEM	= 	"radio get rssi\r\n";
 
+ const char command_142[]	PROGMEM	= 	"at+dutycycle?\r";
+ const char command_143[]	PROGMEM	= 	"at+dutycycle=%u\r";
+
 
 
 
@@ -322,10 +325,13 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
 	command_136,
 	command_137,
     command_138,
-    command_139,
-    command_140,
+	command_139,
+	command_140,
 
-    command_141,
+	command_141,
+
+	command_142,
+	command_143,
 
 };
 
@@ -421,39 +427,39 @@ const char* const table_LoRaWAN_ANSWERS[] PROGMEM=
 	answer_22,
 	answer_23,
 
-  answer_24,
-  answer_25,
-  answer_26,
-  answer_27,
-  answer_28,
-  answer_29,
-  answer_30,
-  answer_31,
-  answer_32,
-  answer_33,
-  answer_34,
-  answer_35,
-  answer_36,
-  answer_37,
-  answer_38,
-  answer_39,
-  answer_40,
-  answer_41,
-  answer_42,
-  answer_43,
-  answer_44,
-  answer_45,
-  answer_46,
-  answer_47,
-  answer_48,
-  answer_49,
-  answer_50,
-  answer_51,
-  answer_52,
-  answer_53,
-  answer_54,
-  answer_55,
-  answer_56,
+	answer_24,
+	answer_25,
+	answer_26,
+	answer_27,
+	answer_28,
+	answer_29,
+	answer_30,
+	answer_31,
+	answer_32,
+	answer_33,
+	answer_34,
+	answer_35,
+	answer_36,
+	answer_37,
+	answer_38,
+	answer_39,
+	answer_40,
+	answer_41,
+	answer_42,
+	answer_43,
+	answer_44,
+	answer_45,
+	answer_46,
+	answer_47,
+	answer_48,
+	answer_49,
+	answer_50,
+	answer_51,
+	answer_52,
+	answer_53,
+	answer_54,
+	answer_55,
+	answer_56,
 
 };
 
@@ -1041,7 +1047,7 @@ uint8_t WaspLoRaWAN::check()
 		_baudrate = 19200;
 
 		OFF(_uart);
-		delay(200);
+		delay(500);
 
 		//pinMode(47, OUTPUT);
 		//digitalWrite(47,HIGH);
@@ -1050,12 +1056,15 @@ uint8_t WaspLoRaWAN::check()
 		  if (_uart == SOCKET0) 	Utils.setMuxSocket0();
 		  if (_uart == SOCKET1) 	Utils.setMuxSocket1();
 
-		// Open UART
-		beginUART();
-
 		// power on the socket
 		PWR.powerSocket(_uart, HIGH);
-		delay(500);
+		delay(1000);
+
+        // Open UART
+        beginUART();
+        delay(100);
+
+        serialFlush(_uart);
 
 		memset(_command,0x00,sizeof(_command));
 		memset(ans1,0x00,sizeof(ans1));
@@ -5065,12 +5074,12 @@ uint8_t WaspLoRaWAN::setRetries(uint8_t retries)
 
 	if (_version != ABZ_MODULE)
 	{
-		// create "mac set retx" command
+        // create "mac set retx" command
 		sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[69])),retries);
-		// create "+OK" answer
-		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[47])));
-		// create "+ERR=" answer
-		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[46])));
+        // create "ok" answer
+		sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[0])));
+		// create "invalid_param" answer
+		sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 		//send command and wait for ans
 		status = sendCommand(_command,ans1,ans2,100);
@@ -8634,7 +8643,7 @@ uint8_t WaspLoRaWAN::getMaxPayload()
     			{
     				case 0:
     				case 1:
-    				case 2:	_maxPayload = 59;
+    				case 2:	_maxPayload = 51;
     						break;
     				case 3: _maxPayload = 123;
     						break;
@@ -9178,6 +9187,131 @@ uint8_t WaspLoRaWAN::setBand(uint8_t band)
 		//~ waitFor("\r");
 		//~ USB.print(F("Error: "));
 		//~ USB.println((char*)_buffer);
+      return LORAWAN_ANSWER_ERROR;
+    }
+  }
+}
+
+/*!
+ * @brief	This function configure duty cycle for EU868 band.
+ * Only for murata module.
+ * 0: off
+ * 1: on (default)
+ *
+ * @return
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error
+ * 	@arg	'2' if no answer
+ * 	@arg	'8' if unrecognized module
+ */
+uint8_t WaspLoRaWAN::setDutyCycle(uint8_t state)
+{
+  uint8_t status;
+  char ans1[5];
+  char ans2[15];
+
+  memset(_command,0x00,sizeof(_command));
+  memset(ans1,0x00,sizeof(ans1));
+  memset(ans2,0x00,sizeof(ans2));
+
+  if (_version != ABZ_MODULE)
+  {
+    //Funtion not available for Micrichip modules
+    return LORAWAN_VERSION_ERROR;
+  }
+  else
+  {
+    // create "at+dutycycle=<state>" command
+    sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[143])),state);
+    // create "+OK" answer
+    sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[47])));
+    // create "+ERR" answer
+    sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[46])));
+
+    //send command and wait for ans
+    status = sendCommand(_command,ans1, ans2, 500);
+
+    if (status == 0)
+    {
+      return LORAWAN_NO_ANSWER;
+    }
+    else if (status == 1)
+    {
+      _dutyCycle = state;
+      return LORAWAN_ANSWER_OK;
+
+    }
+    else
+    {
+		  //print error
+		  waitFor("\r");
+		  USB.print(F("Error: "));
+		  USB.println((char*)_buffer);
+      return LORAWAN_ANSWER_ERROR;
+    }
+  }
+}
+
+/*!
+ * @brief	This function gets duty cycle state for EU868 band.
+ * Only for murata module.
+ * 0: off
+ * 1: on (default)
+ *
+ * @return
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error
+ * 	@arg	'2' if no answer
+ * 	@arg	'8' if unrecognized module
+ */
+uint8_t WaspLoRaWAN::getDutyCycle()
+{
+  uint8_t status;
+  char ans1[15];
+  char ans2[15];
+
+  memset(_command,0x00,sizeof(_command));
+  memset(ans1,0x00,sizeof(ans1));
+  memset(ans2,0x00,sizeof(ans2));
+
+  if (_version != ABZ_MODULE)
+  {
+    //Funtion not available for Micrichip modules
+    return LORAWAN_VERSION_ERROR;
+  }
+  else
+  {
+    // create "at+dformat?" command
+    sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[142])));
+    // create "+OK=" answer
+    sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[49])));
+    // create "+ERR" answer
+    sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[46])));
+
+    //send command and wait for ans
+    status = sendCommand(_command,ans1, ans2, 500);
+
+    if (status == 0)
+    {
+      return LORAWAN_NO_ANSWER;
+    }
+    else if (status == 1)
+    {
+      // create "\r\n" answer
+      memset(ans1,0x00,sizeof(ans1));
+      sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+
+      waitFor(ans1,100);
+
+      _dutyCycle = parseIntValue();
+      return LORAWAN_ANSWER_OK;
+    }
+    else
+    {
+      //print error
+      waitFor("\r");
+      USB.print(F("Error: "));
+      USB.println((char*)_buffer);
       return LORAWAN_ANSWER_ERROR;
     }
   }

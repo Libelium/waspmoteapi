@@ -741,8 +741,8 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	// loop until we run out of time or bytes, or an error occurs
 	u32StartTime = millis();
 
-	int val = 0xFF;
-	long cont = 0;		
+	uint8_t val = 0xFF;
+	uint16_t cont = 0;
 	
 	// wait for correct 'slave address'
 	if (_protocol == RS232_COM) 

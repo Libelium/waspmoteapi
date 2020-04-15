@@ -1726,7 +1726,9 @@ void Gas::showSensorInfo()
 	USB.println(sensor_config.AFE_ver, DEC);
 
 	PRINT_GASES_PRO(F("SENSOR TYPE: "));
-
+	
+	sensorType = sensor_config.sensor_type;
+	
 	switch (sensor_config.sensor_type)
 	{
 		case CL2_SS:

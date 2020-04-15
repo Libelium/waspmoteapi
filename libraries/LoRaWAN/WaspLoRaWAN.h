@@ -143,6 +143,7 @@ class WaspLoRaWAN : public WaspUART
 
 		uint8_t _dFormat;
 		uint8_t _bandABZ;
+		uint8_t _dutyCycle;
 
 		// constructor
 		WaspLoRaWAN()
@@ -282,6 +283,8 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t setDataFormat(uint8_t format);
 		uint8_t getDataFormat();
 		uint8_t setBand(uint8_t band);
+		uint8_t setDutyCycle(uint8_t state);
+		uint8_t getDutyCycle();
 
 	private:
 		// Utils
