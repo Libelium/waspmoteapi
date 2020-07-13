@@ -318,6 +318,7 @@ uint8_t Wasp4G::httpRequest(uint8_t method,
  * 			2 if error sending the request
  * 			3 if error sending POST / PUT data
  * 			4 if wrong method has been selected
+ *			5 if error firmware version
  */
 uint8_t Wasp4G::httpRequest(uint8_t method,
 							char* url,
@@ -326,138 +327,165 @@ uint8_t Wasp4G::httpRequest(uint8_t method,
 							uint8_t* data,
 							uint16_t length)
 {
-	uint8_t answer;
-	char command_buffer[500];
-	char aux[3];
-	memset( aux, 0x00, sizeof(aux) );
-
-	// Step1: Configure HTTP parameters
-	// Generate: AT#HTTPCFG=0,"<url>",<port>\r
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[0])), url, port);
-
-	// send command
-	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR, LE910_ERROR_CODE, 2000);
-
-	if (answer == 2)
+	// Revision identification
+	////////////////////////////////////////////////
+	uint8_t error = getInfo(Wasp4G::INFO_REV_ID);
+	if (error == 0)
 	{
-		_errorCode = WASP4G_ERROR_MESSAGE;
-		return 1;
+		#if DEBUG_WASP4G > 0
+		PRINT_LE910(F("Revision identification: "));
+		USB.println(_4G._buffer, _4G._length);
+		#endif
+
+		char _firmware[20];
+		memset(_firmware, 0x00, sizeof(_firmware));
+		strncpy(_firmware, (char*)_4G._buffer, _4G._length);
+
+
+		if (strcmp(_firmware, "17.00.503") != 0)
+		{
+			uint8_t answer;
+			char command_buffer[500];
+			char aux[3];
+			memset( aux, 0x00, sizeof(aux) );
+
+			// Step1: Configure HTTP parameters
+			// Generate: AT#HTTPCFG=0,"<url>",<port>\r
+			sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[0])), url, port);
+
+			// send command
+			answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR, LE910_ERROR_CODE, 2000);
+
+			if (answer == 2)
+			{
+				_errorCode = WASP4G_ERROR_MESSAGE;
+				return 1;
+			}
+			else if (answer == 3)
+			{
+				getErrorCode();
+				return 1;
+			}
+			else if (answer == 0)
+			{
+				// timeout
+				_errorCode = WASP4G_ERROR_TIMEOUT;
+				return 1;
+			}
+
+
+			// Step2: Perform the request depending on the method selected as input
+			// in the function: GET, HEAD, DELETE, POST or PUT
+			if ((method == Wasp4G::HTTP_GET) ||
+				(method == Wasp4G::HTTP_HEAD) ||
+				(method == Wasp4G::HTTP_DELETE))
+			{
+				// AT#HTTPQRY=0,<method>,"<resource>"\r
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[1])), method, resource);
+
+				// send command
+				answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR, 5000);
+
+				if (answer == 1)
+				{
+					return 0;
+				}
+				else
+				{
+					return 2;
+				}
+			}
+			else if ((method == Wasp4G::HTTP_POST) ||
+					(method == Wasp4G::HTTP_PUT))
+			{
+				// 2a. Send HTTP POST or PUT request
+				// AT#HTTPSND=0,<method>,"<resource>",<data_length>
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[2])),
+						method - 3,
+						resource,
+						length,
+						_contentType);
+
+				// send command
+				answer = sendCommand(command_buffer, LE910_DATA_TO_MODULE, LE910_ERROR, 5000);
+				if (answer != 1)
+				{
+					return 2;
+				}
+
+				// wait a little bit
+				delay(100);
+
+				// 2b. Send POST/PUT data
+				answer = sendCommand((char*)data, LE910_OK ,LE910_ERROR, 5000);
+				if (answer != 1)
+				{
+					return 3;
+				}
+
+				return 0;
+			}
+			else if (method == Wasp4G::HTTP_POST_FRAME)
+			{
+				char php_file[27];
+
+				// 2a. Perform the request
+				// "/getpost_frame_parser.php"
+				strcpy_P(php_file, (char*)pgm_read_word(&(table_HTTP[5])));
+
+				// AT#HTTPSND=0,0,"<php_file>",<data_length>
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[2])),
+						0,
+						php_file,
+						6 + (length * 2),
+						_contentType);
+
+				answer = sendCommand(command_buffer, LE910_DATA_TO_MODULE, LE910_ERROR, 5000);
+				if (answer != 1)
+				{
+					return 2;
+				}
+
+				// wait a little bit
+				delay(100);
+
+				// Add "frame="
+				strcpy_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[6])));
+				printString(command_buffer, 1);
+
+				// Add frame contents in ASCII representation: 3C3D3E...
+				for(uint16_t x = 0; x < length; x++)
+				{
+					// make conversion from byte to hex representation in ASCII (2Bytes)
+					Utils.hex2str((uint8_t*)&data[x], aux, 1);
+					printByte(aux[0], 1);
+					printByte(aux[1], 1);
+				}
+
+
+				// 2b. Send POST/PUT data
+				answer = waitFor(LE910_OK ,LE910_ERROR, 5000);
+				if (answer != 1)
+				{
+					return 3;
+				}
+
+				return 0;
+
+			}
+
+			// Wrong method
+			return 4;
+
+		}
+
+		#if DEBUG_WASP4G > 0
+		PRINT_LE910(F("Firmware version doen't support HTTP commands\r\n"));
+		#endif
+
+		return 5;
 	}
-	else if (answer == 3)
-	{
-		getErrorCode();
-		return 1;
-	}
-	else if (answer == 0)
-	{
-		// timeout
-		_errorCode = WASP4G_ERROR_TIMEOUT;
-		return 1;
-	}
-
-
-	// Step2: Perform the request depending on the method selected as input
-	// in the function: GET, HEAD, DELETE, POST or PUT
-	if ((method == Wasp4G::HTTP_GET) ||
-		(method == Wasp4G::HTTP_HEAD) ||
-		(method == Wasp4G::HTTP_DELETE))
-	{
-		// AT#HTTPQRY=0,<method>,"<resource>"\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[1])), method, resource);
-
-		// send command
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR, 5000);
-
-		if (answer == 1)
-		{
-			return 0;
-		}
-		else
-		{
-			return 2;
-		}
-	}
-	else if ((method == Wasp4G::HTTP_POST) ||
-			(method == Wasp4G::HTTP_PUT))
-	{
-		// 2a. Send HTTP POST or PUT request
-		// AT#HTTPSND=0,<method>,"<resource>",<data_length>
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[2])),
-				method - 3,
-				resource,
-				length,
-				_contentType);
-
-		// send command
-		answer = sendCommand(command_buffer, LE910_DATA_TO_MODULE, LE910_ERROR, 5000);
-		if (answer != 1)
-		{
-			return 2;
-		}
-
-		// wait a little bit
-		delay(100);
-
-		// 2b. Send POST/PUT data
-		answer = sendCommand((char*)data, LE910_OK ,LE910_ERROR, 5000);
-		if (answer != 1)
-		{
-			return 3;
-		}
-
-		return 0;
-	}
-	else if (method == Wasp4G::HTTP_POST_FRAME)
-	{
-		char php_file[27];
-
-		// 2a. Perform the request
-		// "/getpost_frame_parser.php"
-		strcpy_P(php_file, (char*)pgm_read_word(&(table_HTTP[5])));
-
-		// AT#HTTPSND=0,0,"<php_file>",<data_length>
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[2])),
-				0,
-				php_file,
-				6 + (length * 2),
-				_contentType);
-
-		answer = sendCommand(command_buffer, LE910_DATA_TO_MODULE, LE910_ERROR, 5000);
-		if (answer != 1)
-		{
-			return 2;
-		}
-
-		// wait a little bit
-		delay(100);
-
-		// Add "frame="
-		strcpy_P(command_buffer, (char*)pgm_read_word(&(table_HTTP[6])));
-		printString(command_buffer, 1);
-
-		// Add frame contents in ASCII representation: 3C3D3E...
-		for(uint16_t x = 0; x < length; x++)
-		{
-			// make conversion from byte to hex representation in ASCII (2Bytes)
-			Utils.hex2str((uint8_t*)&data[x], aux, 1);
-			printByte(aux[0], 1);
-			printByte(aux[1], 1);
-		}
-
-
-		// 2b. Send POST/PUT data
-		answer = waitFor(LE910_OK ,LE910_ERROR, 5000);
-		if (answer != 1)
-		{
-			return 3;
-		}
-
-		return 0;
-
-	}
-
-	// Wrong method
-	return 4;
+	return 5;
 
 }
 
@@ -3577,26 +3605,81 @@ uint8_t Wasp4G::openSocketClient(uint8_t socketId,
 	}
 
 
-	//// 4. Socket Configuration Extended 3
-	// AT#SCFGEXT3=<socketId>,1\r
-	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[5])), socketId+1);
-
-	// send command
-	answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
-
-	// check answer
-	if (answer != 1)
+    // Revision identification
+    ////////////////////////////////////////////////
+	error = getInfo(Wasp4G::INFO_REV_ID);
+	if (error == 0)
 	{
-		if (answer == 2)
-		{
-			getErrorCode();
+		#if DEBUG_WASP4G > 0
+		PRINT_LE910(F("Revision identification: "));
+		USB.println(_4G._buffer, _4G._length);
+		#endif
 
+		char _firmware[20];
+		memset(_firmware, 0x00, sizeof(_firmware));
+		strncpy(_firmware, (char*)_4G._buffer, _4G._length);
+
+
+		if (strcmp(_firmware, "17.00.503") != 0)
+		{
+
+			//// 4. Socket Configuration Extended 3
+			// AT#SCFGEXT3=<socketId>,1\r
+			sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[5])), socketId+1);
+
+			// send command
+			answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
+
+			// check answer
+			if (answer != 1)
+			{
+				if (answer == 2)
+				{
+					getErrorCode();
+
+					#if DEBUG_WASP4G > 0
+					printErrorCode();
+					#endif
+				}
+				return 24;
+			}
+		}
+		else
+		{
 			#if DEBUG_WASP4G > 0
-				printErrorCode();
+				PRINT_LE910(F("Firmware 17.00.503\n"));;
 			#endif
 		}
-		return 24;
-	}
+    }
+    else
+    {
+		#if DEBUG_WASP4G > 0
+			PRINT_LE910(F("Revision identification ERROR\n"));;
+		#endif
+    }
+
+	//
+	// //// 4. Socket Configuration Extended 3
+	// // AT#SCFGEXT3=<socketId>,1\r
+	// sprintf_P(command_buffer, (char*)pgm_read_word(&(table_IP[5])), socketId+1);
+	//
+	// // send command
+	// answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 5000);
+	//
+	// // check answer
+	// if (answer != 1)
+	// {
+	// 	if (answer == 2)
+	// 	{
+	// 		getErrorCode();
+	//
+	// 		#if DEBUG_WASP4G > 0
+	// 			printErrorCode();
+	// 		#endif
+	// 	}
+	// 	return 24;
+	// }
+
 
 
 	//// 5. Socket Dial
@@ -5255,75 +5338,108 @@ uint8_t Wasp4G::gpsStart(uint8_t gps_mode, uint8_t reset_mode)
 			return 6;
 		}
 
-		//// 7. Set QoS for GPS:
-		// 	horiz_accuracy  = 5
-		// 	vertic_accuracy = 5
-		// 	rsp_time = 100
-		// 	age_of_location_info = 0
-		// 	location_type = 0 (current location)
-		// 	nav_profile = 0 Car navigation profile (default)
-		// 	velocity_request = TRUE
-		// AT$GPSQOS=5,5,100,0,0,0,1\r
-		answer = gpsSetQualityOfService(5, 5, 100, 0, 0, 0, 1);
 
-		if (answer != 0)
+		// Revision identification
+	    ////////////////////////////////////////////////
+		uint8_t error = getInfo(Wasp4G::INFO_REV_ID);
+		if (error == 0)
 		{
-			return 7;
-		}
+			#if DEBUG_WASP4G > 0
+			PRINT_LE910(F("Revision identification: "));
+			USB.println(_4G._buffer, _4G._length);
+			#endif
 
-		//// 8. Set SLP server
-		// AT$SLP=1,"supl.nokia.com:7275"\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[21])));
+			char _firmware[20];
+			memset(_firmware, 0x00, sizeof(_firmware));
+			strncpy(_firmware, (char*)_4G._buffer, _4G._length);
 
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
-		if (answer != 1)
-		{
-			return 8;
-		}
 
-		//// 9. Set the version of supported SUPL
-		// AT$SUPLV=1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[20])), 1);
-
-		// send command
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 1000);
-		if (answer != 1)
-		{
-			if (answer == 2)
+			if (strcmp(_firmware, "17.00.503") != 0)
 			{
-				getErrorCode();
+
+				//// 7. Set QoS for GPS:
+				// 	horiz_accuracy  = 5
+				// 	vertic_accuracy = 5
+				// 	rsp_time = 100
+				// 	age_of_location_info = 0
+				// 	location_type = 0 (current location)
+				// 	nav_profile = 0 Car navigation profile (default)
+				// 	velocity_request = TRUE
+				// AT$GPSQOS=5,5,100,0,0,0,1\r
+				answer = gpsSetQualityOfService(5, 5, 100, 0, 0, 0, 1);
+
+				if (answer != 0)
+				{
+					return 7;
+				}
+
+				//// 8. Set SLP server
+				// AT$SLP=1,"supl.nokia.com:7275"\r
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[21])));
+
+				answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+				if (answer != 1)
+				{
+					return 8;
+				}
+
+				//// 9. Set the version of supported SUPL
+				// AT$SUPLV=1\r
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[20])), 1);
+
+				// send command
+				answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR, 1000);
+				if (answer != 1)
+				{
+					if (answer == 2)
+					{
+						getErrorCode();
+					}
+					return 9;
+				}
+
+				//// 10. Update terminal information
+				// AT$LCSTER=1,,,1\r
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[22])));
+
+				answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+				if (answer != 1)
+				{
+					return 10;
+				}
+
+				//// 11. Enable unsolicited response
+				// AT$LICLS=1\r
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[23])));
+
+				answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+				if (answer != 1)
+				{
+					return 11;
+				}
+
+				//// 12. Lock context for LCS use
+				// AT$LCSLK=1,1\r
+				sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[24])));
+
+				answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
+				if (answer != 1)
+				{
+					return 12;
+				}
 			}
-			return 9;
+			else
+			{
+				#if DEBUG_WASP4G > 0
+				PRINT_LE910(F("Firmware 17.00.503\n"));;
+				#endif
+			}
 		}
-
-		//// 10. Update terminal information
-		// AT$LCSTER=1,,,1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[22])));
-
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
-		if (answer != 1)
+		else
 		{
-			return 10;
-		}
-
-		//// 11. Enable unsolicited response
-		// AT$LICLS=1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[23])));
-
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
-		if (answer != 1)
-		{
-			return 11;
-		}
-
-		//// 12. Lock context for LCS use
-		// AT$LCSLK=1,1\r
-		sprintf_P(command_buffer, (char*)pgm_read_word(&(table_GPS[24])));
-
-		answer = sendCommand(command_buffer, LE910_OK, LE910_ERROR_CODE, LE910_ERROR);
-		if (answer != 1)
-		{
-			return 12;
+			#if DEBUG_WASP4G > 0
+			PRINT_LE910(F("Revision identification ERROR\n"));;
+			#endif
 		}
 
 		//// 13. Enable GNSS (or GLONASS)

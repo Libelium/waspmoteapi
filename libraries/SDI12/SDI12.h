@@ -76,17 +76,33 @@ class WaspSDI12
 	public:
 		// class constructor
 		WaspSDI12(uint8_t _dataPin);
-		
+
 		uint8_t readMeasures(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
 							char *sensorSerialNumber,
-							float &parameter1, 
-							float &parameter2, 
-							float &parameter3, 
+							float &parameter1,
+							float &parameter2,
+							float &parameter3,
 							float &parameter4);
+
+    	uint8_t readMeasuresFast(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
+    					char *sensorSerialNumber,
+    					float &parameter1,
+    					float &parameter2,
+    					float &parameter3,
+    					float &parameter4,
+						bool readSensorBodyTemp);
 		
+		uint8_t readSACMeasures(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
+								char *sensorSerialNumber,
+								float &parameter1,
+								float &parameter2,
+								float &parameter3,
+								float &parameter4,
+								float &parameter5);
+
 		char address;
 		uint8_t timeToNextMeasure;
-		
+
 		void sendCommand(char* cmd, uint8_t length);
 		int available();
 		int read();
@@ -94,7 +110,7 @@ class WaspSDI12
 		void setState(uint8_t status);
 		uint8_t isSensor(char *sensorSearchedName, uint8_t sensorSearchedNameLength,
 						char *sensorSerialNumber);
-		
+
 	private:
 		uint8_t dataPin;				// digital pin for SDI12
 		uint8_t j;						// general counter for received chars
@@ -108,8 +124,9 @@ class WaspSDI12
 		void wakeSensors();
 		void writeChar(uint8_t out);
 		void receiveChar();
-		
-	 	uint8_t startSensor();
+
+		uint8_t startSensor();
+	 	uint8_t startSensor(bool readSensorBodyTemp);
 
 };
 #endif

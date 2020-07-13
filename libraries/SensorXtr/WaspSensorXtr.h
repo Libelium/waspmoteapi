@@ -162,8 +162,9 @@
 #define OPTOD				12
 #define PHEHT				13
 #define NTU					14
-#define TEROS12			15
-#define TEROS11			16
+#define TEROS12				15
+#define TEROS11				16
+#define SAC					17
 
 
 #define EUREKA_PH			0
@@ -487,6 +488,33 @@ struct sensorSI411Vector
 
 	//Sensor serial number variable
 	char sensorSerialNumber[14];
+
+  //! Variable: stores correctedTemperature in degrees Celsius in float type
+  float targetTemperatureCorrected;
+};
+
+
+/*!
+ * \struct sensorSI4B1Vector
+ * \brief Struct to store data of the SI411 sensor
+ */
+
+struct sensorSI4B1Vector
+{
+	//! Variable: stores measured Target Temperature in degrees Celsius in float type
+	float targetTemperature;
+
+	//! Variable: stores measured sensor body temperature in degrees Celsius in float type
+	float sensorBodyTemperature;
+
+	//! Variable: stores measured target millivolts in float type
+	float targetMilliVolts;
+
+	//Sensor serial number variable
+	char sensorSerialNumber[14];
+
+  //! Variable: stores correctedTemperature in degrees Celsius in float type
+  float targetTemperatureCorrected;
 };
 
 
@@ -676,6 +704,46 @@ struct sensorPHEHTVector
 };
 
 
+/*!
+ * \struct sensorPHEHTVector
+ * \brief Struct to store data of the PHEHT sensor
+ */
+
+struct sensorSACVector
+{
+	//! Variable: stores measured temperature in Celsius degrees
+	float temperature;
+
+	//! Variable: stores measured sac
+	float sac;
+
+	//! Variable: stores measured cod in mV
+	float cod;
+
+	//! Variable: stores measured pH in mV
+	float bod;
+	
+	//! Variable: stores measured cod in mV
+	float cot;
+
+	//! Variable: stores measured pH in mV
+	float uvComp;
+	
+	//! Variable: stores measured cod in mV
+	float grComp;
+
+	//! Variable: stores measured pH in mV
+	float uvTran;
+	
+	//! Variable: stores measured cod in mV
+	float grTran;
+
+	//! Variable: stores measured pH in mV
+	float turb;
+
+	//Sensor serial number variable
+	char sensorSerialNumber[14];
+};
 
 /*!
  * \struct sensorC4EVector
@@ -1006,6 +1074,31 @@ class Apogee_SI411
 		void OFF();
 		uint8_t read();
 		uint8_t readSerialNumber();
+
+	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
+		uint8_t socket;
+};
+
+
+/*!
+ * \class Apogee_SI4B1
+ * \brief class for SI4B1 sensor
+ */
+class Apogee_SI4B1
+{
+	public:
+		// constructor
+		Apogee_SI4B1(uint8_t _socket);
+
+		sensorSI4B1Vector sensorSI4B1;
+
+		uint8_t ON();
+		void OFF();
+		uint8_t read();
+		uint8_t readSerialNumber();
+		uint8_t readFast();
+    	float emissivityCorrection(float targetTemp, float sensorBodyTemp);
 
 	private:
 		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
@@ -1424,6 +1517,33 @@ class Aqualabo_PHEHT: public AqualaboWaterXtr
 		uint8_t socket;
 };
 
+
+/*!
+ * \class Aqualabo PHEHT
+ * \brief class for PHEHT sensor
+ */
+class Aqualabo_SAC: public AqualaboWaterXtr
+{
+	public:
+		// constructor
+		Aqualabo_SAC(uint8_t _socket);
+
+		sensorSACVector sensorSAC;
+		uint8_t socket;
+
+		uint8_t ON();
+		void OFF();
+		uint8_t read();
+		uint8_t readSerialNumber();
+		void calibrationProcess(uint8_t parameter);
+
+	private:
+		WaspSDI12 sdi12Sensor = WaspSDI12(ANA2);
+		
+};
+
+
+
 /*!
  * \class Aqualabo C4E
  * \brief class for C4E sensor
@@ -1617,12 +1737,72 @@ class _4_20mA
 		//! Constructor
 		_4_20mA(uint8_t _socket);
 
+
+
 		//! Variable: stores measured current in float type
 		float current;
 
 		uint8_t ON();
 		void OFF();
 		float read();
+
+	private:
+		uint8_t socket;
+};
+
+
+/*!
+ * \class LED
+ * \brief class for LED
+ */
+class LED
+{
+	public:
+		// constructor
+		LED(uint8_t _socket);
+
+		//! LED Color definition
+		enum ledColourEnum
+		{
+			GREEN		= 0,
+			RED			= 1,
+			YELLOW		= 2,
+			OFF			= 3,
+		};
+
+		void setIndicator(uint8_t colour);
+		void unsetIndicator();
+
+		uint8_t ledState;
+
+	private:
+		uint8_t socket;
+};
+
+
+/*!
+ * \class buzzer
+ * \brief class for buzzer
+ */
+class buzzer
+{
+	public:
+		// constructor
+		buzzer(uint8_t _socket);
+
+    //! Buzzer  definition
+		enum buzzerEnum
+		{
+			OFF		= 0,
+			ON		= 1,
+		};
+
+		void setBuzzer();
+		void unsetBuzzer();
+    void positiveBeep();
+    void negativeBeep();
+
+		uint8_t buzzerState;
 
 	private:
 		uint8_t socket;

@@ -56,8 +56,8 @@ const char string_18[] PROGMEM = "%c %s %s %s %d %s %s %s %s %s %c %s %s %s %s %
 const char string_19[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX500 frame format
 const char string_20[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX501 frame format
 const char string_21[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %d %s %s %s %d %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX531 GMX541 GMX551 frame format
-const char string_22[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX550 frame format
-const char string_23[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX600 frame format
+const char string_22[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //GMX550 GMX600frame format
+const char string_23[] PROGMEM = ""; //not used
 const char string_24[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX200 + GPS frame format
 const char string_25[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %c %d %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX240 + GPS frame format
 const char string_26[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX500 + GPS frame format
@@ -1454,6 +1454,7 @@ uint8_t Apogee_SO411::readSerialNumber()
 	return read();
 }
 
+
 //******************************************************************************
 // SI-411 Sensor Class functions
 //******************************************************************************
@@ -1601,6 +1602,222 @@ uint8_t Apogee_SI411::readSerialNumber()
 	return read();
 }
 
+//******************************************************************************
+// SI-4B1 Fever Sensor Class functions
+//******************************************************************************
+
+
+/*!
+	\brief SI411 Class constructor
+	\param socket selected socket for sensor
+*/
+Apogee_SI4B1::Apogee_SI4B1(uint8_t _socket)
+{
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Apogee_SI4B1::ON()
+{
+	char message[70];
+
+	if (SensorXtr.redefinedSocket == 1)
+	{
+		#ifndef MANUFACTURER_TEST
+		//"WARNING: Redefinition of sensor socket detected"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
+		PRINTLN_XTR(message);
+		#endif
+	}
+
+	if ((socket == XTR_SOCKET_E) || (socket == XTR_SOCKET_F))
+	{
+		//"WARNING - The following sensor can not work in the defined socket:"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[7])));
+		PRINT_XTR(message);
+		USB.println(F("SI-4B1"));
+
+		return 0;
+	}
+
+
+	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+	SensorXtr.setMux(socket, DISABLED);
+
+	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+	SensorXtr.set12v(socket, SWITCH_ON);
+
+	//neccessary delay after powering the sensor
+	delay(300);
+
+#if DEBUG_XTR == 2
+	//"socket (!): "
+	strcpy_P(message, (char*)pgm_read_word(&(table_xtr[10])));
+	PRINT_XTR(message);
+	USB.println(socket, DEC);
+#endif
+
+	return 1;
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void Apogee_SI4B1::OFF()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	SensorXtr.OFF();
+
+}
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Apogee_SI4B1::read()
+{
+	SensorXtr.setMux(socket, ENABLED);
+
+	// Initialize variables
+	sensorSI4B1.targetTemperature = 0;
+  	sensorSI4B1.sensorBodyTemperature = 0;
+	float parameter3_dummy = -1000;
+	float parameter4_dummy = -1000;
+	memset(sensorSI4B1.sensorSerialNumber, 0x00, sizeof(sensorSI4B1.sensorSerialNumber));
+
+	uint8_t response = 0;
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	char sensorNameStr[7];
+	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+	strncpy(sensorNameStr, "SI-4", 4);
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		response = sdi12Sensor.readMeasures(sensorNameStr, strlen(sensorNameStr),
+											sensorSI4B1.sensorSerialNumber,
+											sensorSI4B1.targetTemperature,
+											sensorSI4B1.sensorBodyTemperature,
+											parameter3_dummy,
+											parameter4_dummy);
+
+
+		if ((sensorSI4B1.sensorSerialNumber[0] != 0)
+		|| (sensorSI4B1.targetTemperature != 0))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+
+	}
+
+	SensorXtr.setMux(socket, DISABLED);
+	return response;
+}
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Apogee_SI4B1::readFast()
+{
+	SensorXtr.setMux(socket, ENABLED);
+
+	// Initialize variables
+	sensorSI4B1.targetTemperature = 0;
+  	sensorSI4B1.sensorBodyTemperature = 0;
+	float parameter3_dummy = -1000;
+	float parameter4_dummy = -1000;
+	//memset(sensorSI411.sensorSerialNumber, 0x00, sizeof(sensorSI411.sensorSerialNumber));
+
+	uint8_t response = 0;
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	char sensorNameStr[7];
+	//memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+
+  	// ID string shorted for identify faster both SI-411 and SI-4B1
+  	strncpy(sensorNameStr, "SI-4", 4);
+
+
+	response = sdi12Sensor.readMeasuresFast(sensorNameStr, strlen(sensorNameStr),
+											sensorSI4B1.sensorSerialNumber,
+											sensorSI4B1.targetTemperature,
+											sensorSI4B1.sensorBodyTemperature,
+											parameter3_dummy,
+											parameter4_dummy,
+											true);
+
+  // info: retries removed
+
+	SensorXtr.setMux(socket, DISABLED);
+	return response;
+}
+
+
+/*!
+	\brief Reads the sensor serial number
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Apogee_SI4B1::readSerialNumber()
+{
+	return read();
+}
+
+/*!
+	\brief Adjust emissivity for human skin
+	\param void
+	\return
+*/
+float Apogee_SI4B1::emissivityCorrection(float targetTemp, float sensorBodyTemp)
+{
+	// emissivity correction factor for human skin: 0.98
+  float skinEmissivity = 0.98;
+  sensorSI4B1.targetTemperatureCorrected = 0;
+
+  // This formula is based on manufacturer documentation.
+  // sensorBodyTemp = Tbackground;
+  // targetTemp = Temperature measured by the sensor
+  sensorSI4B1.targetTemperatureCorrected = pow( ( ((pow(targetTemp, 4)) - ((1 - skinEmissivity) * (pow(sensorBodyTemp, 4)))) / skinEmissivity), 0.25);
+
+  /*
+    Human body temperature aproximation
+  */
+
+  // lineal aproximation
+
+
+
+  return sensorSI4B1.targetTemperatureCorrected;
+
+}
 
 
 //******************************************************************************
@@ -3319,7 +3536,7 @@ uint8_t weatherStation::read()
 		}
 #endif
 	}
-	else if (dataFrameFound && stationModel == WS_GMX550)
+	else if (dataFrameFound && (stationModel == WS_GMX550 || stationModel == WS_GMX600))
 	{
 		if (!gps)
 		{
@@ -3402,114 +3619,6 @@ uint8_t weatherStation::read()
 							precipTotal_local,
 							precipIntensity_local,
 							&precipStatus_local,
-							&gmx.compass,
-							windChill_local,
-							&gmx.heatIndex,
-							airDensity_local,
-							wetBulbTemperature_local,
-							gmx.sunriseTime,
-							gmx.solarNoonTime,
-							gmx.sunsetTime,
-							gmx.sunPosition,
-							gmx.twilightCivil,
-							gmx.twilightNautical,
-							gmx.twilightAstronom,
-							xTilt_local,
-							yTilt_local,
-							zOrient_local,
-							gmx.timestamp,
-							supplyVoltage_local,
-							gmx.status,
-							gpsCorrectedSpeed_local,
-							gpsAvgCorrectedSpeed_local,
-							gpsCorrectedGustSpeed_local,
-							&gmx.gpsCorrectedGustDirection,
-							gmx.gpsLocation,
-							&gmx.gpsHeading,
-							gpsSpeed_local,
-							gmx.gpsStatus);
-
-			dataFrameParsed = 1;
-		}
-#endif
-	}
-	else if (dataFrameFound && stationModel == WS_GMX600)
-	{
-		if (!gps)
-		{
-			//Frame is like:
-			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 042
-			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
-
-			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"
-			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_xtr[23])));
-			sscanf (buffer_ws_raw, buffer_table,
-							&node_letter_local,
-							&gmx.windDirection,
-							windSpeed_local,
-							&gmx.correctedWindDirection,
-							&gmx.avgWindDirection,
-							avgWindSpeed_local,
-							&gmx.avgWindGustDirection,
-							avgWindGustSpeed_local,
-							&gmx.avgCorrectedWindDirection,
-							gmx.windSensorStatus,
-							pressure_local,
-							pressureSeaLevel_local,
-							pressureStation_local,
-							&gmx.relativeHumidity,
-							temperature_local,
-							dewpoint_local,
-							absoluteHumidity_local,
-							&gmx.compass,
-							windChill_local,
-							&gmx.heatIndex,
-							airDensity_local,
-							wetBulbTemperature_local,
-							gmx.sunriseTime,
-							gmx.solarNoonTime,
-							gmx.sunsetTime,
-							gmx.sunPosition,
-							gmx.twilightCivil,
-							gmx.twilightNautical,
-							gmx.twilightAstronom,
-							xTilt_local,
-							yTilt_local,
-							zOrient_local,
-							gmx.timestamp,
-							supplyVoltage_local,
-							gmx.status);
-
-			dataFrameParsed = 1;
-		}
-#if GMX_GPS_OPTION > 1
-		else
-		{
-			//Frame is like:
-			//"Q 269 000.03 311 000 000.00 000 000.00 000 0100 1032.5 1032.5 1032.5 028 +023.0 +003.8 05.90 042
-			// +028 +028 1.2 +012.8 07:54 12:10 16:25 174:+18 17:03 17:45 18:24 +12 -14 +1 2017-01-20T11:46:01.3 +05.0 0000"
-			// 000.56 000.00 000.00 000 +50.763328:-001.540155:-0002.70 242 000.58 010C"
-
-			//"%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"
-			strcpy_P((char*)buffer_table, (char*)pgm_read_word(&(table_xtr[30])));
-			sscanf (buffer_ws_raw, buffer_table,
-							&node_letter_local,
-							&gmx.windDirection,
-							windSpeed_local,
-							&gmx.correctedWindDirection,
-							&gmx.avgWindDirection,
-							avgWindSpeed_local,
-							&gmx.avgWindGustDirection,
-							avgWindGustSpeed_local,
-							&gmx.avgCorrectedWindDirection,
-							gmx.windSensorStatus,
-							pressure_local,
-							pressureSeaLevel_local,
-							pressureStation_local,
-							&gmx.relativeHumidity,
-							temperature_local,
-							dewpoint_local,
-							absoluteHumidity_local,
 							&gmx.compass,
 							windChill_local,
 							&gmx.heatIndex,
@@ -4434,7 +4543,7 @@ uint8_t Apogee_SU202::ON()
 
 	// necessary for POR of the ADC
 	delay(10);
-  
+
   SensorXtr.set12v(socket, SWITCH_ON);
   delay(300);
 
@@ -4507,7 +4616,7 @@ float Apogee_SU202::read(void)
 
 	// Conversion from voltage into umol·m-2·s-1
 	radiation = (radiationVoltage / 8.33) * 1000;
-  
+
   // Note: if the user wants W m -2, the conversion factor should be adjusted
 
 #if DEBUG_XTR == 1
@@ -5891,6 +6000,2032 @@ uint8_t Aqualabo_PHEHT::readSerialNumber()
 }
 
 
+
+
+/*	SAC: Class constructor
+		Parameters: void
+		Return: void
+*/
+Aqualabo_SAC::Aqualabo_SAC(uint8_t _socket)
+{
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+}
+
+/*!
+	\brief Turns on the sensor
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_SAC::ON()
+{
+	char message[70];
+
+	if (SensorXtr.redefinedSocket == 1)
+	{
+		#ifndef MANUFACTURER_TEST
+		//"WARNING: Redefinition of sensor socket detected"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[6])));
+		PRINTLN_XTR(message);
+		#endif
+	}
+
+	if (socket == XTR_SOCKET_F)
+	{
+		//"WARNING - The following sensor can not work in the defined socket:"
+		strcpy_P(message, (char*)pgm_read_word(&(table_xtr[7])));
+		PRINT_XTR(message);
+		USB.println(F("SAC"));
+
+		return 0;
+	}
+
+	//Socket E is the only with RS-485
+	if (socket == XTR_SOCKET_E)
+	{
+		SensorXtr.ON(REG_3V3); //RS-485 only needs 3v3
+		SensorXtr.set12v(socket, SWITCH_ON);
+		//Enable RS-485 chip on (shared with 3v3 pin)
+		SensorXtr.set3v3(socket, SWITCH_ON);
+
+		//Set modbus address and modbus waiting time acording to sensor
+		aqualaboModbusSensors.setParametersBySensor(SAC);
+	}
+	//The rest of the sockets use SDI-12
+	else
+	{
+		//Before switching on 5v it's necessary disabling Mux (it works with 5V)
+		SensorXtr.setMux(socket, DISABLED);
+
+		SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
+		SensorXtr.set12v(socket, SWITCH_ON);
+		//neccessary delay after powering the sensor
+		delay(1000);
+	}
+
+#if DEBUG_XTR == 2
+	//"socket (!): "
+	strcpy_P(message, (char*)pgm_read_word(&(table_xtr[10])));
+	PRINT_XTR(message);
+	USB.println(socket, DEC);
+#endif
+
+	return 1;
+}
+
+/*!
+	\brief Turns off the sensor
+	\param void
+	\return void
+*/
+void Aqualabo_SAC::OFF()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	//Socket E is the only with RS-485
+	if (socket == XTR_SOCKET_E)
+	{
+		//Disable RS-485 chip on (shared with 3v3 pin)
+		SensorXtr.set3v3(socket, SWITCH_OFF);
+	}
+	SensorXtr.OFF();
+
+}
+
+/*!
+	\brief Reads the sensor data
+	\param void
+	\return 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_SAC::read()
+{
+	// Initialize variables
+	sensorSAC.temperature = 0;
+
+
+	uint8_t response = 0;
+	uint8_t validMeasure = 0;
+	uint8_t retries = 0;
+
+	while ((validMeasure == 0) && (retries < 3))
+	{
+		//Socket E is the only with RS-485
+		if (socket == XTR_SOCKET_E)
+		{
+			response = aqualaboModbusSensors.readMeasures(sensorSAC.temperature,
+													sensorSAC.sac,
+													sensorSAC.cod,
+													sensorSAC.bod,
+													sensorSAC.cot);
+													
+			response = aqualaboModbusSensors.readExtendedMeasures(sensorSAC.uvComp,
+													sensorSAC.grComp,
+													sensorSAC.uvTran,
+													sensorSAC.grTran,
+													sensorSAC.turb);
+		}
+		//The rest of the sockets use SDI-12
+		else
+		{
+			char sensorNameStr[6];
+			memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
+			strncpy(sensorNameStr, "UVT254", 5);
+
+			SensorXtr.setMux(socket, ENABLED);
+
+			memset(sensorSAC.sensorSerialNumber, 0x00, sizeof(sensorSAC.sensorSerialNumber));
+
+			response = sdi12Sensor.readSACMeasures(sensorNameStr, strlen(sensorNameStr),
+												sensorSAC.sensorSerialNumber,
+												sensorSAC.temperature,
+												sensorSAC.sac,
+												sensorSAC.cod,
+												sensorSAC.bod,
+												sensorSAC.cot);
+
+			SensorXtr.setMux(socket, DISABLED);
+		}
+
+		if ((sensorSAC.temperature != 0)
+		|| (sensorSAC.sac != 0)
+		|| (sensorSAC.cod != 0)
+		|| (sensorSAC.bod != 0)
+		|| (sensorSAC.cot != 0))
+		{
+			validMeasure = 1;
+		}
+		else
+		{
+			delay(1000);
+		}
+		retries++;
+	}
+
+
+	return response;
+}
+
+
+/* readSerialNumber: Gets the serial number of the sensor
+	parameters: void
+	return: 1 if ok, 0 if something fails
+*/
+uint8_t Aqualabo_SAC::readSerialNumber()
+{
+	memset(sensorSAC.sensorSerialNumber, 0x00, sizeof(sensorSAC.sensorSerialNumber));
+
+	//Socket E is the only with RS-485
+	if (socket == XTR_SOCKET_E)
+	{
+		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorSAC.sensorSerialNumber);
+	}
+	//The rest of the sockets use SDI-12
+	else
+	{
+		return read();
+	}
+}
+
+/*!
+	\brief menu assisted calibration process
+	\param sensorType and parameter
+	\return void
+*/
+void Aqualabo_SAC::calibrationProcess(uint8_t parameter)
+{
+	const uint8_t inputSize = 100;
+	char input[inputSize];
+	uint8_t response = 0;
+	float offset = 0;
+	float slope = 0;
+
+	printBigLine();
+	USB.println(F("MENU ASSISTED CALIBRATION PROCESS"));
+	USB.println(F("SAC sensor"));
+
+	if (parameter == TEMPERATURE)
+	{
+		USB.println(F("Temperature parameter"));
+		printBigLine();
+		USB.println(F("0. Introduction:"));
+		USB.println(F("\r\nThis is a two-point calibration method. At the end of the process the results"));
+		USB.println(F("of the calibration will be stored in the FLASH memory of the sensor for"));
+		USB.println(F("future uses."));
+		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
+		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
+		USB.println(F("measured values begin to drift."));
+		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
+		USB.println(F("paper before each calibration."));
+		USB.println(F("\r\nFor this process it is advisable to use a reference temperature sensor."));
+		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
+		USB.println(F("and press Enter."));
+		printLine();
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
+		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
+		USB.println(F("Example: 0.350"));
+		USB.print(F("> "));
+
+
+		serialClean();
+		while ( getData(input, inputSize) == 0 );
+		USB.println(input);
+		if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+		{
+			//Exit discarding changes
+			exitCalibration();
+		}
+		else
+		{
+			//In step 1 we reset temporary calibration data and indicate the range (no range)
+			calibrate(SAC, TEMPERATURE, STEP_1, NULL);
+
+			offset = atof(input);
+
+			printLine();
+			USB.print(F("2. Set sensor at selected offset: "));
+			USB.printFloat(offset, 4);
+			USB.println(F("*C."));
+			USB.println(F("Wait some minutes until the measure stabilizes."));
+			USB.println(F("Observing the offset in this step will help you assess whether calibration"));
+			USB.println(F("is necessary or not, depending on the precision required in your application."));
+			USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+			serialClean();
+			memset(input, 0x00, sizeof(input) );
+			uint16_t j = 300;
+			while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+						&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+			{
+				j++;
+				if (j >= 300)
+				{
+					j = 0;
+
+					read();
+					USB.println();
+					USB.printFloat(sensorSAC.temperature, 2);
+					USB.println(F("*C"));
+					USB.print(F("> "));
+				}
+
+				getData(input, inputSize);
+				delay(10);
+			}
+
+			USB.println(input);
+			if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+			{
+				//Exit discarding changes
+				exitCalibration();
+			}
+			else
+			{
+				//In step 2 user select calibration standard 1 (offset)
+				//This step must be done after stabilizing and measuring in water with
+				//the selected value using readMeasures function previosly
+				calibrate(SAC, TEMPERATURE, STEP_2, offset);
+
+				printLine();
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
+				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
+				USB.println(F("Example: 25.140"));
+				USB.print(F("> "));
+
+				serialClean();
+				while ( getData(input, inputSize) == 0 );
+				USB.println(input);
+				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+				{
+					//Exit discarding changes
+					exitCalibration();
+				}
+				else
+				{
+
+					slope = atof(input);
+
+					printLine();
+					USB.print(F("4. Immerse the sensor in water at your selected slope: "));
+					USB.printFloat(slope, 4);
+					USB.println(F("*C."));
+					USB.println(F("Wait some minutes until the measure stabilizes."));
+					USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+					serialClean();
+
+					j = 300;
+					while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+								&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+					{
+						j++;
+						if (j >= 300)
+						{
+							j = 0;
+
+							read();
+							USB.println();
+							USB.printFloat(sensorSAC.temperature, 2);
+							USB.println(F("*C"));
+							USB.print(F("> "));
+						}
+
+						getData(input, inputSize);
+						delay(10);
+					}
+
+					USB.println(input);
+					if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+					{
+						//Exit discarding changes
+						exitCalibration();
+					}
+					else
+					{
+						//In step 3 user select calibration standard 2 (slope)
+						//This step must be done after stabilizing and measuring in water with
+						//the selected value
+						calibrate(SAC, TEMPERATURE, STEP_3, slope);
+
+						printLine();
+						USB.println(F("5. In order to validate the calibration some data is required."));
+						USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
+						USB.print(F("> "));
+
+						serialClean();
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
+
+						char calibrationOperatorsName_temp[17];
+						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
+						strcpy(calibrationOperatorsName_temp, input);
+
+
+						for (int k = strlen(input); k < 16; k++)
+						{
+							calibrationOperatorsName_temp[k] = ' ';
+						}
+
+						USB.println(calibrationOperatorsName_temp);
+						fillOperatorsName(calibrationOperatorsName_temp);
+
+						printLine();
+						USB.println(F("6.Please insert calibration date."));
+
+
+						int year;
+						int month;
+						int day;
+						int hour;
+						int minute;
+
+						char calibrationDate_temp[17];
+						memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
+						/////////////////////////////////
+						//	YEAR
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert year [yy] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						year = atoi(input);
+						USB.println(year);
+
+
+						/////////////////////////////////
+						//	MONTH
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert month [mm] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						month = atoi(input);
+						USB.println(month);
+
+
+						/////////////////////////////////
+						//	DAY
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert day [dd] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						day = atoi(input);
+						USB.println(day);
+
+
+						/////////////////////////////////
+						//	HOUR
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert Hour [HH] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						hour = atoi(input);
+						USB.println(hour);
+
+						/////////////////////////////////
+						//	MINUTE
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert minute [MM] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						minute = atoi(input);
+						USB.println(minute);
+
+
+						/////////////////////////////////
+						//	create buffer
+						/////////////////////////////////
+						sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
+										minute,
+										hour,
+										day,
+										month,
+										year );
+
+
+						calibrationDate_temp[12] = ' ';
+						calibrationDate_temp[13] = ' ';
+						calibrationDate_temp[14] = ' ';
+						calibrationDate_temp[15] = ' ';
+
+						//USB.println(calibrationDate_temp);
+
+						fillCalibrationDate(calibrationDate_temp);
+
+
+						//In step 4 user validates the entire calibration entering operator's name and date
+						calibrate(PHEHT, TEMPERATURE, STEP_4, NULL);
+
+						printLine();
+
+						USB.println(F("Calibration successfully finished!"));
+					}
+				}
+			}
+		}
+		printLine();
+		USB.println(F("End of calibration process"));
+		printBigLine();
+	}
+
+	if (parameter == UV_254)
+	{
+		USB.println(F("UV 254 zeoring"));
+		printBigLine();
+		USB.println(F("0. Introduction:"));
+		USB.println(F("\r\nThis is a two step calibration method. At the end of the process the results"));
+		USB.println(F("of the calibration will be stored in the FLASH memory of the sensor for"));
+		USB.println(F("future uses."));
+		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
+		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
+		USB.println(F("measured values begin to drift."));
+		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
+		USB.println(F("paper before each calibration."));
+		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
+		USB.println(F("and press Enter."));
+		printLine();
+
+		USB.println(F("THIS CALIBRATION PROCESS MUST BE DONE BY USING DEMINERALISED WATER"));
+		
+		printLine();
+
+		USB.println(F("Zero absorbance UV (254nm) calibration."));
+		USB.println(F("The code will wait now for stabilization."));
+		USB.println(F("This process might take several minutes."));
+
+		
+		float previous = 0;
+		uint8_t count = 0;
+		read();
+		previous = sensorSAC.sac;
+		
+		while (count < 20)
+		{
+			read();
+			if ((previous >= sensorSAC.sac - 0.02) && (previous <= sensorSAC.sac + 0.02)) count++;
+			else count = 0;
+			USB.println();
+			USB.printFloat(sensorSAC.sac, 5);
+			USB.println(F("1/m"));
+			USB.print(F("> "));
+		}
+
+		
+			//In step 1 we reset temporary calibration data and indicate the range (no range)
+			calibrate(SAC, UV_254, STEP_1, NULL);
+
+			//In step 2 user select calibration standard 1 (slope)
+			//This step must be done after stabilizing and measuring in water with
+			//the selected value using readMeasures function previosly
+			calibrate(SAC, UV_254, STEP_2, NULL);
+
+		USB.println(F("Zero absorbance Vis (530nm) calibration."));
+		USB.println(F("The code will wait now for stabilization."));
+		USB.println(F("This process might take several minutes."));
+
+		
+		previous = 0;
+		count = 0;
+		read();
+		previous = sensorSAC.grComp;
+		delay(1000);
+		while (count < 20)
+		{
+			read();
+			if ((previous >= sensorSAC.grComp - 0.02) && (previous <= sensorSAC.grComp + 0.02)) count++;
+			else count = 0;
+			previous = sensorSAC.grComp;
+			USB.println();
+			USB.printFloat(sensorSAC.grComp, 2);
+			USB.println(F("1/m"));
+			USB.print(F("> "));
+		}
+
+			//In step 3 user select calibration standard 1 (slope)
+			//This step must be done after stabilizing and measuring in water with
+			//the selected value using readMeasures function previosly
+			calibrate(SAC, UV_254, STEP_3, NULL);
+
+			printLine();
+			USB.println(F("1. In order to validate the calibration some data is required."));
+			USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
+			USB.print(F("> "));
+
+			serialClean();
+			uint8_t validInput = 0;
+			while (!validInput)
+			{
+				while (getData(input, inputSize) == 0);
+
+				if (strlen(input) > 15)
+				{
+					USB.println(F("Invalid name."));
+					USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+					USB.print(F("> "));
+					serialClean();
+				}
+				else
+				{
+					validInput = 1;
+				}
+			}
+
+			char calibrationOperatorsName_temp[17];
+			memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
+			strcpy(calibrationOperatorsName_temp, input);
+
+
+			for (int k = strlen(input); k < 16; k++)
+			{
+				calibrationOperatorsName_temp[k] = ' ';
+			}
+
+			USB.println(calibrationOperatorsName_temp);
+			fillOperatorsName(calibrationOperatorsName_temp);
+
+			printLine();
+			USB.println(F("4.Please insert calibration date."));
+
+
+			int year;
+			int month;
+			int day;
+			int hour;
+			int minute;
+
+			char calibrationDate_temp[17];
+			memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
+			/////////////////////////////////
+			//	YEAR
+			/////////////////////////////////
+			serialClean();
+			do
+			{
+				USB.println("Insert year [yy] and press Enter.");
+				USB.print(F("> "));
+			}
+			while ( getDate(input, inputSize, 2) != true );
+
+			year = atoi(input);
+			USB.println(year);
+
+
+			/////////////////////////////////
+			//	MONTH
+			/////////////////////////////////
+			serialClean();
+			do
+			{
+				USB.println("Insert month [mm] and press Enter.");
+				USB.print(F("> "));
+			}
+			while ( getDate(input, inputSize, 2) != true );
+
+			month = atoi(input);
+			USB.println(month);
+
+
+			/////////////////////////////////
+			//	DAY
+			/////////////////////////////////
+			serialClean();
+			do
+			{
+				USB.println("Insert day [dd] and press Enter.");
+				USB.print(F("> "));
+			}
+			while ( getDate(input, inputSize, 2) != true );
+
+			day = atoi(input);
+			USB.println(day);
+
+
+			/////////////////////////////////
+			//	HOUR
+			/////////////////////////////////
+			serialClean();
+			do
+			{
+				USB.println("Insert Hour [HH] and press Enter.");
+				USB.print(F("> "));
+			}
+			while ( getDate(input, inputSize, 2) != true );
+
+			hour = atoi(input);
+			USB.println(hour);
+
+			/////////////////////////////////
+			//	MINUTE
+			/////////////////////////////////
+			serialClean();
+			do
+			{
+				USB.println("Insert minute [MM] and press Enter.");
+				USB.print(F("> "));
+			}
+			while ( getDate(input, inputSize, 2) != true );
+
+			minute = atoi(input);
+			USB.println(minute);
+
+
+			/////////////////////////////////
+			//	create buffer
+			/////////////////////////////////
+			sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
+							minute,
+							hour,
+							day,
+							month,
+							year );
+
+
+			calibrationDate_temp[12] = ' ';
+			calibrationDate_temp[13] = ' ';
+			calibrationDate_temp[14] = ' ';
+			calibrationDate_temp[15] = ' ';
+
+			//USB.println(calibrationDate_temp);
+
+			fillCalibrationDate(calibrationDate_temp);
+
+
+			//In step 4 user validates the entire calibration entering operator's name and date
+			calibrate(MES5, PARAMETER_1, STEP_4, NULL);
+
+			printLine();
+
+			USB.println(F("Calibration successfully finished!"));
+
+		
+	
+		printLine();
+		USB.println(F("End of calibration process"));
+		printBigLine();
+	}
+}
+
+
+
+
+/*!
+	\brief menu assisted calibration process
+	\param sensorType and parameter
+	\return void
+*/
+void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
+{
+	const uint8_t inputSize = 100;
+	char input[inputSize];
+	uint8_t response = 0;
+	float offset = 0;
+	float slope = 0;
+
+	printBigLine();
+	USB.println(F("MENU ASSISTED CALIBRATION PROCESS"));
+	USB.println(F("PHEHT sensor"));
+
+	if (parameter == TEMPERATURE)
+	{
+		USB.println(F("Temperature parameter"));
+		printBigLine();
+		USB.println(F("0. Introduction:"));
+		USB.println(F("\r\nThis is a two-point calibration method. At the end of the process the results"));
+		USB.println(F("of the calibration will be stored in the FLASH memory of the sensor for"));
+		USB.println(F("future uses."));
+		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
+		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
+		USB.println(F("measured values begin to drift."));
+		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
+		USB.println(F("paper before each calibration."));
+		USB.println(F("\r\nFor this process it is advisable to use a reference temperature sensor."));
+		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
+		USB.println(F("and press Enter."));
+		printLine();
+		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
+		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
+		USB.println(F("Example: 0.350"));
+		USB.print(F("> "));
+
+
+		serialClean();
+		while ( getData(input, inputSize) == 0 );
+		USB.println(input);
+		if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+		{
+			//Exit discarding changes
+			exitCalibration();
+		}
+		else
+		{
+			//In step 1 we reset temporary calibration data and indicate the range (no range)
+			calibrate(PHEHT, TEMPERATURE, STEP_1, NULL);
+
+			offset = atof(input);
+
+			printLine();
+			USB.print(F("2. Set sensor at selected offset: "));
+			USB.printFloat(offset, 4);
+			USB.println(F("*C."));
+			USB.println(F("Wait some minutes until the measure stabilizes."));
+			USB.println(F("Observing the offset in this step will help you assess whether calibration"));
+			USB.println(F("is necessary or not, depending on the precision required in your application."));
+			USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+			serialClean();
+			memset(input, 0x00, sizeof(input) );
+			uint16_t j = 300;
+			while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+						&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+			{
+				j++;
+				if (j >= 300)
+				{
+					j = 0;
+
+					read();
+					USB.println();
+					USB.printFloat(sensorPHEHT.temperature, 2);
+					USB.println(F("*C"));
+					USB.print(F("> "));
+				}
+
+				getData(input, inputSize);
+				delay(10);
+			}
+
+			USB.println(input);
+			if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+			{
+				//Exit discarding changes
+				exitCalibration();
+			}
+			else
+			{
+				//In step 2 user select calibration standard 1 (offset)
+				//This step must be done after stabilizing and measuring in water with
+				//the selected value using readMeasures function previosly
+				calibrate(PHEHT, TEMPERATURE, STEP_2, offset);
+
+				printLine();
+				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
+				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
+				USB.println(F("Example: 25.140"));
+				USB.print(F("> "));
+
+				serialClean();
+				while ( getData(input, inputSize) == 0 );
+				USB.println(input);
+				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+				{
+					//Exit discarding changes
+					exitCalibration();
+				}
+				else
+				{
+
+					slope = atof(input);
+
+					printLine();
+					USB.print(F("4. Immerse the sensor in water at your selected slope: "));
+					USB.printFloat(slope, 4);
+					USB.println(F("*C."));
+					USB.println(F("Wait some minutes until the measure stabilizes."));
+					USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+					serialClean();
+
+					j = 300;
+					while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+								&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+					{
+						j++;
+						if (j >= 300)
+						{
+							j = 0;
+
+							read();
+							USB.println();
+							USB.printFloat(sensorPHEHT.temperature, 2);
+							USB.println(F("*C"));
+							USB.print(F("> "));
+						}
+
+						getData(input, inputSize);
+						delay(10);
+					}
+
+					USB.println(input);
+					if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+					{
+						//Exit discarding changes
+						exitCalibration();
+					}
+					else
+					{
+						//In step 3 user select calibration standard 2 (slope)
+						//This step must be done after stabilizing and measuring in water with
+						//the selected value
+						calibrate(PHEHT, TEMPERATURE, STEP_3, slope);
+
+						printLine();
+						USB.println(F("5. In order to validate the calibration some data is required."));
+						USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
+						USB.print(F("> "));
+
+						serialClean();
+						uint8_t validInput = 0;
+						while (!validInput)
+						{
+							while (getData(input, inputSize) == 0);
+
+							if (strlen(input) > 15)
+							{
+								USB.println(F("Invalid name."));
+								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+								USB.print(F("> "));
+								serialClean();
+							}
+							else
+							{
+								validInput = 1;
+							}
+						}
+
+						char calibrationOperatorsName_temp[17];
+						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
+						strcpy(calibrationOperatorsName_temp, input);
+
+
+						for (int k = strlen(input); k < 16; k++)
+						{
+							calibrationOperatorsName_temp[k] = ' ';
+						}
+
+						USB.println(calibrationOperatorsName_temp);
+						fillOperatorsName(calibrationOperatorsName_temp);
+
+						printLine();
+						USB.println(F("6.Please insert calibration date."));
+
+
+						int year;
+						int month;
+						int day;
+						int hour;
+						int minute;
+
+						char calibrationDate_temp[17];
+						memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
+						/////////////////////////////////
+						//	YEAR
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert year [yy] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						year = atoi(input);
+						USB.println(year);
+
+
+						/////////////////////////////////
+						//	MONTH
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert month [mm] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						month = atoi(input);
+						USB.println(month);
+
+
+						/////////////////////////////////
+						//	DAY
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert day [dd] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						day = atoi(input);
+						USB.println(day);
+
+
+						/////////////////////////////////
+						//	HOUR
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert Hour [HH] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						hour = atoi(input);
+						USB.println(hour);
+
+						/////////////////////////////////
+						//	MINUTE
+						/////////////////////////////////
+						serialClean();
+						do
+						{
+							USB.println("Insert minute [MM] and press Enter.");
+							USB.print(F("> "));
+						}
+						while ( getDate(input, inputSize, 2) != true );
+
+						minute = atoi(input);
+						USB.println(minute);
+
+
+						/////////////////////////////////
+						//	create buffer
+						/////////////////////////////////
+						sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
+										minute,
+										hour,
+										day,
+										month,
+										year );
+
+
+						calibrationDate_temp[12] = ' ';
+						calibrationDate_temp[13] = ' ';
+						calibrationDate_temp[14] = ' ';
+						calibrationDate_temp[15] = ' ';
+
+						//USB.println(calibrationDate_temp);
+
+						fillCalibrationDate(calibrationDate_temp);
+
+
+						//In step 4 user validates the entire calibration entering operator's name and date
+						calibrate(PHEHT, TEMPERATURE, STEP_4, NULL);
+
+						printLine();
+
+						USB.println(F("Calibration successfully finished!"));
+					}
+				}
+			}
+		}
+		printLine();
+		USB.println(F("End of calibration process"));
+		printBigLine();
+	}
+
+	if (parameter == PH)
+	{
+		uint8_t calibrationMethod = 0;
+
+		USB.println(F("pH parameter"));
+		printBigLine();
+		USB.println(F("0. Introduction:"));
+		USB.println(F("\r\nYou can choose between two or three-point calibration method."));
+		USB.println(F("At the end of the process the results of the calibration will be "));
+		USB.println(F("stored in the FLASH memory of the sensor for future uses."));
+		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
+		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
+		USB.println(F("measured values begin to drift."));
+		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
+		USB.println(F("paper before each calibration."));
+		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
+		USB.println(F("and press Enter."));
+		printLine();
+
+		USB.println(F("1. Insert '2' for two point calibration or '3' for three point calibration method"));
+		USB.println(F("and press Enter."));
+		USB.println(F("Example: 3"));
+		USB.print(F("> "));
+
+		serialClean();
+		while ((find((uint8_t*)input, strlen(input), "2") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+			&& (find((uint8_t*)input, strlen(input), "3") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+		{
+
+			getData(input, inputSize);
+
+		}
+
+		USB.println(input);
+
+		if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+		{
+			//Exit discarding changes
+			exitCalibration();
+		}
+		else
+		{
+			calibrationMethod = atoi(input);
+
+
+			if (calibrationMethod == 2)
+			{
+				USB.println(F("Two point calibration method selected"));
+
+				USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
+				USB.println(F("Example: 4"));
+				USB.print(F("> "));
+
+
+				serialClean();
+				while ( getData(input, inputSize) == 0 );
+				USB.println(input);
+				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+				{
+					//Exit discarding changes
+					exitCalibration();
+				}
+				else
+				{
+					//In step 1 we reset temporary calibration data and indicate the range (no range)
+					calibrate(PHEHT, PH, STEP_1, NULL);
+
+					offset = atof(input);
+
+					printLine();
+					USB.print(F("2. Place the sensor at selected offset: pH "));
+					USB.printFloat(offset, 4);
+					USB.println(F(""));
+					USB.println(F("Wait some minutes until the measure stabilizes."));
+					USB.println(F("Observing the offset in this step will help you assess whether calibration"));
+					USB.println(F("is necessary or not, depending on the precision required in your application."));
+					USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+					serialClean();
+					memset(input, 0x00, sizeof(input) );
+					uint16_t j = 300;
+					while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+								&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+					{
+						j++;
+						if (j >= 300)
+						{
+							j = 0;
+
+							read();
+							USB.println();
+							USB.printFloat(sensorPHEHT.pH, 2);
+							USB.println(F(""));
+							USB.print(F("> "));
+						}
+
+						getData(input, inputSize);
+						delay(10);
+					}
+
+					USB.println(input);
+					if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+					{
+						//Exit discarding changes
+						exitCalibration();
+					}
+					else
+					{
+						//In step 2 user select calibration standard 1 (offset)
+						//This step must be done after stabilizing and measuring in water with
+						//the selected value using readMeasures function previosly
+						calibrate(PHEHT, PH, STEP_2, offset);
+
+						printLine();
+						USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
+						USB.println(F("Example: 7"));
+						USB.print(F("> "));
+
+						serialClean();
+						while ( getData(input, inputSize) == 0 );
+						USB.println(input);
+						if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+						{
+							//Exit discarding changes
+							exitCalibration();
+						}
+						else
+						{
+
+							slope = atof(input);
+
+							printLine();
+							USB.print(F("4. Place the sensor at selected slope: pH "));
+							USB.printFloat(slope, 4);
+							USB.println(F(""));
+							USB.println(F("Wait some minutes until the measure stabilizes."));
+							USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+							serialClean();
+
+							j = 300;
+							while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+										&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+							{
+								j++;
+								if (j >= 300)
+								{
+									j = 0;
+
+									read();
+									USB.println();
+									USB.printFloat(sensorPHEHT.pH, 2);
+									USB.println(F(""));
+									USB.print(F("> "));
+								}
+
+								getData(input, inputSize);
+								delay(10);
+							}
+
+							USB.println(input);
+							if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+							{
+								//Exit discarding changes
+								exitCalibration();
+							}
+							else
+							{
+								//In step 3 user select calibration standard 2 (slope)
+								//This step must be done after stabilizing and measuring in water with
+								//the selected value
+								calibrate(PHEHT, PH, STEP_3, slope);
+
+								printLine();
+								USB.println(F("5. In order to validate the calibration some data is required."));
+								USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
+								USB.print(F("> "));
+
+								serialClean();
+								uint8_t validInput = 0;
+								while (!validInput)
+								{
+									while (getData(input, inputSize) == 0);
+
+									if (strlen(input) > 15)
+									{
+										USB.println(F("Invalid name."));
+										USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+										USB.print(F("> "));
+										serialClean();
+									}
+									else
+									{
+										validInput = 1;
+									}
+								}
+
+								char calibrationOperatorsName_temp[17];
+								memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
+								strcpy(calibrationOperatorsName_temp, input);
+
+
+								for (int k = strlen(input); k < 16; k++)
+								{
+									calibrationOperatorsName_temp[k] = ' ';
+								}
+
+								USB.println(calibrationOperatorsName_temp);
+								fillOperatorsName(calibrationOperatorsName_temp);
+
+								printLine();
+								USB.println(F("6.Please insert calibration date."));
+
+
+								int year;
+								int month;
+								int day;
+								int hour;
+								int minute;
+
+								char calibrationDate_temp[17];
+								memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
+								/////////////////////////////////
+								//	YEAR
+								/////////////////////////////////
+								serialClean();
+								do
+								{
+									USB.println("Insert year [yy] and press Enter.");
+									USB.print(F("> "));
+								}
+								while ( getDate(input, inputSize, 2) != true );
+
+								year = atoi(input);
+								USB.println(year);
+
+
+								/////////////////////////////////
+								//	MONTH
+								/////////////////////////////////
+								serialClean();
+								do
+								{
+									USB.println("Insert month [mm] and press Enter.");
+									USB.print(F("> "));
+								}
+								while ( getDate(input, inputSize, 2) != true );
+
+								month = atoi(input);
+								USB.println(month);
+
+
+								/////////////////////////////////
+								//	DAY
+								/////////////////////////////////
+								serialClean();
+								do
+								{
+									USB.println("Insert day [dd] and press Enter.");
+									USB.print(F("> "));
+								}
+								while ( getDate(input, inputSize, 2) != true );
+
+								day = atoi(input);
+								USB.println(day);
+
+
+								/////////////////////////////////
+								//	HOUR
+								/////////////////////////////////
+								serialClean();
+								do
+								{
+									USB.println("Insert Hour [HH] and press Enter.");
+									USB.print(F("> "));
+								}
+								while ( getDate(input, inputSize, 2) != true );
+
+								hour = atoi(input);
+								USB.println(hour);
+
+								/////////////////////////////////
+								//	MINUTE
+								/////////////////////////////////
+								serialClean();
+								do
+								{
+									USB.println("Insert minute [MM] and press Enter.");
+									USB.print(F("> "));
+								}
+								while ( getDate(input, inputSize, 2) != true );
+
+								minute = atoi(input);
+								USB.println(minute);
+
+
+								/////////////////////////////////
+								//	create buffer
+								/////////////////////////////////
+								sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
+												minute,
+												hour,
+												day,
+												month,
+												year );
+
+
+								calibrationDate_temp[12] = ' ';
+								calibrationDate_temp[13] = ' ';
+								calibrationDate_temp[14] = ' ';
+								calibrationDate_temp[15] = ' ';
+
+								//USB.println(calibrationDate_temp);
+
+								fillCalibrationDate(calibrationDate_temp);
+
+
+								//In step 4 user validates the entire calibration entering operator's name and date
+								calibrate(PHEHT, PH, STEP_4, NULL);
+
+								printLine();
+
+								USB.println(F("Calibration successfully finished!"));
+							}
+						}
+					}
+				}
+			}
+
+
+
+			if (calibrationMethod == 3)
+			{
+				USB.println(F("Three point calibration method selected"));
+
+				USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
+				USB.println(F("Example: 4"));
+				USB.print(F("> "));
+
+
+				serialClean();
+				while ( getData(input, inputSize) == 0 );
+				USB.println(input);
+				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+				{
+					//Exit discarding changes
+					exitCalibration();
+				}
+				else
+				{
+					//In step 1 we reset temporary calibration data and indicate the range (no range)
+					calibrate(PHEHT, PH, STEP_1, NULL);
+
+					offset = atof(input);
+
+					printLine();
+					USB.print(F("2. Place the sensor at selected offset: pH "));
+					USB.printFloat(offset, 4);
+					USB.println(F(""));
+					USB.println(F("Wait some minutes until the measure stabilizes."));
+					USB.println(F("Observing the offset in this step will help you assess whether calibration"));
+					USB.println(F("is necessary or not, depending on the precision required in your application."));
+					USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+					serialClean();
+					memset(input, 0x00, sizeof(input) );
+					uint16_t j = 300;
+					while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+								&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+					{
+						j++;
+						if (j >= 300)
+						{
+							j = 0;
+
+							read();
+							USB.println();
+							USB.printFloat(sensorPHEHT.pH, 2);
+							USB.println(F(""));
+							USB.print(F("> "));
+						}
+
+						getData(input, inputSize);
+						delay(10);
+					}
+
+					USB.println(input);
+					if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+					{
+						//Exit discarding changes
+						exitCalibration();
+					}
+					else
+					{
+						//In step 2 user select calibration standard 1 (offset)
+						//This step must be done after stabilizing and measuring in water with
+						//the selected value using readMeasures function previosly
+						calibrate(PHEHT, PH, STEP_2, offset);
+
+						printLine();
+						USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
+						USB.println(F("Example: 7"));
+						USB.print(F("> "));
+
+						serialClean();
+						while ( getData(input, inputSize) == 0 );
+						USB.println(input);
+						if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+						{
+							//Exit discarding changes
+							exitCalibration();
+						}
+						else
+						{
+
+							slope = atof(input);
+
+							printLine();
+							USB.print(F("4. Place the sensor at selected slope: pH "));
+							USB.printFloat(slope, 4);
+							USB.println(F(""));
+							USB.println(F("Wait some minutes until the measure stabilizes."));
+							USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+							serialClean();
+
+							j = 300;
+							while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+										&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+							{
+								j++;
+								if (j >= 300)
+								{
+									j = 0;
+
+									read();
+									USB.println();
+									USB.printFloat(sensorPHEHT.pH, 2);
+									USB.println(F(""));
+									USB.print(F("> "));
+								}
+
+								getData(input, inputSize);
+								delay(10);
+							}
+
+							USB.println(input);
+							if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+							{
+								//Exit discarding changes
+								exitCalibration();
+							}
+							else
+							{
+								//In step 3 user select calibration standard 2 (slope)
+								//This step must be done after stabilizing and measuring in water with
+								//the selected value
+								calibrate(PHEHT, PH, STEP_3, slope);
+
+								printLine();
+
+								USB.println(F("5. Insert the third calibration standard value and press Enter."));
+								USB.println(F("Example: 9"));
+								USB.print(F("> "));
+
+								serialClean();
+								while ( getData(input, inputSize) == 0 );
+								USB.println(input);
+								if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+								{
+									//Exit discarding changes
+									exitCalibration();
+								}
+								else
+								{
+
+									slope = atof(input);
+
+									printLine();
+									USB.print(F("6. Place the sensor at selected slope: pH "));
+									USB.printFloat(slope, 4);
+									USB.println(F(""));
+									USB.println(F("Wait some minutes until the measure stabilizes."));
+									USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+									serialClean();
+
+									j = 300;
+									while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+												&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+									{
+										j++;
+										if (j >= 300)
+										{
+											j = 0;
+
+											read();
+											USB.println();
+											USB.printFloat(sensorPHEHT.pH, 2);
+											USB.println(F(""));
+											USB.print(F("> "));
+										}
+
+										getData(input, inputSize);
+										delay(10);
+									}
+
+									USB.println(input);
+									if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+									{
+										//Exit discarding changes
+										exitCalibration();
+									}
+									else
+									{
+										//In step 3 user select calibration standard 2 (slope)
+										//This step must be done after stabilizing and measuring in water with
+										//the selected value
+										calibrate(PHEHT, PH, STEP_3B, slope);
+
+
+										printLine();
+										USB.println(F("7. In order to validate the calibration some data is required."));
+										USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
+										USB.print(F("> "));
+
+										serialClean();
+										while (getData(input, inputSize) == 0);
+
+										char calibrationOperatorsName_temp[17];
+										memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
+										strcpy(calibrationOperatorsName_temp, input);
+
+
+										for (int k = strlen(input); k < 16; k++)
+										{
+											calibrationOperatorsName_temp[k] = ' ';
+										}
+
+										USB.println(calibrationOperatorsName_temp);
+										fillOperatorsName(calibrationOperatorsName_temp);
+
+										printLine();
+										USB.println(F("8.Please insert calibration date."));
+
+
+										int year;
+										int month;
+										int day;
+										int hour;
+										int minute;
+
+										char calibrationDate_temp[17];
+										memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
+										/////////////////////////////////
+										//	YEAR
+										/////////////////////////////////
+										serialClean();
+										do
+										{
+											USB.println("Insert year [yy] and press Enter.");
+											USB.print(F("> "));
+										}
+										while ( getDate(input, inputSize, 2) != true );
+
+										year = atoi(input);
+										USB.println(year);
+
+
+										/////////////////////////////////
+										//	MONTH
+										/////////////////////////////////
+										serialClean();
+										do
+										{
+											USB.println("Insert month [mm] and press Enter.");
+											USB.print(F("> "));
+										}
+										while ( getDate(input, inputSize, 2) != true );
+
+										month = atoi(input);
+										USB.println(month);
+
+
+										/////////////////////////////////
+										//	DAY
+										/////////////////////////////////
+										serialClean();
+										do
+										{
+											USB.println("Insert day [dd] and press Enter.");
+											USB.print(F("> "));
+										}
+										while ( getDate(input, inputSize, 2) != true );
+
+										day = atoi(input);
+										USB.println(day);
+
+
+										/////////////////////////////////
+										//	HOUR
+										/////////////////////////////////
+										serialClean();
+										do
+										{
+											USB.println("Insert Hour [HH] and press Enter.");
+											USB.print(F("> "));
+										}
+										while ( getDate(input, inputSize, 2) != true );
+
+										hour = atoi(input);
+										USB.println(hour);
+
+										/////////////////////////////////
+										//	MINUTE
+										/////////////////////////////////
+										serialClean();
+										do
+										{
+											USB.println("Insert minute [MM] and press Enter.");
+											USB.print(F("> "));
+										}
+										while ( getDate(input, inputSize, 2) != true );
+
+										minute = atoi(input);
+										USB.println(minute);
+
+
+										/////////////////////////////////
+										//	create buffer
+										/////////////////////////////////
+										sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
+														minute,
+														hour,
+														day,
+														month,
+														year );
+
+
+										calibrationDate_temp[12] = ' ';
+										calibrationDate_temp[13] = ' ';
+										calibrationDate_temp[14] = ' ';
+										calibrationDate_temp[15] = ' ';
+
+										//USB.println(calibrationDate_temp);
+
+										fillCalibrationDate(calibrationDate_temp);
+
+
+										//In step 4 user validates the entire calibration entering operator's name and date
+										calibrate(PHEHT, PH, STEP_4, NULL);
+
+										printLine();
+
+										USB.println(F("Calibration successfully finished!"));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		printLine();
+		USB.println(F("End of calibration process"));
+		printBigLine();
+	}
+
+	if (parameter == REDOX)
+	{
+		USB.println(F("Redox parameter"));
+		printBigLine();
+		USB.println(F("0. Introduction:"));
+		USB.println(F("\r\nThis is a two-point calibration method. At the end of the process the results"));
+		USB.println(F("of the calibration will be stored in the FLASH memory of the sensor for"));
+		USB.println(F("future uses."));
+		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
+		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
+		USB.println(F("measured values begin to drift."));
+		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
+		USB.println(F("paper before each calibration."));
+		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
+		USB.println(F("and press Enter."));
+		printLine();
+
+		//In step 1 we reset temporary calibration data and indicate the range (no range)
+		calibrate(PHEHT, REDOX, STEP_1, NULL);
+
+		//offset is not used in this particular sensor parameter
+		offset = 0;
+
+		USB.println(F("1. Place the sensor at standard offset: 0 mV"));
+		USB.println(F("Wait some minutes until the measure stabilizes."));
+		USB.println(F("Observing the offset in this step will help you assess whether calibration"));
+		USB.println(F("is necessary or not, depending on the precision required in your application."));
+		USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+		serialClean();
+		memset(input, 0x00, sizeof(input) );
+		uint16_t j = 300;
+		while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+			&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+		{
+			j++;
+			if (j >= 300)
+			{
+				j = 0;
+
+				read();
+				USB.println();
+				USB.printFloat(sensorPHEHT.redox, 2);
+				USB.println(F(" mV"));
+				USB.print(F("> "));
+			}
+
+			getData(input, inputSize);
+			delay(10);
+		}
+
+		USB.println(input);
+		if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+		{
+			//Exit discarding changes
+			exitCalibrationAndStopElectronicZero();
+		}
+		else
+		{
+			//In step 2 user select calibration standard 1 (offset)
+			//This step must be done after stabilizing and measuring in water with
+			//the selected value using readMeasures function previosly
+			calibrate(PHEHT, REDOX, STEP_2, offset);
+
+			printLine();
+			USB.println(F("2. Insert the second calibration standard value (slope) and press Enter."));
+			USB.println(F("240 mV is recommended)"));
+			USB.println(F("Example: 240"));
+			USB.print(F("> "));
+
+			serialClean();
+			while ( getData(input, inputSize) == 0 );
+			USB.println(input);
+			if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+			{
+				//Exit discarding changes
+				exitCalibrationAndStopElectronicZero();
+			}
+			else
+			{
+
+				slope = atof(input);
+
+				printLine();
+				USB.print(F("3. Place the sensor at selected slope: "));
+				USB.printFloat(slope, 4);
+				USB.println(F(" mV"));
+				USB.println(F("Wait some minutes until the measure stabilizes."));
+				USB.println(F("Then insert 'N' for Next step and press Enter."));
+
+				serialClean();
+
+				j = 300;
+				while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
+							&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
+				{
+					j++;
+					if (j >= 300)
+					{
+						j = 0;
+
+						read();
+						USB.println();
+						USB.printFloat(sensorPHEHT.redox, 2);
+						USB.println(F(" mV"));
+						USB.print(F("> "));
+					}
+
+					getData(input, inputSize);
+					delay(10);
+				}
+
+				USB.println(input);
+				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
+				{
+					//Exit discarding changes
+					exitCalibrationAndStopElectronicZero();
+				}
+				else
+				{
+					//In step 3 user select calibration standard 2 (slope)
+					//This step must be done after stabilizing and measuring in water with
+					//the selected value
+					calibrate(PHEHT, REDOX, STEP_3, slope);
+
+					printLine();
+					USB.println(F("4. In order to validate the calibration some data is required."));
+					USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
+					USB.print(F("> "));
+
+					serialClean();
+					uint8_t validInput = 0;
+					while (!validInput)
+					{
+						while (getData(input, inputSize) == 0);
+
+						if (strlen(input) > 15)
+						{
+							USB.println(F("Invalid name."));
+							USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
+							USB.print(F("> "));
+							serialClean();
+						}
+						else
+						{
+							validInput = 1;
+						}
+					}
+
+					char calibrationOperatorsName_temp[17];
+					memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
+					strcpy(calibrationOperatorsName_temp, input);
+
+
+					for (int k = strlen(input); k < 16; k++)
+					{
+						calibrationOperatorsName_temp[k] = ' ';
+					}
+
+					USB.println(calibrationOperatorsName_temp);
+					fillOperatorsName(calibrationOperatorsName_temp);
+
+					printLine();
+					USB.println(F("5.Please insert calibration date."));
+
+
+					int year;
+					int month;
+					int day;
+					int hour;
+					int minute;
+
+					char calibrationDate_temp[17];
+					memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
+					/////////////////////////////////
+					//	YEAR
+					/////////////////////////////////
+					serialClean();
+					do
+					{
+						USB.println("Insert year [yy] and press Enter.");
+						USB.print(F("> "));
+					}
+					while ( getDate(input, inputSize, 2) != true );
+
+					year = atoi(input);
+					USB.println(year);
+
+
+					/////////////////////////////////
+					//	MONTH
+					/////////////////////////////////
+					serialClean();
+					do
+					{
+						USB.println("Insert month [mm] and press Enter.");
+						USB.print(F("> "));
+					}
+					while ( getDate(input, inputSize, 2) != true );
+
+					month = atoi(input);
+					USB.println(month);
+
+
+					/////////////////////////////////
+					//	DAY
+					/////////////////////////////////
+					serialClean();
+					do
+					{
+						USB.println("Insert day [dd] and press Enter.");
+						USB.print(F("> "));
+					}
+					while ( getDate(input, inputSize, 2) != true );
+
+					day = atoi(input);
+					USB.println(day);
+
+
+					/////////////////////////////////
+					//	HOUR
+					/////////////////////////////////
+					serialClean();
+					do
+					{
+						USB.println("Insert Hour [HH] and press Enter.");
+						USB.print(F("> "));
+					}
+					while ( getDate(input, inputSize, 2) != true );
+
+					hour = atoi(input);
+					USB.println(hour);
+
+					/////////////////////////////////
+					//	MINUTE
+					/////////////////////////////////
+					serialClean();
+					do
+					{
+						USB.println("Insert minute [MM] and press Enter.");
+						USB.print(F("> "));
+					}
+					while ( getDate(input, inputSize, 2) != true );
+
+					minute = atoi(input);
+					USB.println(minute);
+
+
+					/////////////////////////////////
+					//	create buffer
+					/////////////////////////////////
+					sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
+									minute,
+									hour,
+									day,
+									month,
+									year );
+
+
+					calibrationDate_temp[12] = ' ';
+					calibrationDate_temp[13] = ' ';
+					calibrationDate_temp[14] = ' ';
+					calibrationDate_temp[15] = ' ';
+
+					//USB.println(calibrationDate_temp);
+
+					fillCalibrationDate(calibrationDate_temp);
+
+
+					//In step 4 user validates the entire calibration entering operator's name and date
+					calibrate(PHEHT, REDOX, STEP_4, NULL);
+
+					printLine();
+
+					USB.println(F("Calibration successfully finished!"));
+				}
+			}
+		}
+
+		printLine();
+		USB.println(F("End of calibration process"));
+		printBigLine();
+	}
+
+}
 
 
 
@@ -7562,1278 +9697,7 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 	}
 }
 
-/*!
-	\brief menu assisted calibration process
-	\param sensorType and parameter
-	\return void
-*/
-void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
-{
-	const uint8_t inputSize = 100;
-	char input[inputSize];
-	uint8_t response = 0;
-	float offset = 0;
-	float slope = 0;
 
-	printBigLine();
-	USB.println(F("MENU ASSISTED CALIBRATION PROCESS"));
-	USB.println(F("PHEHT sensor"));
-
-	if (parameter == TEMPERATURE)
-	{
-		USB.println(F("Temperature parameter"));
-		printBigLine();
-		USB.println(F("0. Introduction:"));
-		USB.println(F("\r\nThis is a two-point calibration method. At the end of the process the results"));
-		USB.println(F("of the calibration will be stored in the FLASH memory of the sensor for"));
-		USB.println(F("future uses."));
-		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
-		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
-		USB.println(F("measured values begin to drift."));
-		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
-		USB.println(F("paper before each calibration."));
-		USB.println(F("\r\nFor this process it is advisable to use a reference temperature sensor."));
-		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
-		USB.println(F("and press Enter."));
-		printLine();
-		USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
-		USB.println(F("0*C is recommended (Sensor fully immersed in an ice/water bath)"));
-		USB.println(F("Example: 0.350"));
-		USB.print(F("> "));
-
-
-		serialClean();
-		while ( getData(input, inputSize) == 0 );
-		USB.println(input);
-		if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-		{
-			//Exit discarding changes
-			exitCalibration();
-		}
-		else
-		{
-			//In step 1 we reset temporary calibration data and indicate the range (no range)
-			calibrate(PHEHT, TEMPERATURE, STEP_1, NULL);
-
-			offset = atof(input);
-
-			printLine();
-			USB.print(F("2. Set sensor at selected offset: "));
-			USB.printFloat(offset, 4);
-			USB.println(F("*C."));
-			USB.println(F("Wait some minutes until the measure stabilizes."));
-			USB.println(F("Observing the offset in this step will help you assess whether calibration"));
-			USB.println(F("is necessary or not, depending on the precision required in your application."));
-			USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-			serialClean();
-			memset(input, 0x00, sizeof(input) );
-			uint16_t j = 300;
-			while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-						&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-			{
-				j++;
-				if (j >= 300)
-				{
-					j = 0;
-
-					read();
-					USB.println();
-					USB.printFloat(sensorPHEHT.temperature, 2);
-					USB.println(F("*C"));
-					USB.print(F("> "));
-				}
-
-				getData(input, inputSize);
-				delay(10);
-			}
-
-			USB.println(input);
-			if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-			{
-				//Exit discarding changes
-				exitCalibration();
-			}
-			else
-			{
-				//In step 2 user select calibration standard 1 (offset)
-				//This step must be done after stabilizing and measuring in water with
-				//the selected value using readMeasures function previosly
-				calibrate(PHEHT, TEMPERATURE, STEP_2, offset);
-
-				printLine();
-				USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
-				USB.println(F("25*C is recommended (Sensor fully immersed in a bath heated at 25*C)"));
-				USB.println(F("Example: 25.140"));
-				USB.print(F("> "));
-
-				serialClean();
-				while ( getData(input, inputSize) == 0 );
-				USB.println(input);
-				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-				{
-					//Exit discarding changes
-					exitCalibration();
-				}
-				else
-				{
-
-					slope = atof(input);
-
-					printLine();
-					USB.print(F("4. Immerse the sensor in water at your selected slope: "));
-					USB.printFloat(slope, 4);
-					USB.println(F("*C."));
-					USB.println(F("Wait some minutes until the measure stabilizes."));
-					USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-					serialClean();
-
-					j = 300;
-					while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-								&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-					{
-						j++;
-						if (j >= 300)
-						{
-							j = 0;
-
-							read();
-							USB.println();
-							USB.printFloat(sensorPHEHT.temperature, 2);
-							USB.println(F("*C"));
-							USB.print(F("> "));
-						}
-
-						getData(input, inputSize);
-						delay(10);
-					}
-
-					USB.println(input);
-					if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-					{
-						//Exit discarding changes
-						exitCalibration();
-					}
-					else
-					{
-						//In step 3 user select calibration standard 2 (slope)
-						//This step must be done after stabilizing and measuring in water with
-						//the selected value
-						calibrate(PHEHT, TEMPERATURE, STEP_3, slope);
-
-						printLine();
-						USB.println(F("5. In order to validate the calibration some data is required."));
-						USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
-						USB.print(F("> "));
-
-						serialClean();
-						uint8_t validInput = 0;
-						while (!validInput)
-						{
-							while (getData(input, inputSize) == 0);
-
-							if (strlen(input) > 15)
-							{
-								USB.println(F("Invalid name."));
-								USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
-								USB.print(F("> "));
-								serialClean();
-							}
-							else
-							{
-								validInput = 1;
-							}
-						}
-
-						char calibrationOperatorsName_temp[17];
-						memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
-						strcpy(calibrationOperatorsName_temp, input);
-
-
-						for (int k = strlen(input); k < 16; k++)
-						{
-							calibrationOperatorsName_temp[k] = ' ';
-						}
-
-						USB.println(calibrationOperatorsName_temp);
-						fillOperatorsName(calibrationOperatorsName_temp);
-
-						printLine();
-						USB.println(F("6.Please insert calibration date."));
-
-
-						int year;
-						int month;
-						int day;
-						int hour;
-						int minute;
-
-						char calibrationDate_temp[17];
-						memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
-						/////////////////////////////////
-						//	YEAR
-						/////////////////////////////////
-						serialClean();
-						do
-						{
-							USB.println("Insert year [yy] and press Enter.");
-							USB.print(F("> "));
-						}
-						while ( getDate(input, inputSize, 2) != true );
-
-						year = atoi(input);
-						USB.println(year);
-
-
-						/////////////////////////////////
-						//	MONTH
-						/////////////////////////////////
-						serialClean();
-						do
-						{
-							USB.println("Insert month [mm] and press Enter.");
-							USB.print(F("> "));
-						}
-						while ( getDate(input, inputSize, 2) != true );
-
-						month = atoi(input);
-						USB.println(month);
-
-
-						/////////////////////////////////
-						//	DAY
-						/////////////////////////////////
-						serialClean();
-						do
-						{
-							USB.println("Insert day [dd] and press Enter.");
-							USB.print(F("> "));
-						}
-						while ( getDate(input, inputSize, 2) != true );
-
-						day = atoi(input);
-						USB.println(day);
-
-
-						/////////////////////////////////
-						//	HOUR
-						/////////////////////////////////
-						serialClean();
-						do
-						{
-							USB.println("Insert Hour [HH] and press Enter.");
-							USB.print(F("> "));
-						}
-						while ( getDate(input, inputSize, 2) != true );
-
-						hour = atoi(input);
-						USB.println(hour);
-
-						/////////////////////////////////
-						//	MINUTE
-						/////////////////////////////////
-						serialClean();
-						do
-						{
-							USB.println("Insert minute [MM] and press Enter.");
-							USB.print(F("> "));
-						}
-						while ( getDate(input, inputSize, 2) != true );
-
-						minute = atoi(input);
-						USB.println(minute);
-
-
-						/////////////////////////////////
-						//	create buffer
-						/////////////////////////////////
-						sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
-										minute,
-										hour,
-										day,
-										month,
-										year );
-
-
-						calibrationDate_temp[12] = ' ';
-						calibrationDate_temp[13] = ' ';
-						calibrationDate_temp[14] = ' ';
-						calibrationDate_temp[15] = ' ';
-
-						//USB.println(calibrationDate_temp);
-
-						fillCalibrationDate(calibrationDate_temp);
-
-
-						//In step 4 user validates the entire calibration entering operator's name and date
-						calibrate(PHEHT, TEMPERATURE, STEP_4, NULL);
-
-						printLine();
-
-						USB.println(F("Calibration successfully finished!"));
-					}
-				}
-			}
-		}
-		printLine();
-		USB.println(F("End of calibration process"));
-		printBigLine();
-	}
-
-	if (parameter == PH)
-	{
-		uint8_t calibrationMethod = 0;
-
-		USB.println(F("pH parameter"));
-		printBigLine();
-		USB.println(F("0. Introduction:"));
-		USB.println(F("\r\nYou can choose between two or three-point calibration method."));
-		USB.println(F("At the end of the process the results of the calibration will be "));
-		USB.println(F("stored in the FLASH memory of the sensor for future uses."));
-		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
-		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
-		USB.println(F("measured values begin to drift."));
-		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
-		USB.println(F("paper before each calibration."));
-		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
-		USB.println(F("and press Enter."));
-		printLine();
-
-		USB.println(F("1. Insert '2' for two point calibration or '3' for three point calibration method"));
-		USB.println(F("and press Enter."));
-		USB.println(F("Example: 3"));
-		USB.print(F("> "));
-
-		serialClean();
-		while ((find((uint8_t*)input, strlen(input), "2") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-			&& (find((uint8_t*)input, strlen(input), "3") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-		{
-
-			getData(input, inputSize);
-
-		}
-
-		USB.println(input);
-
-		if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-		{
-			//Exit discarding changes
-			exitCalibration();
-		}
-		else
-		{
-			calibrationMethod = atoi(input);
-
-
-			if (calibrationMethod == 2)
-			{
-				USB.println(F("Two point calibration method selected"));
-
-				USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
-				USB.println(F("Example: 4"));
-				USB.print(F("> "));
-
-
-				serialClean();
-				while ( getData(input, inputSize) == 0 );
-				USB.println(input);
-				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-				{
-					//Exit discarding changes
-					exitCalibration();
-				}
-				else
-				{
-					//In step 1 we reset temporary calibration data and indicate the range (no range)
-					calibrate(PHEHT, PH, STEP_1, NULL);
-
-					offset = atof(input);
-
-					printLine();
-					USB.print(F("2. Place the sensor at selected offset: pH "));
-					USB.printFloat(offset, 4);
-					USB.println(F(""));
-					USB.println(F("Wait some minutes until the measure stabilizes."));
-					USB.println(F("Observing the offset in this step will help you assess whether calibration"));
-					USB.println(F("is necessary or not, depending on the precision required in your application."));
-					USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-					serialClean();
-					memset(input, 0x00, sizeof(input) );
-					uint16_t j = 300;
-					while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-								&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-					{
-						j++;
-						if (j >= 300)
-						{
-							j = 0;
-
-							read();
-							USB.println();
-							USB.printFloat(sensorPHEHT.pH, 2);
-							USB.println(F(""));
-							USB.print(F("> "));
-						}
-
-						getData(input, inputSize);
-						delay(10);
-					}
-
-					USB.println(input);
-					if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-					{
-						//Exit discarding changes
-						exitCalibration();
-					}
-					else
-					{
-						//In step 2 user select calibration standard 1 (offset)
-						//This step must be done after stabilizing and measuring in water with
-						//the selected value using readMeasures function previosly
-						calibrate(PHEHT, PH, STEP_2, offset);
-
-						printLine();
-						USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
-						USB.println(F("Example: 7"));
-						USB.print(F("> "));
-
-						serialClean();
-						while ( getData(input, inputSize) == 0 );
-						USB.println(input);
-						if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-						{
-							//Exit discarding changes
-							exitCalibration();
-						}
-						else
-						{
-
-							slope = atof(input);
-
-							printLine();
-							USB.print(F("4. Place the sensor at selected slope: pH "));
-							USB.printFloat(slope, 4);
-							USB.println(F(""));
-							USB.println(F("Wait some minutes until the measure stabilizes."));
-							USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-							serialClean();
-
-							j = 300;
-							while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-										&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-							{
-								j++;
-								if (j >= 300)
-								{
-									j = 0;
-
-									read();
-									USB.println();
-									USB.printFloat(sensorPHEHT.pH, 2);
-									USB.println(F(""));
-									USB.print(F("> "));
-								}
-
-								getData(input, inputSize);
-								delay(10);
-							}
-
-							USB.println(input);
-							if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-							{
-								//Exit discarding changes
-								exitCalibration();
-							}
-							else
-							{
-								//In step 3 user select calibration standard 2 (slope)
-								//This step must be done after stabilizing and measuring in water with
-								//the selected value
-								calibrate(PHEHT, PH, STEP_3, slope);
-
-								printLine();
-								USB.println(F("5. In order to validate the calibration some data is required."));
-								USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
-								USB.print(F("> "));
-
-								serialClean();
-								uint8_t validInput = 0;
-								while (!validInput)
-								{
-									while (getData(input, inputSize) == 0);
-
-									if (strlen(input) > 15)
-									{
-										USB.println(F("Invalid name."));
-										USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
-										USB.print(F("> "));
-										serialClean();
-									}
-									else
-									{
-										validInput = 1;
-									}
-								}
-
-								char calibrationOperatorsName_temp[17];
-								memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
-								strcpy(calibrationOperatorsName_temp, input);
-
-
-								for (int k = strlen(input); k < 16; k++)
-								{
-									calibrationOperatorsName_temp[k] = ' ';
-								}
-
-								USB.println(calibrationOperatorsName_temp);
-								fillOperatorsName(calibrationOperatorsName_temp);
-
-								printLine();
-								USB.println(F("6.Please insert calibration date."));
-
-
-								int year;
-								int month;
-								int day;
-								int hour;
-								int minute;
-
-								char calibrationDate_temp[17];
-								memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
-								/////////////////////////////////
-								//	YEAR
-								/////////////////////////////////
-								serialClean();
-								do
-								{
-									USB.println("Insert year [yy] and press Enter.");
-									USB.print(F("> "));
-								}
-								while ( getDate(input, inputSize, 2) != true );
-
-								year = atoi(input);
-								USB.println(year);
-
-
-								/////////////////////////////////
-								//	MONTH
-								/////////////////////////////////
-								serialClean();
-								do
-								{
-									USB.println("Insert month [mm] and press Enter.");
-									USB.print(F("> "));
-								}
-								while ( getDate(input, inputSize, 2) != true );
-
-								month = atoi(input);
-								USB.println(month);
-
-
-								/////////////////////////////////
-								//	DAY
-								/////////////////////////////////
-								serialClean();
-								do
-								{
-									USB.println("Insert day [dd] and press Enter.");
-									USB.print(F("> "));
-								}
-								while ( getDate(input, inputSize, 2) != true );
-
-								day = atoi(input);
-								USB.println(day);
-
-
-								/////////////////////////////////
-								//	HOUR
-								/////////////////////////////////
-								serialClean();
-								do
-								{
-									USB.println("Insert Hour [HH] and press Enter.");
-									USB.print(F("> "));
-								}
-								while ( getDate(input, inputSize, 2) != true );
-
-								hour = atoi(input);
-								USB.println(hour);
-
-								/////////////////////////////////
-								//	MINUTE
-								/////////////////////////////////
-								serialClean();
-								do
-								{
-									USB.println("Insert minute [MM] and press Enter.");
-									USB.print(F("> "));
-								}
-								while ( getDate(input, inputSize, 2) != true );
-
-								minute = atoi(input);
-								USB.println(minute);
-
-
-								/////////////////////////////////
-								//	create buffer
-								/////////////////////////////////
-								sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
-												minute,
-												hour,
-												day,
-												month,
-												year );
-
-
-								calibrationDate_temp[12] = ' ';
-								calibrationDate_temp[13] = ' ';
-								calibrationDate_temp[14] = ' ';
-								calibrationDate_temp[15] = ' ';
-
-								//USB.println(calibrationDate_temp);
-
-								fillCalibrationDate(calibrationDate_temp);
-
-
-								//In step 4 user validates the entire calibration entering operator's name and date
-								calibrate(PHEHT, PH, STEP_4, NULL);
-
-								printLine();
-
-								USB.println(F("Calibration successfully finished!"));
-							}
-						}
-					}
-				}
-			}
-
-
-
-			if (calibrationMethod == 3)
-			{
-				USB.println(F("Three point calibration method selected"));
-
-				USB.println(F("1. Insert the first calibration standard value you will use (offset) and press Enter."));
-				USB.println(F("Example: 4"));
-				USB.print(F("> "));
-
-
-				serialClean();
-				while ( getData(input, inputSize) == 0 );
-				USB.println(input);
-				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-				{
-					//Exit discarding changes
-					exitCalibration();
-				}
-				else
-				{
-					//In step 1 we reset temporary calibration data and indicate the range (no range)
-					calibrate(PHEHT, PH, STEP_1, NULL);
-
-					offset = atof(input);
-
-					printLine();
-					USB.print(F("2. Place the sensor at selected offset: pH "));
-					USB.printFloat(offset, 4);
-					USB.println(F(""));
-					USB.println(F("Wait some minutes until the measure stabilizes."));
-					USB.println(F("Observing the offset in this step will help you assess whether calibration"));
-					USB.println(F("is necessary or not, depending on the precision required in your application."));
-					USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-					serialClean();
-					memset(input, 0x00, sizeof(input) );
-					uint16_t j = 300;
-					while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-								&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-					{
-						j++;
-						if (j >= 300)
-						{
-							j = 0;
-
-							read();
-							USB.println();
-							USB.printFloat(sensorPHEHT.pH, 2);
-							USB.println(F(""));
-							USB.print(F("> "));
-						}
-
-						getData(input, inputSize);
-						delay(10);
-					}
-
-					USB.println(input);
-					if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-					{
-						//Exit discarding changes
-						exitCalibration();
-					}
-					else
-					{
-						//In step 2 user select calibration standard 1 (offset)
-						//This step must be done after stabilizing and measuring in water with
-						//the selected value using readMeasures function previosly
-						calibrate(PHEHT, PH, STEP_2, offset);
-
-						printLine();
-						USB.println(F("3. Insert the second calibration standard value (slope) and press Enter."));
-						USB.println(F("Example: 7"));
-						USB.print(F("> "));
-
-						serialClean();
-						while ( getData(input, inputSize) == 0 );
-						USB.println(input);
-						if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-						{
-							//Exit discarding changes
-							exitCalibration();
-						}
-						else
-						{
-
-							slope = atof(input);
-
-							printLine();
-							USB.print(F("4. Place the sensor at selected slope: pH "));
-							USB.printFloat(slope, 4);
-							USB.println(F(""));
-							USB.println(F("Wait some minutes until the measure stabilizes."));
-							USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-							serialClean();
-
-							j = 300;
-							while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-										&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-							{
-								j++;
-								if (j >= 300)
-								{
-									j = 0;
-
-									read();
-									USB.println();
-									USB.printFloat(sensorPHEHT.pH, 2);
-									USB.println(F(""));
-									USB.print(F("> "));
-								}
-
-								getData(input, inputSize);
-								delay(10);
-							}
-
-							USB.println(input);
-							if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-							{
-								//Exit discarding changes
-								exitCalibration();
-							}
-							else
-							{
-								//In step 3 user select calibration standard 2 (slope)
-								//This step must be done after stabilizing and measuring in water with
-								//the selected value
-								calibrate(PHEHT, PH, STEP_3, slope);
-
-								printLine();
-
-								USB.println(F("5. Insert the third calibration standard value and press Enter."));
-								USB.println(F("Example: 9"));
-								USB.print(F("> "));
-
-								serialClean();
-								while ( getData(input, inputSize) == 0 );
-								USB.println(input);
-								if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-								{
-									//Exit discarding changes
-									exitCalibration();
-								}
-								else
-								{
-
-									slope = atof(input);
-
-									printLine();
-									USB.print(F("6. Place the sensor at selected slope: pH "));
-									USB.printFloat(slope, 4);
-									USB.println(F(""));
-									USB.println(F("Wait some minutes until the measure stabilizes."));
-									USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-									serialClean();
-
-									j = 300;
-									while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-												&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-									{
-										j++;
-										if (j >= 300)
-										{
-											j = 0;
-
-											read();
-											USB.println();
-											USB.printFloat(sensorPHEHT.pH, 2);
-											USB.println(F(""));
-											USB.print(F("> "));
-										}
-
-										getData(input, inputSize);
-										delay(10);
-									}
-
-									USB.println(input);
-									if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-									{
-										//Exit discarding changes
-										exitCalibration();
-									}
-									else
-									{
-										//In step 3 user select calibration standard 2 (slope)
-										//This step must be done after stabilizing and measuring in water with
-										//the selected value
-										calibrate(PHEHT, PH, STEP_3B, slope);
-
-
-										printLine();
-										USB.println(F("7. In order to validate the calibration some data is required."));
-										USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
-										USB.print(F("> "));
-
-										serialClean();
-										while (getData(input, inputSize) == 0);
-
-										char calibrationOperatorsName_temp[17];
-										memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
-										strcpy(calibrationOperatorsName_temp, input);
-
-
-										for (int k = strlen(input); k < 16; k++)
-										{
-											calibrationOperatorsName_temp[k] = ' ';
-										}
-
-										USB.println(calibrationOperatorsName_temp);
-										fillOperatorsName(calibrationOperatorsName_temp);
-
-										printLine();
-										USB.println(F("8.Please insert calibration date."));
-
-
-										int year;
-										int month;
-										int day;
-										int hour;
-										int minute;
-
-										char calibrationDate_temp[17];
-										memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
-										/////////////////////////////////
-										//	YEAR
-										/////////////////////////////////
-										serialClean();
-										do
-										{
-											USB.println("Insert year [yy] and press Enter.");
-											USB.print(F("> "));
-										}
-										while ( getDate(input, inputSize, 2) != true );
-
-										year = atoi(input);
-										USB.println(year);
-
-
-										/////////////////////////////////
-										//	MONTH
-										/////////////////////////////////
-										serialClean();
-										do
-										{
-											USB.println("Insert month [mm] and press Enter.");
-											USB.print(F("> "));
-										}
-										while ( getDate(input, inputSize, 2) != true );
-
-										month = atoi(input);
-										USB.println(month);
-
-
-										/////////////////////////////////
-										//	DAY
-										/////////////////////////////////
-										serialClean();
-										do
-										{
-											USB.println("Insert day [dd] and press Enter.");
-											USB.print(F("> "));
-										}
-										while ( getDate(input, inputSize, 2) != true );
-
-										day = atoi(input);
-										USB.println(day);
-
-
-										/////////////////////////////////
-										//	HOUR
-										/////////////////////////////////
-										serialClean();
-										do
-										{
-											USB.println("Insert Hour [HH] and press Enter.");
-											USB.print(F("> "));
-										}
-										while ( getDate(input, inputSize, 2) != true );
-
-										hour = atoi(input);
-										USB.println(hour);
-
-										/////////////////////////////////
-										//	MINUTE
-										/////////////////////////////////
-										serialClean();
-										do
-										{
-											USB.println("Insert minute [MM] and press Enter.");
-											USB.print(F("> "));
-										}
-										while ( getDate(input, inputSize, 2) != true );
-
-										minute = atoi(input);
-										USB.println(minute);
-
-
-										/////////////////////////////////
-										//	create buffer
-										/////////////////////////////////
-										sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
-														minute,
-														hour,
-														day,
-														month,
-														year );
-
-
-										calibrationDate_temp[12] = ' ';
-										calibrationDate_temp[13] = ' ';
-										calibrationDate_temp[14] = ' ';
-										calibrationDate_temp[15] = ' ';
-
-										//USB.println(calibrationDate_temp);
-
-										fillCalibrationDate(calibrationDate_temp);
-
-
-										//In step 4 user validates the entire calibration entering operator's name and date
-										calibrate(PHEHT, PH, STEP_4, NULL);
-
-										printLine();
-
-										USB.println(F("Calibration successfully finished!"));
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		printLine();
-		USB.println(F("End of calibration process"));
-		printBigLine();
-	}
-
-	if (parameter == REDOX)
-	{
-		USB.println(F("Redox parameter"));
-		printBigLine();
-		USB.println(F("0. Introduction:"));
-		USB.println(F("\r\nThis is a two-point calibration method. At the end of the process the results"));
-		USB.println(F("of the calibration will be stored in the FLASH memory of the sensor for"));
-		USB.println(F("future uses."));
-		USB.println(F("\r\nThe sensor is calibrated ex works, meaning that no calibration is required"));
-		USB.println(F("before initial startup. During operation the sensor should be calibrated if the"));
-		USB.println(F("measured values begin to drift."));
-		USB.println(F("\r\nRinse the sensor in clean water and dry it with a soft cloth or an absorbent"));
-		USB.println(F("paper before each calibration."));
-		USB.println(F("\r\nTo exit the calibration without considering anything please insert 'Q' to Quit"));
-		USB.println(F("and press Enter."));
-		printLine();
-
-		//In step 1 we reset temporary calibration data and indicate the range (no range)
-		calibrate(PHEHT, REDOX, STEP_1, NULL);
-
-		//offset is not used in this particular sensor parameter
-		offset = 0;
-
-		USB.println(F("1. Place the sensor at standard offset: 0 mV"));
-		USB.println(F("Wait some minutes until the measure stabilizes."));
-		USB.println(F("Observing the offset in this step will help you assess whether calibration"));
-		USB.println(F("is necessary or not, depending on the precision required in your application."));
-		USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-		serialClean();
-		memset(input, 0x00, sizeof(input) );
-		uint16_t j = 300;
-		while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-			&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-		{
-			j++;
-			if (j >= 300)
-			{
-				j = 0;
-
-				read();
-				USB.println();
-				USB.printFloat(sensorPHEHT.redox, 2);
-				USB.println(F(" mV"));
-				USB.print(F("> "));
-			}
-
-			getData(input, inputSize);
-			delay(10);
-		}
-
-		USB.println(input);
-		if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-		{
-			//Exit discarding changes
-			exitCalibrationAndStopElectronicZero();
-		}
-		else
-		{
-			//In step 2 user select calibration standard 1 (offset)
-			//This step must be done after stabilizing and measuring in water with
-			//the selected value using readMeasures function previosly
-			calibrate(PHEHT, REDOX, STEP_2, offset);
-
-			printLine();
-			USB.println(F("2. Insert the second calibration standard value (slope) and press Enter."));
-			USB.println(F("240 mV is recommended)"));
-			USB.println(F("Example: 240"));
-			USB.print(F("> "));
-
-			serialClean();
-			while ( getData(input, inputSize) == 0 );
-			USB.println(input);
-			if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-			{
-				//Exit discarding changes
-				exitCalibrationAndStopElectronicZero();
-			}
-			else
-			{
-
-				slope = atof(input);
-
-				printLine();
-				USB.print(F("3. Place the sensor at selected slope: "));
-				USB.printFloat(slope, 4);
-				USB.println(F(" mV"));
-				USB.println(F("Wait some minutes until the measure stabilizes."));
-				USB.println(F("Then insert 'N' for Next step and press Enter."));
-
-				serialClean();
-
-				j = 300;
-				while ((find((uint8_t*)input, strlen(input), "N") != 1) && (find((uint8_t*)input, strlen(input), "Q") != 1)
-							&& (find((uint8_t*)input, strlen(input), "n") != 1) && (find((uint8_t*)input, strlen(input), "q") != 1))
-				{
-					j++;
-					if (j >= 300)
-					{
-						j = 0;
-
-						read();
-						USB.println();
-						USB.printFloat(sensorPHEHT.redox, 2);
-						USB.println(F(" mV"));
-						USB.print(F("> "));
-					}
-
-					getData(input, inputSize);
-					delay(10);
-				}
-
-				USB.println(input);
-				if ((find((uint8_t*)input, strlen(input), "Q") == 1) || (find((uint8_t*)input, strlen(input), "q") == 1))
-				{
-					//Exit discarding changes
-					exitCalibrationAndStopElectronicZero();
-				}
-				else
-				{
-					//In step 3 user select calibration standard 2 (slope)
-					//This step must be done after stabilizing and measuring in water with
-					//the selected value
-					calibrate(PHEHT, REDOX, STEP_3, slope);
-
-					printLine();
-					USB.println(F("4. In order to validate the calibration some data is required."));
-					USB.println(F("Please insert operator's name (up to 16 letters) and press Enter."));
-					USB.print(F("> "));
-
-					serialClean();
-					uint8_t validInput = 0;
-					while (!validInput)
-					{
-						while (getData(input, inputSize) == 0);
-
-						if (strlen(input) > 15)
-						{
-							USB.println(F("Invalid name."));
-							USB.println(F("Please insert calibration operator's name (up to 16 letters)"));
-							USB.print(F("> "));
-							serialClean();
-						}
-						else
-						{
-							validInput = 1;
-						}
-					}
-
-					char calibrationOperatorsName_temp[17];
-					memset(calibrationOperatorsName_temp, 0x00, sizeof(calibrationOperatorsName_temp));
-					strcpy(calibrationOperatorsName_temp, input);
-
-
-					for (int k = strlen(input); k < 16; k++)
-					{
-						calibrationOperatorsName_temp[k] = ' ';
-					}
-
-					USB.println(calibrationOperatorsName_temp);
-					fillOperatorsName(calibrationOperatorsName_temp);
-
-					printLine();
-					USB.println(F("5.Please insert calibration date."));
-
-
-					int year;
-					int month;
-					int day;
-					int hour;
-					int minute;
-
-					char calibrationDate_temp[17];
-					memset(calibrationDate_temp, 0x00, sizeof(calibrationDate_temp));
-					/////////////////////////////////
-					//	YEAR
-					/////////////////////////////////
-					serialClean();
-					do
-					{
-						USB.println("Insert year [yy] and press Enter.");
-						USB.print(F("> "));
-					}
-					while ( getDate(input, inputSize, 2) != true );
-
-					year = atoi(input);
-					USB.println(year);
-
-
-					/////////////////////////////////
-					//	MONTH
-					/////////////////////////////////
-					serialClean();
-					do
-					{
-						USB.println("Insert month [mm] and press Enter.");
-						USB.print(F("> "));
-					}
-					while ( getDate(input, inputSize, 2) != true );
-
-					month = atoi(input);
-					USB.println(month);
-
-
-					/////////////////////////////////
-					//	DAY
-					/////////////////////////////////
-					serialClean();
-					do
-					{
-						USB.println("Insert day [dd] and press Enter.");
-						USB.print(F("> "));
-					}
-					while ( getDate(input, inputSize, 2) != true );
-
-					day = atoi(input);
-					USB.println(day);
-
-
-					/////////////////////////////////
-					//	HOUR
-					/////////////////////////////////
-					serialClean();
-					do
-					{
-						USB.println("Insert Hour [HH] and press Enter.");
-						USB.print(F("> "));
-					}
-					while ( getDate(input, inputSize, 2) != true );
-
-					hour = atoi(input);
-					USB.println(hour);
-
-					/////////////////////////////////
-					//	MINUTE
-					/////////////////////////////////
-					serialClean();
-					do
-					{
-						USB.println("Insert minute [MM] and press Enter.");
-						USB.print(F("> "));
-					}
-					while ( getDate(input, inputSize, 2) != true );
-
-					minute = atoi(input);
-					USB.println(minute);
-
-
-					/////////////////////////////////
-					//	create buffer
-					/////////////////////////////////
-					sprintf(calibrationDate_temp, "%02u%02u%02u%02u20%02u",
-									minute,
-									hour,
-									day,
-									month,
-									year );
-
-
-					calibrationDate_temp[12] = ' ';
-					calibrationDate_temp[13] = ' ';
-					calibrationDate_temp[14] = ' ';
-					calibrationDate_temp[15] = ' ';
-
-					//USB.println(calibrationDate_temp);
-
-					fillCalibrationDate(calibrationDate_temp);
-
-
-					//In step 4 user validates the entire calibration entering operator's name and date
-					calibrate(PHEHT, REDOX, STEP_4, NULL);
-
-					printLine();
-
-					USB.println(F("Calibration successfully finished!"));
-				}
-			}
-		}
-
-		printLine();
-		USB.println(F("End of calibration process"));
-		printBigLine();
-	}
-
-}
 
 /*!
 	\brief menu assisted calibration process
@@ -12833,7 +13697,7 @@ uint8_t Meter_TEROS12::ON()
 
 	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
 	SensorXtr.setMux(socket, DISABLED);
-	
+
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -12881,10 +13745,10 @@ uint8_t Meter_TEROS12::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
-	char sensorNameStr[6]; 
+	char sensorNameStr[6];
 	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
 	strncpy(sensorNameStr, "TER12", 5);
-	
+
 	while ((validMeasure == 0) && (retries < 3))
 	{
 
@@ -12976,7 +13840,7 @@ uint8_t Meter_TEROS11::ON()
 
 	//Before switching on 5v it's necessary disabling Mux (it works with 5V)
 	SensorXtr.setMux(socket, DISABLED);
-	
+
 	SensorXtr.ON(); //SDI12 needs both 3v3 and 5v
 	SensorXtr.set12v(socket, SWITCH_ON);
 
@@ -13024,10 +13888,10 @@ uint8_t Meter_TEROS11::read()
 	uint8_t validMeasure = 0;
 	uint8_t retries = 0;
 
-	char sensorNameStr[6]; 
+	char sensorNameStr[6];
 	memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
 	strncpy(sensorNameStr, "TER11", 5);
-	
+
 	while ((validMeasure == 0) && (retries < 3))
 	{
 
@@ -13064,6 +13928,153 @@ uint8_t Meter_TEROS11::readSerialNumber()
 	return read();
 }
 
+
+//******************************************************************************
+// LED Class functions
+//******************************************************************************
+
+/*!
+	\brief LED Class constructor
+	\param socket selected socket for sensor
+*/
+LED::LED(uint8_t _socket)
+{
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+
+}
+
+/*!
+	\brief Turns LED ON
+	\param void
+*/
+void LED::setIndicator(uint8_t colour)
+{
+	switch (colour)
+	{
+		case LED::GREEN:
+			SensorXtr.set12v(socket, SWITCH_ON);
+			SensorXtr.set3v3(socket, SWITCH_OFF);
+			ledState = LED::GREEN;
+			break;
+
+		case LED::YELLOW:
+			SensorXtr.set12v(socket, SWITCH_ON);
+			SensorXtr.set3v3(socket, SWITCH_ON);
+			ledState = LED::YELLOW;
+			break;
+
+		case LED::RED:
+			SensorXtr.set3v3(socket, SWITCH_ON);
+			SensorXtr.set12v(socket, SWITCH_OFF);
+			ledState = LED::RED;
+			break;
+
+		default:
+			break;
+	}
+}
+
+/*!
+	\brief Turns LED OFF
+	\param void
+*/
+void LED::unsetIndicator()
+{
+
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	SensorXtr.set3v3(socket, SWITCH_OFF);
+	ledState = LED::OFF;
+}
+
+//******************************************************************************
+// Buzzer Class functions
+//******************************************************************************
+
+/*!
+	\brief Buzzer Class constructor
+	\param socket selected socket for sensor
+*/
+buzzer::buzzer(uint8_t _socket)
+{
+
+  //Note: The buzzer uses only one pin so redefinicion would be possible
+
+	// store sensor location
+	socket = _socket;
+
+	if (bitRead(SensorXtr.socketRegister, socket) == 1)
+	{
+		//Redefinition of socket by two sensors detected
+		SensorXtr.redefinedSocket = 1;
+	}
+	else
+	{
+		bitSet(SensorXtr.socketRegister, socket);
+	}
+
+}
+
+/*!
+	\brief Turns Buzzer ON
+	\param void
+*/
+void buzzer::setBuzzer()
+{
+  SensorXtr.set12v(socket, SWITCH_ON);
+  buzzerState = buzzer::ON;
+}
+
+/*!
+	\brief Turns LED OFF
+	\param void
+*/
+void buzzer::unsetBuzzer()
+{
+	SensorXtr.set12v(socket, SWITCH_OFF);
+	buzzerState = buzzer::OFF;
+}
+
+
+/*!
+	\brief Make a positive predefined sound
+	\param void
+*/
+void buzzer::positiveBeep()
+{
+  // Make n x 800 ms beep
+  for (uint8_t i = 0; i<3; i++)
+  {
+    setBuzzer();
+    delay(700);
+    unsetBuzzer();
+    delay(200);
+  }
+
+}
+
+
+/*!
+	\brief Make a negative predefined sound
+	\param void
+*/
+void buzzer::negativeBeep()
+{
+  // Make a short beep
+	setBuzzer();
+  delay(150);
+  unsetBuzzer();
+}
 
 
 /*	exampleModbusSensor Class constructor

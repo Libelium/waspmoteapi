@@ -266,7 +266,14 @@
 #define SENSOR_PM_BINH    192
 
 
-
+// fever kit
+#define FEVER_USER_TEMP    				193
+#define FEVER_AIR_TEMP    				194
+#define FEVER_SI4B1_TEMP    			195
+#define FEVER_MEASUREMENTS_COUNTER    	196
+#define FEVER_POSITIVE_FEVER_COUNTER    197
+#define FEVER_THRESHOLD    				198
+#define FEVER_RESULT    				199
 
 
 /// Flash defines //////////////////////////////////////////////////////////////
@@ -513,6 +520,15 @@ const char	str_frame_190[]  PROGMEM = "PM_BIN";
 const char	str_frame_191[]  PROGMEM = "PM_BINL";
 const char	str_frame_192[]  PROGMEM = "PM_BINH";
 
+// fever kit
+const char	str_frame_193[]  PROGMEM = "USER_TC";
+const char	str_frame_194[]  PROGMEM = "AIR_TC";
+const char	str_frame_195[]  PROGMEM = "SI4B1_TC";
+const char	str_frame_196[]  PROGMEM = "COUNTER";
+const char	str_frame_197[]  PROGMEM = "FEVER_COUNTER";
+const char	str_frame_198[]  PROGMEM = "THRESHOLD";
+const char	str_frame_199[]  PROGMEM = "RESULT";
+
 
 
 /*******************************************************************************
@@ -714,9 +730,16 @@ const char* const FRAME_SENSOR_TABLE[] PROGMEM=
 	str_frame_187,
 	str_frame_188,
 	str_frame_189,
-  str_frame_190,
+  	str_frame_190,
 	str_frame_191,
 	str_frame_192,
+	str_frame_193,
+	str_frame_194,
+	str_frame_195,
+	str_frame_196,
+	str_frame_197,
+	str_frame_198,
+	str_frame_199,
 
 };
 
@@ -959,10 +982,19 @@ const uint8_t FRAME_SENSOR_TYPE_TABLE[] PROGMEM=
 	0,		// 188
 	1,		// 189
 
-  // OPC sensor
-  1,    // 190
+  	// OPC sensor
+  	1,    // 190
 	1,    // 191
 	1,    // 192
+
+	// fever
+	2,	// 193
+	2,	// 194
+	2,	// 195
+	4,	// 196
+	4,	// 197
+	2,	// 198
+	0,	// 199
 
 };
 
@@ -1201,10 +1233,19 @@ const uint8_t FRAME_SENSOR_FIELD_TABLE[] PROGMEM=
 	1,		// 188
 	1,		// 189
 
-  // OPC sensor
+	// OPC sensor
 	24,    // 190
 	16,    // 191
-	8,    // 192
+	8,     // 192
+
+	// fever
+	1,	// 193
+	1,	// 194
+	1,	// 195
+	1,	// 196
+	1,	// 197
+	1,	// 198
+	1,	// 199
 };
 
 
@@ -1438,10 +1479,19 @@ const uint8_t FRAME_DECIMAL_TABLE[] PROGMEM =
 	0,		// 188
 	0,		// 189
 
-  // OPC N3 sensor
-  0,    //190
+  	// OPC N3 sensor
+  	0,    //190
 	0,    //191
 	0,    //192
+
+	// fever
+	2,	// 193
+	2,	// 194
+	2,	// 195
+	0,	// 196
+	0,	// 197
+	2,	// 198
+	0,	// 199
 
 };
 

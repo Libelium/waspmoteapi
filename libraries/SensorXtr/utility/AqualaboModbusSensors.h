@@ -59,6 +59,7 @@
 #define ADDRESS_REG					0xA3
 #define WAITING_TIME_REG			0xA4
 #define MEASUREMENTS_REG			0x53
+#define EXT_MEASUREMENTS_REG		0x89
 #define RESET_REG					0x02
 #define TEMP_MEAS_STATUS			0x64
 #define OPER_NAME_REG				0x027E
@@ -130,6 +131,10 @@
 #define COMPENSATE_CONDUCTIVITY	1 //LIKE PARAMETER_1
 #define EXTERNAL_ALPHA			1 //LIKE COMPENSATES_1
 
+//SAC
+#define UV_254			1
+#define VIS_530			2
+
 
 #define PH				2
 #define REDOX			3
@@ -181,6 +186,7 @@
 #define OPTOD				12
 #define PHEHT				13
 #define NTU					14
+#define SAC					17
 
 /******************************************************************************
  * Class
@@ -214,7 +220,20 @@ class aqualaboModbusSensorsClass
 							float &parameter2, 
 							float &parameter3, 
 							float &parameter4);
-						
+							
+		uint8_t readMeasures(float &parameter1, 
+							float &parameter2, 
+							float &parameter3, 
+							float &parameter4, 
+							float &parameter5);
+							
+									
+		uint8_t readExtendedMeasures(float &parameter1, 
+							float &parameter2, 
+							float &parameter3, 
+							float &parameter4, 
+							float &parameter5);
+											
 		uint8_t readSerialNumber(char *sensorSerialNumber);
 		uint8_t searchAddress(uint8_t _sensorAddr);
 		uint8_t changeAddress(uint8_t _sensorAddr);
@@ -268,7 +287,6 @@ class aqualaboModbusSensorsClass
 		foo2;
 		
 	private:
-		
 
 
 };

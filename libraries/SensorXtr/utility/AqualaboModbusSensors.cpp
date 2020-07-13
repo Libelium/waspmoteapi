@@ -1110,6 +1110,21 @@ uint8_t aqualaboModbusSensorsClass::calibrate(uint8_t sensor, uint8_t parameter,
 						break;
 					}
 				break;
+				
+				case SAC:
+					switch (parameter)
+					{
+						case TEMPERATURE:
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_TEMP_1;
+							aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_TEMP_2;
+						break;
+										
+						case PARAMETER_1:
+							aqualaboModbusSensors.address_offset = CALIB_STANDARD_1;
+							aqualaboModbusSensors.address_slope	 = CALIB_STANDARD_3;
+						break;
+					}
+				break;
 			}
 
 			
@@ -1882,6 +1897,11 @@ void aqualaboModbusSensorsClass::setParametersBySensor(uint8_t sensorType)
 			sensorAddr = 60;
 			waitingTime = 500;
 			break;
+			
+		case SAC:
+			sensorAddr = 70;
+			waitingTime = 500;
+			break;
 		
 		default:
 			sensorAddr = DEFAULT_ADDRESS;
@@ -1978,6 +1998,192 @@ uint8_t aqualaboModbusSensorsClass::readMeasures(float &parameter1, float &param
 	return 1;
 }
 
+//!*************************************************************
+//!	Name:	readMeasures()
+//!	Description: Returns all the measures of the sensor
+//!	Param : void
+//!	Returns: 1 if OK, 0 if error
+//!*************************************************************
+uint8_t aqualaboModbusSensorsClass::readMeasures(	float &parameter1, 
+													float &parameter2, 
+													float &parameter3, 
+													float &parameter4, 
+													float &parameter5)
+{
+	initCommunication();
+	
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+	
+	
+	//Set Modbus TX buffer with "0x001F" in order to get the 5 measures of the sensor
+	//			TX buffer
+	//	0	0	0	1	1	1	1	1
+	//				P4	P3	P2	P1	T
+	sensor.setTransmitBuffer(0, 0x001F);
+	
+	while ((status !=0) && (retries < 5))
+	{
+		retries++;
+		
+		//Write 1 register (set previouly in TX buffer) in address "NEW_MEAS_REG"
+		status =  sensor.writeMultipleRegisters(NEW_MEAS_REG, 1);
+		delay(100);
+	}
+
+	// Important delay
+	delay(waitingTime + 10);
+	
+	if (status == 0)
+	{
+		status = -1;
+		retries = 0;
+
+		while ((status !=0) && (retries < 10))
+		{
+			//Read 10 registers with the 5 measures (each register is 2 bytes)
+			status = sensor.readHoldingRegisters(MEASUREMENTS_REG, 0x0A);
+			retries++;
+			delay(100);
+		}
+
+		if (status == 0)
+		{
+			foo.ints[0] = sensor.getResponseBuffer(1);
+			foo.ints[1] = sensor.getResponseBuffer(0);
+			parameter1 = foo.toFloat;
+
+			foo.ints[0] = sensor.getResponseBuffer(3);
+			foo.ints[1] = sensor.getResponseBuffer(2);
+			parameter2 = foo.toFloat;
+			
+			foo.ints[0] = sensor.getResponseBuffer(5);
+			foo.ints[1] = sensor.getResponseBuffer(4);
+			parameter3 = foo.toFloat;
+
+			foo.ints[0] = sensor.getResponseBuffer(7);
+			foo.ints[1] = sensor.getResponseBuffer(6);
+			parameter4 = foo.toFloat;
+			
+			foo.ints[0] = sensor.getResponseBuffer(9);
+			foo.ints[1] = sensor.getResponseBuffer(8);
+			parameter5 = foo.toFloat;
+		}
+		else
+		{
+			// If no response from the slave, print an error message.
+			#if DEBUG_XTR_MODBUS > 0
+				PRINTLN_XTR_MODBUS(F("Communication error reading parameters"));
+			#endif
+			
+			//if fails return 0
+			return 0;
+		}
+	}
+	else
+	{
+		// If no response from the slave, print an error message.
+		#if DEBUG_XTR_MODBUS > 0
+			PRINTLN_XTR_MODBUS(F("Communication error (Writing Multiple Registers)"));
+		#endif
+
+		return 0;
+	}
+
+	return 1;
+}
+
+
+//!*************************************************************
+//!	Name:	readMeasures()
+//!	Description: Returns all the measures of the sensor
+//!	Param : void
+//!	Returns: 1 if OK, 0 if error
+//!*************************************************************
+uint8_t aqualaboModbusSensorsClass::readExtendedMeasures(float &parameter1, float &parameter2, float &parameter3, float &parameter4, float &parameter5)
+{
+	initCommunication();
+	
+	uint8_t status = 0xFF;
+	uint8_t retries = 0;
+	
+	
+	//Set Modbus TX buffer with "0x001F" in order to get the 5 measures of the sensor
+	//			TX buffer
+	//	0	0	0	1	1	1	1	1
+	//				P4	P3	P2	P1	T
+	sensor.setTransmitBuffer(0, 0x001F);
+	
+	while ((status !=0) && (retries < 5))
+	{
+		retries++;
+		
+		//Write 1 register (set previouly in TX buffer) in address "NEW_MEAS_REG"
+		status =  sensor.writeMultipleRegisters(NEW_MEAS_REG, 1);
+		delay(100);
+	}
+
+	// Important delay
+	delay(waitingTime + 10);
+	
+	if (status == 0)
+	{
+		status = -1;
+		retries = 0;
+
+		while ((status !=0) && (retries < 10))
+		{
+			//Read 10 registers with the 5 measures (each register is 2 bytes)
+			status = sensor.readHoldingRegisters(EXT_MEASUREMENTS_REG, 0x0A);
+			retries++;
+			delay(100);
+		}
+
+		if (status == 0)
+		{
+			foo.ints[0] = sensor.getResponseBuffer(1);
+			foo.ints[1] = sensor.getResponseBuffer(0);
+			parameter1 = foo.toFloat;
+
+			foo.ints[0] = sensor.getResponseBuffer(3);
+			foo.ints[1] = sensor.getResponseBuffer(2);
+			parameter2 = foo.toFloat;
+			
+			foo.ints[0] = sensor.getResponseBuffer(5);
+			foo.ints[1] = sensor.getResponseBuffer(4);
+			parameter3 = foo.toFloat;
+
+			foo.ints[0] = sensor.getResponseBuffer(7);
+			foo.ints[1] = sensor.getResponseBuffer(6);
+			parameter4 = foo.toFloat;
+			
+			foo.ints[0] = sensor.getResponseBuffer(9);
+			foo.ints[1] = sensor.getResponseBuffer(8);
+			parameter5 = foo.toFloat;
+		}
+		else
+		{
+			// If no response from the slave, print an error message.
+			#if DEBUG_XTR_MODBUS > 0
+				PRINTLN_XTR_MODBUS(F("Communication error reading parameters"));
+			#endif
+			
+			//if fails return 0
+			return 0;
+		}
+	}
+	else
+	{
+		// If no response from the slave, print an error message.
+		#if DEBUG_XTR_MODBUS > 0
+			PRINTLN_XTR_MODBUS(F("Communication error (Writing Multiple Registers)"));
+		#endif
+
+		return 0;
+	}
+
+	return 1;
+}
 
 
 aqualaboModbusSensorsClass	aqualaboModbusSensors = aqualaboModbusSensorsClass();
