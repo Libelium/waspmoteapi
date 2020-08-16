@@ -83,7 +83,11 @@ const char str_wireach_10[] PROGMEM	= "\"%s://%s:%s/getpost_frame_parser.php?fra
 const char str_wireach_11[] PROGMEM	= "\"%s://%s:%s/%s\""; 	// 11
 const char str_wireach_12[] PROGMEM	= "SLNK"; 			// 12
 const char str_wireach_13[] PROGMEM	= "URL"; 			// 13
+#ifdef FTP_FORCE_PASSIVE
+const char str_wireach_14[] PROGMEM	= "@FOPN"; 			// 14
+#else
 const char str_wireach_14[] PROGMEM	= "FOPN"; 			// 14
+#endif
 const char str_wireach_15[] PROGMEM	= "FSZ"; 			// 15
 const char str_wireach_16[] PROGMEM	= "FRCV"; 			// 16
 const char str_wireach_17[] PROGMEM	= "FCLS"; 			// 17
