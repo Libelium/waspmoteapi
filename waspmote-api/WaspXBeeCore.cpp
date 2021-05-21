@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.7
+ *  Version:		3.8
  *  Design:			David Gascón
  *  Implementation:	Alberto Bielsa, Yuri Carmona
  */
@@ -2275,7 +2275,7 @@ uint8_t WaspXBeeCore::ON(uint8_t uart_used)
     else if( protocol == XBEE_868LP) delay(500);
     else if( protocol == XBEE_900HP) delay(500);
     else if( protocol == DIGIMESH) delay(500);
-    else delay(50);
+    else delay(270);
     error=0;
     XBee_ON=1;
 

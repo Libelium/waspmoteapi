@@ -65,7 +65,7 @@ const char string_27[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %
 const char string_28[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX531 GMX541 GMX551 + GPS frame format
 const char string_29[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %s %s %c %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX550 + GPS frame format
 const char string_30[] PROGMEM = "%c %d %s %d %d %s %d %s %d %s %s %s %s %d %s %s %s %d %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %d %s %d %s %s"; //GMX600 + GPS frame format
-const char string_31[] PROGMEM = "%s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //Eureka example frame format
+const char string_31[] PROGMEM = "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s"; //Eureka example frame format
 
 const char* const table_xtr[] PROGMEM =
 {
@@ -321,7 +321,7 @@ void WaspSensorXtr::set12v(uint8_t socket, uint8_t _state)
 	mcp.pinMode(XTR_SOCKET_D, OUTPUT);
 	mcp.pinMode(XTR_SOCKET_E, OUTPUT);
 	mcp.pinMode(XTR_SOCKET_F, OUTPUT);
-	mcp.pinMode(MCP_GP1, INPUT);
+	mcp.pinMode(MCP_GP0, INPUT);
 	mcp.pinMode(MCP_GP1, INPUT);
 
 	// update SensorXtr.stateRegister12v
@@ -1756,8 +1756,8 @@ uint8_t Apogee_SI4B1::readFast()
 	//memset(sensorSI411.sensorSerialNumber, 0x00, sizeof(sensorSI411.sensorSerialNumber));
 
 	uint8_t response = 0;
-	uint8_t validMeasure = 0;
-	uint8_t retries = 0;
+	//uint8_t validMeasure = 0;
+	//uint8_t retries = 0;
 
 	char sensorNameStr[7];
 	//memset(sensorNameStr, 0x00, sizeof(sensorNameStr));
@@ -4321,7 +4321,7 @@ float _4_20mA::read()
 	USB.println();
 #endif
 
-	if ((current < 0) || (current > 5 ))
+	if ((current < 0) || (current > 20 ))
 	{
 #if DEBUG_XTR == 1
 		PRINTLN_XTR(F("Unknown 4.20 error"));
@@ -5801,6 +5801,8 @@ uint8_t Aqualabo_OPTOD::readSerialNumber()
 	if (socket == XTR_SOCKET_E)
 	{
 		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorOPTOD.sensorSerialNumber);
+		
+		// FIX: Return not handled properly
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -5991,6 +5993,9 @@ uint8_t Aqualabo_PHEHT::readSerialNumber()
 	if (socket == XTR_SOCKET_E)
 	{
 		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorPHEHT.sensorSerialNumber);
+		
+		// FIX: Return not handled properly
+
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -6126,7 +6131,7 @@ uint8_t Aqualabo_SAC::read()
 													sensorSAC.cod,
 													sensorSAC.bod,
 													sensorSAC.cot);
-													
+
 			response = aqualaboModbusSensors.readExtendedMeasures(sensorSAC.uvComp,
 													sensorSAC.grComp,
 													sensorSAC.uvTran,
@@ -6187,6 +6192,9 @@ uint8_t Aqualabo_SAC::readSerialNumber()
 	if (socket == XTR_SOCKET_E)
 	{
 		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorSAC.sensorSerialNumber);
+		
+		// FIX: Return not handled properly
+
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -6204,7 +6212,7 @@ void Aqualabo_SAC::calibrationProcess(uint8_t parameter)
 {
 	const uint8_t inputSize = 100;
 	char input[inputSize];
-	uint8_t response = 0;
+	//uint8_t response = 0;
 	float offset = 0;
 	float slope = 0;
 
@@ -6532,19 +6540,19 @@ void Aqualabo_SAC::calibrationProcess(uint8_t parameter)
 		printLine();
 
 		USB.println(F("THIS CALIBRATION PROCESS MUST BE DONE BY USING DEMINERALISED WATER"));
-		
+
 		printLine();
 
 		USB.println(F("Zero absorbance UV (254nm) calibration."));
 		USB.println(F("The code will wait now for stabilization."));
 		USB.println(F("This process might take several minutes."));
 
-		
+
 		float previous = 0;
 		uint8_t count = 0;
 		read();
 		previous = sensorSAC.sac;
-		
+
 		while (count < 20)
 		{
 			read();
@@ -6556,7 +6564,7 @@ void Aqualabo_SAC::calibrationProcess(uint8_t parameter)
 			USB.print(F("> "));
 		}
 
-		
+
 			//In step 1 we reset temporary calibration data and indicate the range (no range)
 			calibrate(SAC, UV_254, STEP_1, NULL);
 
@@ -6569,7 +6577,7 @@ void Aqualabo_SAC::calibrationProcess(uint8_t parameter)
 		USB.println(F("The code will wait now for stabilization."));
 		USB.println(F("This process might take several minutes."));
 
-		
+
 		previous = 0;
 		count = 0;
 		read();
@@ -6743,8 +6751,8 @@ void Aqualabo_SAC::calibrationProcess(uint8_t parameter)
 
 			USB.println(F("Calibration successfully finished!"));
 
-		
-	
+
+
 		printLine();
 		USB.println(F("End of calibration process"));
 		printBigLine();
@@ -6763,7 +6771,7 @@ void Aqualabo_PHEHT::calibrationProcess(uint8_t parameter)
 {
 	const uint8_t inputSize = 100;
 	char input[inputSize];
-	uint8_t response = 0;
+	//uint8_t response = 0;
 	float offset = 0;
 	float slope = 0;
 
@@ -8205,6 +8213,9 @@ uint8_t Aqualabo_C4E::readSerialNumber()
 	if (socket == XTR_SOCKET_E)
 	{
 		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorC4E.sensorSerialNumber);
+		
+		// FIX: Return not handled properly
+
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -8394,6 +8405,9 @@ uint8_t Aqualabo_NTU::readSerialNumber()
 	if (socket == XTR_SOCKET_E)
 	{
 		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorNTU.sensorSerialNumber);
+		
+		// FIX: Return not handled properly
+
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -8581,6 +8595,9 @@ uint8_t Aqualabo_CTZN::readSerialNumber()
 	if (socket == XTR_SOCKET_E)
 	{
 		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorCTZN.sensorSerialNumber);
+		
+		// FIX: Return not handled properly
+
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -8770,6 +8787,9 @@ uint8_t Aqualabo_MES5::readSerialNumber()
 	if (socket == XTR_SOCKET_E)
 	{
 		uint8_t response = aqualaboModbusSensors.readSerialNumber(sensorMES5.sensorSerialNumber);
+		
+		// FIX: Return not handled properly
+
 	}
 	//The rest of the sockets use SDI-12
 	else
@@ -8901,7 +8921,7 @@ void Aqualabo_OPTOD::calibrationProcess(uint8_t parameter)
 {
 	const uint8_t inputSize = 100;
 	char input[inputSize];
-	uint8_t response = 0;
+	//uint8_t response = 0;
 	float offset = 0;
 	float slope = 0;
 
@@ -11093,7 +11113,7 @@ void Aqualabo_CTZN::calibrationProcess(uint8_t parameter)
 {
 	const uint8_t inputSize = 100;
 	char input[inputSize];
-	uint8_t response = 0;
+	//uint8_t response = 0;
 	float offset = 0;
 	float slope = 0;
 
@@ -11716,7 +11736,7 @@ void Aqualabo_MES5::calibrationProcess(uint8_t parameter)
 {
 	const uint8_t inputSize = 100;
 	char input[inputSize];
-	uint8_t response = 0;
+	//uint8_t response = 0;
 	float offset = 0;
 	float slope = 0;
 
@@ -13129,9 +13149,12 @@ uint8_t Eureka_Manta::read()
 	sensorEureka.chl = 0;
 	sensorEureka.nh4 = 0;
 	sensorEureka.no3 = 0;
-	sensorEureka.cl = 0;
+//	sensorEureka.cl = 0;
 	sensorEureka.hdo = 0;
 	sensorEureka.temperature = 0;
+	sensorEureka.bg = 0;
+	sensorEureka.turb = 0;	
+	
 	strcpy(sensorEureka.ME_date, "0");
 	strcpy(sensorEureka.ME_time, "0");
 
@@ -13142,27 +13165,32 @@ uint8_t Eureka_Manta::read()
 	char ph_local[10];
 	char orp_local[10];
 	char depth_local[10];
-	char spCond_local[10];
+	char spCond_local[20];
 	char chl_local[10];
 	char nh4_local[10];
 	char no3_local[10];
-	char cl_local[10];
+//	char cl_local[10];
 	char hdo_local[10];
 	char temperature_local[10];
+	char bg_local[10];
+	char turb_local[10];
 
-	strcpy(first_character_local, "0");
-	strcpy(ident_local, "0");
-	strcpy(zero_value_local, "0");
-	strcpy(ph_local, "0");
-	strcpy(orp_local, "0");
-	strcpy(depth_local, "0");
-	strcpy(spCond_local, "0");
-	strcpy(chl_local, "0");
-	strcpy(nh4_local, "0");
-	strcpy(no3_local, "0");
-	strcpy(cl_local, "0");
-	strcpy(hdo_local, "0");
-	strcpy(temperature_local, "0");
+	strncpy(first_character_local, "0", sizeof(first_character_local));
+	strncpy(ident_local, "0", sizeof(ident_local));
+	strncpy(zero_value_local, "0", sizeof(zero_value_local));
+	strncpy(ph_local, "0", sizeof(ph_local));
+	strncpy(orp_local, "0", sizeof(orp_local));
+	strncpy(depth_local, "0", sizeof(depth_local));
+	strncpy(spCond_local, "0", sizeof(spCond_local));
+	strncpy(chl_local, "0", sizeof(chl_local));
+	strncpy(nh4_local, "0", sizeof(nh4_local));
+	strncpy(no3_local, "0", sizeof(no3_local));
+//	strcpy(cl_local, "0");
+	strncpy(hdo_local, "0", sizeof(hdo_local));
+	strncpy(temperature_local, "0", sizeof(temperature_local));
+	strncpy(bg_local, "0", sizeof(bg_local));
+	strncpy(turb_local, "0", sizeof(turb_local));
+
 
 	//rs232 config
 	Utils.setMuxAux1();
@@ -13180,11 +13208,11 @@ uint8_t Eureka_Manta::read()
 	bool dataFrameParsed = 0;
 	uint16_t i = 0;
 
-	const uint16_t BUFFER_SIZE = 200;
+	const uint16_t BUFFER_SIZE = 512;
 	char buffer_eureka_raw[BUFFER_SIZE];
 	memset(buffer_eureka_raw, 0x00, sizeof(buffer_eureka_raw));
 
-	char buffer_table[100];
+	char buffer_table[256];
 	memset(buffer_table, 0x00, sizeof(buffer_table));
 
 	//Clean serial buffer
@@ -13259,10 +13287,12 @@ uint8_t Eureka_Manta::read()
 	#endif
 
 	if (dataFrameFound)
-	{
-		//#DATA: DATE,TIME,0.0,Temp_deg_C,pH_units,ORP_mV,Depth_m,SpCond_uS/cm,Chl_ug/l,NH4_mg/L-N,NO3_mg/L-N,Cl_mg/L,HDO_mg/l␍␊
-		//#DATA: 03/13/20,02:22:34,0.0,23.97,7.00,0.1,-48.63,0.0,0.04,0.0,0.0,0.0,0.00␍␊
-		strcpy((char*)buffer_table, (char*)"%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s");
+	{		
+//Eureka_Manta_2,V7.11,09204364
+//DATE,TIME,Temp_deg_C,pH_units,ORP_mV,Depth_m,SpCond_uS/cm,Chl_ug/l,NH4_mg/L-N,bg_ppb,NO3_mg/L-N,HDO_mg/l,Turb_NTU
+//#DATA: 10/02/20,13:22:12,0.0,23.11,9.26,0.4,-48.62,0.5,1.56,12.8,-0.02,0.0,8.43,15.19
+
+		strncpy((char*)buffer_table, (char*)"%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s ", sizeof(buffer_table));
 		#if DEBUG_XTR > 1
 		PRINTLN_XTR(buffer_table);
 		#endif
@@ -13278,10 +13308,12 @@ uint8_t Eureka_Manta::read()
 						orp_local,
 						depth_local,
 						spCond_local,
+						turb_local,
 						chl_local,
 						nh4_local,
+						bg_local,
 						no3_local,
-						cl_local,
+//						cl_local,
 						hdo_local);
 		dataFrameParsed = 1;
 	}
@@ -13292,10 +13324,12 @@ uint8_t Eureka_Manta::read()
 		sensorEureka.orp = atof (orp_local);
 		sensorEureka.depth = atof (depth_local);
 		sensorEureka.spCond = atof (spCond_local);
+		sensorEureka.turb = atof (turb_local);
 		sensorEureka.chl = atof (chl_local);
 		sensorEureka.nh4 = atof (nh4_local);
+		sensorEureka.bg = atof (bg_local);
 		sensorEureka.no3 = atof (no3_local);
-		sensorEureka.cl = atof (cl_local);
+//		sensorEureka.cl = atof (cl_local);
 		sensorEureka.hdo = atof (hdo_local);
 		sensorEureka.temperature = atof (temperature_local);
 
@@ -13539,7 +13573,7 @@ uint8_t DatasolMET::read()
 	sensorDatasolMET.necessaryCleaningNotice = 0;
 	sensorDatasolMET.peakSunHours = 0;
 
-	uint8_t response = 0;
+	//uint8_t response = 0;
 	bool validMeasure = 0;
 
 	initCommunication();
@@ -14137,7 +14171,6 @@ uint8_t exampleModbusSensor::read(uint16_t _registerAddr, uint8_t _numOfRegister
 		delay(100);
 	}
 
-	uint8_t j = 0;
 
 	if (status == 0)
 	{

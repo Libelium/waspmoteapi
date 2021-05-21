@@ -1409,12 +1409,12 @@ const uint8_t SENSOR_TYPE_TABLE[] PROGMEM=
 	4,	//str_LUX		// 88
 
 	//GPS
-	2,	//str_SPEED		// 89
-	2,	//str_COURSE	// 90
-	2,	//str_ALTITUDE	// 91
-	2,	//str_HDOP		// 92
-	2,	//str_VDOP		// 93
-	2,	//str_PDOP		// 94
+	3,	//str_SPEED		// 89
+	3,	//str_COURSE	// 90
+	3,	//str_ALTITUDE	// 91
+	3,	//str_HDOP		// 92
+	3,	//str_VDOP		// 93
+	3,	//str_PDOP		// 94
 
 	// States Machine
 	0,	//str_FSM		// 95

@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		4.3
+ *  Version:		4.4
  *  Design:		David Gascón
  *  Implementation:	Luis Miguel Martí
  */
@@ -121,7 +121,7 @@
  const char command_88[]	PROGMEM	= 	"mac get rxdelay2\r\n";
  const char command_89[]	PROGMEM	= 	"mac get rx2 %s\r\n";
  const char command_90[]	PROGMEM	= 	"mac get rx2\r\n";
- const char command_91[]	PROGMEM	= 	"mac set sync %u\r\n";
+ const char command_91[]	PROGMEM	= 	"mac set sync %x\r\n";
  const char command_92[]	PROGMEM	= 	"mac get sync\r\n";
  const char command_93[]	PROGMEM	= 	"radio tx ";
  const char command_94[]	PROGMEM	= 	"mac set bat %u\r\n";
@@ -177,7 +177,10 @@
 
  const char command_142[]	PROGMEM	= 	"at+dutycycle?\r";
  const char command_143[]	PROGMEM	= 	"at+dutycycle=%u\r";
-
+ const char command_144[]	PROGMEM	= 	"at+cst?\r";
+ const char command_145[]	PROGMEM	= 	"at+cst=%u\r";
+ const char command_146[]	PROGMEM	= 	"at+rssith?\r";
+ const char command_147[]	PROGMEM	= 	"at+rssith=%d\r";
 
 
 
@@ -332,6 +335,10 @@ const char* const table_LoRaWAN_COMMANDS[] PROGMEM=
 
 	command_142,
 	command_143,
+    command_144,
+    command_145,
+    command_146,
+    command_147,
 
 };
 
@@ -1664,8 +1671,8 @@ uint8_t WaspLoRaWAN::setDeviceAddr(char* addr)
 		}
 		else if (status == 1)
 		{
-			memset(_devEUI,0x00,sizeof(_devEUI));
-			strncpy(_devEUI,addr,sizeof(_devEUI));
+			memset(_devAddr,0x00,sizeof(_devAddr));
+			strncpy(_devAddr,addr,sizeof(_devAddr));
 			return LORAWAN_ANSWER_OK;
 		}
 		else
@@ -2164,8 +2171,8 @@ uint8_t WaspLoRaWAN::setAppKey(char* key)
 		}
 		else if (status == 1)
 		{
-			memset(_appEUI,0x00,sizeof(_appEUI));
-			strncpy(_appEUI,key,sizeof(_appEUI));
+			memset(_appKey,0x00,sizeof(_appKey));
+			strncpy(_appKey,key,sizeof(_appKey));
 			return LORAWAN_ANSWER_OK;
 		}
 		else
@@ -2758,9 +2765,11 @@ uint8_t WaspLoRaWAN::joinABP()
 		memset(ans1,0x00,sizeof(ans1));
 		memset(ans2,0x00,sizeof(ans2));
 		memset(ans3,0x00,sizeof(ans3));
-
+	
 		if (_version != ABZ_MODULE)
 		{
+			if (_syncWord != 0) setSyncWord(_syncWord);
+			
 			// create "mac join abp" command
 			sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[7])));
 			// create "ok" answer
@@ -2870,8 +2879,11 @@ uint8_t WaspLoRaWAN::joinOTAA()
 	memset(ans2,0x00,sizeof(ans2));
 	memset(ans3,0x00,sizeof(ans3));
 
+
 	if (_version != ABZ_MODULE)
 	{
+		
+		if (_syncWord != 0) setSyncWord(_syncWord);
 
 		//initialize devAddr so field is not empty
 		status = setDeviceAddr((char*)dev_addr);
@@ -8769,17 +8781,19 @@ uint8_t WaspLoRaWAN::getSyncWord()
 	memset(ans1,0x00,sizeof(ans1));
 	memset(ans2,0x00,sizeof(ans2));
 
-	// create "mac set sync" command
+	// create "mac get sync" command
 	sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[92])));
+	// create "\r\n" answer
+	sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
 	// create "invalid_param" answer
 	sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[1])));
 
 	//send command and wait for ans
 	status = sendCommand(_command,ans1,ans2,100);
 
-	if (status == 1)
+	if (status == 1) 
 	{
-		_syncWord = parseIntValue();
+		_syncWord = parseValue(16);
 		return LORAWAN_ANSWER_OK;
 	}
 	else if (status == 2)
@@ -9316,6 +9330,249 @@ uint8_t WaspLoRaWAN::getDutyCycle()
     }
   }
 }
+
+/*!
+ * @brief	This function sets carrier sensor time (CST) used by LBT
+ * Only for murata module.
+ *
+ * @return
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error
+ * 	@arg	'2' if no answer
+ * 	@arg	'8' if unrecognized module
+ */
+uint8_t WaspLoRaWAN::setCST(uint16_t cst)
+{
+  uint8_t status;
+  char ans1[5];
+  char ans2[15];
+
+  memset(_command,0x00,sizeof(_command));
+  memset(ans1,0x00,sizeof(ans1));
+  memset(ans2,0x00,sizeof(ans2));
+
+  if (_version != ABZ_MODULE)
+  {
+    //Funtion not available for Micrichip modules
+    return LORAWAN_VERSION_ERROR;
+  }
+  else
+  {
+    // create "at+cst=<cst>" command
+    sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[145])), cst);
+    // create "+OK" answer
+    sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[47])));
+    // create "+ERR" answer
+    sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[46])));
+
+    //send command and wait for ans
+    status = sendCommand(_command,ans1, ans2, 500);
+
+    if (status == 0)
+    {
+      return LORAWAN_NO_ANSWER;
+    }
+    else if (status == 1)
+    {
+      _cst = cst;
+      return LORAWAN_ANSWER_OK;
+
+    }
+    else
+    {
+		  //print error
+		  waitFor("\r");
+		  USB.print(F("Error: "));
+		  USB.println((char*)_buffer);
+      return LORAWAN_ANSWER_ERROR;
+    }
+  }
+}
+
+/*!
+ * @brief	This function gets  carrier sensor time (CST) used by LBT
+ * Only for murata module.
+ *
+ * @return
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error
+ * 	@arg	'2' if no answer
+ * 	@arg	'8' if unrecognized module
+ */
+uint8_t WaspLoRaWAN::getCST()
+{
+  uint8_t status;
+  char ans1[15];
+  char ans2[15];
+
+  memset(_command,0x00,sizeof(_command));
+  memset(ans1,0x00,sizeof(ans1));
+  memset(ans2,0x00,sizeof(ans2));
+
+  if (_version != ABZ_MODULE)
+  {
+    //Funtion not available for Micrichip modules
+    return LORAWAN_VERSION_ERROR;
+  }
+  else
+  {
+    // create "at+cst?" command
+    sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[144])));
+    // create "+OK=" answer
+    sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[49])));
+    // create "+ERR" answer
+    sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[46])));
+
+    //send command and wait for ans
+    status = sendCommand(_command,ans1, ans2, 500);
+
+    if (status == 0)
+    {
+      return LORAWAN_NO_ANSWER;
+    }
+    else if (status == 1)
+    {
+      // create "\r\n" answer
+      memset(ans1,0x00,sizeof(ans1));
+      sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+
+      waitFor(ans1,100);
+
+      _cst = parseIntValue();
+      return LORAWAN_ANSWER_OK;
+    }
+    else
+    {
+      //print error
+      waitFor("\r");
+      USB.print(F("Error: "));
+      USB.println((char*)_buffer);
+      return LORAWAN_ANSWER_ERROR;
+    }
+  }
+}
+
+/*!
+ * @brief	This function sets the threshold RSSI value used by LBT
+ * Only for murata module.
+ *
+ * @return
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error
+ * 	@arg	'2' if no answer
+ * 	@arg	'8' if unrecognized module
+ */
+uint8_t WaspLoRaWAN::setThresholdRSSI(int rssi)
+{
+  uint8_t status;
+  char ans1[5];
+  char ans2[15];
+
+  memset(_command,0x00,sizeof(_command));
+  memset(ans1,0x00,sizeof(ans1));
+  memset(ans2,0x00,sizeof(ans2));
+
+  if (_version != ABZ_MODULE)
+  {
+    //Funtion not available for Micrichip modules
+    return LORAWAN_VERSION_ERROR;
+  }
+  else
+  {
+    // create "at+rssith=<rssi>" command
+    sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[147])), rssi);
+    // create "+OK" answer
+    sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[47])));
+    // create "+ERR" answer
+    sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[46])));
+
+    //send command and wait for ans
+    status = sendCommand(_command,ans1, ans2, 500);
+
+    if (status == 0)
+    {
+      return LORAWAN_NO_ANSWER;
+    }
+    else if (status == 1)
+    {
+      _rssith = rssi;
+      return LORAWAN_ANSWER_OK;
+
+    }
+    else
+    {
+		  //print error
+		  waitFor("\r");
+		  USB.print(F("Error: "));
+		  USB.println((char*)_buffer);
+      return LORAWAN_ANSWER_ERROR;
+    }
+  }
+}
+
+/*!
+ * @brief	This function gets the threshold RSSI value used by LBT
+ * Only for murata module.
+ *
+ * @return
+ * 	@arg	'0' if OK
+ * 	@arg	'1' if error
+ * 	@arg	'2' if no answer
+ * 	@arg	'8' if unrecognized module
+ */
+uint8_t WaspLoRaWAN::getThresholdRSSI()
+{
+  uint8_t status;
+  char ans1[15];
+  char ans2[15];
+
+  memset(_command,0x00,sizeof(_command));
+  memset(ans1,0x00,sizeof(ans1));
+  memset(ans2,0x00,sizeof(ans2));
+
+  if (_version != ABZ_MODULE)
+  {
+    //Funtion not available for Micrichip modules
+    return LORAWAN_VERSION_ERROR;
+  }
+  else
+  {
+    // create "at+rssith?" command
+    sprintf_P(_command,(char*)pgm_read_word(&(table_LoRaWAN_COMMANDS[146])));
+    // create "+OK=" answer
+    sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[49])));
+    // create "+ERR" answer
+    sprintf_P(ans2,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[46])));
+
+    //send command and wait for ans
+    status = sendCommand(_command,ans1, ans2, 500);
+
+    if (status == 0)
+    {
+      return LORAWAN_NO_ANSWER;
+    }
+    else if (status == 1)
+    {
+      // create "\r\n" answer
+      memset(ans1,0x00,sizeof(ans1));
+      sprintf_P(ans1,(char*)pgm_read_word(&(table_LoRaWAN_ANSWERS[13])));
+
+      waitFor(ans1,100);
+
+      _rssith = parseIntValue();
+      return LORAWAN_ANSWER_OK;
+    }
+    else
+    {
+      //print error
+      waitFor("\r");
+      USB.print(F("Error: "));
+      USB.println((char*)_buffer);
+      return LORAWAN_ANSWER_ERROR;
+    }
+  }
+}
+
 
 
 // Preinstantiate Objects /////////////////////////////////////////////////////

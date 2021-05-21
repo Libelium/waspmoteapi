@@ -93,7 +93,7 @@ const char BG96_string_47[]	PROGMEM = "+CGATT: 1";												//47
 const char BG96_string_48[]	PROGMEM = "+CGATT: 0";												//48
 const char BG96_string_49[]	PROGMEM = "AT+CGATT=%u\r";											//49
 const char BG96_string_50[]	PROGMEM = "AT+CGNAPN\r";											//50
-const char BG96_string_51[]	PROGMEM = "AT+QPSMS?\r";											//51
+const char BG96_string_51[]	PROGMEM = "AT+CPSMS?\r";											//51
 const char BG96_string_52[]	PROGMEM = "AT+COPS=0\r";											//52
 const char BG96_string_53[]	PROGMEM = "AT+QCFG=\"band\",%s,%s,%s,1\r";							//53
 const char BG96_string_54[]	PROGMEM = "AT+CPSMS=0,,,\"%s\",\"%s\"\r";							//54
@@ -262,7 +262,7 @@ const char BG96_HTTP_08[]	PROGMEM = "AT+QHTTPURL=%u,%u\r";					//8
 const char BG96_HTTP_09[]	PROGMEM = "AT+QHTTPGET=%u\r";						//9
 const char BG96_HTTP_10[]	PROGMEM = "AT+QHTTPREAD=%u\r";						//10
 const char BG96_HTTP_11[]	PROGMEM = "AT+QHTTPPOST=%u,%u,60\r";				//11
-const char BG96_HTTP_12[]	PROGMEM = "%s%s%s\r";								//12
+const char BG96_HTTP_12[]	PROGMEM = "%s:%u%s%s\r";								//12
 const char BG96_HTTP_13[]	PROGMEM = "AT+QHTTPCFG=\"sslctxid\",1\r";			//13
 
 

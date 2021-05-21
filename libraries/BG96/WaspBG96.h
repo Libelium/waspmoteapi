@@ -288,7 +288,6 @@ public:
 
 	char _ip[16]; // xxx.yyy.zzz.www - table_AT[34]
 	char _ipRemote[16];
-	char _UDPData[200];
 	uint16_t _errorCode;
 	int _temp;
 	int _tempInterval;

@@ -17,7 +17,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-    Version:		3.9
+    Version:		4.0
     Design:		David Gascón
     Implementation:	Luis Miguel Martí
 
@@ -135,15 +135,16 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t _version;
 		uint32_t _macStatus;
 		uint8_t _maxPayload;
-		uint8_t _syncWord;
+		uint8_t _syncWord = 0;
 		int8_t _radioRSSI;
 
 		uint8_t _OTAAError;
 
-
 		uint8_t _dFormat;
 		uint8_t _bandABZ;
 		uint8_t _dutyCycle;
+		uint16_t _cst;
+		int _rssith;
 
 		// constructor
 		WaspLoRaWAN()
@@ -285,6 +286,10 @@ class WaspLoRaWAN : public WaspUART
 		uint8_t setBand(uint8_t band);
 		uint8_t setDutyCycle(uint8_t state);
 		uint8_t getDutyCycle();
+		uint8_t setCST(uint16_t cst);
+		uint8_t getCST();
+		uint8_t setThresholdRSSI(int rssi);
+		uint8_t getThresholdRSSI();
 
 	private:
 		// Utils

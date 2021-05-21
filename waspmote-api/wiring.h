@@ -39,9 +39,6 @@ extern "C"{
 #define INPUT 0x0
 #define OUTPUT 0x1
 
-#define true 0x1
-#define false 0x0
-
 #define PI 3.14159265
 #define HALF_PI 1.57079
 #define TWO_PI 6.283185

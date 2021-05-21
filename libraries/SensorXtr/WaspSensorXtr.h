@@ -71,7 +71,7 @@
 #define XTR_SOCKET_F		2
 
 #define MCP_GP1				1		// Unconneted MCP GPIO
-#define MCP_GP1				0		// Unconneted MCP GPIO
+#define MCP_GP0				0		// Unconneted MCP GPIO
 
 
 // PIN Expander definitions
@@ -176,6 +176,8 @@
 #define EUREKA_NH4			6
 #define EUREKA_NO3			7
 #define EUREKA_CL			8
+#define EUREKA_BG			9
+#define EUREKA_TURB			10
 
 
 #define C21_LOW_POWER_MODE 0
@@ -855,8 +857,10 @@ struct sensorEurekaVector
 	float orp;
 	float depth;
 	float spCond;
+	float turb;
 	float chl;
 	float nh4;
+	float bg;
 	float no3;
 	float cl;
 	float hdo;

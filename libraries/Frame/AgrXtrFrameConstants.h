@@ -75,17 +75,19 @@
 #define AGRX_SI411_BT1_C				40
 #define AGRX_SI411_BT1_D				41
 
-// Industrial protocols (ModBus & CAN bus)
+// Industrial protocols (ModBus)
 #define AGRX_MODBUS_COILS				42
 #define AGRX_MODBUS_DISCRETE_INPUT		43
 #define AGRX_MODBUS_HOLDING_REGS		44
 #define AGRX_MODBUS_INPUT_REGS			45
-#define AGRX_CANBUS_RPM					46
-#define AGRX_CANBUS_VS					47
-#define AGRX_CANBUS_FR					48
-#define AGRX_CANBUS_FL					49
-#define AGRX_CANBUS_TP					50
-#define AGRX_CANBUS_FP					51
+
+// Teros11/12
+#define AGRX_TEROS11_VWC1_A				46
+#define AGRX_TEROS11_VWC1_B				47
+#define AGRX_TEROS11_VWC1_C				48
+#define AGRX_TEROS11_VWC1_D				49
+#define AGRX_TEROS11_DP4_A				50
+#define AGRX_TEROS11_DP4_B				51
 
 #define AGRX_DATASOL_RAD				95
 #define AGRX_DATASOL_SC1_RAD			96
@@ -95,6 +97,31 @@
 #define AGRX_DATASOL_WSP				100
 #define AGRX_DATASOL_PSH				101
 #define AGRX_DATASOL_NCN				102
+
+// Teros11/12
+#define AGRX_TEROS11_DP4_C				103
+#define AGRX_TEROS11_DP4_D				104
+#define AGRX_TEROS11_TC7_A				105
+#define AGRX_TEROS11_TC7_B				106
+#define AGRX_TEROS11_TC7_C				107
+#define AGRX_TEROS11_TC7_D				108
+#define AGRX_TEROS12_VWC2_A				109
+#define AGRX_TEROS12_VWC2_B				110
+#define AGRX_TEROS12_VWC2_C				111
+#define AGRX_TEROS12_VWC2_D				112
+#define AGRX_TEROS12_DP5_A				113
+#define AGRX_TEROS12_DP5_B				114
+#define AGRX_TEROS12_DP5_C				115
+#define AGRX_TEROS12_DP5_D				116
+#define AGRX_TEROS12_EC3_A				117
+#define AGRX_TEROS12_EC3_B				118
+#define AGRX_TEROS12_EC3_C				119
+#define AGRX_TEROS12_EC3_D				120
+#define AGRX_TEROS12_TC8_A				121
+#define AGRX_TEROS12_TC8_B				122
+#define AGRX_TEROS12_TC8_C				129
+#define AGRX_TEROS12_TC8_D				130
+
 
 
 // Now some index are reserved for additional fields, already defined
@@ -275,18 +302,19 @@ const char 	agr_xtr_39[] 	PROGMEM	= "BT1_B";
 const char 	agr_xtr_40[] 	PROGMEM	= "BT1_C";
 const char 	agr_xtr_41[] 	PROGMEM	= "BT1_D";
 
-// Industrial protocols: Modbus & CAN bus
+// Industrial protocols: Modbus
 const char	agr_xtr_42[]  PROGMEM = "MB_COILS"; 
 const char	agr_xtr_43[]  PROGMEM = "MB_DI"; 
 const char	agr_xtr_44[]  PROGMEM = "MB_HR"; 
 const char	agr_xtr_45[]  PROGMEM = "MB_IR"; 
-const char	agr_xtr_46[]  PROGMEM = "CB_RPM"; 
-const char	agr_xtr_47[]  PROGMEM = "CB_VS"; 
-const char	agr_xtr_48[]  PROGMEM = "CB_FR"; 
-const char	agr_xtr_49[]  PROGMEM = "CB_FL"; 
-const char	agr_xtr_50[]  PROGMEM = "CB_TP"; 
-const char	agr_xtr_51[]  PROGMEM = "CB_FP"; 
 
+// Teros11/12
+const char	agr_xtr_46[]  PROGMEM = "VWC1_A"; 
+const char	agr_xtr_47[]  PROGMEM = "VWC1_B"; 
+const char	agr_xtr_48[]  PROGMEM = "VWC1_C"; 
+const char	agr_xtr_49[]  PROGMEM = "VWC1_D"; 
+const char	agr_xtr_50[]  PROGMEM = "DP4_A"; 
+const char	agr_xtr_51[]  PROGMEM = "DP4_B"; 
 
 // Additional
 const char	agr_xtr_52[] 	PROGMEM	= "BAT";
@@ -340,26 +368,29 @@ const char	agr_xtr_99[]  	PROGMEM = "PTC";
 const char	agr_xtr_100[]  	PROGMEM = "WSP";
 const char	agr_xtr_101[]  	PROGMEM = "PSH";
 const char	agr_xtr_102[]  	PROGMEM = "NCN";
-const char	agr_xtr_103[]  	PROGMEM = "";
-const char	agr_xtr_104[]  	PROGMEM = "";
-const char	agr_xtr_105[]  	PROGMEM = "";
-const char	agr_xtr_106[]  	PROGMEM = "";
-const char	agr_xtr_107[]  	PROGMEM = "";
-const char	agr_xtr_108[]  	PROGMEM = "";
-const char	agr_xtr_109[]  	PROGMEM = "";
-const char	agr_xtr_110[]  	PROGMEM = "";
-const char	agr_xtr_111[]  	PROGMEM = "";
-const char	agr_xtr_112[]  	PROGMEM = "";
-const char	agr_xtr_113[]  	PROGMEM = "";
-const char	agr_xtr_114[]  	PROGMEM = "";
-const char	agr_xtr_115[]  	PROGMEM = "";
-const char	agr_xtr_116[]  	PROGMEM = "";
-const char	agr_xtr_117[]  	PROGMEM = "";
-const char	agr_xtr_118[]  	PROGMEM = "";
-const char	agr_xtr_119[]  	PROGMEM = "";
-const char	agr_xtr_120[]  	PROGMEM = "";
-const char	agr_xtr_121[]  	PROGMEM = "";
-const char	agr_xtr_122[]  	PROGMEM = "";
+
+// Teros11/12
+const char	agr_xtr_103[]  	PROGMEM = "DP4_C";
+const char	agr_xtr_104[]  	PROGMEM = "DP4_D";
+const char	agr_xtr_105[]  	PROGMEM = "TC7_A";
+const char	agr_xtr_106[]  	PROGMEM = "TC7_B";
+const char	agr_xtr_107[]  	PROGMEM = "TC7_C";
+const char	agr_xtr_108[]  	PROGMEM = "TC7_D";
+const char	agr_xtr_109[]  	PROGMEM = "VWC2_A";
+const char	agr_xtr_110[]  	PROGMEM = "VWC2_B";
+const char	agr_xtr_111[]  	PROGMEM = "VWC2_C";
+const char	agr_xtr_112[]  	PROGMEM = "VWC2_D";
+const char	agr_xtr_113[]  	PROGMEM = "DP5_A";
+const char	agr_xtr_114[]  	PROGMEM = "DP5_B";
+const char	agr_xtr_115[]  	PROGMEM = "DP5_C";
+const char	agr_xtr_116[]  	PROGMEM = "DP5_D";
+const char	agr_xtr_117[]  	PROGMEM = "EC3_A";
+const char	agr_xtr_118[]  	PROGMEM = "EC3_B";
+const char	agr_xtr_119[]  	PROGMEM = "EC3_C";
+const char	agr_xtr_120[]  	PROGMEM = "EC3_D";
+const char	agr_xtr_121[]  	PROGMEM = "TC8_A";
+const char	agr_xtr_122[]  	PROGMEM = "TC8_B";
+
 const char	agr_xtr_123[]  	PROGMEM = "TST";
 const char	agr_xtr_124[]  	PROGMEM = "";
 const char	agr_xtr_125[]  	PROGMEM = "VAPI";
@@ -367,8 +398,9 @@ const char	agr_xtr_126[]  	PROGMEM = "VPROG";
 const char	agr_xtr_127[]  	PROGMEM = "VBOOT";
 const char	agr_xtr_128[]  	PROGMEM = "PS";
 
-const char	agr_xtr_129[]  	PROGMEM = "";
-const char	agr_xtr_130[]  	PROGMEM = "";
+const char	agr_xtr_129[]  	PROGMEM = "TC8_C";
+const char	agr_xtr_130[]  	PROGMEM = "TC8_D";
+
 const char	agr_xtr_131[]  	PROGMEM = "";
 const char	agr_xtr_132[]  	PROGMEM = "";
 const char	agr_xtr_133[]  	PROGMEM = "";
@@ -823,17 +855,18 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 40
 	2,		// 41
 
-	//// Industrial protocols (ModBus & CAN bus)
+	//// Industrial protocols (ModBus)
 	1,		// 42
 	1,		// 43
 	1,		// 44
 	1,		// 45
-	1,		// 46
-	1,		// 47
-	1,		// 48
-	0,		// 49
-	0,		// 50
-	1,		// 51
+	
+	2,		// 46
+	2,		// 47
+	2,		// 48
+	2,		// 49
+	2,		// 50
+	2,		// 51
 
 	0, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -874,9 +907,9 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	0,		// 87
 	0,		// 88
 
-	2,		// 89
-	2,		// 90
-	2,		// 91
+	3,		// 89
+	3,		// 90
+	3,		// 91
 	2,		// 92
 	2,		// 93
 	2,		// 94
@@ -889,26 +922,26 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 100
 	2,		// 101
 	0,		// 102
-	0,		// 103
-	0,		// 104
-	0,		// 105
-	0,		// 106
-	0,		// 107
-	0,		// 108
-	0,		// 109
-	0,		// 110
-	0,		// 111
-	0,		// 112
-	0,		// 113
-	0,		// 114
-	0,		// 115
-	0,		// 116
-	0,		// 117
-	0,		// 118
-	0,		// 119
-	0,		// 120
-	0,		// 121
-	0,		// 122
+	2,		// 103
+	2,		// 104
+	2,		// 105
+	2,		// 106
+	2,		// 107
+	2,		// 108
+	2,		// 109
+	2,		// 110
+	2,		// 111
+	2,		// 112
+	2,		// 113
+	2,		// 114
+	2,		// 115
+	2,		// 116
+	2,		// 117
+	2,		// 118
+	2,		// 119
+	2,		// 120
+	2,		// 121
+	2,		// 122
 
 	4,		// 123
 	0,		// 124
@@ -916,12 +949,12 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	0,		// 126
 	0,		// 127
 	0,		// 128
-	0,		// 129
-	0,		// 130
+	2,		// 129
+	2,		// 130
 	0,		// 131
 	0,		// 132
 	0,		// 133
-	
+
 	2,		// 134
 	2,		// 135
 	2,		// 136
@@ -1016,7 +1049,7 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 225
 	2,		// 226
 	3,		// 227
-	
+
 	1,		// 228
 	2,		// 229
 	3,		// 230
@@ -1045,7 +1078,7 @@ const uint8_t AGR_XTR_TYPE_TABLE[] PROGMEM=
 	1,		// 253
 	2,		// 254
 	3,		// 255
-	
+
 };
 
 
@@ -1114,7 +1147,7 @@ const uint8_t AGR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 48
 	1,		// 49
 	1,		// 50
-	1,		// 51	
+	1,		// 51
 
 	1, // str_BAT,		// 52
 	2, // str_GPS,		// 53
@@ -1202,7 +1235,7 @@ const uint8_t AGR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 131
 	1,		// 132
 	1,		// 133
-	
+
 	1,		// 134
 	1,		// 135
 	1,		// 136
@@ -1297,7 +1330,7 @@ const uint8_t AGR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 225
 	1,		// 226
 	1,		// 227
-	
+
 	1,		// 228
 	1,		// 229
 	1,		// 230
@@ -1386,12 +1419,12 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 43
 	0,		// 44
 	0,		// 45
-	0,		// 46
-	0,		// 47
-	0,		// 48
-	0,		// 49
-	0,		// 50
-	0,		// 51
+	2,		// 46
+	2,		// 47
+	2,		// 48
+	2,		// 49
+	2,		// 50
+	2,		// 51
 
 	0, // str_BAT,		// 52
 	6, // str_GPS,		// 53
@@ -1447,26 +1480,26 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	1,		// 100
 	2,		// 101
 	0,		// 102
-	0,		// 103
-	0,		// 104
-	0,		// 105
-	0,		// 106
-	0,		// 107
-	0,		// 108
-	0,		// 109
-	0,		// 110
-	0,		// 111
-	0,		// 112
-	0,		// 113
-	0,		// 114
-	0,		// 115
-	0,		// 116
-	0,		// 117
-	0,		// 118
-	0,		// 119
-	0,		// 120
-	0,		// 121
-	0,		// 122
+	2,		// 103
+	2,		// 104
+	2,		// 105
+	2,		// 106
+	2,		// 107
+	2,		// 108
+	2,		// 109
+	2,		// 110
+	2,		// 111
+	2,		// 112
+	2,		// 113
+	2,		// 114
+	2,		// 115
+	2,		// 116
+	2,		// 117
+	2,		// 118
+	2,		// 119
+	2,		// 120
+	2,		// 121
+	2,		// 122
 	0,		// 123
 	0,		// 124
 
@@ -1474,12 +1507,12 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 126
 	0,		// 127
 	0,		// 128
-	0,		// 129
-	0,		// 130
+	2,		// 129
+	2,		// 130
 	0,		// 131
 	0,		// 132
 	0,		// 133
-	
+
 	3,		// 134
 	3,		// 135
 	3,		// 136
@@ -1574,7 +1607,7 @@ const uint8_t AGR_XTR_DECIMAL_TABLE[] PROGMEM =
 	0,		// 225
 	1,		// 226
 	0,		// 227
-	
+
 	0,		// 228
 	2,		// 229
 	0,		// 230

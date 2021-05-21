@@ -75,7 +75,7 @@
 #define WTRX_MANTA_NO3_F				38
 #define WTRX_MANTA_CL_F					39
 #define WTRX_MANTA_HDO_F				40
-#define WTRX_MANTA_TC_F					41
+#define WTRX_MANTA_TC_F					41		// manta continues on 237
 
 
 // Industrial protocols (ModBus & CAN bus)
@@ -195,7 +195,8 @@
 #define WTRX_C21_TC7_C					235
 #define WTRX_C21_TC7_D					236
 
-
+#define WTRX_MANTA_TURB_F					237
+#define WTRX_MANTA_BGA_F					238
 /// Flash defines //////////////////////////////////////////////////////////////
 
 
@@ -450,6 +451,8 @@ const char	wtr_xtr_234[]  	PROGMEM = "TC7_B";
 const char	wtr_xtr_235[]  	PROGMEM = "TC7_C";
 const char	wtr_xtr_236[]  	PROGMEM = "TC7_D";
 
+const char	wtr_xtr_237[]  	PROGMEM = "EM_TURB";
+const char	wtr_xtr_238[]  	PROGMEM = "EM_BGA";
 
 /*******************************************************************************
  * SENSOR_TABLE - Sensor label table
@@ -695,7 +698,9 @@ const char* const WTR_XTR_TABLE[] PROGMEM=
 	wtr_xtr_233,
 	wtr_xtr_234,
 	wtr_xtr_235,
-	wtr_xtr_236
+	wtr_xtr_236,
+	wtr_xtr_237,
+	wtr_xtr_238
 };
 
 
@@ -808,9 +813,9 @@ const uint8_t WTR_XTR_TYPE_TABLE[] PROGMEM=
 	0,		// 87
 	0,		// 88
 
-	2,		// 89
-	2,		// 90
-	2,		// 91
+	3,		// 89
+	3,		// 90
+	3,		// 91
 	2,		// 92
 	2,		// 93
 	2,		// 94
@@ -958,7 +963,9 @@ const uint8_t WTR_XTR_TYPE_TABLE[] PROGMEM=
 	2,		// 233
 	2,		// 234
 	2,		// 235
-	2		// 236
+	2,		// 236
+	2,		// 237
+	2			// 238
 };
 
 
@@ -1218,7 +1225,9 @@ const uint8_t WTR_XTR_FIELD_TABLE[] PROGMEM=
 	1,		// 233
 	1,		// 234
 	1,		// 235
-	1		// 236
+	1,		// 236
+	1,		// 237
+	1			// 238
 };
 
 
@@ -1474,7 +1483,9 @@ const uint8_t WTR_XTR_DECIMAL_TABLE[] PROGMEM =
 	1,		// 233
 	1,		// 234
 	1,		// 235
-	1		// 236
+	2,		// 236
+	2,		// 237
+	2			// 238
 
 };
 

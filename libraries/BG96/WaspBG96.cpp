@@ -17,7 +17,7 @@
  *  You should have received a copy of the GNU Lesser General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- *  Version:		3.2
+ *  Version:		3.3
  *  Design:			David Gascón
  *  Implementation:	P.Moreno
  */
@@ -625,9 +625,9 @@ uint8_t WaspBG96::httpRequest(uint8_t method,
 	memset( aux, '\0', sizeof(aux) );
 	memset( datapacket, '\0', sizeof(datapacket) );
 
-	//Construct new url using host:port.
-	char urlport[100];
-	snprintf(urlport, 100, "%s:%u", url, port);
+	// //Construct new url using host:port.
+	// char urlport[100];
+	// snprintf(urlport, sizeof(urlport), "%s:%u", url, port);
 
 	// Step1: Configure HTTP parameters: contextid
 	// Generate: AT+QHTTPCFG=“contextid”, 1
@@ -664,7 +664,7 @@ uint8_t WaspBG96::httpRequest(uint8_t method,
 	if (method == WaspBG96::HTTP_GET)
 	{
 		//Construct the data.
-		sprintf_P(datapacket, (char*)pgm_read_word(&(table_HTTP[12])), urlport, resource, data);
+		sprintf_P(datapacket, (char*)pgm_read_word(&(table_HTTP[12])), url, port, resource, data);
 		#if DEBUG_BG96 == 2
 			USB.print(F("Packet structure: "));
 			USB.println(datapacket);
@@ -703,7 +703,7 @@ uint8_t WaspBG96::httpRequest(uint8_t method,
 	{
 
 		//Construct the data.
-		sprintf_P(datapacket, (char*)pgm_read_word(&(table_HTTP[12])), urlport, resource, NULL);
+		sprintf_P(datapacket, (char*)pgm_read_word(&(table_HTTP[12])), url, port, resource, NULL);
 		#if DEBUG_BG96 == 2
 			USB.print(F("Packet structure: "));
 			USB.println(datapacket);
@@ -756,7 +756,7 @@ uint8_t WaspBG96::httpRequest(uint8_t method,
 		char resource[27];
 		//Construct the data.
 		sprintf_P(resource, (char*)pgm_read_word(&(table_HTTP[0])));
-		sprintf_P(datapacket, (char*)pgm_read_word(&(table_HTTP[12])), urlport, resource, NULL);
+		sprintf_P(datapacket, (char*)pgm_read_word(&(table_HTTP[12])), url, port, resource, NULL);
 		#if DEBUG_BG96 == 2
 			USB.print(F("Packet structure: "));
 			USB.println(datapacket);
@@ -1639,7 +1639,7 @@ uint8_t WaspBG96::gprsConnection(char* apn, char* gprsband, char* network, uint8
 	uint8_t answer;
 	uint8_t status;
 
-	char command_buffer[40];
+	char command_buffer[40];			// FIXME: THis buffer may be undersized due to command QICSGP. sNprintf recommended
 	char answer1[20];
 	char answer2[20];
 
@@ -2315,7 +2315,7 @@ uint8_t WaspBG96::nbiotGetPSMValues()
 	uint8_t answer;
 	char command_buffer[20];
 
-	// "AT+QPSMS?"
+	// "AT+CPSMS?"
 	sprintf_P(command_buffer, (char*)pgm_read_word(&(table_AT[51])));
 
 	// send command
@@ -2407,6 +2407,7 @@ uint8_t WaspBG96::nbiotSendUDP(char* ipRemote, uint16_t _port, char* UDPData, bo
 	uint8_t answer;
 	char command_buffer[200];
 	uint8_t data_length = 0;
+	char _UDPData[200];
 
 	memset(_ipRemote, '\0', sizeof(_ipRemote));
 	memset(_UDPData, '\0', sizeof(_UDPData));
@@ -2748,7 +2749,7 @@ uint8_t WaspBG96::http(uint8_t method,
 	answer = httpRequest(method, url, port, resource, data);
 	if (answer != 0)
 	{
-		USB.println(answer, DEC);
+		//USB.println(answer, DEC);
 		return answer+10;	// 10 to 19 error codes
 	}
 

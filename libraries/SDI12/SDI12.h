@@ -36,7 +36,7 @@
 * Includes
 ******************************************************************************/
 #include <inttypes.h>
-#include <avr/parity.h>         // optimized parity bit handling
+#include <util/parity.h>         // optimized parity bit handling
 
 
 /******************************************************************************

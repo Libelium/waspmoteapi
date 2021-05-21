@@ -1169,7 +1169,7 @@ uint8_t Wasp4G::ON()
 	digitalWrite(GPRS_PW, LOW);
 	delay(500);
 	digitalWrite(GPRS_PW, HIGH);
-	delay(10);
+	delay(10000);
 
 	answer = check_DS2413();
 
