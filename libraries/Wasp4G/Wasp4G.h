@@ -287,13 +287,13 @@ public:
 	//! Wireless Network enumeration
 	enum WirelessNetworkEnum
 	{
-		NETWORK_GSM				= 12,
+		NETWORK_GSM			= 12,
 		NETWORK_UTRAN 			= 22,
 		NETWORK_3GPP			= 25, // default
 		NETWORK_EUTRAN_ONLY		= 28,
 		NETWORK_GERAN_UTRAN		= 29,
-		NETWORK_GERAN_EUTRAN	= 30,
-		NETWORK_UTRAN_EUTRAN	= 31,
+		NETWORK_GERAN_EUTRAN		= 30,
+		NETWORK_UTRAN_EUTRAN		= 31,
 	};
 
 	//! GPS Mode Enumeration
@@ -307,24 +307,24 @@ public:
 	//! Module Information Enumeration
 	enum ModuleInformationEnum
 	{
-		INFO_HW 				= 0,
-		INFO_MANUFACTURER_ID 	= 1,
+		INFO_HW 			= 0,
+		INFO_MANUFACTURER_ID 		= 1,
 		INFO_MODEL_ID 			= 2,
 		INFO_REV_ID 			= 3,
-		INFO_IMEI 				= 4,
-		INFO_IMSI 				= 5,
-		INFO_ICCID 				= 6,
+		INFO_IMEI 			= 4,
+		INFO_IMSI 			= 5,
+		INFO_ICCID 			= 6,
 	};
 
 	//! Network Type Enumeration
 	enum NetworkTypeEnumeration
 	{
-		NETWORK_GPRS	= 0,
-		NETWORK_EGPRS	= 1,
-		NETWORK_WCDMA	= 2,
-		NETWORK_HSDPA	= 3,
+		NETWORK_GPRS		= 0,
+		NETWORK_EGPRS		= 1,
+		NETWORK_WCDMA		= 2,
+		NETWORK_HSDPA		= 3,
 		NETWORK_LTE		= 4,
-		NETWORK_UNKNOWN	= 5,
+		NETWORK_UNKNOWN		= 5,
 	};
 
 	//! SMS Delete Flag
@@ -345,7 +345,7 @@ public:
 		HTTP_DELETE		= 2,
 		HTTP_POST		= 3,
 		HTTP_PUT		= 4,
-		HTTP_POST_FRAME	= 5,
+		HTTP_POST_FRAME		= 5,
 	};
 
 	//! TCP/UDP sockets protocol enumeration
@@ -368,7 +368,7 @@ public:
 	//! E-mail security enumeration
 	enum EmailSecurityEnumeration
 	{
-		EMAIL_NONSSL	= 0,
+		EMAIL_NONSSL		= 0,
 		EMAIL_SSL		= 1,
 	};
 
@@ -393,11 +393,10 @@ public:
 		CHOSEN_BY_REMOTE_SERVER			= 0,
 		TLS_RSA_WITH_RC4_128_MD5		= 1,
 		TLS_RSA_WITH_RC4_128_SHA		= 2,
-		TLS_RSA_WITH_AES_128_CBC_SHA	= 3,
+		TLS_RSA_WITH_AES_128_CBC_SHA		= 3,
 		TLS_RSA_WITH_NULL_SHA 			= 4,
-		TLS_RSA_WITH_AES_256_CBC_SHA	= 5,
-
-		V1_TLS_RSA_WITH_AES_256_CBC_SHA	= 3,
+		TLS_RSA_WITH_AES_256_CBC_SHA		= 5,
+		V1_TLS_RSA_WITH_AES_256_CBC_SHA		= 3,
 	};
 
 
@@ -406,7 +405,7 @@ public:
 	{
 		SSL_VERIFY_NONE					= 0,
 		MANAGE_SERVER_AUTH				= 1,
-		MANAGE_SERVER_AND_CLIENT_AUTH	= 2,
+		MANAGE_SERVER_AND_CLIENT_AUTH			= 2,
 	};
 
 	//! SSL/TLS protocol version
